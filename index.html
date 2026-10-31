@@ -1295,6 +1295,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <!-- ========================================== -->
     <!--        窗口结束                -->
     <!-- ========================================== -->
+<style id="beatTuneCSS">
+#beatViz #bvTune{display:none;margin:0 0 10px}
+#beatViz.tune #bvTune{display:block}
+#beatViz .bv-tr{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;margin:0 0 10px}
+#beatViz .bv-tl{font-size:13px;font-weight:600;color:#fff}
+#beatViz .bv-tl small{display:block;font-size:11px;font-weight:400;opacity:.55;margin-top:1px}
+#beatViz .bv-tv{font-size:13px;font-variant-numeric:tabular-nums;color:#fff;opacity:.9;text-align:right;min-width:38px}
+#beatViz .bv-tr input[type=range]{grid-column:1/-1;width:100%;margin:2px 0 0}
+#beatViz #bvTuneReset{display:block;width:100%;flex:none}
+</style>
 <style id="beatVizCSS">
 #beatViz{
   --bv-e:var(--spring,cubic-bezier(.32,.72,0,1));
@@ -1463,10 +1473,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
     <div id="bvLogWrap"><div class="bv-lgi"><div id="bvLogs"></div></div></div>
 
+    <div id="bvTune">
+      <div class="bv-tr"><div class="bv-tl">网格宽容度<small>漏拍调大，多拍调小</small></div><input type="range" data-bt="gridTol" min="0.1" max="0.6" step="0.01"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">解锁灵敏度<small>换段后久不重新锁定就调大</small></div><input type="range" data-bt="unlock" min="0.1" max="0.5" step="0.01"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">阈值硬度<small>整体漏拍调小，噪声误触调大</small></div><input type="range" data-bt="thr" min="0.2" max="0.8" step="0.01"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">底鼓权重<small></small></div><input type="range" data-bt="bw0" min="0" max="2" step="0.05"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">军鼓权重<small>军鼓重的歌加大</small></div><input type="range" data-bt="bw1" min="0" max="1.5" step="0.05"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">帽镲权重<small></small></div><input type="range" data-bt="bw2" min="0" max="1" step="0.05"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">速度倍率<small>快歌被报成一半就拨到偏快，慢歌被报成两倍就拨到偏慢</small></div><input type="range" data-bt="tempoBias" min="-1" max="1" step="1"><b class="bv-tv">--</b></div>
+      <div class="bv-tr"><div class="bv-tl">延迟补偿<small>画面比声音早（蓝牙耳机）就调大，单位毫秒</small></div><input type="range" data-bt="delay" min="0" max="400" step="10"><b class="bv-tv">--</b></div>
+      <button id="bvTuneReset" class="bv-tb" type="button">恢复默认</button>
+    </div>
+
     <div id="bvTools">
       <button id="bvPause" class="bv-tb" type="button">暂停</button>
       <button id="bvReset" class="bv-tb" type="button">清零</button>
       <button id="bvLogBtn" class="bv-tb" type="button">日志</button>
+      <button id="bvTuneBtn" class="bv-tb" type="button">调参</button>
     </div>
 
   </div></div></div>
@@ -1844,6 +1867,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!shown()) return;
     viz.classList.remove('show','dragging'); viz.setAttribute('aria-hidden','true'); drag=null; stop(); restoreIsland();
   }
+  /* ---------- 调参（节拍检测参数，写入 Beat.tune） ---------- */
+  (function(){
+    var T=window.Beat&&window.Beat.tune, btn=$('bvTuneBtn'), rs=$('bvTuneReset');
+    var ins=[].slice.call(viz.querySelectorAll('#bvTune input[data-bt]'));
+    function fmt(k,v){if(k==='tempoBias')return ['偏慢','自动','偏快'][(+v)+1];if(k==='delay')return Math.round(+v)+'ms';return (+v).toFixed(2)}
+    function pull(){if(!T)return;var c=T.get();ins.forEach(function(el){var v=c[el.dataset.bt];el.value=v;el.nextElementSibling.textContent=fmt(el.dataset.bt,v)})}
+    if(btn)btn.addEventListener('click',function(){var on=!viz.classList.contains('tune');viz.classList.toggle('tune',on);btn.classList.toggle('on',on);if(on)pull();setTimeout(function(){try{fit()}catch(_){}},60)});
+    ins.forEach(function(el){el.addEventListener('input',function(){if(!T)return;T.set(el.dataset.bt,el.value);el.nextElementSibling.textContent=fmt(el.dataset.bt,el.value)})});
+    if(rs)rs.addEventListener('click',function(){if(T){T.reset();pull()}});
+    if(!T&&btn)btn.style.display='none';
+  })();
+
   window.__showBeatViz=show;
   window.__hideBeatViz=hide;
   window.__toggleBeatViz=function(){shown()?hide():show()};
