@@ -198,6 +198,10 @@
       '.aiui-pill.is-dancing[data-d=roll]{animation:aiui-proll 1.3s ease-in-out both}',
       '.aiui-pill.is-dancing[data-d=spin]{animation:aiui-pspin 1s cubic-bezier(.25,.1,.3,1) both}',
       '.aiui-pill.is-dancing[data-d=bounce]{animation:aiui-pbounce .55s ease-in-out infinite}',
+      // 节拍锁定（beat.js 有节拍时）：舞步还是原来的舞步，只把一个循环的时长换成「整数拍」，并把落点对到拍子上
+      '#aiui-root.is-bsync .aiui-pill.is-dancing[data-d],#aiui-root.is-bsync .aiui-eyes.is-dancing[data-d]{animation-duration:var(--aiui-bd,1s) !important;animation-delay:var(--aiui-bdl,0s) !important}',
+      '#aiui-root.is-bsync .aiui-eyes.is-dancing[data-d=wave] .aiui-eye{animation-duration:var(--aiui-bd,1s) !important;animation-delay:var(--aiui-bdl,0s) !important}',
+      '#aiui-root.is-bsync .aiui-eyes.is-dancing[data-d=wave] .aiui-eye:nth-child(2){animation-delay:calc(var(--aiui-bdl,0s) + var(--aiui-bd,1s) / 2) !important}',
       '@keyframes aiui-pbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}',
       '@keyframes aiui-psway{0%,100%{transform:none}25%{transform:translateX(-5px) rotate(-10deg)}75%{transform:translateX(5px) rotate(10deg)}}',
       '@keyframes aiui-phop{0%,100%{transform:none}45%{transform:translateY(-7px) scale(.95,1.08)}}',
@@ -751,28 +755,33 @@
   var DANCE_FACES = ['neutral', 'happy', 'content', 'squint', 'star', 'love', 'excited', 'laugh', 'shiny', 'starstruck', 'heartbeat', 'sparkle', 'grin', 'beam', 'glow'];
   var danceTimer = 0, danceFace = 'neutral';
 
-  var DANCE_DUR = { bob: 620, sway: 860, hop: 520, tilt: 1000, swing: 720, twirl: 1900, wave: 600, run: 1100, flip: 1500, leap: 800, roll: 1300, spin: 1000, bounce: 550 };
+  var DANCE_DUR = { bob: 620, sway: 860, hop: 520, tilt: 1000, swing: 720, twirl: 1900, wave: 900, run: 1100, flip: 1500, leap: 800, roll: 1300, spin: 1000, bounce: 550 };
   var DANCE_TURN = { twirl: 1, flip: 1, roll: 1, spin: 1 };      // 旋转类动作：只转 1 或 2 圈，转完停一下再换
 
-  function setDance(m, total) {
+  function setDance(m, total, cycles) {
+    curMove = m;
     eyesEl.setAttribute('data-d', m);
     pill.setAttribute('data-d', m);                                // 整个胶囊也跟着跳同一套舞步
+    var delay = applyBeatTiming(m);                                // 有节拍：时长取整数拍、等到下一拍再起（起手永远是中立姿态）
+    danceIter = cycles || 0;                                       // 循环类：数够 N 圈，在「圈与圈的交界」换下一个，不用定时器
     danceFace = pick(DANCE_FACES);
     renderFace();
     clearTimeout(danceTimer);
-    danceTimer = setTimeout(danceStep, total + 60);                // 兜底：万一 animationend 没触发，也能按时进入下一套
+    danceTimer = setTimeout(danceStep, total + delay + 1200);      // 兜底：只在 animationiteration / animationend 都没触发时才会用到（后台 / 省电）；留足余量，绝不抢在真实交界之前
   }
 
   function danceStep() {
-    var m = pick(DANCE_MOVES);
-    var dur = DANCE_DUR[m] || 1000;
-    if (DANCE_TURN[m]) {                                           // 旋转类：转 1~2 圈，靠 animationend 在循环边界切换，衔接最顺
+    commitBsync();                                                 // 锁 / 松节拍只在舞步交界处生效，不在动作中途改时间轴
+    var m = pick(DANCE_MOVES), n = 0;
+    while (m === curMove && n++ < 8) m = pick(DANCE_MOVES);        // 不连续两次同一个动作：同名动画不会重启，会卡住
+    var dur = moveDur(m);                                          // 有节拍时 = 整数拍；否则 = 原来的时长
+    if (DANCE_TURN[m]) {                                           // 旋转类：转 1~2 圈，靠 animationend 在结束处切换，衔接最顺
       root.style.setProperty('--aiui-spin', (Math.random() < 0.5 ? 360 : 720) + 'deg');
-      setDance(m, dur);
+      setDance(m, dur, 0);
       return;
     }
     var cycles = Math.max(1, Math.round(rand(2200, 4200) / dur));  // 摇摆类动作完整跳完 N 个循环
-    setDance(m, dur * cycles);
+    setDance(m, dur * cycles, cycles);
   }
 
   function bindDanceEnd() {
@@ -781,7 +790,76 @@
       var m = pill.getAttribute('data-d');
       if (DANCE_TURN[m] && /^aiui-p/.test(e.animationName || '')) danceStep();
     });
+    // 循环类动作：每一圈的起点 / 终点姿态都是中立（transform: none），在这一刻换下一个动作才不会顿
+    pill.addEventListener('animationiteration', function (e) {
+      if (e.target !== pill || !/^aiui-p/.test(e.animationName || '')) return;
+      if (!S.playing || document.hidden || danceIter <= 0) return;
+      if (--danceIter <= 0) danceStep();
+    });
   }
+
+  /* =========================================================================
+   * [5b] 节拍锁定：舞步还是上面那套，只是「跳得和歌同拍」
+   *      数据来自 beat.js：window 'beat' 事件（每拍一次）和 Beat.bpm。
+   *      · 一个舞步循环的时长 = 整数拍（左右摆的取 2 拍；上下跳的取 1 拍，落地踩拍）
+   *      · 每个舞步都「从中立姿态、在拍点上」起手：有节拍时先等到下一拍（延迟只会是正数），
+   *        上一个动作在圈与圈的交界（也是中立姿态）结束，所以换动作时画面是连续的，不会瞬移
+   *      · 锁定 / 解除只在舞步交界处生效，不在动作中途改时间轴
+   *      · 1.6 秒没有新的一拍（歌太安静 / 检测不到）→ 当前舞步跳完后回到原来的自由节奏
+   * ========================================================================= */
+  var curMove = '', bsyncOn = false, bsyncWant = false, bsyncTimer = 0, beatTimes = [], danceIter = 0;
+  var BEAT_K0 = { bob: 1, hop: 1, bounce: 1, sway: 2, tilt: 2, swing: 2, run: 2, wave: 2, leap: 2, twirl: 2, flip: 2, roll: 2, spin: 2 };   // 最少几拍一个循环
+  function beatPeriod() {
+    var b = window.Beat ? +window.Beat.bpm : 0;
+    return b > 0 ? 60000 / b : 500;
+  }
+  function mod(a, n) { return ((a % n) + n) % n; }
+  function syncDur(m, P) {                                         // 取最接近原时长的「2 的幂次拍数」，且不少于 k0 拍
+    var n = DANCE_DUR[m] || 1000;
+    var k = Math.pow(2, Math.round(Math.log(n / P) / Math.LN2));
+    return Math.round(Math.max(BEAT_K0[m] || 1, k) * P);
+  }
+  function moveDur(m) { return bsyncOn ? syncDur(m, beatPeriod()) : (DANCE_DUR[m] || 1000); }
+  function gridAnchor(P) {                                         // 最近几拍的「多数派」拍点，抗抖动、抗多拍 / 漏拍
+    var latest = beatTimes[beatTimes.length - 1], offs = [];
+    for (var i = 0; i < beatTimes.length; i++) {
+      var d = mod(beatTimes[i] - latest, P); if (d > P / 2) d -= P; offs.push(d);
+    }
+    offs.sort(function (x, y) { return x - y; });
+    return latest + offs[Math.floor(offs.length / 2)];
+  }
+  function canLock() { return beatTimes.length >= 3 && window.Beat && +window.Beat.bpm > 0; }
+  function commitBsync() {                                         // 在一个舞步开始前，把「想锁 / 想松」落实
+    if (bsyncWant && !canLock()) bsyncWant = false;
+    if (bsyncOn === bsyncWant) return;
+    bsyncOn = bsyncWant;
+    root.classList.toggle('is-bsync', bsyncOn);
+    if (!bsyncOn) { root.style.removeProperty('--aiui-bd'); root.style.removeProperty('--aiui-bdl'); beatTimes.length = 0; }
+  }
+  function endBsyncNow() {                                         // 音乐停了 / 面板打开等：立刻解除（此时已经没有舞步在跳）
+    clearTimeout(bsyncTimer); bsyncTimer = 0; bsyncWant = false; commitBsync(); beatTimes.length = 0;
+  }
+  function applyBeatTiming(m) {                                    // 返回起手前要等的毫秒数
+    if (!bsyncOn || !m) return 0;
+    var P = beatPeriod(), d = syncDur(m, P);
+    var delay = mod(gridAnchor(P) - performance.now(), P);          // 距下一个拍点
+    if (delay > P * 0.85) delay = 0;                               // 刚过拍点一点点：直接起，不再多等一整拍
+    root.style.setProperty('--aiui-bd', d + 'ms');
+    root.style.setProperty('--aiui-bdl', Math.round(delay) + 'ms');
+    return delay;
+  }
+  function reduceMotion() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches); } catch (_) { return false; }
+  }
+  window.addEventListener('beat', function () {
+    if (!pill || !root || !S.playing || document.hidden || reduceMotion()) return;
+    if (root.classList.contains('is-still') || !pill.classList.contains('is-dancing')) return;
+    beatTimes.push(performance.now()); if (beatTimes.length > 8) beatTimes.shift();
+    if (!canLock()) return;                                        // BPM 还没积累够：先不锁
+    bsyncWant = true;
+    clearTimeout(bsyncTimer);
+    bsyncTimer = setTimeout(function () { bsyncWant = false; }, 1600);   // 1.6 秒没有新的一拍 → 下一个舞步起恢复自由节奏
+  });
 
   function applyMood() {
     var still = !!(document.body && document.body.classList.contains('open'));   // 设置 / 歌曲面板打开：小眼睛保持不动
@@ -795,6 +873,7 @@
       eyesEl.removeAttribute('data-d');
       pill.removeAttribute('data-d');
     }
+    if (!dancing) { endBsyncNow(); danceIter = 0; curMove = ''; }
     renderFace();
   }
 
@@ -1204,6 +1283,9 @@
   function burstVP() { [0, 100, 250, 450, 800].forEach(function (d) { setTimeout(scheduleVP, d); }); }
 
   var lastLift = 0, closeUntil = 0;
+  // perf: 缓存安全区高度与上次写入的 vvTop，供 syncViewport 做无变化早退
+  var lastSab = 0, lastVvTop = -1;
+  function readSafeArea() { lastSab = probe.offsetHeight || 0; }   // perf: 只读一次布局，改由 resize / 转屏驱动
   function getLift() { return parseFloat(root.style.getPropertyValue('--aiui-lift')) || 0; }
   function kbDir(dir) {                                        // 键盘上顶 / 收起：切换缓动曲线 + 播放果冻动画
     bar.classList.toggle('kb-down', dir === 'down');
@@ -1223,16 +1305,21 @@
       window.scrollTo(0, focusScrollY);
     }
 
-    var sab = probe.offsetHeight || 0;
+    var sab = lastSab;                                        // perf: 用缓存值，避免每帧读 offsetHeight 强制同步布局
     var lift = kb > KB_MIN ? Math.max(0, kb - sab) : 0;
     var currentLift = getLift();
     if (Date.now() < closeUntil && document.activeElement !== ta) lift = 0;   // 收起过程中别被残留的视口高度拉回去
     if (lift > KB_MIN) lastLift = lift;
+
+    // perf: lift 与 vvTop 都未变化时早退，跳过样式写入和瞳孔重测（visualViewport scroll 会高频触发）
+    if (lift === currentLift && vvTop === lastVvTop) return;
+
     if (lift > currentLift + 1) kbDir('up'); else if (lift < currentLift - 1) kbDir('down');
 
     root.style.setProperty('--aiui-lift', lift + 'px');
     root.style.setProperty('--aiui-vvt', vvTop + 'px');
-    
+    lastVvTop = vvTop;
+
     centers = null;
     scheduleGaze();
   }
@@ -1251,8 +1338,22 @@
     }
     return true;
   }
+  // perf: 返回键位置改由目标元素的属性变化驱动，轮询只做低频兜底
+  var backMO = null, backRaf = 0;
+  function scheduleAvoidBack() {
+    if (backRaf) return;
+    backRaf = requestAnimationFrame(function () { backRaf = 0; avoidBack(); });
+  }
+  function watchBackTargets() {
+    if (!backMO) backMO = new MutationObserver(scheduleAvoidBack);
+    var targets = [document.getElementById('bravais-wall'), document.getElementById('qpop'), document.getElementById('qpP2')];
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i]) backMO.observe(targets[i], { attributes: true, attributeFilter: ['aria-hidden', 'class', 'style'] });
+    }
+  }
   function avoidBack() {
     if (document.hidden || root.classList.contains('is-scrolling')) return;   // 滑动中不测量布局，避免强制回流
+    watchBackTargets();                                                       // perf: 墙面 / 二级页出现后再挂观察器
     var wall = document.getElementById('bravais-wall');
     var wallOn = !!(wall && wall.getAttribute('aria-hidden') !== 'true');
     if (wallOn !== root.classList.contains('is-wall')) root.classList.toggle('is-wall', wallOn);
@@ -1286,8 +1387,8 @@
       vv.addEventListener('resize', scheduleVP);
       vv.addEventListener('scroll', scheduleVP);
     }
-    window.addEventListener('resize', scheduleVP);
-    window.addEventListener('orientationchange', function () { setTimeout(scheduleVP, 300); });
+    window.addEventListener('resize', function () { readSafeArea(); scheduleVP(); });   // perf: 布局变化时重测安全区
+    window.addEventListener('orientationchange', function () { setTimeout(function () { readSafeArea(); scheduleVP(); }, 300); });
 
     // iOS 的 visualViewport 事件有时来得晚甚至不来，聚焦 / 失焦后补几次主动同步
     // 根因：输入框在屏幕底部，iOS 聚焦时发现它会被键盘盖住，于是把整页（含原生 scrollView）往上顶。
@@ -1333,6 +1434,7 @@
       burstVP();
       setTimeout(restoreScroll, 90);
     });
+    readSafeArea();                                           // perf: 首次同步前先量一次安全区
     scheduleVP();
   }
 
@@ -1525,7 +1627,8 @@
     bindOutsideTap();
     bindInput();
     bindViewport();
-    setInterval(avoidBack, 400);                              // 返回键出现 / 消失时自动让位
+    setInterval(avoidBack, 1000);                             // perf: 仅作兜底，主要靠 backMO 事件驱动
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchBackTargets);
     avoidBack();
 
     // 欢迎语：放进历史窗口，用户第一次展开时就能看到

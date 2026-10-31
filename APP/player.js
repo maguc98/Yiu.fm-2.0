@@ -122,8 +122,11 @@ function tick(ts){
     var end = (idx+1 < TS.length) ? TS[idx+1] : ((audio.duration || start + 5) - LYR_OFF);
     prog = Math.min(1, Math.max(0, (ct - start) / Math.max(0.1, end - start)));
     karaPaint(ct);
-    if (curMode === 'sonnet' && window.SonnetAdapter && typeof window.SonnetAdapter.drive === 'function') {
-        window.SonnetAdapter.drive(ct, TS, WT, LN);
+    // 可视化引擎驱动：Manager 转发给各适配器，未激活的适配器自己忽略（不再依赖 curMode，凝彩也走这里）
+    if (window.VisualizerManager) {
+        window.VisualizerManager.drive(ct);
+    } else if (curMode === 'sonnet' && window.SonnetAdapter && typeof window.SonnetAdapter.drive === 'function') {
+        window.SonnetAdapter.drive(ct, TS, WT, LN);   // Manager 未加载时的兜底
     }
     // 逐字歌词：最后一个字完全显示后再停留一小会儿，然后整句落下；尽量赶在下一句开始前落完
     if(WT[idx] && cur && cur._kara && curMode !== 'pan'){
@@ -252,8 +255,10 @@ function applyLRC(lrc) {
   idx = 0; prog = 0;
   if(AUDIO_ON && audio && TS.length) audio.currentTime = lyrSeekTime(0);
   refreshAll();
-  if (window.SonnetAdapter && typeof window.SonnetAdapter.loadLyrics === 'function') {
-      window.SonnetAdapter.loadLyrics(TS, WT, LN);
+  if (window.VisualizerManager) {
+      window.VisualizerManager.loadLyrics(TS, WT, LN);   // 转发给所有适配器（未激活的也缓存最新歌词）
+  } else if (window.SonnetAdapter && typeof window.SonnetAdapter.loadLyrics === 'function') {
+      window.SonnetAdapter.loadLyrics(TS, WT, LN);       // Manager 未加载时的兜底
   }
   updateAudioInfo();
   if(window.updateMusicPanel) window.updateMusicPanel();

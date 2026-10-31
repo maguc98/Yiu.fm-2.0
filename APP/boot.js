@@ -43,7 +43,11 @@ if ('serviceWorker' in navigator) {
   };
 })();
 
-/* ===== 商籁（Sonnet）初始化：SonnetAdapter 未加载时静默跳过 ===== */
-if (window.SonnetAdapter && typeof window.SonnetAdapter.init === 'function') {
+/* ===== 可视化引擎登记（商籁 / 凝彩）：只登记宿主元素、绑定音频事件，不创建 WebGL，也不改 #stage 的 mode 类。
+   真正创建发生在切到对应风格时（Sonnet 由 renderer.js 调 show()；凝彩由 VisualizerManager.switchTo('tempera')）。
+   适配器 / Manager 未加载时静默跳过。 ===== */
+if (window.VisualizerManager && typeof window.VisualizerManager.boot === 'function') {
+    window.VisualizerManager.boot();
+} else if (window.SonnetAdapter && typeof window.SonnetAdapter.init === 'function') {
     window.SonnetAdapter.init();
 }

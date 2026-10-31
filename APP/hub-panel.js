@@ -181,7 +181,13 @@
     g.style.width=w+"px";g.style.height=h+"px";
     g.style.borderRadius=cs.borderTopLeftRadius;
   }
+  var varsRaf = 0;
   function vars(){
+    // perf: 同一帧内多次 style 变化只同步一次
+    if(varsRaf) return;
+    varsRaf=requestAnimationFrame(function(){varsRaf=0;applyVars()});
+  }
+  function applyVars(){
     ["--hx","--hy","--tx","--ty"].forEach(function(k){
       var v=hub.style.getPropertyValue(k);
       if(v)g.style.setProperty(k,v);else g.style.removeProperty(k);
@@ -190,8 +196,10 @@
   new MutationObserver(function(){vars()}).observe(hub,{attributes:true,attributeFilter:["style"]});
   if(window.ResizeObserver)new ResizeObserver(function(){box()}).observe(hub);
   window.addEventListener("resize",function(){box()});
+  // perf: 只在动画结束后校一次盒子，动画期间不再反复测量
+  hub.addEventListener("transitionend",function(e){ if(e.target===hub) box(); });
   /* 打开瞬间再校一次：此时 #hub 可能刚被其它脚本改过尺寸 */
-  new MutationObserver(function(){box();vars()}).observe(document.body,{attributes:true,attributeFilter:["class"]});
+  new MutationObserver(function(){vars()}).observe(document.body,{attributes:true,attributeFilter:["class"]});
   box();vars();
 })();
 

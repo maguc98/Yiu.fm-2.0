@@ -23,6 +23,7 @@
   var lyricsDirty = false;     // 运行时里的歌词是否落后于 pendingLyrics
   var lastRenderedCt = NaN;    // 暂停状态下上一次补画的时间点
   var segmenter = null;
+  var readyWaiters = [];       // VisualizerManager：等「创建完成 / 失败 / 取消」的回调
 
   var valueOf = function (initial) { var v = initial; return { get: function () { return v; }, set: function (n) { v = n; return n; } }; };
   var emptySpectrum = new Uint8Array(64);
@@ -53,29 +54,40 @@
   var defaultTheme = { name: 'Default', backgroundColor: 0x000000, primaryColor: 0xffffff, secondaryColor: 0x8899ff, accentColor: 0xffcc44, fontStyle: 'sans', fontFamilyStack: [], fontWeight: 800, animationIntensity: 'normal', wordColors: [], lyricsIcons: [] };
 
   var defaultTuning = {
-    typographyMotion: 1, cameraIntensity: 1, mgDensity: 0.5,
-    showBackgroundMg: true, showFixedGeo: true, showBackgroundDecor: true,
-    showGuide: true, showOnlyText: false, showGiantDecorativeText: true,
+    typographyMotion: 0, cameraIntensity: 0, mgDensity: 0.5,      // perf: 60FPS 基线，静止字形与镜头
+    showBackgroundMg: false, showFixedGeo: false, showBackgroundDecor: false,   // perf: 关闭全部背景层
+    showGuide: true, showOnlyText: false, showGiantDecorativeText: false,       // perf: 关闭巨型装饰字
     outerFrameMode: 'full', postProcessEnabled: false,
-    edgeDispersion: 0.8, edgeDispersionBand: 0.7,    // 上下两端 RGB 色散：强度 0..2；范围 0.1..1（从上下边往里延伸多远，占半屏高度）
-    textureResolution: Math.min(2, window.devicePixelRatio || 1), // 适配 Retina，防模糊
-    enableTransitions: true, staticMode: false
+    edgeDispersion: 0, edgeDispersionBand: 0,    // perf: 关闭上下两端 RGB 色散
+    textureResolution: Math.min(4, Math.max(1, window.devicePixelRatio || 1)), // perf: 跟 DPR 走保证 Retina 清晰，上限 4x（4K）
+    enableTransitions: false, staticMode: false  // perf: 关闭转场
   };
 
   // ---------- 实时配置（UI 面板 → 引擎） ----------
   var STORE_KEY = 'sonnetCfg.v1';
   var THEME_COLORS = { backgroundColor: 1, primaryColor: 1, secondaryColor: 1, accentColor: 1 };
   var THEME_OTHER  = { fontWeight: 1, animationIntensity: 1 };
-  var EXTRA_DEFAULT = { lyricsFontScale: 1, smartBeatEnabled: false, interludeDots: true };   // interludeDots：长间奏里用圆点代替“傻等”
+  var EXTRA_DEFAULT = { lyricsFontScale: 1, smartBeatEnabled: false, interludeDots: false };   // perf: 关闭间奏圆点，省掉空档里的额外场景
   // 全程原地修改（Object.assign）：若引擎持有同一个对象引用，改动会直接生效
   var curTuning = Object.assign({}, defaultTuning);
   var curTheme  = Object.assign({}, defaultTheme);
   var curExtra  = Object.assign({}, EXTRA_DEFAULT);
   // 边缘 RGB 色闪：由适配器自己画的叠加层，不经过引擎
-  var FX_DEFAULT = { rgbEdge: true, rgbEdgeIntensity: 0.7, rgbEdgeWidth: 0.14, rgbEdgeRate: 1 };
+  var FX_DEFAULT = { rgbEdge: false, rgbEdgeIntensity: 0.7, rgbEdgeWidth: 0.14, rgbEdgeRate: 1 };   // perf: 关闭边缘 RGB 色闪叠加层
   var curFx = Object.assign({}, FX_DEFAULT);
   var lastProgram = null, lastSeed = null, swapT = 0, warned = false;
   var builtWithDots = null;    // 上一次编译歌词时，间奏圆点是否开着（null = 还没编译过）
+
+  // perf: 动态性能调节器（governor）接线状态
+  var currentModulation = {};         // 用户 modulation 基线（adapter 暂无 modulation UI，从空对象起步）
+  var currentTuning = curTuning;      // 用户 tuning 基线（与 curTuning 同一引用，原地更新即同步）
+  var governor = null;                // SonnetPerfGovernor 实例，runtime 创建后接线
+  var tuneDebounceT = 0;              // perf: tuning 变化 debounce 300ms（setTuning 会 rebuildScenes ~300ms）
+  // perf: 动态性能调节开关的 localStorage 键（与设置面板开关共用）
+  var DYNAMIC_KEY = 'folia.sonnet.dynamic';
+  function dynamicEnabled() {
+    try { return localStorage.getItem(DYNAMIC_KEY) !== '0'; } catch (_) { return true; }
+  }
 
   function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function toInt(v) {
@@ -107,6 +119,11 @@
     try {
       var raw = localStorage.getItem(STORE_KEY); if (!raw) return;
       var s = splitPatch(JSON.parse(raw));
+      // perf: 历史配置里存过低分辨率（<1x，来自早期 60FPS 基线的 textureResolution 上限 1x），
+      // 会让画面发虚/锯齿。这里丢弃 <1 的旧值，沿用新的清晰默认值（≥1 的用户值仍保留）。
+      if (s.tuning && isFinite(+s.tuning.textureResolution) && +s.tuning.textureResolution < 1) {
+        delete s.tuning.textureResolution;
+      }
       Object.assign(curTuning, s.tuning); Object.assign(curTheme, s.theme); Object.assign(curExtra, s.extra); Object.assign(curFx, s.fx);
     } catch (_) {}
   }
@@ -134,6 +151,22 @@
     }, 120);
   }
 
+  // perf: 用户改 modulation 基线：governor 运行中同步基线，否则直接热替换到 runtime（setModulation 无重建成本）
+  function onUserModulationChange(nextMod) {
+    currentModulation = nextMod;
+    if (governor && governor.running) governor.setUserModulation(nextMod);
+    else if (runtime) runtime.setModulation(nextMod);
+  }
+  // perf: 用户改 tuning 基线：setTuning 会同步 rebuildScenes ~300ms，拖滑块时 debounce 300ms 再调
+  function onUserTuningChange(nextTuning) {
+    currentTuning = nextTuning;
+    clearTimeout(tuneDebounceT);
+    tuneDebounceT = setTimeout(function () {
+      if (governor && governor.running) governor.setUserTuning(nextTuning);
+      else if (runtime) runtime.setTuning(nextTuning);
+    }, 300);
+  }
+
   function pushConfig(s) {
     rgbSync();                             // 色闪开关 / 参数改了：立刻生效
     // 间奏圆点开关改了：歌词要重新编译才生效（和上次编译时的开关状态比较，没变就不动）
@@ -157,6 +190,8 @@
         if (!warned) { warned = true; console.info('[Sonnet] runtime 无 updateConfig，走兜底路径；控制台执行 SonnetAdapter.probe() 查看接口'); }
       }
       if (s && (has(s.tuning, 'edgeDispersion') || has(s.tuning, 'edgeDispersionBand'))) scheduleTuningRebuild();
+      // perf: tuning 变化同步 governor 基线（governor 运行中走 debounce 300ms，L3/L4 降级后据此恢复；非色散键靠上面原地更新实时生效）
+      if (governor && governor.running && s && Object.keys(s.tuning).length) onUserTuningChange(curTuning);
       if (rt.options && rt.options.paused) rt.renderOnce();    // 暂停中也立刻看到效果
     } catch (e) { console.warn('[Sonnet] 应用配置失败', e); }
   }
@@ -172,6 +207,7 @@
     var s = { tuning: Object.assign({}, defaultTuning), theme: Object.assign({}, defaultTheme), extra: Object.assign({}, EXTRA_DEFAULT), fx: Object.assign({}, FX_DEFAULT) };
     Object.assign(curTuning, s.tuning); Object.assign(curTheme, s.theme); Object.assign(curExtra, s.extra); Object.assign(curFx, s.fx);
     saveConfig(); pushConfig(s);
+    scheduleResolutionRebuild();   // perf: textureResolution 是 host 重建键，恢复默认后需重建画面才生效
   }
   // 在 Web Inspector 控制台执行，直接看运行时暴露了哪些接口
   function probe() {
@@ -186,7 +222,8 @@
 
 
   // ---------- 屏幕边缘 RGB 色闪（独立叠加层，不依赖引擎） ----------
-  var rgb = { cv: null, cx: null, timer: 0, raf: 0, endAt: 0, lastDraw: 0, running: false, line: -1, boost: 1 };
+  var rgb = { cv: null, cx: null, timer: 0, raf: 0, endAt: 0, lastDraw: 0, running: false, line: -1, boost: 1,
+              fitW: 2, fitH: 2, top: 0 };
 
   function rgbEnsure() {
     if (rgb.cv) return rgb.cv;
@@ -197,15 +234,24 @@
     return cv;
   }
   function rgbClear() { if (rgb.cx && rgb.cv) rgb.cx.clearRect(0, 0, rgb.cv.width, rgb.cv.height); }
+  // perf: 每次 burst 只量一次几何（尺寸 + 顶部偏移），一次 getBoundingClientRect 同时拿到两者，
+  // 避免 rgbDraw 每帧都强制同步布局。
+  function rgbMeasure() {
+    var cv = rgb.cv; if (!cv) return;
+    var r = cv.getBoundingClientRect();
+    rgb.fitW = Math.max(2, Math.round(r.width / 2));
+    rgb.fitH = Math.max(2, Math.round(r.height / 2));
+    rgb.top = r.top;
+  }
   function rgbFit() {                                      // 半分辨率：够用，也省电
-    var cv = rgb.cv, w = Math.max(2, Math.round(cv.clientWidth / 2)), h = Math.max(2, Math.round(cv.clientHeight / 2));
-    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    var cv = rgb.cv;
+    if (cv.width !== rgb.fitW || cv.height !== rgb.fitH) { cv.width = rgb.fitW; cv.height = rgb.fitH; }
   }
   function rgbDraw() {
     var cx = rgb.cx, cv = rgb.cv, W, H, i;
     rgbFit(); W = cv.width; H = cv.height;
     // #stage 底部比屏幕多出一截（bottom:-100px）：只在真正看得见的区域里放色闪
-    var top = cv.getBoundingClientRect().top;
+    var top = rgb.top;
     var VH = Math.max(8, Math.min(H, Math.round((window.innerHeight - top) / 2)));
     cx.clearRect(0, 0, W, H);
     cx.globalCompositeOperation = 'lighter';               // 红+绿+蓝叠在一起会变白，和截图里的白条一致
@@ -236,6 +282,7 @@
   }
   function rgbBurst(boost) {
     if (!rgb.running || !rgbEnsure()) return;
+    rgbMeasure();                                        // perf: 每次闪光前量一次几何即可
     rgb.boost = boost || 1;
     rgb.endAt = performance.now() + 90 + Math.random() * 140;
     if (!rgb.raf) rgb.raf = requestAnimationFrame(rgbFrame);
@@ -253,7 +300,10 @@
     rgbClear();
   }
   // 不绑定音频播放状态：音乐可能不是走 <audio>（比如 ios-music），只要商籁在显示、开关开着、页面可见就闪
-  function rgbSync() { if (active && !suspended && curFx.rgbEdge && !document.hidden) rgbStart(); else rgbStop(); }
+  function rgbSync() {
+    if (!curFx.rgbEdge) { rgbStop(); return; }   // perf: 关闭时立即取消 rAF 并清掉叠加层
+    if (active && !suspended && !document.hidden) rgbStart(); else rgbStop();
+  }
   document.addEventListener('visibilitychange', function () { rgbSync(); });
   // 面板里改色闪参数时，立刻预览一次
   function rgbPreview() { rgbSync(); rgbBurst(1.2); }
@@ -396,6 +446,15 @@
     return dots ? withInterludes(out, sung) : out;
   }
 
+  function flushReady() {
+    var w = readyWaiters; readyWaiters = [];
+    for (var i = 0; i < w.length; i++) { try { w[i](); } catch (_) {} }
+  }
+  function whenReady() {
+    if (runtime || !creating) return Promise.resolve();
+    return new Promise(function (res) { readyWaiters.push(res); });
+  }
+
   function reportFailure() {
     // renderer.js 里定义：商籁起不来时退回默认风格，免得一片空白
     try { if (typeof window.__sonnetFailed === 'function') window.__sonnetFailed(); } catch (_) {}
@@ -405,6 +464,7 @@
     if (!creating) return;
     try { creating.ctrl.abort(); } catch (_) {}
     creating = null;
+    flushReady();
   }
 
   // Ticker 只在「显示中 且 在播放」时运行；其余时间停掉（setPaused(true) 会再补画一帧）
@@ -450,13 +510,30 @@
     }
   }
 
-  function createRuntime() {
+  function createRuntime(afterLoad) {
     if (runtime || creating) return;
     var host = getHost();
     var RT = window.SonnetRuntime;
+    // 按需加载：引擎脚本（sonnet.js + 性能调节器）第一次用到时才下载；加载期间 creating 占位，whenReady / isAlive 照常等待
+    if (!RT && !afterLoad && host && window.__EngineLoader) {
+      var lt = { ctrl: new AbortController() };
+      creating = lt;
+      window.__EngineLoader.load('sonnet').then(function () {
+        if (creating !== lt) return;          // 加载期间被 hide() / destroy() 取消了
+        creating = null;
+        createRuntime(true);
+      }, function (e) {
+        if (creating === lt) creating = null;
+        console.error('[Sonnet] 引擎脚本加载失败', e);
+        reportFailure();
+        flushReady();
+      });
+      return;
+    }
     if (!host || !RT || !RT.SonnetPixiRuntime || !RT.compileSonnetProgram) {
       console.error('[Sonnet] 无法创建：' + (!host ? '找不到 #sonnetHost' : 'window.SonnetRuntime 不存在（检查 sonnet.js 是否加载）'));
       reportFailure();
+      flushReady();
       return;
     }
 
@@ -479,6 +556,7 @@
       console.error('[Sonnet] 编译初始歌词失败', e);
       if (creating === token) creating = null;
       reportFailure();
+      flushReady();
       return;
     }
 
@@ -493,7 +571,7 @@
       program: program,
       songSeed: seed,
       theme: curTheme,
-      tuning: curTuning,
+      tuning: effTuning(),
       smartBeatEnabled: false,
       staticMode: false,
       transparentBackground: true,
@@ -503,15 +581,30 @@
     }).then(function (rt) {
       if (creating !== token) {            // 创建期间被 hide() / destroy() 取消了
         try { rt.destroy(); } catch (_) {}
+        flushReady();
         return;
       }
       creating = null;
       runtime = rt;
+      // perf: 接线动态性能调节器（governor 脚本须先于本文件加载）
+      if (window.SonnetPerfGovernor) {
+        governor = new window.SonnetPerfGovernor({
+          runtime: rt,
+          userModulation: currentModulation,
+          userTuning: currentTuning,
+          targetFps: 60,
+          onExit: function () { (window.setStyle || window.setVisualStyle || function () {}).call(window, 'scatter'); }
+        });
+        // perf: 面板开关在 runtime 创建前就绪时，这里按开关状态补一次 start
+        if (dynamicEnabled()) governor.start();
+      }
       if (lyricsDirty) applyLyrics();      // 创建期间又来了新歌词
       syncTime();
       applyRunState();
+      flushReady();
     }).catch(function (err) {
       if (creating === token) creating = null;
+      flushReady();
       if (err && err.name === 'AbortError') return;   // 主动取消，不算失败
       console.error('[Sonnet] create 失败:', err);
       reportFailure();
@@ -530,8 +623,16 @@
 
   // ---------------- 对外接口 ----------------
 
-  function init(hostEl) {
+  function init(hostEl, opts) {
+    // 兼容旧调用：传进来的是 #stage 而不是 #sonnetHost
+    if (hostEl && hostEl.id === 'stage') hostEl = document.getElementById('sonnetHost') || hostEl;
     hostElement = hostEl || hostElement || document.getElementById('sonnetHost');
+    // opts.theme / opts.tuning：原地合并进当前配置（不写 localStorage；颜色键支持 '#rrggbb'）
+    if (opts && typeof opts === 'object') {
+      var k;
+      if (opts.theme) for (k in opts.theme) if (has(opts.theme, k)) curTheme[k] = THEME_COLORS[k] ? toInt(opts.theme[k]) : opts.theme[k];
+      if (opts.tuning) for (k in opts.tuning) if (has(opts.tuning, k)) curTuning[k] = opts.tuning[k];
+    }
     bindAudio();
     return Promise.resolve();            // 不在这里创建 WebGL：等用户真的切到商籁再 show()
   }
@@ -560,6 +661,8 @@
     active = false;
     rgbStop();
     abortCreating();
+    // perf: 停掉 governor 并恢复 L0，避免 rAF 循环泄漏
+    if (governor) { try { governor.stop(); } catch (_) {} governor = null; }
     if (runtime) {
       try { runtime.destroy(); } catch (e) { console.warn('[Sonnet] destroy 失败', e); }
       runtime = null;
@@ -567,6 +670,50 @@
     var host = getHost();
     if (host) host.innerHTML = '';       // 保险：清掉残留画布
     lastRenderedCt = NaN;
+  }
+
+  // perf: 手动分辨率调节 —— textureResolution 是 host 重建键（决定 WebGL 上下文 / canvas 分辨率），
+  // 改它 setTuning 不生效，必须销毁并重建整个 runtime。拖滑块时 debounce 400ms，松手才真正重建一次。
+  var resRebuildT = 0;
+  function scheduleResolutionRebuild() {
+    clearTimeout(resRebuildT);
+    resRebuildT = setTimeout(function () {
+      if (!runtime || !active) return;          // perf: 未创建或未显示时不动，下次 create 自然用新值
+      if (governor) { try { governor.stop(); } catch (_) {} governor = null; }
+      var rt = runtime;
+      runtime = null; creating = null;
+      flushReady();
+      try { rt.destroy(); } catch (_) {}
+      var host = getHost();
+      if (host) host.innerHTML = '';
+      lastRenderedCt = NaN;
+      createRuntime();                           // perf: 重建 runtime + governor，用已更新的 curTuning
+    }, 400);
+  }
+
+  // 全局渲染分辨率倍率（开发者选项里设置，localStorage 'qt_res_mul'；1 = 不缩放）。只在 <1 时才改动引擎参数，默认行为不变
+  function resMul() {
+    var m = window.__renderResMul;
+    if (m == null) { try { m = parseFloat(localStorage.getItem('qt_res_mul')); } catch (_) { m = NaN; } }
+    return (m >= 0.25 && m < 1) ? m : 1;
+  }
+  // 创建运行时用的 tuning：倍率为 1 时就是 curTuning 本身；<1 时给一份拷贝并缩小 textureResolution（不污染保存的基线 / 面板显示）
+  function effTuning() {
+    var m = resMul();
+    if (m === 1) return curTuning;
+    var t = Object.assign({}, curTuning);
+    t.textureResolution = Math.max(0.25, Math.min(4, (+t.textureResolution || 1) * m));
+    return t;
+  }
+
+  // perf: 设置纹理渲染分辨率（0.25 ~ 2.0，1 为屏幕原生），更新基线并（若在运行中）重建画面生效
+  function setTextureResolution(res) {
+    res = +res;
+    if (!isFinite(res) || res <= 0) return getConfig();
+    curTuning.textureResolution = Math.max(0.25, Math.min(4, res));
+    saveConfig();
+    scheduleResolutionRebuild();
+    return getConfig();
   }
 
   function loadLyrics(TS, WT, LN) {
@@ -617,6 +764,14 @@
   }
 
   window.SonnetAdapter = { init: init, show: show, hide: hide, destroy: destroy, drive: drive, loadLyrics: loadLyrics, state: state, syncLyrics: syncFromGlobals, setSuspended: setSuspended,
+                           isAlive: function () { return !!(runtime || creating); },   // VisualizerManager 用
+                           isActive: function () { return active; },
+                           whenReady: whenReady,
                            updateConfig: updateConfig, getConfig: getConfig, resetConfig: resetConfig, probe: probe,
+                           setUserModulation: onUserModulationChange, setUserTuning: onUserTuningChange,
+                           setTextureResolution: setTextureResolution,
+                           applyResMul: scheduleResolutionRebuild,   // 全局分辨率倍率变化：运行中则重建一次，未显示则下次创建时生效
                            interlude: INTERLUDE, buildLines: function (T, W, L) { return toSonnetLines(T, W, L); }, burst: function () { rgbBurst(1.6); } };
+  // perf: 暴露 governor 实例（可能是 null，runtime 创建后才接线），供设置面板开关 start/stop
+  Object.defineProperty(window.SonnetAdapter, 'governor', { get: function () { return governor; } });
 })();

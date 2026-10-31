@@ -524,7 +524,7 @@
   if (fpsUI) fpsUI.remove(); // 若页面里有旧版节点，用新版替换
   fpsUI = document.createElement('div');
   fpsUI.id = 'fpsIndicator';
-  fpsUI.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:99997;' +
+  fpsUI.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 80px);right:16px;z-index:99997;' +
     'opacity:0;pointer-events:none;transition:opacity calc(.3s/var(--ui-spd,1)) ease;user-select:none;-webkit-user-select:none;';
   fpsUI.innerHTML =
     '<div class="fpsCap">' +
@@ -621,7 +621,14 @@
 
   // 只有显示时才接收触摸；隐藏时必须放行，否则右上角会有一块看不见却点不动的区域
   var activeTimer = 0;
+  // 默认位置：关闭后再次显示时回到这里（拖动过的位置不保留）
+  function resetFpsPos() {
+    fpsUI.style.left = 'auto';
+    fpsUI.style.right = '16px';
+    fpsUI.style.top = 'calc(env(safe-area-inset-top,0px) + 80px)';
+  }
   function showFpsUI(msg, isError) {
+    if (fpsUI.style.opacity !== '1') resetFpsPos();   // 从隐藏变为显示时才复位，显示期间不打断拖动
     fpsText.textContent = msg;
     fpsUI.style.opacity = '1';
     fpsUI.style.pointerEvents = 'auto';
@@ -641,6 +648,7 @@
   // 3. 帧率与卡顿检测（解耦：rAF 只计数，setInterval 负责渲染）
   var fps = 60, frames = 0, lastTime = performance.now(), lastWarnTime = 0;
   var origRAF = window.requestAnimationFrame; // 打补丁之前保存，计数循环不经过溯源包装
+  var origCancel = window.cancelAnimationFrame;
 
   document.addEventListener('visibilitychange', function(){
     lastTime = performance.now();
@@ -687,36 +695,51 @@
   }
   restartFpsTimer();
 
-  // 拦截 rAF 抓取卡顿溯源
+  // perf: 拦截 rAF 抓取卡顿溯源；同时合并 hbLpJS 的低功耗限帧器，避免双层包装
+  var rafSeq = 1e9, rafMap = Object.create(null);
   window.requestAnimationFrame = function(cb) {
-    if (!state.jank) return origRAF.call(window, cb);
-    return origRAF.call(window, function(ts) {
-      var t0 = performance.now();
-      try {
-        if (typeof cb === 'function') cb(ts);
-      } finally {
-        var cost = performance.now() - t0;
-        // 注意：不能在 finally 里 return，否则会吞掉回调抛出的异常
-        if (cost > 16 && Date.now() - lastWarnTime >= 1500) {
-          lastWarnTime = Date.now();
-          var lines = (new Error().stack || '').split('\n');
-          var codeLoc = '', mc = 0;
-          for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim();
-            if (line.indexOf('at ') === 0) { codeLoc += '\n  ' + line; mc++; if (mc >= 3) break; }
-          }
-          if (!mc) {
-            var raw = lines.filter(function(l){ return l.trim(); }).slice(0, 3);
-            if (raw.length) codeLoc = '\n  ' + raw.join('\n  ');
-          }
-          if (!codeLoc) codeLoc = '未知位置';
-          if (window.console && console.warn) {
-            console.warn('[卡顿溯源] rAF 阻塞 ' + Math.round(cost) + 'ms (函数: ' + ((cb && cb.name) || 'anon') + ')\n位置: ' + codeLoc);
+    if (!state.jank && !window.__rafCap) return origRAF.call(window, cb);
+    var id = ++rafSeq;
+    (function go() {
+      rafMap[id] = origRAF.call(window, function(ts) {
+        if (!(id in rafMap)) return;
+        var cap = window.__rafCap;
+        if (cap && !cap(ts)) { go(); return; }
+        delete rafMap[id];
+        if (!state.jank) { if (typeof cb === 'function') cb(ts); return; }
+        var t0 = performance.now();
+        try {
+          if (typeof cb === 'function') cb(ts);
+        } finally {
+          var cost = performance.now() - t0;
+          // 注意：不能在 finally 里 return，否则会吞掉回调抛出的异常
+          if (cost > 16 && Date.now() - lastWarnTime >= 1500) {
+            lastWarnTime = Date.now();
+            var lines = (new Error().stack || '').split('\n');
+            var codeLoc = '', mc = 0;
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].trim();
+              if (line.indexOf('at ') === 0) { codeLoc += '\n  ' + line; mc++; if (mc >= 3) break; }
+            }
+            if (!mc) {
+              var raw = lines.filter(function(l){ return l.trim(); }).slice(0, 3);
+              if (raw.length) codeLoc = '\n  ' + raw.join('\n  ');
+            }
+            if (!codeLoc) codeLoc = '未知位置';
+            if (window.console && console.warn) {
+              console.warn('[卡顿溯源] rAF 阻塞 ' + Math.round(cost) + 'ms (函数: ' + ((cb && cb.name) || 'anon') + ')\n位置: ' + codeLoc);
+            }
           }
         }
-      }
-    });
+      });
+    })();
+    return id;
   };
+  window.cancelAnimationFrame = function(id) {
+    if (id in rafMap) { origCancel.call(window, rafMap[id]); delete rafMap[id]; }
+    else origCancel.call(window, id);
+  };
+  window.__rafWrapped = true;
 
   // 4. 悬浮窗日志
   var floatLog = document.createElement('div');
@@ -1051,6 +1074,53 @@
       contentWrap.appendChild(perfWrap);
     }
 
+    // A2. 全局渲染分辨率：在各引擎自己的分辨率设置上再乘一个比例（商籁 / 凝彩 / 绘光 / 云阶），5 档滑块
+    (function () {
+      var vals = [0.25, 0.35, 0.5, 0.75, 1];            // 滑块位置 0..4，越往右越清晰
+      function cur() { var v = parseFloat(lsGet('qt_res_mul')); return (v >= 0.25 && v < 1) ? v : 1; }
+      function idxOf(v) {
+        var bi = 0, bd = 9;
+        vals.forEach(function (x, i) { var d = Math.abs(x - v); if (d < bd) { bd = d; bi = i; } });
+        return bi;
+      }
+      function pct(v) { return Math.round(v * 100) + '%'; }
+      window.__renderResMul = cur();
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:4px;';
+      var start = idxOf(cur());
+      wrap.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">' +
+          '<span style="font-size:14px;">渲染分辨率（全局）</span>' +
+          '<em id="devResMulV" style="font-style:normal;font-size:12px;color:var(--sub);">' + pct(vals[start]) + '</em>' +
+        '</div>' +
+        '<input type="range" id="devResMul" min="0" max="4" step="1" value="' + start + '" style="width:100%;">' +
+        '<div style="display:flex;justify-content:space-between;padding:0 2px;font-size:11px;opacity:.55;">' +
+          vals.map(function (v) { return '<span>' + pct(v) + '</span>'; }).join('') +
+        '</div>';
+      contentWrap.appendChild(wrap);
+      var slider = wrap.querySelector('#devResMul'), labelEl = wrap.querySelector('#devResMulV');
+      if (typeof wrapRange === 'function') { try { wrapRange(slider); } catch (_) {} }
+      if (typeof sync === 'function') { try { sync(slider); } catch (_) {} }
+      function apply(v) {
+        lsSet('qt_res_mul', String(v));
+        window.__renderResMul = v;
+        ['SonnetAdapter', 'TemperaAdapter', 'LumiereAdapter', 'PartitaAdapter'].forEach(function (n) {
+          var A = window[n];
+          if (A && typeof A.applyResMul === 'function') { try { A.applyResMul(); } catch (_) {} }
+        });
+      }
+      // 拖动时只更新数字；松手（change）才真正应用，避免拖一下就重建一次画面
+      slider.addEventListener('input', function () {
+        labelEl.textContent = pct(vals[+this.value]);
+        if (typeof sync === 'function') { try { sync(this); } catch (_) {} }
+      });
+      slider.addEventListener('change', function () { apply(vals[+this.value]); });
+      var note = document.createElement('div');
+      note.style.cssText = 'font-size:11px;opacity:.55;padding:0 2px;';
+      note.textContent = '在各动效自己的分辨率设置上再乘这个比例，越低越省电；松手后当前画面会重建一次。云阶是网页元素，低档位时会变得更模糊。';
+      contentWrap.appendChild(note);
+    })();
+
     // B. 卡顿检测
     addSwitch('devJank', '卡顿检测', state.jank, function() {
       state.jank = this.checked;
@@ -1126,6 +1196,79 @@
     
     addDelaySlider('dev_bgSwapDelay', '背景换图等待', 1.0);
     addDelaySlider('dev_coverSwapDelay', '封面换图等待', 1.0);
+
+    // E3. 命令窗口 · 键盘与高度
+    (function(){
+      var tit = document.createElement('div');
+      tit.style.cssText = 'font-size:13px;color:var(--sub);margin-top:10px;padding:0 2px;';
+      tit.textContent = '命令窗口 · 键盘与高度';
+      contentWrap.appendChild(tit);
+
+      // 模式：跟随键盘 / 手动高度 / 自动（记住高度，之后不再动）
+      var modes = [['follow','跟随键盘'],['manual','手动高度'],['auto','自动']];
+      var cur = lsGet('dev_cm_mode'); if (!cur) cur = 'auto';
+      var mrow = document.createElement('div');
+      mrow.style.cssText = 'display:flex;gap:8px;';
+      var mbtns = {};
+      modes.forEach(function(m){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip';
+        b.style.cssText = 'flex:1;min-width:0;padding:10px 0;font-size:13px;';
+        b.textContent = m[1];
+        b.onclick = function(){ lsSet('dev_cm_mode', m[0]); paintModes(); };
+        mbtns[m[0]] = b; mrow.appendChild(b);
+      });
+      function paintModes(){
+        var c = lsGet('dev_cm_mode') || 'auto';
+        Object.keys(mbtns).forEach(function(k){
+          mbtns[k].style.color = (k === c) ? '#8fb0ff' : '';
+          mbtns[k].style.border = (k === c) ? '1px solid rgba(143,176,255,.5)' : '';
+        });
+        hRow.style.display = (c === 'manual') ? 'flex' : 'none';
+      }
+      contentWrap.appendChild(mrow);
+
+      function addNumSlider(id, label, min, max, step, def, unit, parent){
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:4px;';
+        var saved = parseFloat(lsGet(id)); if (isNaN(saved)) saved = def;
+        wrap.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">' +
+            '<span style="font-size:14px;">' + label + '</span>' +
+            '<em id="' + id + 'V" style="font-style:normal;font-size:12px;color:var(--sub);">' + saved + unit + '</em>' +
+          '</div>' +
+          '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + saved + '" style="width:100%;">';
+        (parent || contentWrap).appendChild(wrap);
+        var slider = wrap.querySelector('#' + id), labelEl = wrap.querySelector('#' + id + 'V');
+        if (typeof wrapRange === 'function') wrapRange(slider);
+        if (typeof sync === 'function') { slider.step = 'any'; sync(slider); }
+        slider.addEventListener('input', function(){
+          var val = Math.round(parseFloat(this.value) / step) * step;
+          labelEl.textContent = val + unit;
+          lsSet(id, String(val));
+          if (typeof sync === 'function') sync(this);
+        });
+        return wrap;
+      }
+
+      var hRow = document.createElement('div');
+      hRow.style.cssText = 'display:none;flex-direction:column;';
+      contentWrap.appendChild(hRow);
+      addNumSlider('dev_cm_height', '窗口高度（手动）', 200, 700, 10, 360, 'px', hRow);
+
+      addNumSlider('dev_cm_up',   '键盘弹出 · 窗口收起速度', 0, 800, 10, 280, 'ms');
+      addNumSlider('dev_cm_down', '键盘收起 · 窗口展开速度', 0, 800, 10, 320, 'ms');
+      addNumSlider('dev_cm_wait', '键盘收起后等待', 0, 1000, 50, 300, 'ms');
+
+      var rst = document.createElement('button');
+      rst.type = 'button'; rst.className = 'chip';
+      rst.style.cssText = 'width:100%;margin-top:4px;padding:10px 0;font-size:13px;';
+      rst.textContent = '重新测量键盘高度';
+      rst.onclick = function(){ try { localStorage.removeItem('dev_cm_kbH'); } catch(_) {} rst.textContent = '已清除，下次点输入框时重新测量'; setTimeout(function(){ rst.textContent = '重新测量键盘高度'; }, 1800); };
+      contentWrap.appendChild(rst);
+
+      paintModes();
+    })();
 
     // F. 按钮组
     var btnWrap = document.createElement('div');

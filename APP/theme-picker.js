@@ -61,7 +61,8 @@
   }
 
   function renderCarousel() {
-    carousel.innerHTML = ''; cards = [];
+    var frag = document.createDocumentFragment();   // perf: 先在 fragment 里组装，最后一次性插入
+    cards = [];
     THEMES.forEach(function(t, i) {
       var card = document.createElement('div');
       card.className = 'tp-card'; card.dataset.idx = i;
@@ -69,13 +70,16 @@
         + '<button type="button" class="tp-del" aria-label="删除主题"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg><span>删除</span></button>';
       var c = t[1];
       card.style.background = 'linear-gradient(160deg, '+c[0]+', '+c[1]+', '+c[2]+', '+c[3]+')';
-      carousel.appendChild(card); cards.push(card);
+      frag.appendChild(card); cards.push(card);
     });
 
     var addCard = document.createElement('div');
     addCard.className = 'tp-card add-card';
     addCard.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>添加新主题</span>';
-    carousel.appendChild(addCard); cards.push(addCard);
+    frag.appendChild(addCard); cards.push(addCard);
+
+    carousel.innerHTML = '';
+    carousel.appendChild(frag);
 
     cards.forEach(function(card, index) {
       var isTheme = index < THEMES.length;
@@ -142,8 +146,11 @@
     clearTimeout(settleTimer);
     if (suspend || pendingTheme < 0 || pendingTheme === window.theme || !menu.classList.contains('show')) return;
     window.theme = pendingTheme;
-    if (typeof applyPreset === "function") applyPreset(window.theme);
-    if (typeof reqBg === "function") reqBg(true);
+    var run = function() {
+      if (typeof applyPreset === "function") applyPreset(window.theme);
+      if (typeof reqBg === "function") reqBg(true);
+    };
+    if (window.themeXfade) window.themeXfade(run); else run();   /* 套一层交叉淡化，主题不再一下子跳过去 */
   }
   carousel.addEventListener('scrollend', commitTheme);
 
@@ -365,3 +372,58 @@
 })();
 
 
+
+
+/* =========================================================
+ * 主题切换过渡（themeXfade）
+ * 以前：背景 / 面板底色在同一帧里全部瞬间换掉，所以看起来「跳一下」。
+ * 现在：1) 换主题之前，把 #bgf / #bg / #dimv 当前的样子拍成一层静态副本盖在上面；
+ *       2) 照常换主题；3) 副本淡出（约 0.5 秒），新旧背景交叉过渡；
+ *       4) 同时给面板 / 卡片 / 胶囊的底色加上颜色过渡（浅色 <-> 深色切换时不再硬切）。
+ * 图片主题自己有「圆形扩散」换图转场（window.__bgSwap），那种情况不叠这层，避免冲突。
+ * ========================================================= */
+(function(){
+  var st=document.createElement("style");
+  st.textContent=
+    'body.theme-xf :is(.dock,.lg-bg,.card,.panel,.chip,.nb,#cdock,#mini,#hbTools,#hback){'+
+      'transition:background-color .5s ease,color .4s ease,border-color .5s ease,box-shadow .5s ease!important}'+
+    'body.theme-xf #hub::before{transition:background-color .5s ease,box-shadow .5s ease!important}';
+  document.head.appendChild(st);
+  var cleanT=0;
+  window.themeXfade=function(fn){
+    var stage=document.getElementById("stage"),dur=500;
+    try{ if(typeof uiT==="function")dur=uiT(500) }catch(e){}
+    var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+    if(!stage||reduce||!stage.animate){fn();return}
+    var old=document.getElementById("themeXf");if(old)old.remove();
+    var sr=stage.getBoundingClientRect(),ov=document.createElement("div");
+    ov.id="themeXf";ov.style.cssText="position:absolute;inset:0;overflow:hidden;pointer-events:none;";
+    var anchor=null;
+    ["bgf","bg","dimv"].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      var cs=getComputedStyle(el);if(cs.display==="none")return;
+      var hasImg=cs.backgroundImage&&cs.backgroundImage!=="none";
+      var hasCol=cs.backgroundColor&&!/rgba?\(0,\s*0,\s*0,\s*0\)|transparent/.test(cs.backgroundColor);
+      anchor=el;
+      if(!hasImg&&!hasCol)return;
+      var r=el.getBoundingClientRect(),d=document.createElement("div");
+      d.style.cssText="position:absolute;left:"+(r.left-sr.left)+"px;top:"+(r.top-sr.top)+"px;width:"+r.width+"px;height:"+r.height+"px;"+
+        "background-image:"+cs.backgroundImage+";background-color:"+cs.backgroundColor+";background-size:"+cs.backgroundSize+";"+
+        "background-position:"+cs.backgroundPosition+";background-repeat:"+cs.backgroundRepeat+";filter:"+cs.filter+";opacity:"+cs.opacity+";";
+      ov.appendChild(d);
+    });
+    if(!ov.firstChild||!anchor){fn();return}
+    anchor.parentNode.insertBefore(ov,anchor.nextSibling);   /* 放在 #dimv 后面、其它舞台内容下面 */
+    document.body.classList.add("theme-xf");
+    clearTimeout(cleanT);cleanT=setTimeout(function(){document.body.classList.remove("theme-xf")},dur+150);
+    fn();
+    if(window.__bgSwap){ov.remove();return}                    /* 图片主题有自己的圆形转场，不叠加 */
+    setTimeout(function(){                                      /* 留 ~2 帧，等新背景真正画上去再开始淡出 */
+      if(!ov.parentNode)return;
+      var a=ov.animate([{opacity:1},{opacity:0}],{duration:dur,easing:"ease",fill:"forwards"});
+      var rm=function(){if(ov.parentNode)ov.parentNode.removeChild(ov)};
+      a.onfinish=rm;a.oncancel=rm;
+    },34);
+    setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov)},dur+400);
+  };
+})();

@@ -396,7 +396,13 @@
     }
 
     /* ---------- 卡片外观：按主题类型显示渐变 / 纯色 / 图片缩略图 ---------- */
+    var paintRaf = 0;
     function paintCards() {
+      // perf: 同一轮里的多次调用合并到下一帧，避免重建卡片时重复上色
+      if (paintRaf) return;
+      paintRaf = requestAnimationFrame(function () { paintRaf = 0; paintCardsNow(); });
+    }
+    function paintCardsNow() {
       [].forEach.call(carousel.children, function (card, i) {
         var t = THEMES[i]; if (!t || card.classList.contains("add-card")) return;
         var cfg = cfgOf(i), bg;
@@ -466,7 +472,12 @@
       refreshEditor();
     }
     /* 主菜单关闭 / 点主菜单里卡片和二级菜单之外的地方：收起二级菜单 */
-    new MutationObserver(function () { if (!menu.classList.contains("show") && sheetOpen) closeSheet(); })
+    var menuHiddenHook = null;   // perf: 与手势区的收起逻辑共用一个 MutationObserver
+    new MutationObserver(function () {
+      if (menu.classList.contains("show")) return;
+      if (sheetOpen) closeSheet();
+      if (menuHiddenHook) menuHiddenHook();
+    })
       .observe(menu, { attributes: true, attributeFilter: ["class"] });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && sheetOpen) { e.stopImmediatePropagation(); closeSheet(); } }, true);
 
@@ -692,8 +703,7 @@
         if (g && g.mode === "reorder") return;
         hidePen(); cancelPending();
       }, { passive: true });
-      new MutationObserver(function () { if (!menu.classList.contains("show")) { hidePen(); cancelPending(); } })
-        .observe(menu, { attributes: true, attributeFilter: ["class"] });
+      menuHiddenHook = function () { hidePen(); cancelPending(); };   // perf: 交给上面的统一 observer
 
       /* ----- 点屏幕任意位置：一次只退一层（编辑面板 → 主题选择器） ----- */
       window.addEventListener("pointerdown", function (e) {

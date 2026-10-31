@@ -7,6 +7,25 @@
   var mini=g("mini"),back=g("hback"),stg=g("stage");
   var npT=g("npT"),miT=g("miT"),tile=g("miTile"),cover=g("hubCover"),ckey="";
   var ckey2="",coverPainted=false;
+  /* 封面过渡：把旧的 --cover 做成一层盖在上面的图，淡出后移除（--cover 是 background-image，CSS 自己没法过渡） */
+  function coverXfade(oldVal){
+    try{
+      if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+      var dur=typeof uiT==="function"?uiT(550):550;
+      var hubGlowEl=g("hubGlow");
+      [[cover,"position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:"+oldVal+" center/cover no-repeat;",1],
+       [hubGlowEl,"position:absolute;inset:-60px;pointer-events:none;background:"+oldVal+" center/cover no-repeat;filter:blur(44px) saturate(1.6);transform:translateZ(0);",.4]
+      ].forEach(function(it){
+        var host=it[0];if(!host)return;
+        [].forEach.call(host.querySelectorAll(":scope>.cover-xf"),function(n){n.remove()});
+        var d=document.createElement("div");d.className="cover-xf";d.style.cssText=it[1]+"opacity:"+it[2];
+        host.appendChild(d);
+        var rm=function(){if(d.parentNode)d.parentNode.removeChild(d)};
+        if(d.animate){var a=d.animate([{opacity:it[2]},{opacity:0}],{duration:dur,easing:"ease",fill:"forwards"});a.onfinish=rm;a.oncancel=rm}
+        setTimeout(rm,dur+120);
+      });
+    }catch(_){}
+  }
   function paintCover(){
     var bg=g("bg");
     var bgImg=(typeof bgMode!=="undefined"&&bgMode==="img"&&typeof imgData!=="undefined"&&imgData)?imgData:"";
@@ -16,7 +35,11 @@
     else{var bi=bg.style.backgroundImage;
       if(bi&&bi!=="none"){key="g"+bi;val=bi}
       else{var c=bg.style.backgroundColor||"#1c1c24";key="c"+c;val="linear-gradient("+c+","+c+")"}}
-    if(key!==ckey){ckey=key;B.style.setProperty("--cover",val)}
+    if(key!==ckey){
+      var oldVal=B.style.getPropertyValue("--cover");
+      ckey=key;B.style.setProperty("--cover",val);
+      if(coverPainted&&oldVal&&oldVal!==val)coverXfade(oldVal);   /* 主题 / 背景切换：旧封面叠在上面淡出，和新的交叉过渡 */
+    }
     
     /* --cover2：图一（迷你条小封面）和图二（卡片大封面）的独立封面；没设置时回退到 --cover */
     /* 音乐模式且有当前歌曲（__musicTitle 有值）：只用这首歌自己的封面（每首歌自选 > 音频自带，由 song-library.js 设置），没有就是默认样式；
@@ -67,6 +90,17 @@
     if(tile) tile.classList.toggle("img",!!(cc||bgImg));
     coverPainted=true;
   }
+  /* 背景一变（切主题 / 换图 / 换纯色）就立刻重画 --cover。
+     原来只有 tick() 里「标题或歌词变了」才会调 paintCover()，所以切主题后面板里的封面预览和背景光晕
+     要等到下一句歌词出现才刷新——就是那几秒的延迟。paintCover 自带 key 去重，重复调用很便宜。 */
+  window.__paintCover=paintCover;
+  try{
+    var bgNode=g("bg"),pcRaf=0;
+    if(bgNode)new MutationObserver(function(){
+      if(pcRaf)return;
+      pcRaf=requestAnimationFrame(function(){pcRaf=0;paintCover()});
+    }).observe(bgNode,{attributes:true,attributeFilter:["style"]});
+  }catch(_){}
 
   // ===== 独立封面上传 =====
   var coverFile=document.createElement('input');
@@ -361,7 +395,9 @@
     npCard.style.paddingBottom = (PB * p) + 'px';
     npCard.style.pointerEvents = p > 0 ? 'auto' : 'none';
     if (p > 0) {
-      npCard.style.background = 'rgba(65, 65, 75, ' + (0.45 * p) + ')';
+      // 底色跟随全局 --ui-glass-fill（与迷你条一致），拖动中按进度 p 淡入；不支持 color-mix 的浏览器第二句会被忽略，保持上一句
+      npCard.style.background = 'var(--ui-glass-fill)';
+      npCard.style.background = 'color-mix(in srgb, var(--ui-glass-fill) ' + (p * 100).toFixed(1) + '%, transparent)';
       npCard.style.boxShadow = '0 18px 50px rgba(0,0,0,' + (0.25 * p) + ')';
       npCard.style.backdropFilter = ''; npCard.style.webkitBackdropFilter = '';
     } else {
@@ -502,12 +538,12 @@
     },uiT(150));
   }
   function tick(){
-    paintCover();
     var s="";try{s=(LN&&LN[idx])||""}catch(_){}
     s=String(s).replace(/\s+/g," ").trim();
     var mt=window.__musicTitle||"";   /* 音乐模式：只有迷你条的标题显示歌名；播放卡片的大标题仍显示当前歌词句 */
     var key=mt+"\u0001"+s;
     if(key===last)return;last=key;
+    paintCover();   // perf: 标题/歌词没变时不重绘封面，避免每 200ms 读样式
     var t=s||"—";   /* 播放卡片的大标题：始终是当前歌词句 */
     var mtt=mt||t;   /* 迷你条标题：音乐模式显示歌名 */
     

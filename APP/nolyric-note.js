@@ -135,8 +135,10 @@
     stage.classList.toggle('nolyr', want);
   }
 
-  /* 轮询足够轻（只读内存里的歌曲列表）；再配合几个事件让切歌、导入 LRC 后反应更快 */
-  setInterval(sync, 300);
+  /* perf: 歌曲库变化时事件驱动同步；1s 轮询仅作兜底，页面隐藏时跳过 */
+  var SL = window.SongLibrary;
+  if(SL && typeof SL.onChange === 'function') SL.onChange(sync);
+  setInterval(function(){ if(!document.hidden) sync(); }, 1000);
   ['loadedmetadata', 'emptied', 'play', 'pause'].forEach(function(ev){
     if(window.audio && audio.addEventListener) audio.addEventListener(ev, sync);
   });

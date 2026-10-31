@@ -183,4 +183,5 @@ list().forEach(function(c){grow(area(c))});commit(true);
     commit(true);
   };
 })();
-[].forEach.call(document.querySelectorAll("input[type=range]"),function(el){el.step="any";sync(el);el.addEventListener("input",function(){sync(el)})});
+// perf: input 不阻止默认行为，改为 passive；这里的全局绑定与 utils.sync 不重复（utils 只处理 pointer 结束）
+[].forEach.call(document.querySelectorAll("input[type=range]"),function(el){el.step="any";sync(el);el.addEventListener("input",function(){sync(el)},{passive:true})});

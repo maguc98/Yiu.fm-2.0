@@ -1,5 +1,56 @@
 // app/renderer.js — 舞台渲染、动效面板
-var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,.3)",CF=[],shownSig="",statT=0,skyT=0,sonnetOn=false,sonnetKillT=0;
+var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,.3)",CF=[],shownSig="",statT=0,skyT=0,sonnetOn=false,sonnetKillT=0,
+    glOn=null,glKillT=0,glTok=0,GLM={sonnet:1,tempera:1,lumiere:1,partita:1};   // GL 引擎风格：同一时刻最多一个（glOn = 当前显示的引擎名）
+/* 把「凝彩」登记进风格列表：放在「商籁」同一个列表里、紧跟其后（chips / 下拉都在下面几行才建，所以必须在这里先插）。
+   core.js 不动：这里按 id 找到商籁所在的列表；找不到就放进最后一个存在的列表。图标沿用商籁的。 */
+(function(){
+  try{
+    var lists=[typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].filter(Boolean);
+    var has=false,host=null,pos=-1,label="凝彩";
+    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="tempera")has=true;if(e[0]==="sonnet"){host=L;pos=i}})});
+    if(has)return;
+    var sonnetLabel=host?host[pos][1]:null;
+    if(host)host.splice(pos+1,0,["tempera",label]);else if(lists.length)lists[lists.length-1].push(["tempera",label]);
+    if(typeof FX_IC!=="undefined"&&FX_IC&&!FX_IC[label]&&sonnetLabel&&FX_IC[sonnetLabel])FX_IC[label]=FX_IC[sonnetLabel];
+  }catch(e){console.warn("register tempera style failed",e)}
+})();
+/* register lumiere right after tempera in the same style list */
+(function(){
+  try{
+    var lists=[typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].filter(Boolean);
+    var has=false,host=null,pos=-1,label="绘光",tLabel=null;
+    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="lumiere")has=true;if(e[0]==="tempera"){host=L;pos=i;tLabel=e[1]}})});
+    if(has)return;
+    if(host)host.splice(pos+1,0,["lumiere",label]);else if(lists.length)lists[lists.length-1].push(["lumiere",label]);
+    if(typeof FX_IC!=="undefined"&&FX_IC&&!FX_IC[label]&&tLabel&&FX_IC[tLabel])FX_IC[label]=FX_IC[tLabel];
+  }catch(e){console.warn("register lumiere style failed",e)}
+})();
+/* register partita (云阶) right after lumiere in the same style list */
+(function(){
+  try{
+    var lists=[typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].filter(Boolean);
+    var has=false,host=null,pos=-1,label="云阶",lLabel=null;
+    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="partita")has=true;if(e[0]==="lumiere"){host=L;pos=i;lLabel=e[1]}})});
+    if(has)return;
+    if(host)host.splice(pos+1,0,["partita",label]);else if(lists.length)lists[lists.length-1].push(["partita",label]);
+    if(typeof FX_IC!=="undefined"&&FX_IC&&!FX_IC[label]&&lLabel&&FX_IC[lLabel])FX_IC[label]=FX_IC[lLabel];
+  }catch(e){console.warn("register partita style failed",e)}
+})();
+/* group-two style icons (distinct per engine); keyed by id so label changes do not matter */
+(function(){
+  try{
+    var IC={
+      sonnet:'<path d="M12 7c-2-1.6-5-2-8-1.5v12c3-.5 6-.1 8 1.5 2-1.6 5-2 8-1.5v-12c-3-.5-6-.1-8 1.5z"/><path d="M12 7v12"/>',
+      tempera:'<path d="M12 3.5c3.6 4.3 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.4-6 6-10.3z"/><path d="M9 14.2a3 3 0 0 0 2.3 2.8"/>',
+      lumiere:'<circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/>',
+      partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/>'
+    };
+    if(typeof FX_IC==="undefined"||!FX_IC)return;
+    [typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].forEach(function(L){
+      if(L)L.forEach(function(e){if(IC[e[0]])FX_IC[e[1]]=IC[e[0]]})
+    });
+  }catch(e){console.warn("style icons failed",e)}
+})();
 function cfgOf(i){return CF[i]||{}}
 function markStyles(){[$("styles"),$("styles2"),$("styles3")].forEach(function(box,b){var L=b===2?STY3:b?STY2:STY;[].forEach.call(box.children,function(c,i){c.classList.toggle("on",L[i][0]===style)})})}
 function setStyle(v){
@@ -13,34 +64,112 @@ chips($("styles3"),STY3,function(){return style},setStyle);
 chips($("themes"),THEMES.map(function(t,i){return [i,t[0]]}),function(){return theme},function(v){theme=v;applyPreset(v);reqBg(true)});
 chips($("bgm"),[["grad","混色渐变"],["solid","纯色"],["img","自选图片"]],function(){return bgMode},function(v){bgMode=v;$("gbox").classList.toggle("hide",v!=="grad");$("solidbox").classList.toggle("hide",v!=="solid");$("ibox").classList.toggle("hide",v!=="img");reqBg(true)});
 glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
-/* ---- 动效风格下拉 ---- */
+/* ---- 动效风格下拉：两组并排，共用一个弹层（GNAMES 里改组名） ---- */
 (function(){
-  var sel=$("styleSel"),pop=$("stylePop"),grid=pop.firstChild,hub=$("hub"),ALL=STY.concat(STY2,STY3,STY4),nSp=STY3.length+STY4.length,btns=[];
+  var GNAMES=["经典","光影"],GB={sonnet:1,tempera:1,lumiere:1,partita:1};
+  var GICON=['<path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/>','<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v5M16.5 17.5h5"/>'];
+
+  var AN={
+    scatter:'<rect class="a-sc" style="--x:-3px;--y:-3px;--r:-14deg" x="4.5" y="4.5" width="6" height="6" rx="1.4"/><rect class="a-sc" style="--x:3px;--y:-3px;--r:14deg" x="13.5" y="4.5" width="6" height="6" rx="1.4"/><rect class="a-sc" style="--x:-3px;--y:3px;--r:14deg" x="4.5" y="13.5" width="6" height="6" rx="1.4"/><rect class="a-sc" style="--x:3px;--y:3px;--r:-14deg" x="13.5" y="13.5" width="6" height="6" rx="1.4"/>',
+    pan:'<path d="M3 5v14M21 5v14" opacity=".4"/><g class="a-pan"><rect x="7" y="7.5" width="10" height="9" rx="2"/><circle cx="12" cy="12" r="1.5"/></g>',
+    star:'<path class="a-tw" d="M11 5l1.7 4.4 4.6.4-3.5 3 1.1 4.5L11 14.9 7.1 17.3l1.1-4.5-3.5-3 4.6-.4z"/><path class="a-bl" d="M19 3.5v5M16.5 6h5"/>',
+    fade:'<circle class="a-f1" cx="9.3" cy="12" r="5.6"/><circle class="a-f2" cx="14.7" cy="12" r="5.6"/>',
+    type:'<path class="a-ty a-ty1" d="M5 7.5h12"/><path class="a-ty a-ty2" d="M5 12h14"/><path class="a-ty a-ty3" d="M5 16.5h7"/><path class="a-cr" d="M15 14.5v4"/>',
+    poster:'<rect class="a-pb1" x="4" y="4" width="9" height="9" rx="1.6"/><circle cx="17.5" cy="7" r="2.4"/><path class="a-pb3" d="M4 17h12M4 20.5h8"/>',
+    bounce:'<circle class="a-bn" cx="12" cy="6.5" r="3"/><path class="a-bs" d="M8 20h8"/><path d="M5 20.5h14" opacity=".35"/>',
+    flip:'<rect class="a-fl" x="6.5" y="4.5" width="11" height="15" rx="2.2"/><path d="M12 9v6" opacity=".5"/>',
+    focus:'<circle cx="12" cy="12" r="2.3"/><path class="a-fc" d="M4 9V4.5h4.5M20 9V4.5h-4.5M4 15v4.5h4.5M20 15v4.5h-4.5"/>',
+    wave:'<path class="a-w1" d="M3 9.5c3-4 6-4 9 0s6 4 9 0"/><path class="a-w2" d="M3 15.5c3-4 6-4 9 0s6 4 9 0"/>',
+    glitch:'<rect class="a-gl1" x="6" y="6" width="12" height="12" rx="2.2" opacity=".55"/><rect class="a-gl2" x="6" y="6" width="12" height="12" rx="2.2"/><path d="M9 12h6" opacity=".7"/>',
+    sonnet:'<path d="M12 7c-2-1.6-5-2-8-1.5v12c3-.5 6-.1 8 1.5"/><path class="a-pg" d="M12 7c2-1.6 5-2 8-1.5v12c-3-.5-6-.1-8 1.5"/><path d="M12 7v12"/>',
+    tempera:'<g class="a-dr"><path d="M12 3.5c3.6 4.3 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.4-6 6-10.3z"/><path d="M9 14.2a3 3 0 0 0 2.3 2.8"/></g>',
+    lumiere:'<circle class="a-sun" cx="12" cy="12" r="3.5"/><path class="a-rs" d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/>',
+    partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/>',
+    _g0:'<path class="a-ly1" d="M12 4l8 4-8 4-8-4z"/><path class="a-ly2" d="M4 12l8 4 8-4M4 16l8 4 8-4"/>',
+    _g1:'<path class="a-tw" d="M11 5l1.7 4.4 4.6.4-3.5 3 1.1 4.5L11 14.9 7.1 17.3l1.1-4.5-3.5-3 4.6-.4z"/><path class="a-bl" d="M19 14v6M16 17h6"/>'
+  };
+  /* 优先用带动画的图标（按 id）；没有的退回 FX_IC（静态，包一层轻微浮动 .fb）；都没有就用该组默认图标 */
+  function svgFor(id,label,gi){
+    var a=id&&AN[id];
+    if(a)return{h:'<svg viewBox="0 0 24 24" class="ai">'+a+'</svg>',fb:false};
+    var f=label&&typeof FX_IC!=="undefined"&&FX_IC&&FX_IC[label];
+    if(f)return{h:'<svg viewBox="0 0 24 24">'+f+'</svg>',fb:true};
+    return{h:'<svg viewBox="0 0 24 24" class="ai">'+AN[gi?"_g1":"_g0"]+'</svg>',fb:false};
+  }
+  var AV={sonnet:typeof sonnetOK==="function"?sonnetOK:null,tempera:typeof temperaOK==="function"?temperaOK:null,lumiere:typeof lumiereOK==="function"?lumiereOK:null,partita:typeof partitaOK==="function"?partitaOK:null};
+  var pop=$("stylePop"),first=pop.firstChild,ALL=STY.concat(STY2,STY3,STY4),WIDE={};
+  STY3.forEach(function(e){WIDE[e[0]]=1});
+  var sel2=$("styleSel2"),two=!!sel2;
+  var GROUPS=two?[
+    {name:GNAMES[0],sel:$("styleSel"),tx:$("styleSelTx"),list:ALL.filter(function(e){return!GB[e[0]]}),allWide:false},
+    {name:GNAMES[1],sel:sel2,tx:$("styleSelTx2"),list:ALL.filter(function(e){return GB[e[0]]}),allWide:true}
+  ]:[
+    {name:"动画样式",sel:$("styleSel"),tx:$("styleSelTx"),list:ALL,allWide:false}
+  ];
+  if(!two)ALL.forEach(function(e){if(GB[e[0]])WIDE[e[0]]=1});
   var hd=document.createElement("div");hd.className="dd-h";hd.style.display="flex";
-  var tt=document.createElement("b");tt.className="dd-t";tt.textContent="动画样式";hd.appendChild(tt);
-  pop.insertBefore(hd,grid);pop.classList.add("rich");
-  ALL.forEach(function(e,i){var b=document.createElement("button");b.type="button";b.setAttribute("role","option");
-    var ic=document.createElement("i");ic.className="ic";ic.innerHTML='<svg viewBox="0 0 24 24">'+(FX_IC[e[1]]||"")+'</svg>';b.appendChild(ic);
-    var sp=document.createElement("span");sp.textContent=e[1];b.appendChild(sp);
-    if(i>=ALL.length-nSp){b.classList.add("wide");if(i===ALL.length-nSp){var d=document.createElement("div");d.className="dd-sep";grid.appendChild(d)}}
-    b.onclick=function(ev){ev.stopPropagation();setStyle(e[0]);close()};grid.appendChild(b);btns.push(b)});
-  function fade(){var t=grid.scrollTop>2,bt=grid.scrollTop+grid.clientHeight<grid.scrollHeight-2;
-    grid.style.setProperty("--ft",t?"18px":"0px");grid.style.setProperty("--fb",bt?"18px":"0px")}
-  grid.addEventListener("scroll",fade,{passive:true});
-  function label(){for(var i=0;i<ALL.length;i++)if(ALL[i][0]===style){$("styleSelTx").textContent=ALL[i][1];btns.forEach(function(b,j){b.classList.toggle("on",j===i)});return}}
+  var tt=document.createElement("b");tt.className="dd-t";tt.textContent=GROUPS[0].name;hd.appendChild(tt);
+  pop.insertBefore(hd,first);pop.classList.add("rich");
+  var cur=null;
+  function avail(id){var f=AV[id];return !f||!!f()}
+  GROUPS.forEach(function(g,gi){
+    var grid;
+    if(gi===0)grid=first;else{grid=document.createElement("div");grid.className="sp-grid";pop.appendChild(grid)}
+    g.grid=grid;g.btns=[];g.si=document.createElement("span");g.si.className="si";g.si.setAttribute("aria-hidden","true");g.icon="";
+    if(g.tx&&g.tx.parentNode===g.sel)g.sel.insertBefore(g.si,g.tx);else g.sel.insertBefore(g.si,g.sel.firstChild);
+    var sepDone=false;
+    g.list.forEach(function(e){var b=document.createElement("button");b.type="button";b.setAttribute("role","option");b.setAttribute("aria-selected","false");
+      var ic=document.createElement("i");ic.className="ic";var rs=svgFor(e[0],e[1],gi);ic.innerHTML=rs.h;if(rs.fb)ic.classList.add("fb");b.appendChild(ic);
+      var sp=document.createElement("span");sp.textContent=e[1];b.appendChild(sp);
+      if(g.allWide||WIDE[e[0]]){b.classList.add("wide");if(!g.allWide&&!sepDone){sepDone=true;var d=document.createElement("div");d.className="dd-sep";grid.appendChild(d)}}
+      b.onclick=function(ev){ev.stopPropagation();if(!avail(e[0]))return;setStyle(e[0]);close()};grid.appendChild(b);g.btns.push(b)});
+    function fade(){var t=grid.scrollTop>2,bt=grid.scrollTop+grid.clientHeight<grid.scrollHeight-2;
+      grid.style.setProperty("--ft",t?"18px":"0px");grid.style.setProperty("--fb",bt?"18px":"0px")}
+    g.fade=fade;grid.addEventListener("scroll",fade,{passive:true});
+  });
   document.body.appendChild(pop);
-  function place(keepScroll){
+  function label(){
+    GROUPS.forEach(function(g,gi){
+      var hit=-1;for(var i=0;i<g.list.length;i++)if(g.list[i][0]===style){hit=i;break}
+      g.btns.forEach(function(b,j){var on=j===hit;b.classList.toggle("on",on);b.setAttribute("aria-selected",on?"true":"false");
+        var ok=avail(g.list[j][0]);b.classList.toggle("na",!ok);if(ok)b.removeAttribute("aria-disabled");else b.setAttribute("aria-disabled","true")});
+      g.sel.classList.toggle("is-on",hit>=0);
+      var t=hit>=0?g.list[hit][1]:g.name;if(g.tx&&g.tx.textContent!==t)g.tx.textContent=t;
+      var rs=hit>=0?svgFor(g.list[hit][0],g.list[hit][1],gi):svgFor(null,null,gi);
+      if(rs.h!==g.icon){g.icon=rs.h;g.si.innerHTML=rs.h;g.si.classList.toggle("fb",rs.fb)}
+      g.sel.setAttribute("aria-label",g.name+(hit>=0?"："+g.list[hit][1]:""));
+    });
+  }
+  function place(g,keepScroll){
     var pw=Math.min(272,window.innerWidth-24);
     pop.style.width=pw+"px";
-    PopFX.place(pop,sel,{inner:grid,maxH:440,width:pw});
-    if(keepScroll!==true){var on=grid.querySelector("button.on");if(on)grid.scrollTop=Math.max(0,on.offsetTop-grid.clientHeight/2+on.offsetHeight/2)}
-    fade();
+    PopFX.place(pop,g.sel,{inner:g.grid,maxH:440,width:pw});
+    if(keepScroll!==true){var on=g.grid.querySelector("button.on");g.grid.scrollTop=on?Math.max(0,on.offsetTop-g.grid.clientHeight/2+on.offsetHeight/2):0}
+    g.fade();
   }
-  function open(){label();place();PopFX.show(pop);sel.setAttribute("aria-expanded","true")}
-  function close(){PopFX.hide(pop);sel.setAttribute("aria-expanded","false")}
-  sel.addEventListener("click",function(e){e.stopPropagation();pop.classList.contains("show")?close():open()});
-  document.addEventListener("pointerdown",function(e){if(pop.classList.contains("show")&&!pop.contains(e.target)&&!sel.contains(e.target))close()},true);
-  var _rz=0;window.addEventListener("resize",function(){if(_rz||!pop.classList.contains("show"))return;_rz=requestAnimationFrame(function(){_rz=0;if(pop.classList.contains("show"))place(true)})});document.addEventListener("scroll",function(e){if(!pop.contains(e.target))close()},true);
+  function open(g){
+    label();cur=g;
+    GROUPS.forEach(function(o){o.grid.style.display=o===g?"":"none";o.sel.setAttribute("aria-expanded",o===g?"true":"false")});
+    tt.textContent=g.name;
+    place(g);
+    if(!pop.classList.contains("show"))PopFX.show(pop);
+  }
+  function close(){
+    GROUPS.forEach(function(o){o.sel.setAttribute("aria-expanded","false")});
+    cur=null;
+    if(pop.classList.contains("show"))PopFX.hide(pop);
+  }
+  GROUPS.forEach(function(g){
+    g.sel.addEventListener("click",function(e){e.stopPropagation();if(pop.classList.contains("show")&&cur===g)close();else open(g)});
+  });
+  document.addEventListener("pointerdown",function(e){
+    if(!pop.classList.contains("show")||pop.contains(e.target))return;
+    for(var i=0;i<GROUPS.length;i++)if(GROUPS[i].sel.contains(e.target))return;
+    close();
+  },true);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&pop.classList.contains("show"))close()});
+  var _rz=0;window.addEventListener("resize",function(){if(_rz||!cur||!pop.classList.contains("show"))return;_rz=requestAnimationFrame(function(){_rz=0;if(cur&&pop.classList.contains("show"))place(cur,true)})});
+  document.addEventListener("scroll",function(e){if(pop.classList.contains("show")&&!pop.contains(e.target))close()},true);
   var _ms=markStyles;markStyles=function(){_ms();label()};
   label();
 })();
@@ -114,7 +243,7 @@ function update(){
   var tIdle=titleIdle(),m=modeOf(idx),pan=m==="pan",cfg=cfgOf(idx),dur=secOf(idx),text=tIdle?songTitleText():LN[idx];
   shownIdle=tIdle;shownTitle=tIdle?text:"";
   if(tIdle)dur=Math.max(dur,4);   // 歌名要停留，别按第一句只有 0.1 秒的时长来播动画
-  if(m!=="sonnet"&&sonnetOn)sonnetLeave();
+  if(glOn&&!GLM[m])glLeave();               // 离开 GL 风格（回到 DOM 风格）
 if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.classList.contains("vig")||c.classList.contains("noise")))c.remove(); }); }
   if(cur){
     /* 切句前：如果旧 box 是海报排版，把它的当前 cam 位置存到交接对象，
@@ -135,8 +264,8 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
     if(!pan)setTimeout(function(){o.remove()},o.classList.contains("m-poster")?900:1800)
   }
   if(!pan&&(wx||wy||(one.style.transform&&one.style.transform!=="none"))){panGen++;one.style.transition="none";one.style.transform="none";one.style.filter="";wx=0;wy=0}
-  if(m==="sonnet"){                  // 商籁自己画整首歌：这里不建 DOM 文字，只保证画布已显示
-    sonnetEnter();skyShow(false);
+  if(GLM[m]){                        // 商籁 / 凝彩自己画整首歌：这里不建 DOM 文字，只保证画布已显示
+    glEnter(m);skyShow(false);
     cur=null;curMode=m;shown=text;shownSig=sigOf(idx);paintStat(true);
     return;
   }
@@ -215,33 +344,68 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
 
 /* ---- 逐条配置：LN 文本 + CF 每条的独立设置（字号/颜色/动画/停留） ---- */
 /* ---- 商籁（Sonnet）：全局风格；画布与 Pixi Ticker 由 SonnetAdapter 管理 ---- */
-var SONNET_KEEP_MS=15000;   // 离开商籁后，隐藏画布并停掉 Ticker；超过这个时间没回来就销毁 WebGL 释放显存
+var SONNET_KEEP_MS=15000;   // 离开 GL 风格后，隐藏画布并停掉 Ticker；超过这个时间没回来就销毁 WebGL 释放显存
 function sonnetOK(){var A=window.SonnetAdapter;return !!(A&&typeof A.show==="function"&&typeof A.hide==="function")}
-function sonnetEnter(){
-  clearTimeout(sonnetKillT);
-  if(sonnetOn)return;                       // 幂等：每句换句都会走到这里
-  sonnetOn=true;
-  stage.classList.add("mode-sonnet");       // CSS：显示 #sonnetHost，隐藏 #one / #sky
-  try{window.SonnetAdapter.show()}catch(e){
-    console.warn("Sonnet show failed:",e);
-    sonnetOn=false;stage.classList.remove("mode-sonnet");
-    setTimeout(function(){if(style==="sonnet")setStyle("scatter")},0);
+/* 引擎脚本改为按需加载后，运行时全局要到第一次切换才存在；加载器登记了该引擎就视为可用 */
+function engLazy(n){var L=window.__EngineLoader;return !!(L&&L.groups&&L.groups[n])}
+function temperaOK(){var A=window.TemperaAdapter;return !!(window.VisualizerManager&&(window.TemperaRuntime||engLazy("tempera"))&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
+function lumiereOK(){var A=window.LumiereAdapter;return !!(window.VisualizerManager&&(window.LumiereRuntime||engLazy("lumiere"))&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
+function partitaOK(){var A=window.PartitaAdapter;return !!(window.VisualizerManager&&window.Partita&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
+function glClassOff(){stage.classList.remove("mode-sonnet","mode-tempera","mode-lumiere","mode-partita")}
+/* 进入 GL 风格：走 VisualizerManager.switchTo。
+   · 先同步挂 mode-xxx 类（CSS 显示对应宿主、隐藏 #one / #sky；StyleFX 入场动画也据此选宿主）
+   · {reuse:true}：该引擎正被保留（离开后 15 秒内、且没有别的引擎存活）时只 show()，不销毁重建
+   · 其它情况（比如商籁 → 凝彩）Manager 串行：销毁旧引擎 → 等两帧 → 创建新引擎
+   · 创建是异步的：用 glTok 作废过期回调（用户已经切走 / 又切了别的） */
+function glEnter(name){
+  clearTimeout(glKillT);
+  if(glOn===name)return;                    // 幂等：每句换句都会走到这里
+  glOn=name;sonnetOn=(name==="sonnet");
+  var tk=++glTok,VM=window.VisualizerManager;
+  glClassOff();stage.classList.add("mode-"+name);
+  function fail(e){
+    if(tk!==glTok)return;
+    console.warn(name+" 启动失败:",e);
+    glOn=null;sonnetOn=false;glClassOff();
+    setTimeout(function(){if(style===name)setStyle("scatter")},0);
+  }
+  try{
+    var p;
+    if(VM)p=VM.switchTo(name,{reuse:true});
+    else if(name==="sonnet")window.SonnetAdapter.show();     // Manager 没加载时的兜底（仅商籁）
+    else throw new Error("VisualizerManager 未加载");
+    Promise.resolve(p).then(function(){if(tk!==glTok&&!glOn)glHide()},fail);   // 创建期间用户已离开：补一次隐藏
+  }catch(e){fail(e)}
+}
+function glLeave(){
+  if(!glOn)return;
+  glOn=null;sonnetOn=false;glTok++;         // 作废进行中的创建回调
+  glHide();
+}
+function glHide(){
+  glClassOff();
+  clearTimeout(glKillT);
+  var VM=window.VisualizerManager;
+  if(VM){
+    try{VM.hide()}catch(_){}                // 立刻停 Ticker + 藏画布
+    glKillT=setTimeout(function(){if(!glOn){try{VM.destroy()}catch(_){}}},SONNET_KEEP_MS);
+  }else{
+    var A=window.SonnetAdapter;if(!A)return;
+    try{A.hide()}catch(_){}
+    if(typeof A.destroy==="function")glKillT=setTimeout(function(){if(!glOn){try{A.destroy()}catch(_){}}},SONNET_KEEP_MS);
   }
 }
-function sonnetLeave(){
-  if(!sonnetOn)return;
-  sonnetOn=false;
-  stage.classList.remove("mode-sonnet");
-  var A=window.SonnetAdapter;if(!A)return;
-  try{A.hide()}catch(_){}                   // 立刻停 Ticker + 藏画布
-  clearTimeout(sonnetKillT);
-  if(typeof A.destroy==="function")sonnetKillT=setTimeout(function(){if(!sonnetOn){try{A.destroy()}catch(_){}}},SONNET_KEEP_MS);
-}
+function sonnetEnter(){glEnter("sonnet")}                       // 兼容旧调用
+function sonnetLeave(){if(glOn==="sonnet")glLeave()}
 /* 适配器异步建画布失败（WebGL 拿不到等）时调用：退回默认风格，免得一片空白 */
 window.__sonnetFailed=function(){if(style==="sonnet")setStyle("scatter")};
+window.__temperaFailed=function(){if(style==="tempera")setStyle("scatter")};
 function modeOf(i){
   if(style==="sonnet")return sonnetOK()?"sonnet":"scatter";   // 商籁不参与逐句覆盖；适配器没加载时退回打散重组
-  var m=cfgOf(i).mode;return(m&&m!=="sonnet")?m:style;
+  if(style==="tempera")return temperaOK()?"tempera":"scatter"; // 凝彩同理
+  if(style==="lumiere")return lumiereOK()?"lumiere":"scatter";
+  if(style==="partita")return partitaOK()?"partita":"scatter";
+  var m=cfgOf(i).mode;return(m&&!GLM[m])?m:style;             // 逐句覆盖里不允许出现 GL 风格
 }
 function pdUnits(t){var c=window._pdN=window._pdN||{},v=c[t];if(v==null){v=0;posterWords(t).forEach(function(w){v+=pchars(w).length});c[t]=v=v||1}return v}
 function secOf(i){
@@ -286,7 +450,7 @@ function syncBoxes(){
   $("fxbox").classList.toggle("hide",!(u.bounce||u.flip||u.focus||u.wave||u.glitch));
   $("posterbox").classList.toggle("hide",!u.poster);
   $("sonnetbox").classList.toggle("hide",style!=="sonnet");
-  var gt=$("gtextRow");if(gt)gt.classList.toggle("hide",style==="sonnet");
+  var gt=$("gtextRow");if(gt)gt.classList.toggle("hide",style==="sonnet"||style==="tempera"||style==="lumiere"||style==="partita");
   pdSync();
 }
 /* ---- 星空：数量 / 大小 / 速度（星星与流星各自独立） ---- */
@@ -322,10 +486,17 @@ function skyShow(on){
   else{sky.classList.add("off");skyT=setTimeout(function(){sky.classList.add("hide")},900)}
 }
 /* ---- 状态栏：第几条 / 总条数 · 剩余时长 ---- */
+var cntCache=null;   // perf: 缓存 .cnt 节点，避免 10Hz 的 querySelectorAll
+function cntNodes(){
+  if(!cntCache||!cntCache.length||!cntCache[0].isConnected)cntCache=[].slice.call(document.querySelectorAll(".cnt"));
+  return cntCache;
+}
 function paintStat(force){
   var now=performance.now();if(!force&&now-statT<90)return;statT=now;
   var rm=Math.max(0,(1-prog)*secOf(idx)).toFixed(1),t="第 "+(idx+1)+" / "+LN.length+" 条 · 剩余 "+rm+"s";
-  [].forEach.call(document.querySelectorAll(".cnt"),function(c){c.textContent=t});
+  var ns=cntNodes();
+  if(!force&&ns.length&&ns[0].textContent===t)return;   // perf: 文本没变就不写 DOM（暂停时几乎每次相同）
+  ns.forEach(function(c){c.textContent=t});
 }
 window.onItemsChanged=function(){
   bag=null;syncBoxes();

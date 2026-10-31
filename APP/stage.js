@@ -59,7 +59,8 @@ function showPg(i,dir){
   $("panel").scrollTop=0;
 }
 var lgEl=$("lg"),thumb=$("thumb"),NB=[].slice.call(navs),dragging=false;
-var T={x:0,v:0,tx:0,s:1,sv:0,ts:1,last:0,run:false,drag:false,d:0};
+var lgBtns=lgEl?lgEl.querySelector(".lg-btns"):null;   // perf: 只查一次，避免 frame 每帧 querySelector
+var T={x:0,v:0,tx:0,s:1,sv:0,ts:1,last:0,run:false,drag:false,d:0,lo:0,hi:0};
 function curK(){for(var k=0;k<NB.length;k++)if(+NB[k].dataset.i===curTab)return k;return 0}
 function nearest(x){var best=0,bd=1e9;NB.forEach(function(b,k){var d=Math.abs(b.offsetLeft+b.offsetWidth/2-x);if(d<bd){bd=d;best=k}});return best}
 function mark(k){NB.forEach(function(c,j){c.classList.toggle("on",j===k)})}
@@ -81,7 +82,7 @@ for(var _i=0;_i<_n;_i++){
 if(T.drag){T.x=T.tx;T.v=0}
   else{var k=340,c=qC(12,340);T.v+=(-k*(T.x-T.tx)-c*T.v)*dt;T.x+=T.v*dt}
   /* 撞墙回弹：冲到底栏两端时被"弹回"，保留强回弹但不会飞出去 */
-  var lo=bx(0)-2,hi=bx(NB.length-1)+2;
+  var lo=T.lo-2,hi=T.hi+2;   // perf: 用 putThumb / resize 时缓存的边界，frame 内不再读 offsetLeft
   if(T.x<lo){T.x=lo;if(T.v<0)T.v=-T.v*.7}else if(T.x>hi){T.x=hi;if(T.v>0)T.v=-T.v*.7}
   T.sv+=(-420*(T.s-T.ts)-qC(11,420)*T.sv)*dt;T.s+=T.sv*dt;
 }
@@ -93,8 +94,9 @@ if(T.drag){T.x=T.tx;T.v=0}
   requestAnimationFrame(frame);
 }
 function kick(){if(!T.run){T.run=true;T.last=performance.now();requestAnimationFrame(frame)}}
-function bx(k){return NB[k].offsetLeft+lgEl.querySelector(".lg-btns").offsetLeft}
+function bx(k){return NB[k].offsetLeft+(lgBtns?lgBtns.offsetLeft:0)}
 function putThumb(k,snap){
+  T.lo=bx(0);T.hi=bx(NB.length-1);   // perf: 只在落位 / resize 时量一次边界
   thumb.style.setProperty("--w",NB[k].offsetWidth+"px");
   T.tx=bx(k);
   if(snap){T.x=T.tx;T.v=0;T.s=T.ts=1;T.sv=0;draw()}else{T.d=Math.abs(T.tx-T.x)+Math.abs(T.v)*.1;kick()}

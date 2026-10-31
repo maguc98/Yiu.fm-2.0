@@ -17,6 +17,18 @@
   var curOrig = '';        // 当前歌曲音频自带的封面（用户自选封面被恢复默认时退回到它）
   var curCover = '';       // 当前歌曲的封面（dataURL；音频里没有内嵌封面则为空）
 
+  /* perf: 歌曲库变化的事件订阅，避免外部模块高频轮询 list() */
+  var changeCbs = [];
+  function notifyChange(){
+    for(var i = 0; i < changeCbs.length; i++){
+      try{ changeCbs[i](); }catch(_){ }
+    }
+  }
+  function onChange(cb){
+    if(typeof cb === 'function' && changeCbs.indexOf(cb) < 0) changeCbs.push(cb);
+    return function(){ var i = changeCbs.indexOf(cb); if(i >= 0) changeCbs.splice(i, 1); };
+  }
+
   /* ---------------- 统一弹窗（确认 / 提示） ----------------
      外观照抄面板：--p-bg 玻璃底 + 高斯模糊 + 封面光晕；带弹入 / 弹出动画。
      window.YDialog.confirm({title, msg, html, ok, cancel, danger}) → Promise<boolean>
@@ -358,19 +370,20 @@
       im.src = src;
     });
   }
-  var thumbBusy = false;
+  var thumbBusy = false, thumbDirty = false;
   function fillThumbs(){        // 老歌没有缩略图：一首一首补，补完存回
     if(thumbBusy) return;
     thumbBusy = true;
+    thumbDirty = false;
     (function next(){
       var s = null;
       for(var i = 0; i < songs.length; i++) if(typeof songs[i].thumb !== 'string'){ s = songs[i]; break; }
-      if(!s){ thumbBusy = false; return; }
+      if(!s){ thumbBusy = false; if(thumbDirty) render(); return; }   // perf: 全部补完只重建一次列表
       getFile(s.id).then(function(rec){ return (rec && rec.blob && find(s.id)) ? ensureCover(s.id, rec) : ''; })
         .then(makeThumb)
-        .then(function(t){ if(!find(s.id)) return; s.thumb = t; return putMeta(s); })
-        .catch(function(){ if(typeof s.thumb !== 'string') s.thumb = ''; })
-        .then(function(){ render(); next(); });
+        .then(function(t){ if(!find(s.id)) return; s.thumb = t; thumbDirty = true; return putMeta(s); })
+        .catch(function(){ if(typeof s.thumb !== 'string'){ s.thumb = ''; thumbDirty = true; } })
+        .then(function(){ next(); });
     })();
   }
 
@@ -537,6 +550,7 @@
   }
 
   function render(msg){
+    notifyChange();                                                    // perf: 用事件通知替代外部 300ms 轮询
     syncNow();
     offSync();
     if(D || (G && G.mode === 'swipe')){ renderLater = true; return; }      // 手势进行中不重建列表
@@ -1404,5 +1418,5 @@
     }).catch(function(){ return ''; });
   }
 
-  window.SongLibrary = {list: function(){ return songs.slice(); }, select: selectSong, step: stepSong, autoNext: autoNext, peekNext: peekNext, isMusic: isMusicMode, remove: removeSong, current: function(){ return curId; }, cover: coverOf, importScanned: importScanned, clearAll: clearAll};
+  window.SongLibrary = {list: function(){ return songs.slice(); }, select: selectSong, step: stepSong, autoNext: autoNext, peekNext: peekNext, isMusic: isMusicMode, remove: removeSong, current: function(){ return curId; }, cover: coverOf, importScanned: importScanned, clearAll: clearAll, onChange: onChange};
 })();

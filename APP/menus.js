@@ -644,9 +644,46 @@ upd();
     els.forEach(function(el){write(el,c[el.dataset.sk])});
   }
   var rs=document.getElementById("sonnetReset");
-  if(rs)rs.onclick=function(){if(A()&&A().resetConfig){A().resetConfig();pull()}};
+  if(rs)rs.onclick=function(){
+    if(A()&&A().resetConfig){A().resetConfig();pull()}
+    // perf: 恢复默认后同步分辨率滑块显示（resetConfig 内部已触发画面重建）
+    var re=document.getElementById("sonnet-res");
+    if(re){var c2=A()&&A().getConfig?A().getConfig():null;if(c2&&isFinite(+c2.textureResolution))re.value=Math.round(Math.max(0.25,Math.min(4,+c2.textureResolution))*100);}
+  };
   els.forEach(function(el){   // 滑块套上磨砂把手（若全局没统一包过）
     if(el.type==="range"&&typeof wrapRange==="function"&&!(el.parentNode&&el.parentNode.classList.contains("rw")))try{wrapRange(el)}catch(_){}
   });
+  // perf: 动态性能调节开关 → governor start/stop（开关状态存 localStorage，与 adapter 共享同一键）
+  var dynEl=document.getElementById("sonnet-dynamic-toggle");
+  if(dynEl){
+    var DYNAMIC_KEY="folia.sonnet.dynamic";
+    var dynOn=localStorage.getItem(DYNAMIC_KEY)!=="0";
+    dynEl.checked=dynOn;
+    // perf: runtime 已创建时立即按开关状态 start；未创建则交由 createRuntime 接线处按开关状态补 start
+    if(dynOn){ var g0=A()&&A().governor; if(g0&&!g0.running)g0.start(); }
+    dynEl.onchange=function(){
+      localStorage.setItem(DYNAMIC_KEY,dynEl.checked?"1":"0");
+      var g=A()&&A().governor;   // perf: runtime 未创建时 governor 为 null，本次只记状态，创建后生效
+      if(!g)return;
+      if(dynEl.checked)g.start(); else g.stop();
+    };
+  }
+  // perf: 手动分辨率调节 → adapter.setTextureResolution（debounce 400ms，松手后重建一次）
+  var resEl=document.getElementById("sonnet-res");
+  if(resEl){
+    if(typeof wrapRange==="function")try{wrapRange(resEl)}catch(_){}
+    var resT=0;
+    // perf: 初始值从 adapter 读回（含 localStorage 记忆），避免和实际配置脱节
+    var cfg=A()&&A().getConfig?A().getConfig():null;
+    if(cfg&&isFinite(+cfg.textureResolution))resEl.value=Math.round(Math.max(0.25,Math.min(4,+cfg.textureResolution))*100);
+    resEl.addEventListener("input",function(){
+      if(typeof sync==="function")try{sync(resEl)}catch(_){}   // perf: 滑块填充条实时反馈
+      clearTimeout(resT);
+      resT=setTimeout(function(){
+        var r=+resEl.value/100;
+        if(A()&&A().setTextureResolution)A().setTextureResolution(r);
+      },400);
+    });
+  }
   pull();   // 读回适配器里（含 localStorage 记忆）的当前值
 })();
