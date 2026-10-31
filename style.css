@@ -157,7 +157,16 @@ input[type=color]::-moz-color-swatch{border:none;border-radius:50%}
    材质只有两样：背景高斯模糊 + 纯色半透明填充，外加柔和投影。
    --gb 是模糊半径（设置里可调）；想给边缘加一条细线，把 --g-rim 改成 inset 0 0 0 1px rgba(255,255,255,.12) */
 :root{--gb:23px;--g-blur:blur(var(--gb));
-  --g-fill:linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12));
+  /* ★★ UI 玻璃规矩（所有新面板 / 弹窗 / 浮层必须遵守）★★
+     1. 玻璃底色只许用 var(--ui-glass-fill)，模糊只许用 var(--g-blur)，二者基准 = 左下角迷你播放条（#mini）。
+     2. 不要自己写深色底（如 rgba(30,30,34,.7)），也不要叠封面图 / 取色的氛围层（旧 #hubGlow 已停用）。
+        背景偏亮时需要变深，由令牌自己负责：--ui-k（0~1）由 APP/glass-adapt.js 按背景亮度写入，
+        --ui-glass-fill 在「白 14%」与「深灰 60%」之间按 --ui-k 混色，所有玻璃一起变。
+     3. 面板内部的按钮、标签条等小元素：只叠 --g-fill2 / --p-fill 这类浅色填充，不再加 backdrop-filter。
+     想调通透度改 14%（暗背景）/ 60%（亮背景最深）；想调触发的亮度范围改 glass-adapt.js 里的 T0 / T1。 */
+  --ui-k:0;
+  --ui-glass-fill:rgba(calc(255 - 231*var(--ui-k)),calc(255 - 231*var(--ui-k)),calc(255 - 227*var(--ui-k)),calc(.14 + .46*var(--ui-k)));
+  --g-fill:linear-gradient(var(--ui-glass-fill),var(--ui-glass-fill));
   --g-fill2:linear-gradient(rgba(255,255,255,.16),rgba(255,255,255,.16));
   --g-thumb:linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28));
   --g-rim:0 0 0 0 transparent}
@@ -613,7 +622,7 @@ body.open #hback{opacity:1;visibility:visible;pointer-events:auto;scale:1;transi
 /* 装饰线 */
 .deco{position:fixed;z-index:2;pointer-events:none;color:rgba(255,255,255,.6)}
 body.light-bg .deco{color:rgba(0,0,0,.45)}
-.deco.v{left:24px;top:calc(env(safe-area-inset-top,0px) + 112px);width:1px;height:86px;background:currentColor}   /* 下移到 AI 岛（顶部 +68px、高 34px）下方，留 10px 间隙 */
+.deco.v{left:24px;top:calc(env(safe-area-inset-top,0px) + 62px);width:1px;height:86px;background:currentColor}
 .deco.p{right:22px;top:calc(env(safe-area-inset-top,0px) + 16px);width:14px;height:14px;
   background:linear-gradient(currentColor,currentColor) center/100% 1px no-repeat,linear-gradient(currentColor,currentColor) center/1px 100% no-repeat}
 /* 全屏沉浸：全部收起 */
@@ -692,7 +701,7 @@ body.light-bg .deco{color:rgba(0,0,0,.45)}
 #one .m-poster .c.hero{text-shadow:var(--tsh,none)}
 
 /* ===== v0.0.3 深色磨砂面板（参照设计稿：封面 → 标签栏 → 控制键 → 内容）===== */
-:root{--p-bg:rgba(30,30,34,.7);--p-fill:rgba(255,255,255,.07);--p-fill2:rgba(255,255,255,.15);--p-line:rgba(255,255,255,.09);--p-sub:rgba(255,255,255,.58)}
+:root{--p-bg:var(--ui-glass-fill);--p-fill:rgba(255,255,255,.07);--p-fill2:rgba(255,255,255,.15);--p-line:rgba(255,255,255,.09);--p-sub:rgba(255,255,255,.58)}
 #hub{width:min(70vw,300px);padding:14px;border-radius:28px;min-height:0;max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 106px)}
 #hub::before,body.light-bg #hub::before{background:var(--p-bg);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
   box-shadow:0 10px 30px rgba(0,0,0,.36)}
@@ -722,7 +731,7 @@ body.light-bg .deco{color:rgba(0,0,0,.45)}
 #hub .csep{display:none!important}
 #hub .cb{flex:1;width:auto;height:46px;border-radius:16px;background:var(--p-fill);box-shadow:none}
 #hub .cb.on{background:var(--p-fill2);box-shadow:none}
-#hub #qpop{border-radius:20px;background:rgba(255,255,255,.14);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);box-shadow:0 14px 40px rgba(0,0,0,.3)}
+#hub #qpop{border-radius:20px;background:var(--ui-glass-fill);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);box-shadow:0 14px 40px rgba(0,0,0,.3)}
 /* 内容区 */
 #hub .dock{order:3;flex:1 1 230px;min-height:96px;border-radius:0;border-top:1px solid var(--p-line)}
 #hub .panel{background:transparent;box-shadow:none;border-radius:0;padding:10px 0 4px!important;scrollbar-gutter:auto}
@@ -745,7 +754,7 @@ body.light-bg #hub .chip,body.light-bg #hub .cb,body.light-bg #hub .nb{color:#ff
 body.light-bg #hub .nb svg,body.light-bg #hub .chip svg,body.light-bg #hub .cb svg{stroke:currentColor}
 /* 迷你条：封面缩略图 + 正在播放 */
 #mini{color:#f5f5f7;border-radius:22px;transition:width calc(.4s/var(--ui-spd,1)) cubic-bezier(.3,1,.4,1),scale calc(.7s/var(--ui-spd,1)) var(--spring),opacity calc(.4s/var(--ui-spd,1)) ease}
-#mini::before{background:rgba(255,255,255,.14);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
+#mini::before{background:var(--ui-glass-fill);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
   box-shadow:0 12px 34px rgba(0,0,0,.3)}
 .mi-tile{width:48px;height:48px;border-radius:13px;background:var(--cover2,var(--cover,linear-gradient(135deg,rgba(143,176,255,.6),rgba(255,255,255,.12)))) center/cover no-repeat;
   box-shadow:0 4px 12px rgba(0,0,0,.35);text-shadow:0 1px 8px rgba(0,0,0,.35)}
@@ -848,87 +857,10 @@ body.light-bg .gpop{background:rgba(255,255,255,.55)}
 .tlt { display: none !important; }
 /* 全屏保持单色连贯 */
 
-/* ===== 状态栏时间轴：一体式胶囊样式 =====
-   材质和 #hub 面板里其它控件（.chip / .cb / .card）完全一致：
-   var(--p-fill) 平铺半透明 + 无投影 + 不叠第二层模糊（高斯模糊由 #hub 面板整体提供）。
-   用 --p-fill 而不是写死颜色，换主题 / 浅色背景时会跟着变。 */
-#statbar {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  background: var(--p-fill, rgba(255, 255, 255, 0.07)) !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
-  border-radius: 24px !important;
-  height: 48px !important;
-  padding: 0 16px !important;
-  margin-top: 10px !important;
-  box-sizing: border-box;
-}
-/* .tl 现在是"整条胶囊高度"的触摸热区（长按放大镜 / 点按跳转都靠它），
-   看得见的 6px 轨道画在 ::before 上。不能再给 .tl 设 overflow:hidden 和 6px 高：
-   那样会把 .tl::after 的扩大点按区裁掉，只剩 6px 能按到 */
-#statbar .tl {
-  flex: 1 1 auto !important;
-  width: auto !important;
-  height: auto !important;
-  align-self: stretch !important;
-  align-items: center !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  overflow: visible !important;
-  display: flex !important;
-  gap: 0 !important;
-}
-#statbar .tl::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 6px;
-  margin-top: -3px;
-  border-radius: 3px;
-  /* 已播放 = 白色：左边到 --tl-pct 是白，右边是淡轨道（--tl-pct 由 timeline.js 的 paintTL 写入） */
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.85) var(--tl-pct, 0%), rgba(255, 255, 255, 0.15) var(--tl-pct, 0%));
-  pointer-events: none;
-}
-#statbar .tl::after { top: 0 !important; bottom: 0 !important; }
-/* .tlc = 能按播放时间连续算进度（有音频，或按顺序播放）：整条白色填充已经画好了，隐藏各句自己的小填充，免得叠出细缝 */
-#statbar .tl.tlc .tg::before { display: none !important; }
-#statbar .tl .tg {
-  height: 6px !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-#statbar .tl .tg:first-child { border-radius: 3px 0 0 3px !important; }
-#statbar .tl .tg:nth-last-child(2) { border-radius: 0 3px 3px 0 !important; } /* 最后一个色块（后面还跟着隐藏的 .cur） */
-#statbar .tl .tg:first-child:nth-last-child(2) { border-radius: 3px !important; }
-#statbar .tl .tg::before {
-  background: rgba(255, 255, 255, 0.85) !important;
-  box-shadow: none !important;
-}
-html body.single-color #statbar .tl .tg { background: transparent !important; } /* 盖掉下面单色模式给每块加的 20% 白底 */
-#statbar .tl .cur { display: none !important; }
-.tl-time {
-  flex: none;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.45);
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  user-select: none;
-  letter-spacing: 0.5px;
-}
-/* #hub .statbar{height:22px!important;margin-top:6px!important}（上方第 799 行）优先级更高，
-   会把胶囊压回 22px，这里用 #hub #statbar 夺回高度和上边距 */
-/* 进度胶囊下移：原来胶囊下面有 margin-bottom 14px + 面板内边距 14px = 28px 空白，
-   这里把 margin-bottom 归零，胶囊离面板底边只剩 14px（和左右内边距一样宽）。
-   面板整体变矮 14px，因为面板是贴底定位的，上方的显示空间就多出 14px。
-   （#hub .statbar 在第 730 行和 @media(max-height:660px) 里各设了一次 margin-bottom，这里用 !important 统一盖掉） */
-#hub #statbar { height: 48px !important; margin-top: 10px !important; margin-bottom: 0 !important; }
+/* 状态栏恢复彩虹分段 */
+#statbar .tl { gap: 2px !important; border-radius: 0 !important; overflow: visible !important; }
+#statbar .tl .tg { border-radius: 5px !important; background: hsla(var(--h),70%,68%,.3) !important; }
+#statbar .tl .tg::before { background: hsl(var(--h),66%,46%) !important; box-shadow: none !important; }
 /* 背景菜单：点图片左下角"样式"弹出，和动效风格菜单同一套气泡 */
 #ddPop{z-index:210;padding:10px;border-radius:24px}
 #ddPop .sp-grid{position:relative;gap:8px;padding:2px;
@@ -989,7 +921,7 @@ body.mx #mini .mi-b:active{scale:.84;transition:scale calc(.12s/var(--ui-spd,1))
 /* 播放卡片：上滑迷你条弹出的二级页面（大封面 + 当前句 + 控制） */
 #npCard{position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);width:min(calc(100% - 24px),calc(30vh + 28px),340px);z-index:190;padding:10px 14px 12px;border-radius:28px;color:#f5f5f7;
   overflow:hidden;height:auto;
-  background:rgba(65, 65, 75, .45);
+  background:var(--ui-glass-fill);   /* 统一玻璃规矩：见 :root 的 --ui-glass-fill */
   -webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
   box-shadow:0 18px 50px rgba(0,0,0,.25);touch-action:none;
   opacity:0;visibility:hidden;pointer-events:none;transform:translateY(28px) scale(.94);transform-origin:50% 100%;
@@ -1033,15 +965,13 @@ body.mx #mini .mi-b:active{scale:.84;transition:scale calc(.12s/var(--ui-spd,1))
   z-index: 10;
   touch-action: none;
 }
-/* 迷你条上方的把手已去掉：只是不再显示那根白条，元素和触摸区原样保留（手势不受影响） */
-.mi-grab::before,
-.mi-grab::after { content: none; }
+/* 迷你条上方的小白条（.mi-grab::before）已删除。.mi-grab 本身保留作透明的拖动热区，mini-player.js 靠它拖动 / 展开 */
 /* 迷你条右侧的设置按钮：迷你条收起时显示；展开(mx)/设置页已打开/全屏时隐藏，两个方向都有过渡 */
 #miSet{
   position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 11px);
   width:52px;height:52px;padding:0;border:none;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  color:#f5f5f7;background:rgba(255,255,255,.14);
+  color:#f5f5f7;background:var(--ui-glass-fill);
   -webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
   box-shadow:0 12px 34px rgba(0,0,0,.3);
   z-index:6;cursor:pointer;-webkit-tap-highlight-color:transparent;
@@ -1444,7 +1374,7 @@ body.light-bg .bt{color:#151515;background:rgba(0,0,0,.08)}
 /* =========================================================
  * 主题选择器（横向滑动二级菜单）
  * ========================================================= */
-#mediaMenu.theme-picker { position: fixed; top: 50%; left: 50%; right: auto; bottom: auto; width: min(340px, 92vw); padding: 14px; border-radius: 20px; background: rgba(255,255,255,.14)!important; -webkit-backdrop-filter: var(--g-blur)!important; backdrop-filter: var(--g-blur)!important; border: none!important; box-shadow: 0 14px 40px rgba(0,0,0,.3)!important; z-index: 999; opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, calc(-50% + 12px)) scale(.96); transform-origin: 50% 50%; transition: transform calc(.35s/var(--ui-spd,1)/var(--theme-spd,1)) cubic-bezier(.32,.72,0,1), opacity calc(.2s/var(--ui-spd,1)/var(--theme-spd,1)), visibility 0s calc(.35s/var(--ui-spd,1)/var(--theme-spd,1)); max-height: calc(100vh - 120px); max-height: calc(100dvh - 120px); overflow-y: auto; scrollbar-width: none; }
+#mediaMenu.theme-picker { position: fixed; top: 50%; left: 50%; right: auto; bottom: auto; width: min(340px, 92vw); padding: 14px; border-radius: 20px; background: var(--ui-glass-fill)!important; -webkit-backdrop-filter: var(--g-blur)!important; backdrop-filter: var(--g-blur)!important; border: none!important; box-shadow: 0 14px 40px rgba(0,0,0,.3)!important; z-index: 999; opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, calc(-50% + 12px)) scale(.96); transform-origin: 50% 50%; transition: transform calc(.35s/var(--ui-spd,1)/var(--theme-spd,1)) cubic-bezier(.32,.72,0,1), opacity calc(.2s/var(--ui-spd,1)/var(--theme-spd,1)), visibility 0s calc(.35s/var(--ui-spd,1)/var(--theme-spd,1)); max-height: calc(100vh - 120px); max-height: calc(100dvh - 120px); overflow-y: auto; scrollbar-width: none; }
 #mediaMenu.theme-picker.show { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, -50%) scale(1); transition: transform calc(.4s/var(--ui-spd,1)/var(--theme-spd,1)) cubic-bezier(.32,.72,0,1), opacity calc(.2s/var(--ui-spd,1)/var(--theme-spd,1)), visibility 0s 0s; }
 .tp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .tp-title { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; }
@@ -1475,7 +1405,7 @@ body.light-bg .bt{color:#151515;background:rgba(0,0,0,.08)}
 /* 主题选择器：与 #qpop 等其他弹出卡片保持一致的底色 / 模糊 / 阴影，并固定在屏幕正中。
    叠加 .show 抬高特异性，用来盖过前面“终极修复/加固层”里写死的深色底和 blur(20px)。 */
 body #mediaMenu.theme-picker.show.show.show.show {
-  background: rgba(255,255,255,.14) !important;
+  background: var(--ui-glass-fill) !important;
   -webkit-backdrop-filter: var(--g-blur) !important;
   backdrop-filter: var(--g-blur) !important;
   border: none !important;
@@ -1521,7 +1451,7 @@ body #mediaMenu.theme-picker.show::before {
   display: block !important;
   position: absolute; inset: 0; z-index: -1; pointer-events: none;
   border-radius: 20px;
-  background: rgba(255,255,255,.14);
+  background: var(--ui-glass-fill);
   -webkit-backdrop-filter: blur(var(--tpb, var(--gb)));
   backdrop-filter: blur(var(--tpb, var(--gb)));
   box-shadow: 0 14px 40px rgba(0,0,0,.3);
@@ -1652,7 +1582,7 @@ html body #zoomPop.pfx.show {
 /* ===== 主题选择器的二级菜单：长按卡片弹出，挂在主菜单正下方，不遮挡上面的卡片 ===== */
 body #mediaMenu.theme-picker.show > #tpEdit.tp-sheet{position:absolute;left:0;right:0;top:calc(100% + 10px);z-index:2;
   display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:20px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  background:rgba(255,255,255,.14);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
+  background:var(--ui-glass-fill);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
   box-shadow:0 14px 40px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.08);
   opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-14px) scale(.96);transform-origin:50% 0;
   transition:transform calc(.5s/var(--ui-spd,1)) var(--spring-pop,cubic-bezier(.32,.72,0,1)),opacity calc(.2s/var(--ui-spd,1)) ease,
@@ -1787,7 +1717,7 @@ body #mediaMenu.theme-picker.show > #tpEdit.tp-sheet.open{
    这里给“未显示”状态补上同样的外观，并让它淡出而不是冒出来。 */
 body #mediaMenu.theme-picker:not(.show) > #tpEdit.tp-sheet{position:absolute;left:0;right:0;top:calc(100% + 10px);z-index:2;box-sizing:border-box;
   display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:16px;overflow:hidden;
-  background:rgba(255,255,255,.14);box-shadow:0 14px 40px rgba(0,0,0,.3);
+  background:var(--ui-glass-fill);box-shadow:0 14px 40px rgba(0,0,0,.3);
   opacity:0!important;pointer-events:none;transform:none;transition:opacity .14s ease!important;display:none!important}
 /* 翻面改为逐帧驱动，不再用 CSS 过渡 rotate（否则会和逐帧写入打架） */
 body #mediaMenu.theme-picker .tp-card.tpflip:not(.dragging){transition:translate .35s var(--spring-pop,cubic-bezier(.32,.72,0,1)),scale .35s var(--spring-pop,cubic-bezier(.32,.72,0,1)),box-shadow .2s ease!important}
@@ -2346,245 +2276,70 @@ body #hub #panel{
 #qpop .qp-ttl{font-size:15px;font-weight:700}
 body.light-bg #qpop .qp-row,body.light-bg #qpop .qp-back{color:#151515;background:rgba(0,0,0,.08)}
 
-/* ===== 商籁（Sonnet）画布层 =====
-   画布由 SonnetAdapter 挂到 #sonnetHost。背景（#bgf/#bg/#dimv）留在下面，Pixi 画布是透明的；
-   只隐藏 DOM 文字层 #one 和星空 #sky，不隐藏整个 #stage。
-   宿主用 visibility 隐藏而不是 display:none：这样隐藏时尺寸不变，Pixi 的 ResizeObserver 不会把画布缩成 320×240 再重建场景。 */
-#sonnetHost{position:absolute;inset:0;visibility:hidden;overflow:hidden;pointer-events:none}
-#sonnetHost canvas{display:block}
-#stage.mode-sonnet #sonnetHost{visibility:visible}
-#stage.mode-sonnet #one,#stage.mode-sonnet #sky{display:none!important}
 
-/* =========================================================
- * Bravais 墙面（Folia 海报墙风格）
- * 依赖变量：--g-blur / --spring-pop / --ui-spd（均已在上文定义）
- * ========================================================= */
-#bravais-wall {
-  position: fixed; inset: 0; z-index: 99990;
-  overflow: hidden; touch-action: none;
-  -webkit-tap-highlight-color: transparent;
-  contain: layout paint;
-  opacity: 0; visibility: hidden; transform: scale(0.95);
-  transition: opacity calc(.4s/var(--ui-spd,1)) ease,
-              transform calc(.6s/var(--ui-spd,1)) var(--spring-pop),
-              visibility 0s calc(.6s/var(--ui-spd,1));
-}
-#bravais-wall.show {
-  opacity: 1; visibility: visible; transform: scale(1);
-  transition: opacity calc(.4s/var(--ui-spd,1)) ease,
-              transform calc(.6s/var(--ui-spd,1)) var(--spring-pop),
-              visibility 0s;
-}
-#bravais-wall.show.settled { transform: none; }
-/* 墙面打开时把背后的舞台 / 控件 / 环境模糊层全部隐藏：省掉全屏 blur 的合成开销 */
-body.bravais-open .app,
-body.bravais-open #amb,
-body.bravais-open #pgbg { visibility: hidden; }
-#bravais-bg {
-  position: absolute; inset: 0; z-index: 1;
-  background: #0b0b10;
-}
+/* ===== 统一玻璃：控制栏与迷你播放条同材质 =====
+   #hubGlow（封面图放大模糊 + 1.6 倍饱和）只认原图、不认合成后的真实画面，叠了后处理 / 动效就会发棕发团，所以停用。
+   元素保留在 DOM 里：mini-player.js 换图时仍会往里写样式，直接删会报错。 */
+html body #hubGlow{display:none!important}
 
-/* 画布与磁贴 */
-#bravais-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; will-change: transform; }
-.bw-tile {
-  position: absolute; overflow: hidden;
-  background: rgba(255,255,255,.075);
-  cursor: pointer; user-select: none; -webkit-user-select: none;
-  contain: layout;
-}
-.bw-tile img {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; display: block; pointer-events: none;
-  opacity: 0; transition: opacity .35s ease;
-}
-.bw-tile img.ld { opacity: 1; }
-/* 滑动期间不做封面淡入：否则每块新进入的磁贴都会临时升成独立合成层 */
-#bravais-canvas.moving .bw-tile img { transition: none; }
-/* 捏合缩放：歌曲信息（序号 / 标题 / 歌手 / 播放角标）不跟着放大——手势中淡出，落实后以原字号淡入 */
-/* 用 visibility 瞬间隐藏 / 显示，不用 opacity 过渡：上百个磁贴的文字同时做 opacity 过渡会各自升成合成层，捏合开始和结束时会卡住一下 */
-#bravais-canvas.pinching .bw-no,
-#bravais-canvas.pinching .bw-meta,
-#bravais-canvas.pinching .bw-eq { visibility: hidden; }
-/* 序号 / 标题 / 歌手 / 播放角标：按 --bw-t（≤1）整体缩放，字号、边距、角标一起等比，缩小后版式和缩小前一模一样 */
-.bw-no, .bw-meta, .bw-eq { zoom: var(--bw-t, 1); }
-.bw-tile::after {                       /* 底部压暗，保证文字可读 */
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 62%;
-  background: linear-gradient(transparent, rgba(0,0,0,.72)); pointer-events: none;
-}
-.bw-tile.lift { opacity: 0; }
-.bw-tile.sel { outline: 1.5px solid rgba(255,255,255,.8); outline-offset: -1.5px; z-index: 1; }
-.bw-no {
-  position: absolute; top: 6px; left: 6px; z-index: 2;
-  padding: 1px 5px; border-radius: 3px;
-  font-size: 9px; font-weight: 700; letter-spacing: .5px; font-variant-numeric: tabular-nums;
-  color: rgba(255,255,255,.78); background: rgba(0,0,0,.42);
-}
-.bw-meta {
-  position: absolute; left: 8px; right: 8px; bottom: 7px; z-index: 2;
-  color: #fff; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.55);   /* 模糊半径 6→3：每块磁贴的文字阴影栅格化更便宜 */
-}
-.bw-meta b {
-  display: block; font-size: 12px; line-height: 1.25; font-weight: 700;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
-}
-.bw-meta span {
-  display: block; margin-top: 2px; font-size: 10px; color: rgba(255,255,255,.66);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.bw-tile.s2 .bw-meta b { font-size: 14px; }
-.bw-tile.s2 .bw-meta span { font-size: 11px; }
-.bw-tile.s3 .bw-meta { left: 12px; right: 12px; bottom: 11px; }
-.bw-tile.s3 .bw-meta b { font-size: 17px; -webkit-line-clamp: 2; }
-.bw-tile.s3 .bw-meta span { font-size: 12px; margin-top: 3px; }
-.bw-tile.s3 .bw-no, .bw-tile.s2 .bw-no { font-size: 10px; }
 
-/* 正在播放角标 */
-.bw-eq {
-  position: absolute; top: 6px; right: 6px; z-index: 2;
-  height: 18px; padding: 0 6px; border-radius: 9px;
-  display: none; align-items: center; gap: 2px;
-  background: rgba(0,0,0,.5); pointer-events: none;
-}
-.bw-tile.now .bw-eq { display: flex; }
-/* 均衡器条：改用 transform: scaleY（合成层动画），不再动 height（会让磁贴每帧重新布局 + 重绘，拖动墙面时尤其卡） */
-.bw-eq i { width: 3px; height: 11px; border-radius: 2px; background: #fff; transform: scaleY(.45); }
-.bw-eq i:nth-child(1) { transform: scaleY(.45); }
-.bw-eq i:nth-child(2) { transform: scaleY(.9); }
-.bw-eq i:nth-child(3) { transform: scaleY(.64); }
-.bw-tile.playing .bw-eq i { animation: bwEq .9s ease-in-out infinite; will-change: transform; }
-.bw-eq i:nth-child(2) { animation-delay: -.3s; }
-.bw-eq i:nth-child(3) { animation-delay: -.6s; }
-@keyframes bwEq { 0%, 100% { transform: scaleY(.36); } 50% { transform: scaleY(1); } }
+/* ===== 玻璃内文字固定为白色（对应 :root 里的「UI 玻璃规矩」）=====
+   旧的 body.light-bg 规则假设"背景亮 → 玻璃也亮 → 字要深"，把玻璃里的字改成了 #151515；
+   现在亮背景上玻璃会按 --ui-k 自动变深，深底配深字反而更糟（迷你条里"正在播放"变暗灰、按钮文字发黑）。
+   所以只对玻璃表面把文字 / 变量还原成深色模式的值；玻璃外面的页面文字（页脚、快捷开关等）仍跟着 light-bg 走。 */
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav){--tx:#f5f5f7;--sub:rgba(255,255,255,.62);color:#f5f5f7}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.stat,.ph,.lcnt,label,.row span,.mt,.crow>span){color:var(--sub)!important}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.chip,.ctl button,.nb,.cb,.gh,.qh b,.qr span,.qtip,.qd .chk,.mm-h,.qt,.bt,.pkg-tab,.card .gear,.card .del){color:#f5f5f7}
+/* 旧规则里 .mini 的深色是 !important，所以单独加 !important；.qt 是「调节」页顶部的六个快捷开关 */
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .mini:not(.dirty){color:#f5f5f7!important}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.nb,.chip,.ctl,.cb,.gh,.card .gear,.card .del) svg{stroke:currentColor}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.chip.on,.cb.on,.mini.dirty,.pkg-tab.active){color:#fff}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .deco{color:rgba(255,255,255,.45)}
+/* 这些元素在 light-bg 下被改成了"深色半透明底"，还原成深色模式的浅色半透明底 */
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.bt,.pkg-tab,.card .gear,.card .del,#qpop .qp-row,#qpop .qp-back){background:rgba(255,255,255,.12)}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .mini:not(.dirty){background:var(--g-fill2);box-shadow:none}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(textarea,.card textarea){color:#fff;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18)}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) textarea::placeholder{color:rgba(255,255,255,.4)}
+html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(#qpop .qp-row,#qpop .qp-back){color:#f5f5f7}
 
-/* 压暗 + 边缘景深 */
-#bravais-vignette {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 46%, rgba(0,0,0,0) 48%, rgba(0,0,0,.5) 100%),
-    rgba(0,0,0,.26);
-}
 
-/* 左侧集合标签（逐字竖排） */
-#bravais-tab {
-  position: absolute; left: 0; top: 50%; z-index: 4;
-  transform: translateY(-50%);
-  padding: 12px 8px; border-radius: 0 14px 14px 0;
-  background: rgba(205,205,212,.36);
-  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
-  box-shadow: 0 4px 16px rgba(0,0,0,.3);
-  pointer-events: none;
-}
-#bravais-tab b {
-  display: block; width: 18px; text-align: center;
-  font-size: 15px; font-weight: 800; line-height: 1.3; color: rgba(255,255,255,.92);
-}
+/* ===== 进度条统一单色（灰白）=====
+   style.css 里原有的 body.single-color 规则没有任何脚本去加那个类，所以彩虹一直开着。
+   这里直接把同样的规则无条件写出来，不再依赖任何脚本（也不用改 timeline.js）。
+   想恢复彩虹：删掉这一整段即可。 */
+html body .tl .tg,html body #statbar .tl .tg,html body .tl .tg.on{background:rgba(255,255,255,.2)!important}
+html body .tl .tg::before,html body #statbar .tl .tg::before{background:rgba(255,255,255,.85)!important;box-shadow:none!important}
+html body #tlLens .lseg,html body #tlLens .lseg.pk{background:rgba(255,255,255,.2)!important}
+html body #tlLens .lseg::before{background:rgba(255,255,255,.85)!important}
 
-/* 返回键 */
-#bravais-close {
-  position: absolute; z-index: 10;
-  top: calc(env(safe-area-inset-top, 0px) + 16px); left: 16px;
-  width: 40px; height: 40px; border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(60,60,66,.5); color: #fff;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
-  transition: transform 0.2s, background 0.2s;
-}
-#bravais-close:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
-#bravais-close svg { width: 20px; height: 20px; }
 
-/* 放大卡片 */
-#bravais-scrim {
-  position: absolute; inset: 0; z-index: 5;
-  background: rgba(0,0,0,.5);
-  opacity: 0; pointer-events: none;
-  transition: opacity calc(.35s/var(--ui-spd,1)) ease;
-}
-#bravais-wall.has-pop #bravais-scrim { opacity: 1; pointer-events: auto; }
-#bravais-pop {
-  position: absolute; z-index: 6; overflow: hidden;
-  left: 0; top: 0; width: 0; height: 0;
-  border: 1.5px solid rgba(255,255,255,.75); border-radius: 2px;
-  background: #1c1c20; box-shadow: 0 24px 70px rgba(0,0,0,.65);
-  visibility: hidden; pointer-events: none; transition: none;
-}
-#bravais-pop.show { visibility: visible; pointer-events: auto; }
-#bravais-pop.anim {
-  transition: left calc(.5s/var(--ui-spd,1)) var(--spring-pop), top calc(.5s/var(--ui-spd,1)) var(--spring-pop),
-              width calc(.5s/var(--ui-spd,1)) var(--spring-pop), height calc(.5s/var(--ui-spd,1)) var(--spring-pop);
-}
-#bravais-pop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-#bravais-pop::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 58%;
-  background: linear-gradient(transparent, rgba(0,0,0,.82)); pointer-events: none;
-}
-#bravais-pop .pop-meta {
-  position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 2; color: #fff;
-  opacity: 0; transform: translateY(8px);
-  transition: opacity .25s ease .18s, transform .35s var(--spring) .18s;
-}
-#bravais-pop.open .pop-meta { opacity: 1; transform: translateY(0); }
-#bravais-pop-title {
-  font-size: 22px; font-weight: 800; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,.5);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
-}
-#bravais-pop-sub {
-  margin-top: 6px; font-size: 12px; color: rgba(255,255,255,.76);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-#bravais-pop .pop-act { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
-#bravais-pop .pop-act button {
-  display: flex; align-items: center; gap: 6px; padding: 4px 0;
-  border: none; background: none; color: rgba(255,255,255,.88);
-  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-}
-#bravais-pop .pop-act button:active { opacity: .6; }
-#bravais-pop .pop-act .ic svg { width: 18px; height: 18px; display: block; }
+/* ===== 底部进度条：还原成「圆角底板 + 左右时间 + 一整条细轨道」=====
+   只改进度条这一行的外观，不动玻璃底色 / 模糊 / --ui-k。
+   盖掉了上面「状态栏恢复彩虹分段」那几条（每段 2px 缝、5px 圆角），改回连成一条的轨道；
+   轨道本身只有 5px 高，但 .tl 仍是 22px 高的透明触摸区，手指好按。 */
+html body #hub #statbar{display:flex!important;align-items:center!important;gap:14px!important;height:50px!important;margin:8px 0 0!important;padding:0 18px!important;border-radius:25px!important;background:rgba(255,255,255,.12)!important}
+html body #hub #statbar .tl-time{display:block!important;flex:none!important;font-size:15px!important;letter-spacing:.06em!important;font-variant-numeric:tabular-nums!important;color:rgba(255,255,255,.6)!important}
+html body #statbar .tl{flex:1 1 0!important;width:auto!important;height:22px!important;gap:0!important;border-radius:0!important;overflow:visible!important;align-items:center!important;background:none!important}
+html body #statbar .tl .tg{height:5px!important;align-self:center!important;border-radius:0!important}
+html body #statbar .tl .tg:first-of-type{border-radius:3px 0 0 3px!important}
+html body #statbar .tl .tg:last-of-type{border-radius:0 3px 3px 0!important}
+html body #statbar .tl .tg:only-of-type{border-radius:3px!important}
+html body #statbar .tl .cur{display:none!important}
 
-/* 底部进度胶囊 + 右侧悬浮按钮 */
-#bravais-dock {
-  position: absolute; z-index: 10;
-  left: 16px; right: 74px; max-width: 300px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-  height: 44px; padding: 0 18px; border-radius: 22px;
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(34,34,38,.55);
-  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
-  box-shadow: 0 8px 28px rgba(0,0,0,.4);
-  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.62); font-variant-numeric: tabular-nums;
-}
-#bravais-track {
-  position: relative; flex: 1; height: 24px; display: flex; align-items: center;
-  touch-action: none; cursor: pointer;
-}
-#bravais-track::before {
-  content: ""; position: absolute; left: 0; right: 0; height: 4px; border-radius: 2px;
-  background: rgba(255,255,255,.2);
-}
-#bravais-track i {
-  position: absolute; left: 0; width: 100%; height: 4px; border-radius: 2px;
-  background: rgba(255,255,255,.88); transform-origin: left center; transform: scaleX(0);
-  transition: transform .28s linear;
-}
-#bravais-fab {
-  position: absolute; z-index: 10; right: 14px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-  display: flex; flex-direction: column; gap: 12px;
-}
-#bravais-fab button {
-  width: 44px; height: 44px; border-radius: 22px; padding: 0;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(34,34,38,.55); color: rgba(255,255,255,.88);
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
-  transition: transform .2s, background .2s;
-}
-#bravais-fab button:active { transform: scale(.88); background: rgba(255,255,255,.28); }
-#bravais-fab svg { width: 22px; height: 22px; display: block; }
+/* 时间文字保险：不管别处怎么藏，这两个一定要显示 */
+html body #hub #statbar #tlTimeCur,html body #hub #statbar #tlTimeTot{display:block!important;visibility:visible!important;opacity:1!important;position:static!important;width:auto!important;height:auto!important;overflow:visible!important;clip:auto!important;transform:none!important}
 
-@media (prefers-reduced-motion: reduce) {
-  .bw-tile.playing .bw-eq i { animation: none; height: 8px; }
-}
+
+/* 主题卡片弹窗：它在 #hub 里面，hub 收起时 opacity:0，opacity<1 的祖先会让弹窗的模糊采不到背景，玻璃就只剩 14% 白底、发浅。
+   这种情况下（body 没有 .open）补一层固定的深色底，保证白字可读。 */
+html body:not(.open) #mediaMenu.theme-picker::before,html body:not(.open) #tpEdit::before{background-color:rgba(24,24,28,.5)!important}
+
+/* 面板内小元素（.card、.gh）原来是 .12 的白底，玻璃变深后层次偏平，略微提亮一档 */
+html body #hub :is(.card,.gh){background:rgba(255,255,255,.16)}
+
+/* 设置页里的「玻璃深色深度」滑块：文字 + 数值在上，滑块独占下一行（glass-adapt.js 挂在「界面动画速度」后面） */
+.gd-set{display:block;padding:12px 4px 10px;color:#f5f5f7;font-size:14px}
+.gd-set .gd-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.gd-set .gd-name{white-space:nowrap}
+.gd-set input[type=range]{display:block;width:100%;margin:0}
+.gd-set em{flex:none;font-style:normal;font-size:12px;color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums}
