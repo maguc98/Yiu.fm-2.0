@@ -33,7 +33,16 @@
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null, analyser = null, fdb = null, bdb = null, prevDb = null, useFloat = false, ready = false;
   var BANDS = [[30, 140], [140, 420], [420, 1400]];   // 底鼓 / 军鼓低中频 / 帽镲
-  var BW = [1, 0.45, 0.18];                            // 权重：底鼓主导，军鼓补 2/4 拍，帽镲只作点缀
+  /* 可调参数（面板「调参」里改；存 localStorage，刷新后保留）
+     gridTol 网格宽容度 · unlock 解锁灵敏度 · thr 阈值硬度 · bw0/1/2 底鼓/军鼓/帽镲权重 */
+  var TKEY = 'yiu.beatTune.v1';
+  var TDEF = { gridTol: 0.3, unlock: 0.24, thr: 0.45, bw0: 1, bw1: 0.45, bw2: 0.18, delay: 0, tempoBias: 0 };   // delay：视觉延迟补偿 ms（蓝牙耳机声音晚于画面时调大）
+  var TUNE = {}, tk;
+  for (tk in TDEF) TUNE[tk] = TDEF[tk];
+  try {
+    var _sv = JSON.parse(localStorage.getItem(TKEY) || 'null');
+    if (_sv) for (tk in TDEF) if (isFinite(+_sv[tk]) && _sv[tk] !== null) TUNE[tk] = +_sv[tk];
+  } catch (_) {}
   var binOf = [[1, 6], [6, 18], [18, 65]];
 
   function ensureCtx() {
@@ -86,6 +95,10 @@
   var recentS = [], beatCount = 0;
   var running = false, raf = 0;
   var cbs = [];
+  /* v6：节奏跟踪（自相关估速度 + 梳状滤波找相位）。不再靠「onset 间隔中位数」推速度，
+     反拍贝斯 / 装饰音再多也不会把速度带偏；onset 只负责在预测拍点附近「校准」 */
+  var ebuf = [], lastEst = 0, nextSlot = 0, tempoMiss = 0, phaseMiss = 0, lowConf = 0, confNow = 0;
+  var SLOT_LATE = 50;      // 预测拍点之后多久还没等到 onset，就按网格补发（ms）
 
   function median(a) {
     if (!a.length) return 0;
@@ -94,6 +107,7 @@
   }
   function foldBpm(b) { while (b < 70) b *= 2; while (b >= 160) b /= 2; return b; }
   function bpmNow() {
+    if (locked && period > 0) return Math.round(foldBpm(60000 / period));
     if (intervals.length < 3) return 0;
     return Math.round(median(intervals.map(function (x) { return foldBpm(60000 / x); })));
   }
@@ -108,6 +122,7 @@
     lastBeat = 0; lastInterval = 400; lastLoop = 0; warmT = 0;
     armed = true; peakE = 0;
     locked = false; period = 500; devSum = 0; devN = 0; quietT = 0;
+    ebuf.length = 0; lastEst = 0; nextSlot = 0; tempoMiss = 0; phaseMiss = 0; lowConf = 0; confNow = 0;
     if (prevDb) prevDb.fill(-100);
   }
 
@@ -141,7 +156,7 @@
         out[b] = sum2 / (hi2 - lo2 + 1);
       }
     }
-    return out[0] * BW[0] + out[1] * BW[1] + out[2] * BW[2];
+    return out[0] * TUNE.bw0 + out[1] * TUNE.bw1 + out[2] * TUNE.bw2;
   }
 
   /* =========================================================================
@@ -159,21 +174,8 @@
     lastBeat = t;
     beatCount++;
     recentS.push(s); if (recentS.length > 8) recentS.shift();
-    fire(s);
-  }
-
-  function lockPeriod() {
-    if (intervals.length >= 3) period = 60000 / foldBpm(60000 / median(intervals));
-  }
-
-  function tryLock() {
-    if (intervals.length < 6) return;
-    var bs = intervals.map(function (x) { return foldBpm(60000 / x); }).sort(function (a, b) { return a - b; });
-    var med = bs[bs.length >> 1];
-    var mad = median(bs.map(function (b) { return Math.abs(b - med); }));
-    if (med > 0 && mad / med < 0.06) {                 // 折叠 BPM 中位数 ±6% 以内才算稳
-      locked = true; lockPeriod(); devSum = 0; devN = 0;
-    }
+    if (TUNE.delay > 0) { setTimeout(function () { fire(s); }, TUNE.delay); }   // 延迟补偿：只推迟视觉联动，不影响速度统计
+    else fire(s);
   }
 
   function onCandidate(t, s) {
@@ -181,7 +183,7 @@
     if (since < 180) return;                           // 硬下限：任何模式下都不快于 ~315 BPM
 
     if (!locked) {
-      // 自由模式：动态冷却 + 间隔离群过滤（明显偏离当前节奏的 onset 不进 BPM 池）
+      // 自由模式（刚开始 / 刚换段）：先用 onset 间隔顶着，等节奏估计出结果后自动锁定
       var cool = Math.max(200, Math.min(450, lastInterval * 0.55));
       if (since < cool) return;
       if (lastBeat) {
@@ -189,29 +191,117 @@
         if (r < 0.45 || r > 2.2) return;
       }
       accept(t, s);
-      tryLock();
       return;
     }
 
-    // 锁定模式：必须落在预测网格上（±30%），贝斯 off-beat / 装饰音直接丢弃
-    var n = Math.round(since / period);
-    if (n < 1) { devSum += 0.5; devN++; checkUnlock(); return; }
-    var devMs = t - (lastBeat + n * period);
-    var tol = Math.max(70, 0.3 * n * period);
-    if (Math.abs(devMs) <= tol) {
+    // 锁定模式：onset 必须落在「预测拍点」附近才算拍；反拍 / 装饰音直接丢弃
+    var dev = t - nextSlot;
+    var tolE = Math.max(50, TUNE.gridTol * period * 0.5);          // 提前侧容差（宽容度滑块）
+    if (dev >= -tolE && dev <= SLOT_LATE) {
       accept(t, s);
-      lockPeriod();
-      devSum += Math.abs(devMs) / (n * period); devN++;
-    } else {
-      devSum += 0.5; devN++;                           // 持续离群 → 累计偏差，触发解锁重收敛
+      nextSlot += period + 0.2 * dev;                              // 相位微调：每个真实拍往实测位置靠 20%
+      devSum += Math.abs(dev) / period; devN++;
+      checkUnlock();
     }
-    checkUnlock();
   }
 
   function checkUnlock() {
     if (devN < 8) return;
-    if (devSum / devN > 0.24) { locked = false; intervals.length = 0; }
+    if (devSum / devN > TUNE.unlock) { locked = false; intervals.length = 0; lowConf = 0; }
     devSum = 0; devN = 0;
+  }
+
+  /* 节奏估计：每 400ms 对最近 ~8s 的 onset 包络做一次
+     ① 自相关找拍周期（70–160 BPM，带 1× / 2× 倍周期加权，抛物线插值到亚 10ms 精度）
+     ② 梳状滤波找相位（周期已定，哪个相位上的能量最大） */
+  function estimateTempo(now) {
+    var n = ebuf.length;
+    if (n < 40) return;
+    var t0 = ebuf[0].t, span = now - t0;
+    if (span < 3500) return;
+    lastEst = now;
+    var STEP = 10, N = Math.floor(span / STEP);
+    if (N < 300) return;
+    var x = new Float32Array(N), j = 0, i, a, c, f;
+    for (i = 0; i < N; i++) {
+      var ti = t0 + i * STEP;
+      while (j < n - 2 && ebuf[j + 1].t < ti) j++;
+      a = ebuf[j]; c = ebuf[j + 1];
+      f = (ti - a.t) / ((c.t - a.t) || 1);
+      x[i] = a.v + (c.v - a.v) * (f < 0 ? 0 : f > 1 ? 1 : f);
+    }
+    // 去基线（约 0.6s 滑动均值）并截负，只留比周围「突出」的部分
+    var W = 30, cs = new Float64Array(N + 1);
+    for (i = 0; i < N; i++) cs[i + 1] = cs[i] + x[i];
+    for (i = 0; i < N; i++) {
+      var lo = Math.max(0, i - W), hi = Math.min(N, i + W + 1);
+      var v = x[i] - (cs[hi] - cs[lo]) / (hi - lo);
+      x[i] = v > 0 ? v : 0;
+    }
+    var LMIN = 33, LMAX = 90, LTOP = LMAX * 2 + 2, acf = new Float32Array(LTOP + 2), l, k, s0;
+    for (l = 0; l <= LTOP; l++) {
+      s0 = 0;
+      for (k = 0; k + l < N; k++) s0 += x[k] * x[k + l];
+      acf[l] = s0 / (N - l);
+    }
+    var r0 = acf[0];
+    if (!(r0 > 1e-3)) { confNow = 0; noteLowConf(); return; }
+    var best = -1, bestS = 0, sc = new Float32Array(LMAX + 2);
+    for (l = LMIN - 1; l <= LMAX + 1; l++) sc[l] = acf[l] + 0.5 * acf[l * 2 <= LTOP ? l * 2 : l];
+    for (l = LMIN; l <= LMAX; l++) {
+      var oct = Math.log(l * STEP / 545) / Math.LN2;               // 以 ~110 BPM 为中心的温和先验
+      var wv = sc[l] * Math.exp(-0.5 * oct * oct / 0.64);
+      if (sc[l] >= sc[l - 1] && sc[l] >= sc[l + 1] && wv > bestS) { bestS = wv; best = l; }
+    }
+    if (best < 0) { confNow = 0; noteLowConf(); return; }
+    // 八度歧义：周期和 2 倍周期得分常常几乎一样（75 BPM 被报成 150、158 被报成 79）。
+    // 默认「自动」不干预；面板「速度倍率」可偏快 / 偏慢：对应候选得分够接近（≥90%）就取它
+    if (TUNE.tempoBias !== 0) {
+      var alt = TUNE.tempoBias > 0 ? Math.round(best / 2) : Math.round(best * 2), ab = alt, h2;
+      if (alt >= LMIN && alt <= LMAX) {
+        for (h2 = alt - 1; h2 <= alt + 1; h2++) if (h2 >= LMIN && h2 <= LMAX && sc[h2] > sc[ab]) ab = h2;
+        var ao = Math.log(ab * STEP / 545) / Math.LN2;
+        if (sc[ab] * Math.exp(-0.5 * ao * ao / 0.64) >= 0.9 * bestS && sc[ab] >= 0.85 * sc[best]) best = ab;
+      }
+    }
+    var d1 = sc[best - 1], d2 = sc[best], d3 = sc[best + 1], den = d1 - 2 * d2 + d3;
+    var off = den < 0 ? 0.5 * (d1 - d3) / den : 0;
+    if (off > 1) off = 1; else if (off < -1) off = -1;
+    var P = (best + off) * STEP;
+    confNow = acf[best] / r0;
+
+    // 相位：在一个周期内扫描，找梳状和最大的位置
+    var bestPh = 0, bestC = -1, ph, sum, cnt, idx;
+    for (ph = 0; ph < P; ph += STEP) {
+      sum = 0; cnt = 0;
+      for (idx = N - 1 - ph / STEP; idx >= 0; idx -= P / STEP) { sum += x[Math.round(idx)]; cnt++; }
+      if (cnt > 0 && sum / cnt > bestC) { bestC = sum / cnt; bestPh = ph; }
+    }
+    var gt = t0 + (N - 1) * STEP - bestPh;                          // 最近一个网格拍点（ms，performance 时基）
+
+    if (!locked) {
+      if (confNow >= 0.15) {
+        locked = true; period = P; lowConf = 0; tempoMiss = 0; phaseMiss = 0; devSum = 0; devN = 0;
+        nextSlot = gt + Math.ceil((now - SLOT_LATE - gt) / P) * P;
+      }
+      return;
+    }
+    if (confNow < 0.07) { noteLowConf(); return; }
+    lowConf = 0;
+    // 速度：偏差小就平滑跟随，偏差大（换曲 / 变速）连续 3 次才重定
+    var dp = (P - period) / period;
+    if (Math.abs(dp) < 0.05) { period += 0.3 * (P - period); tempoMiss = 0; }
+    else if (++tempoMiss >= 3) { period = P; tempoMiss = 0; phaseMiss = 99; }
+    // 相位：和当前网格差不多就轻推，差太多连续 2 次才整体换相位
+    var kk = Math.round((gt - nextSlot) / period);
+    var dv = gt - (nextSlot + kk * period);
+    if (Math.abs(dv) < 0.2 * period) { nextSlot += 0.35 * dv; phaseMiss = 0; }
+    else if (++phaseMiss >= 2) {
+      nextSlot = gt + Math.ceil((now - SLOT_LATE - gt) / period) * period; phaseMiss = 0;
+    }
+  }
+  function noteLowConf() {
+    if (locked && ++lowConf >= 4) { locked = false; intervals.length = 0; lowConf = 0; }
   }
 
   /* =========================================================================
@@ -238,6 +328,12 @@
     while (h0 < hist.length && hist[h0].t < cut) h0++;
     if (h0) hist.splice(0, h0);
 
+    ebuf.push({ t: now, v: env });
+    var ecut = now - 8000, e0 = 0;
+    while (e0 < ebuf.length && ebuf[e0].t < ecut) e0++;
+    if (e0) ebuf.splice(0, e0);
+    if (now - lastEst >= 400) estimateTempo(now);
+
     var m = 0, pk = 0, i;
     for (i = 0; i < hist.length; i++) { m += hist[i].v; if (hist[i].v > pk) pk = hist[i].v; }
     m = hist.length ? m / hist.length : 0;
@@ -253,17 +349,20 @@
       if (env < peakE - drop || since > (locked ? period * 1.5 : 600)) armed = true;
     }
 
-    var thr = m + Math.max(FLOOR, (pk - m) * 0.45);
+    var thr = m + Math.max(FLOOR, (pk - m) * TUNE.thr);
     if (warmT > 400 && hist.length >= 6 && now - hist[0].t >= 500 && armed && env > FLOOR && env > thr) {
       armed = false; peakE = env;
       onCandidate(now, Math.min(2, Math.max(0.35, env / thr * 0.9)));
     }
 
-    // 网格补拍：锁定后漏检的拍按预测位置补发（弱 15%）；安静段落不补
-    if (locked && lastBeat && quietT < 800) {
+    // 网格补拍：预测拍点过了 SLOT_LATE 还没等到 onset，就按网格补发（弱 15%）；安静段落只推进网格不发
+    if (locked) {
       var guard = 0;
-      while (now - lastBeat > period * 1.45 && guard++ < 4) {
-        accept(lastBeat + period, avgRecent() * 0.85);
+      while (now - nextSlot > SLOT_LATE && guard++ < 4) {
+        if (quietT < 800) { accept(nextSlot, avgRecent() * 0.85); devSum += 0.5; devN++; }
+        nextSlot += period;
+        checkUnlock();
+        if (!locked) break;
       }
     }
   }
@@ -374,6 +473,19 @@
     get bpm()     { return bpmNow(); },
     get beating() { return running && !!lastBeat && (performance.now() - lastBeat < 1200); },
     get locked()  { return locked; },                 // v5 新增：网格是否已锁定（调试用）
+    tune: {
+      defaults: TDEF,
+      get: function () { var o = {}, k; for (k in TUNE) o[k] = TUNE[k]; return o; },
+      set: function (k, v) {
+        if (!(k in TDEF) || !isFinite(+v)) return;
+        TUNE[k] = +v;
+        try { localStorage.setItem(TKEY, JSON.stringify(TUNE)); } catch (_) {}
+      },
+      reset: function () {
+        var k; for (k in TDEF) TUNE[k] = TDEF[k];
+        try { localStorage.removeItem(TKEY); } catch (_) {}
+      }
+    },
     start: start,
     stop: stop
   };

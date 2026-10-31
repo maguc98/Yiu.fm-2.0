@@ -1075,6 +1075,7 @@
     }
 
     // A2. 全局渲染分辨率：在各引擎自己的分辨率设置上再乘一个比例（商籁 / 凝彩 / 绘光 / 云阶），5 档滑块
+    try {
     (function () {
       var vals = [0.25, 0.35, 0.5, 0.75, 1];            // 滑块位置 0..4，越往右越清晰
       function cur() { var v = parseFloat(lsGet('qt_res_mul')); return (v >= 0.25 && v < 1) ? v : 1; }
@@ -1120,6 +1121,7 @@
       note.textContent = '在各动效自己的分辨率设置上再乘这个比例，越低越省电；松手后当前画面会重建一次。云阶是网页元素，低档位时会变得更模糊。';
       contentWrap.appendChild(note);
     })();
+    } catch (e) { try { console.warn('[devtools] 渲染分辨率滑块初始化失败', e); } catch (_) {} }
 
     // B. 卡顿检测
     addSwitch('devJank', '卡顿检测', state.jank, function() {

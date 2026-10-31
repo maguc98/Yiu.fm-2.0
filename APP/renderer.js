@@ -265,6 +265,7 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
   }
   if(!pan&&(wx||wy||(one.style.transform&&one.style.transform!=="none"))){panGen++;one.style.transition="none";one.style.transform="none";one.style.filter="";wx=0;wy=0}
   if(GLM[m]){                        // 商籁 / 凝彩自己画整首歌：这里不建 DOM 文字，只保证画布已显示
+    [].forEach.call(one.querySelectorAll(".one"),function(c){c.remove()});   // 进入 GL 风格：旧 DOM 文字立刻清掉，不留 1.8s 淡出尾巴（否则切换时会闪一下文字）
     glEnter(m);skyShow(false);
     cur=null;curMode=m;shown=text;shownSig=sigOf(idx);paintStat(true);
     return;
