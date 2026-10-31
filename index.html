@@ -13,6 +13,8 @@
 <style id="temperaHostCSS">/* #temperaHost 的显示规则（按 #sonnetHost 同构假设写；请对照 style.css 里 #sonnetHost 的规则核对） */#temperaHost{position:absolute;inset:0;display:none}#stage.mode-tempera #temperaHost{display:block}#stage.mode-tempera #one,#stage.mode-tempera #sky{display:none}</style>
 <style id="lumiereHostCSS">#lumiereHost{position:absolute;inset:0;display:none}#stage.mode-lumiere #lumiereHost{display:block}#stage.mode-lumiere #one,#stage.mode-lumiere #sky{display:none}</style>
 <style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>
+<style id="sonnetHostSizeCSS">/* 商籁宿主铺满舞台：实测 #sonnetHost 只有 375×240（高度被画布固有尺寸撑出来），歌词画在画布外所以看不见 */#stage #sonnetHost{position:absolute;inset:0;width:100%;height:100%}#stage #sonnetHost canvas{width:100%;height:100%}</style>
+<style id="sonnetHideOneCSS">/* 商籁：切入时立刻隐藏普通文字层，避免切换那一帧文字闪现（与凝彩/绘光/云阶一致） */#stage.mode-sonnet #one,#stage.mode-sonnet #sky{display:none}</style>
 <style id="partitaBoxCSS">#partitabox{display:none}body.is-partita #partitabox{display:block}body.is-partita :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox,#temperabox,#lumierebox){display:none!important}#partitabox .row span{min-width:76px}#partitabox input[type=color]{width:44px;height:28px;padding:0;border:none;background:none;border-radius:8px}#partitabox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}#partitabox #partitaReset{margin-top:14px}</style>
 <style id="temperaBoxCSS">#temperabox{display:none}body.is-tempera #temperabox{display:block}body.is-tempera :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox){display:none!important}#temperabox .row span{min-width:64px}#temperabox.tc-off .tcol{opacity:.45}#temperabox .tcol{transition:opacity .25s ease}#temperabox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}#temperabox #temperaReset{margin-top:14px}</style>
 <style id="styleSelsCSS">html body #styleSels{display:flex;gap:8px;align-items:stretch}html body #styleSels .ssel{flex:1 1 0;min-width:0;width:auto;margin:0}html body #styleSels .ssel{justify-content:center;gap:10px;transition:opacity .25s,background .25s,box-shadow .25s}html body #styleSels .ssel span[id^="styleSelTx"]{display:none}html body #styleSels .ssel svg{flex:none}html body #styleSels .ssel:not(.is-on){opacity:.55;background:rgba(255,255,255,.08);box-shadow:none}html body #styleSels .ssel.is-on{opacity:1;background:rgba(140,155,230,.3);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}html body #styleSels .ssel .si{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;margin:0}html body #styleSels .ssel .si svg{width:28px;height:28px;margin:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform:none!important;rotate:none!important;translate:none!important;transition:none!important}html body #stylePop .sp-grid button.na{opacity:.38}</style>
@@ -2203,10 +2205,11 @@ html.cm-open .aiui-pill{z-index:1!important}
     if(st.classList.contains("mode-sonnet"))return document.getElementById("sonnetHost");
     if(st.classList.contains("mode-tempera"))return document.getElementById("temperaHost");
     if(st.classList.contains("mode-lumiere"))return document.getElementById("lumiereHost");
+    if(st.classList.contains("mode-partita"))return document.getElementById("partitaHost");
     return document.getElementById("one");
   }
   function hasContent(h){
-    return !!h&&(h.id==="sonnetHost"||h.id==="temperaHost"||h.id==="lumiereHost"||h.childElementCount>0);
+    return !!h&&(h.id==="sonnetHost"||h.id==="temperaHost"||h.id==="lumiereHost"||h.id==="partitaHost"||h.childElementCount>0);
   }
   function snap(h){var cs=getComputedStyle(h);return{opacity:cs.opacity,translate:cs.translate||"none",scale:cs.scale||"none"}}
   function wait(a,ms){                                  // 动画结束；页面在后台、时间线不走时用定时器兜底
