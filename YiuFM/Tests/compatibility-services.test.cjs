@@ -721,6 +721,12 @@ test('Partita suspension hides temporarily and resumes without destroying the re
   const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
   const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
   let renderCount = 0;
+  let nextTimerId = 0;
+  const activeTimers = new Set();
+  const cancelledTimers = [];
+  let nextRafId = 0;
+  const activeRafs = new Set();
+  const cancelledRafs = [];
   const host = {
     style: {},
     innerHTML: '',
@@ -755,6 +761,7 @@ test('Partita suspension hides temporarily and resumes without destroying the re
   };
   const window = {
     Partita,
+    __renderResMul: 0.5,
     LN: [],
     TS: [],
     WT: [],
@@ -764,10 +771,10 @@ test('Partita suspension hides temporarily and resumes without destroying the re
   vm.runInNewContext(source, {
     window, document,
     localStorage: { getItem() { return null; }, setItem() {} },
-    setTimeout() { return 1; },
-    clearTimeout() {},
-    cancelAnimationFrame() {},
-    requestAnimationFrame() { return 1; },
+    setTimeout() { const id = ++nextTimerId; activeTimers.add(id); return id; },
+    clearTimeout(id) { cancelledTimers.push(id); activeTimers.delete(id); },
+    cancelAnimationFrame(id) { cancelledRafs.push(id); activeRafs.delete(id); },
+    requestAnimationFrame() { const id = ++nextRafId; activeRafs.add(id); return id; },
     Date, Math, Array, Object, String, Number, isFinite
   });
 
@@ -776,9 +783,15 @@ test('Partita suspension hides temporarily and resumes without destroying the re
   assert.equal(host.style.display, 'block');
   assert.equal(renderCount, 1);
 
+  const pendingFitTimer = [...activeTimers][0];
+  const pendingResFrame = [...activeRafs][0];
   window.PartitaAdapter.setSuspended(true);
   assert.equal(host.style.display, 'none');
   assert.equal(renderCount, 1);
+  assert.ok(cancelledTimers.includes(pendingFitTimer), 'suspension must cancel pending DOM fit measurement');
+  assert.ok(cancelledRafs.includes(pendingResFrame), 'suspension must cancel pending resolution animation frames');
+  assert.equal(activeTimers.size, 0);
+  assert.equal(activeRafs.size, 0);
 
   window.PartitaAdapter.setSuspended(false);
   assert.equal(host.style.display, 'block');
@@ -787,7 +800,13 @@ test('Partita suspension hides temporarily and resumes without destroying the re
   window.PartitaAdapter.setSuspended(false);
   assert.equal(renderCount, 2, 'repeated resume should be idempotent');
 
+  const beforeDestroyTimer = [...activeTimers][0];
+  const beforeDestroyRaf = [...activeRafs][0];
   window.PartitaAdapter.destroy();
+  assert.ok(cancelledTimers.includes(beforeDestroyTimer), 'destroy must clear pending fit timers');
+  assert.ok(cancelledRafs.includes(beforeDestroyRaf), 'destroy must cancel pending resolution frames');
+  assert.equal(activeTimers.size, 0);
+  assert.equal(activeRafs.size, 0);
 });
 
 
