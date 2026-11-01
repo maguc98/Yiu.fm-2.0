@@ -31,12 +31,12 @@ All asynchronous signals are coalesced through one `requestAnimationFrame` callb
 
 The build runs `YiuFM/Scripts/patch-mini-player-refresh.py` after restoring the pinned UI baseline. The patch script requires every expected source anchor exactly once and fails closed if the baseline changes unexpectedly.
 
-The workflow then syntax-checks the patched mini-player, runs the compatibility contract tests, and verifies in the packaged app that the interval identifiers are absent and playback/library subscriptions are present.
+The workflow syntax-checks the patched player, renderer, song-library, and mini-player; runs the compatibility contract tests; and verifies in the packaged app that the mini-player polling intervals are absent and playback/library subscriptions are present.
 
-GitHub Actions Run #30 (`41301825919`) passed:
-- 4 tests passed, 0 failed.
+GitHub Actions Run #52 (`41305330292`) passed:
+- 6 tests passed, 0 failed.
 - XcodeGen and iOS Release build passed.
 - All four legacy visual-engine payloads verified.
-- Unsigned IPA uploaded (2,523,837 bytes; artifact ID `13081702394`).
+- Unsigned IPA uploaded (2,524,092 bytes; artifact ID `13083257342`).
 
 These checks prove the guarded source transformation, syntax, package contents, and service contracts. They do not replace on-device visual/interaction testing or runtime CPU profiling.
