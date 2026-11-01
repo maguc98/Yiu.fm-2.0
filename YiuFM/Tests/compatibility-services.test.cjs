@@ -77,6 +77,16 @@ function createHarness() {
       if (playNow) window.setPlay(true);
       return index;
     },
+    parseLRC(text) {
+      const items = String(text).split(/\\r?\\n/).map(line => {
+        const match = line.match(/^\\[(\\d{2}):(\\d{2})\\.(\\d{2})\\](.*)$/);
+        return match ? {
+          t: Number(match[1]) * 60 + Number(match[2]) + Number(match[3]) / 100,
+          text: match[4]
+        } : null;
+      }).filter(Boolean);
+      return { items, meta: { ti: 'Parsed fixture' } };
+    },
     applyLRC(parsed) {
       window.LN = parsed.items.map(item => item.text);
       window.TS = parsed.items.map(item => item.t);
@@ -119,6 +129,7 @@ function createHarness() {
     audio,
     emitted,
     load,
+    fireAudioEvent(name) { (audioListeners[name] || []).forEach(fn => fn({ type: name })); },
     notifyLibraryChange() { if (libraryListener) libraryListener(); }
   };
 }
@@ -135,8 +146,8 @@ test('playback facade delegates commands and publishes legacy/audio events', () 
   assert.ok(received.includes('playbackstatechange'));
 
   h.audio.currentTime = 31;
-  (h.audio._unused || []);
-  // The registered audio listener is exercised through the public DOM event path.
+  h.fireAudioEvent('timeupdate');
+  assert.ok(received.includes('timeupdate'));
   h.window.YiuPlayback.seek(44);
   assert.equal(h.audio.currentTime, 44);
 
