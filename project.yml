@@ -20,8 +20,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.textdisplay
-        PRODUCT_NAME: 文字显示器
-        INFOPLIST_KEY_CFBundleDisplayName: 文字显示器
+        PRODUCT_NAME: Yiu.fm
+        INFOPLIST_KEY_CFBundleDisplayName: Yiu.fm
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         MARKETING_VERSION: "0.1.1"
         CURRENT_PROJECT_VERSION: "4"
