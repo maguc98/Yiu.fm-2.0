@@ -20,7 +20,9 @@ All asynchronous signals are coalesced through one `requestAnimationFrame` callb
 
 ## Deliberately unchanged
 
-- The separate 200 ms `tick()` that synchronizes the mini-bar lyric/song title and cover is retained. This migration targets the 50/100 ms open-card refresh loop, not every timer in the player.
+- The mini-bar's former 200 ms `tick()` has also been removed in the build copy. Its text/cover refresh is driven by `YiuPlayback` lyric-index/lyrics events and `YiuLibrary` state events.
+- Audio-clock and no-audio lyric progression publish `lyricindexchange`; LRC application and actual lyric-array edits publish `lyricschange`; song title/cover/mode synchronization publishes `librarychange`.
+- The mini-bar deduplication key includes the active cover as well as song title and lyric text, so cover-only changes are not skipped.
 - The renderer's existing status updates remain authoritative; the card observes real `.mi-s` DOM changes rather than creating a second clock.
 - The existing fade timing, text transitions, cover transitions, play icon, next-track/next-lyric label, gesture handling, and drawer animation remain in place.
 - Legacy `SongLibrary`, `setPlay`, and player globals remain available.
