@@ -229,3 +229,14 @@ Run #25 is the current verified milestone. It validates the facade contracts aga
 ## Next step
 
 Before migrating any existing consumer, map the current dependency edges from mini-player, iOS music scanning, player end-of-track handling, and music panel to `SongLibrary`. Then choose one low-risk consumer at a time for migration to `YiuLibrary`, with behavior tests and a rollback point. Do not change the underlying IndexedDB schema or native audio ownership yet.
+
+
+### Phase 1F — First consumer migration (iOS music import)
+
+Added `docs/architecture/LEGACY_CONSUMER_DEPENDENCY_MAP.md` after auditing the pinned Run #13 script order and all direct `SongLibrary` references in `player.js`, `mini-player.js`, and `ios-music.js`.
+
+The native directory scanner is the safest first consumer because it has one narrow responsibility: pass scanned items and the existing `all` / `manual` / progress options into the library importer. The build now applies a guarded, exact-match patch to the restored `ios-music.js` so it prefers `YiuLibrary.importScanned()` and falls back to `SongLibrary.importScanned()`. Scan, chunked file reading, LRC matching, and import semantics remain unchanged.
+
+The high-frequency mini-player path (50 ms normal refresh / 100 ms performance mode) and the playback end-of-track path remain on the legacy API for now. They will not be migrated until their performance and playback regression tests are ready.
+
+Run #26 (`41301173305`) is validating this first consumer migration, including an exact-source patch guard and JavaScript syntax check.
