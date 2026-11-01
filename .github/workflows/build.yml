@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: macos-15
+    env:
+      IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
 
     steps:
       - name: Checkout repository
@@ -38,18 +42,90 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Package IPA
+      - name: Package unsigned IPA
         run: |
           mkdir -p output/Payload
-          ls -la build/Build/Products/Release-iphoneos
           cp -R build/Build/Products/Release-iphoneos/*.app output/Payload/TextDisplay.app
           cd output
           /usr/bin/zip -qry TextDisplay-unsigned.ipa Payload
           rm -rf Payload
-          ls -la
 
-      - name: Upload build artifact
+      - name: Sign IPA with stored Apple certificate
+        if: ${{ env.IOS_CERTIFICATE_BASE64 != '' && env.IOS_CERTIFICATE_PASSWORD != '' && env.IOS_PROVISION_PROFILE_BASE64 != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP_PATH="$GITHUB_WORKSPACE/build/Build/Products/Release-iphoneos/文字显示器.app"
+          if [ ! -d "$APP_PATH" ]; then
+            APP_PATH="$(find "$GITHUB_WORKSPACE/build/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
+          fi
+          test -n "$APP_PATH" && test -d "$APP_PATH"
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/ios-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+          CERT_PATH="$RUNNER_TEMP/signing-certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/signing-profile.mobileprovision"
+          PROFILE_PLIST="$RUNNER_TEMP/profile.plist"
+          ENTITLEMENTS_PATH="$RUNNER_TEMP/profile-entitlements.plist"
+
+          printf '%s' "$IOS_CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+          printf '%s' "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | awk '/[0-9]+\) [A-F0-9]+/ {print $2; exit}')"
+          if [ -z "$IDENTITY" ]; then
+            echo "No valid Apple code-signing identity was found in the supplied .p12."
+            exit 1
+          fi
+
+          security cms -D -i "$PROFILE_PATH" > "$PROFILE_PLIST"
+          PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$PROFILE_PLIST")
+          APP_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")
+
+          python3 - "$APP_BUNDLE_ID" "$PROFILE_APP_ID" <<'PY'
+          import fnmatch, sys
+          bundle_id, profile_app_id = sys.argv[1:]
+          profile_bundle_pattern = profile_app_id.split(".", 1)[1] if "." in profile_app_id else ""
+          if not fnmatch.fnmatchcase(bundle_id, profile_bundle_pattern):
+              raise SystemExit(
+                  f"Provisioning profile does not match this app. App Bundle ID: {bundle_id}; "
+                  f"profile allows: {profile_bundle_pattern}"
+              )
+          print(f"Provisioning profile matches {bundle_id}")
+          PY
+
+          plutil -extract Entitlements xml1 -o "$ENTITLEMENTS_PATH" "$PROFILE_PLIST"
+          cp "$PROFILE_PATH" "$APP_PATH/embedded.mobileprovision"
+
+          codesign --force --sign "$IDENTITY" --entitlements "$ENTITLEMENTS_PATH" --generate-entitlement-der "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+          rm -rf "$GITHUB_WORKSPACE/output/Payload"
+          mkdir -p "$GITHUB_WORKSPACE/output/Payload"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/output/Payload/TextDisplay.app"
+          cd "$GITHUB_WORKSPACE/output"
+          /usr/bin/zip -qry TextDisplay-signed.ipa Payload
+          rm -rf Payload
+
+          security delete-keychain "$KEYCHAIN_PATH"
+          rm -f "$CERT_PATH" "$PROFILE_PATH" "$PROFILE_PLIST" "$ENTITLEMENTS_PATH"
+
+      - name: Upload unsigned IPA
         uses: actions/upload-artifact@v6
         with:
           name: TextDisplay-unsigned-ipa
           path: output/TextDisplay-unsigned.ipa
+
+      - name: Upload signed IPA
+        if: ${{ env.IOS_CERTIFICATE_BASE64 != '' && env.IOS_CERTIFICATE_PASSWORD != '' && env.IOS_PROVISION_PROFILE_BASE64 != '' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: TextDisplay-signed-ipa
+          path: output/TextDisplay-signed.ipa
