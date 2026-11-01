@@ -314,9 +314,15 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
   ].join('\n'));
   fs.writeFileSync(path.join(app, 'renderer.js'), '  if(chg)LN=arr;');
   fs.writeFileSync(path.join(app, 'song-library.js'),
-    "window.__musicCover = on ? curCover : '';\n    syncNextLabel();");
+  fs.writeFileSync(path.join(app, 'song-library.js'), [
+    "window.__musicCover = on ? curCover : '';",
+    '    syncNextLabel();'
+  ].join('\\n'));
   fs.writeFileSync(path.join(app, 'mini-player.js'),
-    'var key=mt+"\\u0001"+s;\n  tick();setInterval(tick,200);');
+  fs.writeFileSync(path.join(app, 'mini-player.js'), [
+    'var key=mt+"\\\\u0001"+s;',
+    '  tick();setInterval(tick,200);'
+  ].join('\\n'));
 
   const patch = path.join(__dirname, '..', 'Scripts', 'patch-mini-bar-events.py');
   const result = spawnSync('python3', [patch], { cwd: temp, encoding: 'utf8' });
