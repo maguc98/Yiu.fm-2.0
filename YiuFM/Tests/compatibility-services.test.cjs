@@ -257,6 +257,7 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
     window,
     mini,
     MutationObserver,
+    npRefreshRaf: 0,
     npCard: { classList: { contains(name) { return name === 'show' && visible; } } },
     isNpDragging: false,
     npRefresh() { refreshCount += 1; },
