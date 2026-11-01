@@ -259,3 +259,12 @@ Contract and limitations: `docs/architecture/MINI_PLAYER_REFRESH_V1.md`.
 Run #30 (`41301825919`) completed successfully: 4/4 tests passed, patched mini-player syntax check passed, XcodeGen and iOS Release build passed, all four visual-engine payloads were verified, and the unsigned IPA artifact uploaded (2,523,837 bytes; artifact ID `13081702394`).
 
 This is source/build verification, not yet an on-device runtime performance measurement. The next step is a focused regression audit of the mini-player's open/close, play/pause, lyric switching, song switching, performance-mode toggle, cover updates, and drag gestures before considering changes to the separate 200 ms ticker.
+
+
+### Phase 1H — Playback library consumer migration
+
+The build now applies `YiuFM/Scripts/patch-player-library-consumer.py` to the restored Run #13 `player.js` copy. The end-of-track handler and next-track command prefer `YiuLibrary` and fall back to `SongLibrary`. Both facade methods delegate to the same existing `SongLibrary` methods; the audio element, playback clock, song selection, repeat/shuffle behavior, and end-of-track policy are unchanged.
+
+The patch is guarded by exact single-match anchors. A regression test verifies both the transformed consumer and facade-first runtime dispatch with the legacy fallback available. The build checks the transformed source in the packaged Web payload.
+
+This completes the remaining direct `SongLibrary` consumer migration in `player.js` without moving IndexedDB, audio Blob/object URL, or import ownership. The next phase is to audit persistence reads/writes and document a non-destructive persistence compatibility contract; no database/schema migration is authorized by this step.
