@@ -237,8 +237,7 @@ test('mini-player refresh is event-driven rather than interval-polled', () => {
 
 test('mini-player bridge coalesces playback, library, and DOM signals into one frame', () => {
   const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-mini-player-refresh.py');
-  const patch = fs.readFileSync(patchPath, 'utf8');
-  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
+  const patch = fs.readFileSync(patchPath, 'utf8');  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
   assert.ok(match, 'event-driven bridge must exist in the build patch');
 
   const playbackListeners = [];
@@ -384,6 +383,61 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
   assert.equal(context.curCover, 'user-cover', 'stale async cover must not overwrite the newly selected song');
   assert.equal(events.length, 3, 'stale async cover completion must not publish a current-song event');
 
+  // Execute the transformed mini-bar tick and its subscriptions, not just source-pattern checks.
+  const tickStart = mini.indexOf('  function tick(){');
+  const tickEnd = mini.lastIndexOf('\\n})();');
+  assert.ok(tickStart >= 0 && tickEnd > tickStart, 'patched mini-bar tick and event listeners must be present');
+  const runtimeSource = mini.slice(tickStart, tickEnd);
+  const playbackSubscribers = [];
+  const librarySubscribers = [];
+  const paints = [];
+  const runtimeWindow = {
+    __musicTitle: 'Fixture Song',
+    __musicCover: 'cover-a',
+    customCoverData: '',
+    YiuPlayback: { subscribe(fn) { playbackSubscribers.push(fn); } },
+    YiuLibrary: { subscribe(fn) { librarySubscribers.push(fn); } }
+  };
+  const runtime = {
+    window: runtimeWindow,
+    LN: ['First lyric', 'Second lyric'],
+    idx: 0,
+    npT: { textContent: '' },
+    miT: { textContent: '' },
+    tile: { textContent: '' },
+    cover: { textContent: '' },
+    paintCover() { paints.push(runtimeWindow.__musicCover || runtimeWindow.customCoverData || ''); },
+    fadeSwap(element, value) { element.textContent = value; }
+  };
+  vm.runInNewContext(runtimeSource, runtime, { filename: 'mini-bar-event-runtime.js' });
+  assert.equal(runtime.npT.textContent, 'First lyric');
+  assert.equal(runtime.miT.textContent, 'Fixture Song');
+  assert.equal(paints.length, 1);
+
+  runtime.idx = 1;
+  playbackSubscribers[0]({ type: 'lyricindexchange' });
+  assert.equal(runtime.npT.textContent, 'Second lyric', 'lyric-index events must update the displayed lyric');
+  assert.equal(paints.length, 2);
+
+  runtimeWindow.__musicCover = 'cover-b';
+  librarySubscribers[0]();
+  assert.equal(paints.length, 3, 'cover-only changes must bypass the title/lyric dedupe key');
+
+  runtimeWindow.__musicTitle = 'Next Song';
+  librarySubscribers[0]();
+  assert.equal(runtime.miT.textContent, 'Next Song', 'song-title changes must update the mini-bar title');
+  assert.equal(paints.length, 4);
+
+  runtimeWindow.__musicTitle = '';
+  runtimeWindow.__musicCover = '';
+  runtimeWindow.customCoverData = 'custom-cover';
+  librarySubscribers[0]();
+  assert.equal(paints.at(-1), 'custom-cover', 'custom cover changes must trigger a refresh outside music mode');
+
+  const paintCount = paints.length;
+  librarySubscribers[0]();
+  assert.equal(paints.length, paintCount, 'duplicate events with unchanged title, lyric, and cover must be deduplicated');
+
   fs.rmSync(temp, { recursive: true, force: true });
 });
 
@@ -477,8 +531,7 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(playbackPreferences.includes('getPlayMode'));
   assert.ok(playbackPreferences.includes('setPlayMode'));
   assert.ok(mini.includes('YiuPlaybackPreferences.getPlayMode()'));
-  assert.ok(mini.includes('YiuPlaybackPreferences.setPlayMode(window.playMode)'));
-  assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
+  assert.ok(mini.includes('YiuPlaybackPreferences.setPlayMode(window.playMode)'));  assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
 
   assert.ok(sonnet.includes("'sonnetCfg.v1'"));
   assert.ok(sonnet.includes("'folia.sonnet.dynamic'"));
