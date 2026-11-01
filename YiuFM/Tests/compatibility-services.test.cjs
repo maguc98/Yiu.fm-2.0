@@ -853,3 +853,76 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
     assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
   }
 });
+
+test('Partita drive locates lyric boundaries correctly across a large timeline', () => {
+  const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
+  assert.ok(source.includes('while (low <= high)'), 'per-frame line lookup must use binary search');
+  assert.ok(!source.includes('for (var i = 0; i < lastLines.length; i++)'), 'per-frame lookup must not scan the entire lyric timeline');
+
+  let latestIndex = null;
+  let nextTimer = 0;
+  const host = { style: {}, innerHTML: '', appendChild() {}, querySelector() { return null; }, querySelectorAll() { return []; } };
+  const window = {
+    __renderResMul: 1,
+    performance: { now: () => 1000 },
+    addEventListener() {},
+    console: { warn() {}, error() {} },
+    Partita: {
+      default: function PartitaView() {},
+      React: {
+        Component: function Component() {},
+        createElement(type, props, children) { return { type, props, children }; }
+      },
+      ReactDOM: {
+        createRoot() {
+          return {
+            render(element) { latestIndex = element.children.props.currentLineIndex; },
+            unmount() {}
+          };
+        }
+      },
+      FramerMotion: {
+        motionValue(value) {
+          let current = value;
+          return { get: () => current, set: next => { current = next; } };
+        }
+      }
+    }
+  };
+  const document = {
+    head: { appendChild() {} },
+    createElement() { return { style: {}, setAttribute() {}, textContent: '' }; }
+  };
+  vm.runInNewContext(source, {
+    window, document,
+    localStorage: { getItem() { return null; }, setItem() {} },
+    setTimeout() { return ++nextTimer; },
+    clearTimeout() {},
+    cancelAnimationFrame() {},
+    requestAnimationFrame() { return 1; },
+    Date, Math, Array, Object, String, Number, isFinite
+  });
+
+  const starts = Array.from({ length: 1024 }, (_, i) => i * 2);
+  const lyrics = starts.map((_, i) => '字' + i);
+  window.PartitaAdapter.init(host, {});
+  window.PartitaAdapter.show();
+  window.PartitaAdapter.loadLyrics(starts, [], lyrics);
+
+  const cases = [
+    [-1, -1],
+    [0, 0],
+    [1.99, 0],
+    [2, 1],
+    [1023.99, 511],
+    [1024, 512],
+    [2046, 1023],
+    [4096, 1023]
+  ];
+  for (const [time, expected] of cases) {
+    window.PartitaAdapter.drive(time);
+    assert.equal(latestIndex, expected, 'wrong active lyric index at time ' + time);
+  }
+  window.PartitaAdapter.destroy();
+});
