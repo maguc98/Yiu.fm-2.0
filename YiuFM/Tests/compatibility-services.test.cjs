@@ -240,7 +240,7 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
   const patch = fs.readFileSync(patchPath, 'utf8');
   const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
   assert.ok(match, 'event-driven bridge must exist in the build patch');
-  assert.match(patch, /if\\(npRefreshRaf\\)\\{cancelAnimationFrame\\(npRefreshRaf\\);npRefreshRaf=0;\\}/, 'closing the card must cancel and clear a pending refresh frame');
+  assert.ok(patch.includes('if(npRefreshRaf){cancelAnimationFrame(npRefreshRaf);npRefreshRaf=0;}'), 'closing the card must cancel and clear a pending refresh frame');
 
   const playbackListeners = [];
   const libraryListeners = [];
