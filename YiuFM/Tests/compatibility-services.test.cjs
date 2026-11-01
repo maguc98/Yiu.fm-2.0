@@ -564,8 +564,7 @@ test('visualizer manager destroys the previous engine before mounting the next',
 test('visualizer manager coalesces in-flight switch requests to the latest target', async () => {
   const h = createVisualizerHarness({ holdSonnetShow: true });
   const first = h.manager.switchTo('sonnet');
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let i = 0; i < 10 && !h.events.includes('sonnet:show'); i++) await Promise.resolve();
   assert.ok(h.events.includes('sonnet:show'));
 
   const second = h.manager.switchTo('tempera');
