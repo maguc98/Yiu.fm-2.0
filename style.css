@@ -1156,7 +1156,7 @@ body.light-bg.ui-glow.ui-shadow #npCard, body.light-bg.ui-glow.ui-shadow #mini::
 }
 
 /* ===== 可切换的性能优化：保留动画，优先降低大面积模糊与滤镜成本 ===== */
-:root{--perf-glass-blur:var(--g-blur)}   /* 性能模式下玻璃模糊也跟随「卡片模糊程度」滑块 */
+:root{--perf-glass-blur:blur(8px)}   /* 性能模式将玻璃模糊固定为 8px，避免 23px 大半径在 iOS 上造成高额合成开销 */
 body.performance-mode .dock,
 body.performance-mode .lg-bg,
 body.performance-mode .lg-thumb,
@@ -1175,10 +1175,10 @@ body.performance-mode .gpop{
   backdrop-filter:var(--perf-glass-blur)!important;
 }
 body.performance-mode #hub::before,
-body.performance-mode.light-bg #hub::before{ -webkit-backdrop-filter:var(--g-blur)!important; backdrop-filter:var(--g-blur)!important }
+body.performance-mode.light-bg #hub::before{ -webkit-backdrop-filter:var(--perf-glass-blur)!important; backdrop-filter:var(--perf-glass-blur)!important }
 body.performance-mode [style*="backdrop-filter"]{
-  -webkit-backdrop-filter:var(--g-blur)!important;
-  backdrop-filter:var(--g-blur)!important;
+  -webkit-backdrop-filter:var(--perf-glass-blur)!important;
+  backdrop-filter:var(--perf-glass-blur)!important;
 }
 /* 大面积 drop-shadow 是移动端较昂贵的合成操作；用轻量阴影代替，不移除元素和动画。 */
 body.performance-mode.ui-glow #npCard,
