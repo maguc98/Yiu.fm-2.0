@@ -277,3 +277,10 @@ Added `docs/architecture/PERSISTENCE_COMPATIBILITY_V1.md` after auditing the pin
 The inventory records the v1 `td_autosave` backup, the `yiufm-songs` IndexedDB database and its `songs` / `files` stores, theme metadata and image storage (`themesV1`, `themeCfgV1`, `themeImgsV1`), engine-specific configuration keys, and related playback/UI preferences. It also records important fallback behavior, including quota preservation, legacy inline theme images, song restoration, and reparsing raw LRC to restore word timing.
 
 This is an audit/documentation milestone only. No stored data, localStorage key, database, object store, schema, or migration path was changed. The next implementation step is to introduce a narrow compatibility boundary for one low-risk preference domain, after mapping its full read/write call sites and initialization order. The primary backup, song library, and theme image stores remain out of scope for that first adapter.
+
+
+### Phase 2B — Persistence compatibility regression guards
+
+Added a compatibility test that pins the observed legacy backup key and payload version, song-library database/store names and key paths, theme metadata/image stores and fallback paths, engine configuration keys, and selected playback/UI preference keys.
+
+These are preservation guards, not a storage migration. They intentionally fail if a future refactor silently renames a key, changes an IndexedDB version/store, or removes a legacy fallback. The new test runs in the existing macOS build workflow before the iOS Release build.
