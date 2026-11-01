@@ -386,3 +386,46 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
 
   fs.rmSync(temp, { recursive: true, force: true });
 });
+
+
+test('player end-of-track and next-track consumers prefer YiuLibrary with legacy fallback', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'yiu-player-library-'));
+  const app = path.join(temp, 'YiuFM', 'Resources', 'Web', 'APP');
+  fs.mkdirSync(app, { recursive: true });
+  fs.writeFileSync(path.join(app, 'player.js'), [
+    '  var SL = window.SongLibrary;',
+    '  if(window.SongLibrary && SongLibrary.step && SongLibrary.step(1)) return;'
+  ].join('\\n'));
+
+  const patch = path.join(__dirname, '..', 'Scripts', 'patch-player-library-consumer.py');
+  const result = spawnSync('python3', [patch], { cwd: temp, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const source = fs.readFileSync(path.join(app, 'player.js'), 'utf8');
+  assert.match(source, /var SL = window\\.YiuLibrary \\|\\| window\\.SongLibrary;/);
+  assert.match(source, /var library = window\\.YiuLibrary \\|\\| window\\.SongLibrary;/);
+  assert.doesNotMatch(source, /var SL = window\\.SongLibrary;/);
+  assert.doesNotMatch(source, /window\\.SongLibrary && SongLibrary\\.step/);
+
+  const calls = [];
+  const context = {
+    window: {
+      YiuLibrary: {
+        isMusic: () => true,
+        autoNext: () => { calls.push('facade:autoNext'); return true; },
+        step: direction => { calls.push('facade:step:' + direction); return true; }
+      },
+      SongLibrary: {
+        isMusic: () => { calls.push('legacy:isMusic'); return false; },
+        autoNext: () => { calls.push('legacy:autoNext'); return false; },
+        step: direction => { calls.push('legacy:step:' + direction); return false; }
+      }
+    }
+  };
+  vm.runInNewContext(source + '\\n' +
+    'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
+    'var library = window.YiuLibrary || window.SongLibrary; library.step(1);',
+    context);
+  assert.deepEqual(calls, ['facade:autoNext', 'facade:step:1']);
+  fs.rmSync(temp, { recursive: true, force: true });
+});
