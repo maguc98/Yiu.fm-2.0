@@ -106,7 +106,6 @@ function createHarness() {
 
   const context = vm.createContext({
     window,
-    MutationObserver,
     document: { getElementById: id => id === 'audio' ? audio : null },
     CustomEvent,
     console: { warn() {}, error() {}, log() {} },
