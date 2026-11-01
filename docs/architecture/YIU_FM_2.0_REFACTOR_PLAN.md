@@ -239,4 +239,4 @@ The native directory scanner is the safest first consumer because it has one nar
 
 The high-frequency mini-player path (50 ms normal refresh / 100 ms performance mode) and the playback end-of-track path remain on the legacy API for now. They will not be migrated until their performance and playback regression tests are ready.
 
-Run #26 (`41301173305`) is validating this first consumer migration, including an exact-source patch guard and JavaScript syntax check.
+Run #26 (`41301173305`) completed successfully. The exact-source patch guard, migrated iOS scanner syntax check, 3 facade contract tests, XcodeGen generation, iOS Release build, four-engine package verification, and IPA upload all passed. The unsigned IPA artifact is 2,523,532 bytes (artifact ID `13081241729`).
