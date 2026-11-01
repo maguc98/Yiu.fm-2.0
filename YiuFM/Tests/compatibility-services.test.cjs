@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
+const os = require('node:os');
+const { spawnSync } = require('node:child_process');
 
 function createHarness() {
   const audioListeners = Object.create(null);
@@ -298,4 +300,35 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
   assert.equal(rafQueue.length, 1);
   rafQueue.shift()();
   assert.equal(refreshCount, 2);
+});
+
+
+test('mini-bar event patch publishes renderer lyric edits and state changes', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'yiu-mini-events-'));
+  const app = path.join(temp, 'YiuFM', 'Resources', 'Web', 'APP');
+  fs.mkdirSync(app, { recursive: true });
+  fs.writeFileSync(path.join(app, 'player.js'), [
+    'if(i !== idx){ idx = i; prog = 0; deferUpdate(); return; }',
+    'if(prog >= 1){ prog = 0; idx = nextIdx(true); deferUpdate(); return; }',
+    'for(var k = 0; k < n; k++) TS.push(d * k / n);'
+  ].join('\n'));
+  fs.writeFileSync(path.join(app, 'renderer.js'), '  if(chg)LN=arr;');
+  fs.writeFileSync(path.join(app, 'song-library.js'),
+    "window.__musicCover = on ? curCover : '';\\n    syncNextLabel();");
+  fs.writeFileSync(path.join(app, 'mini-player.js'),
+    'var key=mt+"\\\\u0001"+s;\\n  tick();setInterval(tick,200);');
+
+  const patch = path.join(__dirname, '..', 'Scripts', 'patch-mini-bar-events.py');
+  const result = spawnSync('python3', [patch], { cwd: temp, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const renderer = fs.readFileSync(path.join(app, 'renderer.js'), 'utf8');
+  const player = fs.readFileSync(path.join(app, 'player.js'), 'utf8');
+  const mini = fs.readFileSync(path.join(app, 'mini-player.js'), 'utf8');
+  assert.match(renderer, /YiuPlayback\\.notify\\('lyricschange'\\)/);
+  assert.equal((player.match(/notify\\('lyricindexchange'\\)/g) || []).length, 2);
+  assert.match(mini, /YiuPlayback.*subscribe/);
+  assert.match(mini, /YiuLibrary.*subscribe/);
+  assert.doesNotMatch(mini, /setInterval\\(tick,200\\)/);
+  fs.rmSync(temp, { recursive: true, force: true });
 });
