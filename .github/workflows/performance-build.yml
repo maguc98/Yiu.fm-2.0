@@ -1,0 +1,107 @@
+name: Performance Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build optimized local web assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned esbuild
+        run: npm install --no-save --no-package-lock esbuild@0.25.12
+
+      - name: Copy the complete app without changing its layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist-performance/site
+          rsync -a ./ dist-performance/site/ \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='dist-performance' \
+            --exclude='.DS_Store'
+
+      - name: Minify standalone JavaScript and CSS safely
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const esbuild = require('esbuild');
+
+          const root = path.resolve('dist-performance/site');
+          const changed = [];
+
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const file = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(file);
+              else if (/\.(?:js|css)$/i.test(entry.name)) changed.push(file);
+            }
+          }
+
+          (async () => {
+            walk(root);
+            for (const file of changed) {
+              const source = fs.readFileSync(file, 'utf8');
+              const loader = file.toLowerCase().endsWith('.css') ? 'css' : 'js';
+              const result = await esbuild.transform(source, {
+                loader,
+                minifyWhitespace: true,
+                minifyIdentifiers: false,
+                minifySyntax: false,
+                legalComments: 'none',
+                charset: 'utf8'
+              });
+              fs.writeFileSync(file, result.code, 'utf8');
+            }
+            console.log(`Whitespace-minified ${changed.length} standalone JS/CSS files.`);
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Validate JavaScript syntax and required entry files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist-performance/site/index.html
+          test -s dist-performance/site/style.css
+          test -d dist-performance/site/APP
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find dist-performance/site -type f -name '*.js' -print0)
+          echo "Entry files and JavaScript syntax checks passed."
+
+      - name: Create distributable archive
+        run: |
+          set -euo pipefail
+          cd dist-performance
+          zip -qry ../TextDisplay-Performance-Build.zip site
+          cd ..
+          sha256sum TextDisplay-Performance-Build.zip
+
+      - name: Upload performance build
+        uses: actions/upload-artifact@v4
+        with:
+          name: TextDisplay-Performance-Build
+          path: TextDisplay-Performance-Build.zip
+          if-no-files-found: error
+          retention-days: 14
