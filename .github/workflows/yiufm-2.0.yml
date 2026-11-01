@@ -37,20 +37,22 @@ jobs:
           test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
           test -s YiuFM/Resources/Web/APP/partita-vendor.js
           test -s YiuFM/Resources/Web/APP/playback-service.js
+          test -s YiuFM/Resources/Web/APP/lyrics-service.js
           python3 - <<'PY'
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           anchor = '<script src="./APP/player.js?v=20261029a"></script>'
-          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>'
+          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>'
           if html.count(anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
-          if "playback-service.js" in html:
-              raise SystemExit("Playback facade is already injected; refusing duplicate insertion.")
+          if "playback-service.js" in html or "lyrics-service.js" in html:
+              raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
           PY
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
+          node --check YiuFM/Resources/Web/APP/lyrics-service.js
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
@@ -81,8 +83,10 @@ jobs:
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/playback-service.js"
+          test -s "$WEB_ROOT/APP/lyrics-service.js"
           grep -q 'APP/playback-service.js?v=1' "$WEB_ROOT/index.html"
-          echo "Verified Run #13 UI, playback facade, and all four engine payloads in $WEB_ROOT"
+          grep -q 'APP/lyrics-service.js?v=1' "$WEB_ROOT/index.html"
+          echo "Verified Run #13 UI, playback/lyrics facades, and all four engine payloads in $WEB_ROOT"
           du -sh "$WEB_ROOT"
 
       - name: Package IPA
