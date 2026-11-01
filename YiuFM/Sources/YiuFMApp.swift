@@ -157,60 +157,45 @@ struct YiuHomeView: View {
     private var nowPlaying: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeading("正在播放", detail: "NOW PLAYING")
-            HStack(spacing: 15) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 17, style: .continuous)
-                        .fill(
-                            LinearGradient(colors: [YiuPalette.pink, YiuPalette.violet, YiuPalette.cyan],
-                                           startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                    Circle().stroke(.white.opacity(0.55), lineWidth: 1).padding(11)
-                    Circle().stroke(.white.opacity(0.3), lineWidth: 1).padding(20)
-                    Image(systemName: "waveform")
-                        .font(.system(size: 27, weight: .light))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 68, height: 68)
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(audioPlayer.title)
-                        .font(.system(size: 14, weight: .semibold))
-                        .lineLimit(1)
-                    Text(audioPlayer.artist.isEmpty ? "Yiu.fm · 本地音乐" : audioPlayer.artist)
-                        .font(.system(size: 11))
-                        .foregroundStyle(YiuPalette.muted)
-                    HStack(spacing: 3) {
-                        ForEach(0..<22, id: \.self) { index in
-                            Capsule()
-                                .fill(index < 13 ? YiuPalette.cyan : .white.opacity(0.17))
-                                .frame(width: 2, height: CGFloat([5, 10, 15, 8, 19, 12, 7, 16][index % 8]))
-                        }
+            VStack(spacing: 11) {
+                HStack(spacing: 15) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 17, style: .continuous)
+                            .fill(LinearGradient(colors: [YiuPalette.pink, YiuPalette.violet, YiuPalette.cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        Circle().stroke(.white.opacity(0.55), lineWidth: 1).padding(11)
+                        Circle().stroke(.white.opacity(0.3), lineWidth: 1).padding(20)
+                        Image(systemName: "waveform").font(.system(size: 27, weight: .light)).foregroundStyle(.white)
                     }
-                    .padding(.top, 3)
+                    .frame(width: 68, height: 68)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(audioPlayer.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                        Text(audioPlayer.artist.isEmpty ? "Yiu.fm · 本地音乐" : audioPlayer.artist)
+                            .font(.system(size: 11)).foregroundStyle(YiuPalette.muted)
+                        HStack(spacing: 3) {
+                            ForEach(0..<22, id: \.self) { index in
+                                Capsule().fill(index < 13 ? YiuPalette.cyan : .white.opacity(0.17))
+                                    .frame(width: 2, height: CGFloat([5, 10, 15, 8, 19, 12, 7, 16][index % 8]))
+                            }
+                        }.padding(.top, 3)
+                    }
+                    Spacer(minLength: 0)
+                    Button { audioPlayer.togglePlayback() } label: {
+                        Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 17, weight: .bold)).foregroundStyle(YiuPalette.ink)
+                            .frame(width: 45, height: 45)
+                            .background(LinearGradient(colors: [YiuPalette.cyan, Color.white], startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
+                            .shadow(color: YiuPalette.cyan.opacity(0.35), radius: 13)
+                    }
+                    .buttonStyle(.plain).disabled(!audioPlayer.hasTrack)
+                    .opacity(audioPlayer.hasTrack ? 1 : 0.55)
                 }
-                Spacer(minLength: 0)
-                Button {
-                    audioPlayer.togglePlayback()
-                } label: {
-                    Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(YiuPalette.ink)
-                        .frame(width: 45, height: 45)
-                        .background(
-                            LinearGradient(colors: [YiuPalette.cyan, Color.white], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            in: Circle()
-                        )
-                        .shadow(color: YiuPalette.cyan.opacity(0.35), radius: 13)
+                if audioPlayer.hasTrack {
+                    VStack(spacing: 4) {
+                        Slider(value: Binding(get: { audioPlayer.currentTime }, set: { audioPlayer.seek(to: $0) }), in: 0...max(audioPlayer.duration, 0.1)).tint(YiuPalette.cyan)
+                        HStack { Text(audioPlayer.formattedTime(audioPlayer.currentTime)); Spacer(); Text(audioPlayer.formattedTime(audioPlayer.duration)) }
+                            .font(.system(size: 9, design: .rounded)).foregroundStyle(YiuPalette.muted)
+                    }.padding(.horizontal, 3)
                 }
-                .buttonStyle(.plain)
-                .disabled(!audioPlayer.hasTrack)
-                .opacity(audioPlayer.hasTrack ? 1 : 0.55)
-            }
-            if audioPlayer.hasTrack {
-                VStack(spacing: 4) {
-                    Slider(value: Binding(get: { audioPlayer.currentTime }, set: { audioPlayer.seek(to: $0) }), in: 0...max(audioPlayer.duration, 0.1)).tint(YiuPalette.cyan)
-                    HStack { Text(audioPlayer.formattedTime(audioPlayer.currentTime)); Spacer(); Text(audioPlayer.formattedTime(audioPlayer.duration)) }
-                        .font(.system(size: 9, design: .rounded)).foregroundStyle(YiuPalette.muted)
-                }.padding(.horizontal, 3)
             }
             .padding(15)
             .background(.ultraThinMaterial.opacity(0.75), in: RoundedRectangle(cornerRadius: 23, style: .continuous))
@@ -390,7 +375,7 @@ private struct OrbitalArtwork: View {
 
 // MARK: - Native local audio playback
 @MainActor
-final class YiuAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
+final class YiuAudioPlayer: ObservableObject {
     @Published private(set) var title = "选择一首本地歌曲"
     @Published private(set) var artist = ""
     @Published private(set) var isPlaying = false
@@ -413,7 +398,6 @@ final class YiuAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
             try fm.copyItem(at: url, to: destination)
         }
         let next = try AVAudioPlayer(contentsOf: destination)
-        next.delegate = self
         next.prepareToPlay()
         player?.stop()
         player = next
@@ -426,9 +410,14 @@ final class YiuAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
         errorMessage = nil
         progressTimer?.invalidate()
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
-            guard let self, let active = self.player else { return }
-            self.currentTime = active.currentTime
-            self.isPlaying = active.isPlaying
+            Task { @MainActor [weak self] in
+                guard let self, let active = self.player else { return }
+                self.currentTime = active.currentTime
+                self.isPlaying = active.isPlaying
+                if !active.isPlaying && active.currentTime >= active.duration {
+                    self.currentTime = 0
+                }
+            }
         }
     }
 
@@ -458,11 +447,7 @@ final class YiuAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
 
     func report(error: Error) { errorMessage = error.localizedDescription }
 
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        isPlaying = false
-        currentTime = 0
-        player.currentTime = 0
-    }
+
 
     deinit { progressTimer?.invalidate() }
 }
