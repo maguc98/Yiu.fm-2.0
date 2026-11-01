@@ -264,18 +264,18 @@
       '<div class="tpe-head"><div class="tpe-title" id="tpeTitle">当前主题</div>' +
         '<div class="tpe-types" id="tpeTypes"><button type="button" data-t="grad">混色</button><button type="button" data-t="solid">纯色</button><button type="button" data-t="img">图片</button></div>' +
       '</div>' +
-      /* 混色：左 = 四个色块(2×2)，右 = 角度 / 流动 */
+      /* 混色：统一顺序 = 滑块(角度) → 开关(流动) → 颜色(四个色块一排，圆角长方形) */
       '<div class="tpe-grp tpe-cols" id="tpeGrad">' +
-        '<div class="tpe-l"><div class="tpe-sw"><input type="color" id="tpeC1"><input type="color" id="tpeC2"><input type="color" id="tpeC3"><input type="color" id="tpeC4"></div></div>' +
         '<div class="tpe-r">' +
           '<div class="tpe-line"><span class="tpe-n">角度</span><input type="range" id="tpeAng" min="0" max="360" value="160"><em id="tpeAngV">160°</em></div>' +
           '<div class="tpe-line"><span class="tpe-n">流动</span><label class="chk" style="margin:0 0 0 auto"><input type="checkbox" id="tpeFlow"></label></div>' +
         '</div>' +
+        '<div class="tpe-l"><div class="tpe-sw"><input type="color" id="tpeC1"><input type="color" id="tpeC2"><input type="color" id="tpeC3"><input type="color" id="tpeC4"></div></div>' +
       '</div>' +
-      /* 纯色：左 = 大色块，右 = 说明 */
+      /* 纯色：一条圆角长方形色块 + 说明 */
       '<div class="tpe-grp tpe-cols hide" id="tpeSolid">' +
         '<div class="tpe-l"><input type="color" id="tpeSolidC" value="#000000"></div>' +
-        '<div class="tpe-r"><div class="tpe-cap">点左侧色块选择纯色</div></div>' +
+        '<div class="tpe-r"><div class="tpe-cap">点色块选择纯色</div></div>' +
       '</div>' +
       /* 图片：左 = 缩略图(点它选图)，右 = 模糊 / 压暗 */
       '<div class="tpe-grp tpe-cols hide" id="tpeImg">' +

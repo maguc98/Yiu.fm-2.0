@@ -66,7 +66,7 @@ chips($("bgm"),[["grad","混色渐变"],["solid","纯色"],["img","自选图片"
 glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
 /* ---- 动效风格下拉：两组并排，共用一个弹层（GNAMES 里改组名） ---- */
 (function(){
-  var GNAMES=["经典","光影"],GB={sonnet:1,tempera:1,lumiere:1,partita:1};
+  var GNAMES=["经典","光影"],GB={sonnet:1,tempera:1,lumiere:1,partita:1},EN={sonnet:"Sonnet",tempera:"Tempera",lumiere:"Lumiere",partita:"Partita"};
   var GICON=['<path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/>','<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v5M16.5 17.5h5"/>'];
 
   var AN={
@@ -84,7 +84,7 @@ glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
     sonnet:'<path d="M12 7c-2-1.6-5-2-8-1.5v12c3-.5 6-.1 8 1.5"/><path class="a-pg" d="M12 7c2-1.6 5-2 8-1.5v12c-3-.5-6-.1-8 1.5"/><path d="M12 7v12"/>',
     tempera:'<g class="a-dr"><path d="M12 3.5c3.6 4.3 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.4-6 6-10.3z"/><path d="M9 14.2a3 3 0 0 0 2.3 2.8"/></g>',
     lumiere:'<circle class="a-sun" cx="12" cy="12" r="3.5"/><path class="a-rs" d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/>',
-    partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/>',
+    partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/><circle class="a-st" cx="6" cy="17.3" r="1.5" fill="currentColor" stroke="none"/>',
     _g0:'<path class="a-ly1" d="M12 4l8 4-8 4-8-4z"/><path class="a-ly2" d="M4 12l8 4 8-4M4 16l8 4 8-4"/>',
     _g1:'<path class="a-tw" d="M11 5l1.7 4.4 4.6.4-3.5 3 1.1 4.5L11 14.9 7.1 17.3l1.1-4.5-3.5-3 4.6-.4z"/><path class="a-bl" d="M19 14v6M16 17h6"/>'
   };
@@ -120,7 +120,9 @@ glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
     var sepDone=false;
     g.list.forEach(function(e){var b=document.createElement("button");b.type="button";b.setAttribute("role","option");b.setAttribute("aria-selected","false");
       var ic=document.createElement("i");ic.className="ic";var rs=svgFor(e[0],e[1],gi);ic.innerHTML=rs.h;if(rs.fb)ic.classList.add("fb");b.appendChild(ic);
-      var sp=document.createElement("span");sp.textContent=e[1];b.appendChild(sp);
+      var sp=document.createElement("span"),en=EN[e[0]];
+      if(en){sp.appendChild(document.createTextNode(e[1].replace(/\s*[（(].*[）)]\s*$/,"")+" "));var em=document.createElement("em");em.className="en";em.textContent="("+en+")";sp.appendChild(em)}else sp.textContent=e[1];   // 光影组：中文名 + (English)，四行同一格式
+      b.appendChild(sp);
       if(g.allWide||WIDE[e[0]]){b.classList.add("wide");if(!g.allWide&&!sepDone){sepDone=true;var d=document.createElement("div");d.className="dd-sep";grid.appendChild(d)}}
       b.onclick=function(ev){ev.stopPropagation();if(!avail(e[0]))return;setStyle(e[0]);close()};grid.appendChild(b);g.btns.push(b)});
     function fade(){var t=grid.scrollTop>2,bt=grid.scrollTop+grid.clientHeight<grid.scrollHeight-2;

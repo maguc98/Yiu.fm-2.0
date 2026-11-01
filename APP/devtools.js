@@ -1028,6 +1028,8 @@
         '<div style="display:flex;flex-direction:column;gap:14px;padding-top:10px;"></div>' +
       '</div></div></div>';
     var contentWrap = grp.querySelector('.gp > div');
+    // 统一顺序：滑块(10) → 选择(32) → 开关(20) → 按钮(40)；contentWrap 是纵向 flex，用 order 排，不动 DOM、不影响事件
+    function ord(el, n) { el.style.order = String(n); return el; }
 
     var ghBtn = grp.querySelector('.gh');
     ghBtn.addEventListener('click', function() {
@@ -1052,6 +1054,7 @@
       c.onchange = onChange;
       l.appendChild(txt);
       l.appendChild(c);
+      ord(l, 20);
       contentWrap.appendChild(l);
       return c;
     }
@@ -1071,6 +1074,7 @@
         var perfDesc = perfLabel.nextElementSibling;
         if (perfDesc) perfDesc.style.padding = '6px 12px 0';
       }
+      ord(perfWrap, 20);
       contentWrap.appendChild(perfWrap);
     }
 
@@ -1098,6 +1102,7 @@
         '<div style="display:flex;justify-content:space-between;padding:0 2px;font-size:11px;opacity:.55;">' +
           vals.map(function (v) { return '<span>' + pct(v) + '</span>'; }).join('') +
         '</div>';
+      ord(wrap, 10);
       contentWrap.appendChild(wrap);
       var slider = wrap.querySelector('#devResMul'), labelEl = wrap.querySelector('#devResMulV');
       if (typeof wrapRange === 'function') { try { wrapRange(slider); } catch (_) {} }
@@ -1119,6 +1124,7 @@
       var note = document.createElement('div');
       note.style.cssText = 'font-size:11px;opacity:.55;padding:0 2px;';
       note.textContent = '在各动效自己的分辨率设置上再乘这个比例，越低越省电；松手后当前画面会重建一次。云阶是网页元素，低档位时会变得更模糊。';
+      ord(note, 10);
       contentWrap.appendChild(note);
     })();
     } catch (e) { try { console.warn('[devtools] 渲染分辨率滑块初始化失败', e); } catch (_) {} }
@@ -1180,6 +1186,7 @@
         '</div>' +
         '<input type="range" id="' + id + '" min="0" max="5" step="0.1" value="' + saved + '" style="width:100%;">';
         
+      ord(wrap, 10);
       contentWrap.appendChild(wrap);
       
       var slider = wrap.querySelector('#' + id);
@@ -1204,6 +1211,7 @@
       var tit = document.createElement('div');
       tit.style.cssText = 'font-size:13px;color:var(--sub);margin-top:10px;padding:0 2px;';
       tit.textContent = '命令窗口 · 键盘与高度';
+      ord(tit, 30);
       contentWrap.appendChild(tit);
 
       // 模式：跟随键盘 / 手动高度 / 自动（记住高度，之后不再动）
@@ -1228,6 +1236,7 @@
         });
         hRow.style.display = (c === 'manual') ? 'flex' : 'none';
       }
+      ord(mrow, 32);
       contentWrap.appendChild(mrow);
 
       function addNumSlider(id, label, min, max, step, def, unit, parent){
@@ -1240,6 +1249,7 @@
             '<em id="' + id + 'V" style="font-style:normal;font-size:12px;color:var(--sub);">' + saved + unit + '</em>' +
           '</div>' +
           '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + saved + '" style="width:100%;">';
+        if (!parent) ord(wrap, 31);
         (parent || contentWrap).appendChild(wrap);
         var slider = wrap.querySelector('#' + id), labelEl = wrap.querySelector('#' + id + 'V');
         if (typeof wrapRange === 'function') wrapRange(slider);
@@ -1255,6 +1265,7 @@
 
       var hRow = document.createElement('div');
       hRow.style.cssText = 'display:none;flex-direction:column;';
+      ord(hRow, 31);
       contentWrap.appendChild(hRow);
       addNumSlider('dev_cm_height', '窗口高度（手动）', 200, 700, 10, 360, 'px', hRow);
 
@@ -1267,6 +1278,7 @@
       rst.style.cssText = 'width:100%;margin-top:4px;padding:10px 0;font-size:13px;';
       rst.textContent = '重新测量键盘高度';
       rst.onclick = function(){ try { localStorage.removeItem('dev_cm_kbH'); } catch(_) {} rst.textContent = '已清除，下次点输入框时重新测量'; setTimeout(function(){ rst.textContent = '重新测量键盘高度'; }, 1800); };
+      ord(rst, 33);
       contentWrap.appendChild(rst);
 
       paintModes();
@@ -1319,6 +1331,7 @@
     btnWrap.appendChild(btnCmd);
     btnWrap.appendChild(btnBeat);
     
+    ord(btnWrap, 40);
     contentWrap.appendChild(btnWrap);
 
     // G. 强制刷新：点击后弹出确认弹窗（带进入 / 退出动画），确认后清缓存并换新地址重载
@@ -1327,6 +1340,7 @@
     btnReload.style.cssText = 'width:100%;margin-top:8px;padding:10px 0;font-size:13px;';
     btnReload.textContent = '强制刷新';
     btnReload.onclick = showReloadConfirm;
+    ord(btnReload, 41);
     contentWrap.appendChild(btnReload);
 
     var ver = null;
