@@ -73,3 +73,17 @@ The VM-based lifecycle regression suite now covers:
 The drive isolation is applied only to the restored build-workspace copy by `YiuFM/Scripts/patch-visualizer-drive-isolation.py`. The script uses exact single-match anchors and does not edit the pinned source baseline.
 
 Run #62 passed all 12 automated tests, XcodeGen, iOS Release build, four-engine payload verification, and unsigned IPA packaging. No engine rendering code or UI was changed.
+
+
+## Follow-up implementation — lifecycle hardening
+
+Build-only compatibility patches now address two audit findings without changing engine rendering:
+
+- `VisualizerManager.drive()` isolates exceptions per adapter. A failure in one engine no longer prevents later adapters from receiving the same playback clock; a recovered adapter clears its fault marker.
+- `PartitaAdapter.setSuspended(v)` now has reversible, idempotent semantics. Suspending hides the host and suppresses render/drive work while preserving active state and cached lyrics. Resuming restores the host and renders the latest state without recreating or unmounting the React root.
+
+The manager header comment is also corrected to describe four renderers: Sonnet, Tempera, and Lumiere use WebGL; Partita uses React/DOM.
+
+Regression coverage now includes serialized teardown-before-mount, latest-request coalescing, non-lazy reuse, hide-versus-destroy, clock/lyric fan-out, per-adapter drive failure isolation and recovery, and Partita suspend/resume without renderer destruction.
+
+Verification: Run #69 passed all 13 Node tests, XcodeGen, iOS Release compilation, four-engine payload checks, and unsigned IPA packaging. This remains a build-time patch against the pinned Run #13 UI baseline; no visual engine source or UI layout is rewritten.
