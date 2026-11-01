@@ -197,7 +197,8 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
   snapshot.songs[0].name = 'changed';
   assert.equal(h.window.SongLibrary.list()[0].name, 'Fixture Song');
 
-  h.window.__musicTitle = 'Fixture Song';  h.window.__musicCover = 'data:image/fixture';
+  h.window.__musicTitle = 'Fixture Song';
+  h.window.__musicCover = 'data:image/fixture';
   const enriched = h.window.YiuLibrary.getSnapshot();
   assert.equal(enriched.currentTitle, 'Fixture Song');
   assert.equal(enriched.currentCover, 'data:image/fixture');
@@ -236,7 +237,9 @@ test('mini-player refresh is event-driven rather than interval-polled', () => {
 
 test('mini-player bridge coalesces playback, library, and DOM signals into one frame', () => {
   const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-mini-player-refresh.py');
-  const patch = fs.readFileSync(patchPath, 'utf8');  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);  assert.ok(match, 'event-driven bridge must exist in the build patch');
+  const patch = fs.readFileSync(patchPath, 'utf8');
+  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
+  assert.ok(match, 'event-driven bridge must exist in the build patch');
 
   const playbackListeners = [];
   const libraryListeners = [];
@@ -381,7 +384,7 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
   assert.equal(context.curCover, 'user-cover', 'stale async cover must not overwrite the newly selected song');
   assert.equal(events.length, 3, 'stale async cover completion must not publish a current-song event');
 
-  // Execute the transformed mini-bar tick and its subscriptions, not just source-pattern checks.
+  // Exercise the real restored mini-bar tick after the build-only event patch.
   const runtimeMini = fs.readFileSync(path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'mini-player.js'), 'utf8');
   const tickStart = runtimeMini.indexOf('  function tick(){');
   const tickEnd = runtimeMini.lastIndexOf('\n})();');
@@ -398,7 +401,8 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
     YiuLibrary: { subscribe(fn) { librarySubscribers.push(fn); } }
   };
   const runtime = {
-    window: runtimeWindow,    LN: ['First lyric', 'Second lyric'],
+    window: runtimeWindow,
+    LN: ['First lyric', 'Second lyric'],
     idx: 0,
     npT: { textContent: '' },
     miT: { textContent: '' },
@@ -475,7 +479,8 @@ test('player end-of-track and next-track consumers prefer YiuLibrary with legacy
     }
   };
   vm.runInNewContext(
-    '(function(window){' +    'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
+    '(function(window){' +
+    'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
     'var library = window.YiuLibrary || window.SongLibrary; library.step(1);' +
     '})(window);',
     context
@@ -527,8 +532,9 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(playbackPreferences.includes("'playModeV1'"));
   assert.ok(playbackPreferences.includes('getPlayMode'));
   assert.ok(playbackPreferences.includes('setPlayMode'));
-  assert.ok(mini.includes('YiuPlaybackPreferences.getPlayMode()'));
-  assert.ok(mini.includes('YiuPlaybackPreferences.setPlayMode(window.playMode)'));  assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
+  assert.ok(mini.includes('playbackPreferences.getPlayMode()'));
+  assert.ok(mini.includes('playbackPreferences.setPlayMode(window.playMode)'));
+  assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
 
   assert.ok(sonnet.includes("'sonnetCfg.v1'"));
   assert.ok(sonnet.includes("'folia.sonnet.dynamic'"));
@@ -597,7 +603,8 @@ function createVisualizerHarness(options = {}) {
       loadLyrics() { events.push(name + ':lyrics'); },
       setSuspended(value) { events.push(name + ':suspend:' + value); },
       isAlive() { return state.alive; },
-      isActive() { return state.active; },      _state: state
+      isActive() { return state.active; },
+      _state: state
     };
   }
 
