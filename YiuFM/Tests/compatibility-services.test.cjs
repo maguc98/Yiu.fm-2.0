@@ -444,6 +444,7 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   const core = read('core.js');
   const mode = read('mode-pref.js');
   const mini = read('mini-player.js');
+  const playbackPreferences = read('playback-preferences-service.js');
   const sonnet = read('sonnet-adapter.js');
   const tempera = read('tempera-adapter.js');
   const lumiere = read('lumiere-adapter.js');
@@ -472,7 +473,12 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(core.includes('localStorage.getItem("themesV1"'));
   assert.ok(core.includes("localStorage.getItem('performanceMode')"));
   assert.ok(mode.includes("'ui_mode_pref'") && mode.includes("'ui_mode_last'"));
-  assert.ok(mini.includes('PM_KEY = "playModeV1"'));
+  assert.ok(playbackPreferences.includes("'playModeV1'"));
+  assert.ok(playbackPreferences.includes('getPlayMode'));
+  assert.ok(playbackPreferences.includes('setPlayMode'));
+  assert.ok(mini.includes('YiuPlaybackPreferences.getPlayMode()'));
+  assert.ok(mini.includes('YiuPlaybackPreferences.setPlayMode(window.playMode)'));
+  assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
 
   assert.ok(sonnet.includes("'sonnetCfg.v1'"));
   assert.ok(sonnet.includes("'folia.sonnet.dynamic'"));
@@ -480,6 +486,29 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(lumiere.includes("'folia.lumiere.cfg'"));
   assert.ok(partita.includes("'partitaCfgV3'"));
   assert.ok(beat.includes("'yiu.beatTune.v1'"));
+});
+
+
+test('playback preferences preserve the legacy playModeV1 values and fallback behavior', () => {
+  const root = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const source = fs.readFileSync(path.join(root, 'playback-preferences-service.js'), 'utf8');
+  const values = new Map();
+  const window = { localStorage: {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); }
+  }};
+  vm.runInNewContext(source, { window });
+  const prefs = window.YiuPlaybackPreferences;
+  assert.equal(prefs.getPlayMode(), 0);
+  assert.equal(prefs.setPlayMode(1), true);
+  assert.equal(values.get('playModeV1'), '1');
+  assert.equal(prefs.getPlayMode(), 1);
+  assert.equal(prefs.setPlayMode(2), true);
+  assert.equal(prefs.getPlayMode(), 2);
+  assert.equal(prefs.setPlayMode(3), false);
+  assert.equal(prefs.getPlayMode(), 2);
+  assert.equal(prefs.setPlayMode(0), true);
+  assert.equal(prefs.getPlayMode(), 0);
 });
 
 
