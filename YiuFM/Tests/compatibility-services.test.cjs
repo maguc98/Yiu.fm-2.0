@@ -143,6 +143,8 @@ test('playback facade delegates commands and publishes legacy/audio events', () 
 
   h.window.YiuPlayback.play();
   assert.equal(h.audio.paused, false);
+  h.window.YiuPlayback.notify('lyricindexchange');
+  assert.ok(received.includes('lyricindexchange'));
   assert.ok(received.includes('playbackstatechange'));
 
   h.audio.currentTime = 31;
@@ -193,11 +195,18 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
   snapshot.songs[0].name = 'changed';
   assert.equal(h.window.SongLibrary.list()[0].name, 'Fixture Song');
 
+  h.window.__musicTitle = 'Fixture Song';
+  h.window.__musicCover = 'data:image/fixture';
+  const enriched = h.window.YiuLibrary.getSnapshot();
+  assert.equal(enriched.currentTitle, 'Fixture Song');
+  assert.equal(enriched.currentCover, 'data:image/fixture');
+
   const changes = [];
   const unsubscribe = h.window.YiuLibrary.subscribe(value => changes.push(value.currentId));
   await h.window.YiuLibrary.select(9, true);
   h.notifyLibraryChange();
-  assert.deepEqual(changes, [9]);
+  h.window.YiuLibrary.notify('librarychange');
+  assert.deepEqual(changes, [9, 9]);
 
   assert.equal(h.window.YiuLibrary.step(-1), -1);
   assert.equal(h.window.YiuLibrary.peekNext(), 9);
