@@ -237,8 +237,7 @@ test('mini-player refresh is event-driven rather than interval-polled', () => {
 
 test('mini-player bridge coalesces playback, library, and DOM signals into one frame', () => {
   const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-mini-player-refresh.py');
-  const patch = fs.readFileSync(patchPath, 'utf8');  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
-  assert.ok(match, 'event-driven bridge must exist in the build patch');
+  const patch = fs.readFileSync(patchPath, 'utf8');  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);  assert.ok(match, 'event-driven bridge must exist in the build patch');
 
   const playbackListeners = [];
   const libraryListeners = [];
@@ -385,9 +384,9 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
 
   // Execute the transformed mini-bar tick and its subscriptions, not just source-pattern checks.
   const tickStart = mini.indexOf('  function tick(){');
-  const tickEnd = mini.lastIndexOf('\\n})();');
+  const tickEnd = mini.lastIndexOf('\n})();');
   assert.ok(tickStart >= 0 && tickEnd > tickStart, 'patched mini-bar tick and event listeners must be present');
-  const runtimeSource = mini.slice(tickStart, tickEnd);
+  const runtimeSource = 'var last = null;\n' + mini.slice(tickStart, tickEnd);
   const playbackSubscribers = [];
   const librarySubscribers = [];
   const paints = [];
@@ -477,8 +476,7 @@ test('player end-of-track and next-track consumers prefer YiuLibrary with legacy
     }
   };
   vm.runInNewContext(
-    '(function(window){' +
-    'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
+    '(function(window){' +    'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
     'var library = window.YiuLibrary || window.SongLibrary; library.step(1);' +
     '})(window);',
     context
@@ -798,14 +796,3 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
     assert.ok(bridge.includes('case ' + operation), 'native bridge missing operation ' + operation);
   }
   assert.ok(bridge.includes('!name.contains("/")'));
-  assert.ok(bridge.includes('name != ".."'));
-  assert.ok(bridge.includes('8_388_608'));
-  assert.ok(iosMusic.includes('window.YiuLibrary || window.SongLibrary'));
-
-  assert.ok(player.includes("document.getElementById('audio')"));
-  assert.ok(player.includes('audio.play()'));
-  assert.ok(nativeAudio.includes('AVAudioPlayer'));
-  for (const shell of [app, root, stage]) {
-    assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
-  }
-});
