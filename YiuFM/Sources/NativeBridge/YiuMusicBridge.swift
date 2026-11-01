@@ -14,6 +14,8 @@ final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
         let message: String
     }
 
+    private static let maxTextReadBytes = 8_388_608
+
     static var musicDirectory: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Music", isDirectory: true)
@@ -74,7 +76,17 @@ final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
               name != ".." else {
             throw BridgeError(message: "bad name")
         }
-        return musicDirectory.appendingPathComponent(name)
+        let url = musicDirectory.appendingPathComponent(name).standardizedFileURL
+        guard url.deletingLastPathComponent() == musicDirectory.standardizedFileURL.deletingLastPathComponent()
+            || url.deletingLastPathComponent() == musicDirectory.standardizedFileURL else {
+            throw BridgeError(message: "bad name")
+        }
+
+        let values = try url.resourceValues(forKeys: [.isSymbolicLinkKey, .isRegularFileKey])
+        guard values.isSymbolicLink != true, values.isRegularFile == true else {
+            throw BridgeError(message: "not a regular file")
+        }
+        return url
     }
 
     private static func listFiles() throws -> [String: Any] {
@@ -98,7 +110,12 @@ final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
     }
 
     private static func readText(_ body: [String: Any]) throws -> [String: Any] {
-        let data = try Data(contentsOf: resolve(body))
+        let url = try resolve(body)
+        let values = try url.resourceValues(forKeys: [.fileSizeKey])
+        guard (values.fileSize ?? 0) <= maxTextReadBytes else {
+            throw BridgeError(message: "text file too large")
+        }
+        let data = try Data(contentsOf: url, options: [.mappedIfSafe])
         var string = String(data: data, encoding: .utf8)
 
         if string == nil,
