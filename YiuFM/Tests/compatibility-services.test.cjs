@@ -689,8 +689,8 @@ test('visualizer manager keeps non-lazy reuse and separates hide from destroy', 
   h.manager.drive(12.5);
   h.manager.loadLyrics([0], [[ [0, 1] ]], ['test']);
   for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
-    assert.ok(h.events.includes(name + ':drive:12.5'));
-    assert.ok(h.events.includes(name + ':lyrics'));
+    assert.ok(!h.events.includes(name + ':drive:12.5'), 'hidden adapter must not receive frame updates: ' + name);
+    assert.ok(h.events.includes(name + ':lyrics'), 'inactive adapters must still cache new lyrics: ' + name);
   }
 
   await h.manager.destroy();
@@ -699,8 +699,11 @@ test('visualizer manager keeps non-lazy reuse and separates hide from destroy', 
 });
 
 
-test('one visualizer drive exception does not starve later adapters', () => {
+test('one visualizer drive exception does not starve later active adapters', () => {
   const h = createVisualizerHarness();
+  // Simulate overlapping active states to verify fault isolation independently
+  // of the manager's normal single-active-renderer invariant.
+  for (const adapter of Object.values(h.adapters)) adapter._state.active = true;
   h.adapters.sonnet.drive = () => { throw new Error('simulated adapter failure'); };
 
   h.manager.drive(7.25);
