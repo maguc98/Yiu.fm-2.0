@@ -603,3 +603,21 @@ test('visualizer manager keeps non-lazy reuse and separates hide from destroy', 
   assert.equal(h.adapters.sonnet._state.alive, false);
   assert.equal(h.manager.current, null);
 });
+
+
+test('one visualizer drive exception does not starve later adapters', () => {
+  const h = createVisualizerHarness();
+  h.adapters.sonnet.drive = () => { throw new Error('simulated adapter failure'); };
+
+  h.manager.drive(7.25);
+  assert.ok(!h.events.includes('sonnet:drive:7.25'));
+  for (const name of ['tempera', 'lumiere', 'partita']) {
+    assert.ok(h.events.includes(name + ':drive:7.25'));
+  }
+
+  h.adapters.sonnet.drive = ct => { h.events.push('sonnet:drive:' + ct); };
+  h.manager.drive(8.5);
+  for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
+    assert.ok(h.events.includes(name + ':drive:8.5'));
+  }
+});
