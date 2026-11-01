@@ -261,14 +261,6 @@ Run #30 (`41301825919`) completed successfully: 4/4 tests passed, patched mini-p
 This is source/build verification, not yet an on-device runtime performance measurement. The later Phase 1I change removes the separate 200 ms mini-bar ticker as well; the build-copy event bridge now refreshes on lyric-index, lyric-content, and library-state changes. A focused on-device regression pass is still required for open/close, play/pause, lyric switching, song switching, performance-mode toggle, cover updates, and drag gestures.
 
 
-### Phase 1I — Event-driven mini-bar title and cover refresh
-
-The initial Phase 1G implementation removed the 50 ms / 100 ms playback-card polling but temporarily retained the separate 200 ms mini-bar ticker. A subsequent guarded build-copy patch, `YiuFM/Scripts/patch-mini-bar-events.py`, removes that remaining ticker and subscribes the mini-bar to explicit playback/lyrics and library events.
-
-The event bridge covers audio-clock and no-audio lyric-index progression, LRC application and lyric-array edits, and current song/title/cover/mode synchronization. The deduplication key includes title, lyric text, and active cover data so a cover-only update is not suppressed. The pinned Run #13 source remains unchanged; all transformations occur after the workflow restores the baseline.
-
-Regression coverage verifies event publication and now exercises the patched mini-bar refresh function against lyric-only, title, cover-only, and custom-cover changes, including duplicate-event suppression. This remains build-time behavior verification; real-device visual and interaction regression is still required.
-
 ### Phase 1H — Playback library consumer migration
 
 The build now applies `YiuFM/Scripts/patch-player-library-consumer.py` to the restored Run #13 `player.js` copy. The end-of-track handler and next-track command prefer `YiuLibrary` and fall back to `SongLibrary`. Both facade methods delegate to the same existing `SongLibrary` methods; the audio element, playback clock, song selection, repeat/shuffle behavior, and end-of-track policy are unchanged.
@@ -276,6 +268,15 @@ The build now applies `YiuFM/Scripts/patch-player-library-consumer.py` to the re
 The patch is guarded by exact single-match anchors. A regression test verifies both the transformed consumer and facade-first runtime dispatch with the legacy fallback available. The build checks the transformed source in the packaged Web payload.
 
 This completes the remaining direct `SongLibrary` consumer migration in `player.js` without moving IndexedDB, audio Blob/object URL, or import ownership. The next phase is to audit persistence reads/writes and document a non-destructive persistence compatibility contract; no database/schema migration is authorized by this step.
+
+
+### Phase 1I — Event-driven mini-bar title and cover refresh
+
+The initial Phase 1G implementation removed the 50 ms / 100 ms playback-card polling but temporarily retained the separate 200 ms mini-bar ticker. A subsequent guarded build-copy patch, `YiuFM/Scripts/patch-mini-bar-events.py`, removes that remaining ticker and subscribes the mini-bar to explicit playback/lyrics and library events.
+
+The event bridge covers audio-clock and no-audio lyric-index progression, LRC application and lyric-array edits, and current song/title/cover/mode synchronization. The deduplication key includes title, lyric text, and active cover data so a cover-only update is not suppressed. The pinned Run #13 source remains unchanged; all transformations occur after the workflow restores the baseline.
+
+Regression coverage verifies event publication and now exercises the patched mini-bar refresh function against lyric-only, title, cover-only, and custom-cover changes, including duplicate-event suppression. This remains build-time behavior verification; real-device visual and interaction regression is still required.
 
 
 ### Phase 2A — Persistence discovery and compatibility inventory
