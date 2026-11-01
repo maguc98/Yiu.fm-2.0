@@ -206,4 +206,26 @@ The facade standardizes snapshots, subscriptions, song selection/navigation, cov
 
 Contract and audited legacy constraints: `docs/architecture/LIBRARY_SERVICE_V1.md`.
 
-Run #21 (`41300807414`) is the first build that includes the library facade and its syntax/package checks. Its final result must be recorded after GitHub Actions completes.
+Run #21 (`41300807414`) completed successfully with the library facade included and all four engine payloads verified.
+
+
+### Phase 1E — Automated compatibility contract tests
+
+Added `YiuFM/Tests/compatibility-services.test.cjs` and wired it into the macOS build workflow.
+
+GitHub Actions Run #25 (`41300975596`) completed successfully:
+
+- 3 tests passed, 0 failed.
+- Playback facade command delegation and audio-event publishing.
+- Lyrics facade parse/apply/seek delegation and defensive snapshot copies.
+- Library facade snapshots, subscriptions, and operation delegation.
+- JavaScript syntax checks passed for all three facades.
+- XcodeGen generation and iOS Release build passed.
+- Run #13 UI and all four visual-engine payloads were verified in the packaged app.
+- Unsigned IPA artifact uploaded (2,523,516 bytes).
+
+Run #25 is the current verified milestone. It validates the facade contracts against controlled legacy-compatible test doubles; it is not a substitute for on-device playback, import, lyric-sync, or visualizer regression testing.
+
+## Next step
+
+Before migrating any existing consumer, map the current dependency edges from mini-player, iOS music scanning, player end-of-track handling, and music panel to `SongLibrary`. Then choose one low-risk consumer at a time for migration to `YiuLibrary`, with behavior tests and a rollback point. Do not change the underlying IndexedDB schema or native audio ownership yet.
