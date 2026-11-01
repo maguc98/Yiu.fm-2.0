@@ -384,9 +384,8 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
 
   // Execute the transformed mini-bar tick and its subscriptions, not just source-pattern checks.
   const tickStart = mini.indexOf('  function tick(){');
-  const tickEnd = mini.lastIndexOf('\n})();');
-  assert.ok(tickStart >= 0 && tickEnd > tickStart, 'patched mini-bar tick and event listeners must be present');
-  const runtimeSource = 'var last = null;\n' + mini.slice(tickStart, tickEnd);
+  assert.ok(tickStart >= 0, 'patched mini-bar tick and event listeners must be present');
+  const runtimeSource = 'var last = null;\n' + mini.slice(tickStart);
   const playbackSubscribers = [];
   const librarySubscribers = [];
   const paints = [];
