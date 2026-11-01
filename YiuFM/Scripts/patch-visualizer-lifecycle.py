@@ -74,4 +74,76 @@ replace_once(
       if (!suspended) this._render();
     },"""
 )
+
+# Cancel delayed DOM measurements and resolution frames while Partita is suspended,
+# and release all adapter-owned references when the renderer is destroyed.
+replace_once(
+    "partita-adapter.js",
+    "    if (!active || !hostEl || idx !== lineIndex || idx < 0) return;",
+    "    if (!active || suspended || !hostEl || idx !== lineIndex || idx < 0) return;"
+)
+replace_once(
+    "partita-adapter.js",
+    """    hide: function () {
+      active = false;
+      if (hostEl) hostEl.style.display = 'none';
+    },""",
+    """    hide: function () {
+      active = false;
+      if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; }
+      if (resTimer) { cancelAnimationFrame(resTimer); resTimer = 0; }
+      if (hostEl) { hostEl.style.display = 'none'; hostEl.style.opacity = ''; }
+    },"""
+)
+replace_once(
+    "partita-adapter.js",
+    """    setSuspended: function (v) {
+      v = !!v;
+      if (v === suspended) return;
+      suspended = v;
+      if (!active || !hostEl) return;
+      hostEl.style.display = suspended ? 'none' : 'block';
+      if (!suspended) this._render();
+    },""",
+    """    setSuspended: function (v) {
+      v = !!v;
+      if (v === suspended) return;
+      suspended = v;
+      if (!active || !hostEl) return;
+      if (suspended) {
+        if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; }
+        if (resTimer) { cancelAnimationFrame(resTimer); resTimer = 0; }
+        hostEl.style.display = 'none';
+        hostEl.style.opacity = '';
+      } else {
+        hostEl.style.display = 'block';
+        applyRes();
+        this._render();
+      }
+    },"""
+)
+replace_once(
+    "partita-adapter.js",
+    """    destroy: function () {
+      active = false;
+      if (root) { try { root.unmount(); } catch (e) {} root = null; }
+      if (hostEl) hostEl.innerHTML = '';
+      // 彻底清空内存中的假数据和游标
+      lastLines = [];
+      lineIndex = -1;
+    },""",
+    """    destroy: function () {
+      active = false;
+      suspended = false;
+      if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; }
+      if (resTimer) { cancelAnimationFrame(resTimer); resTimer = 0; }
+      if (root) { try { root.unmount(); } catch (e) {} root = null; }
+      if (hostEl) hostEl.innerHTML = '';
+      hostEl = null;
+      currentTimeObj = null;
+      lastLines = [];
+      lineIndex = -1;
+    },"""
+)
+
 print("Hardened visualizer drive fan-out and implemented reversible Partita suspension.")
