@@ -40,13 +40,13 @@ jobs:
       - name: Package unsigned IPA
         run: |
           mkdir -p output/Payload
-          cp -R build/Build/Products/Release-iphoneos/*.app output/Payload/TextDisplay.app
+          cp -R build/Build/Products/Release-iphoneos/*.app output/Payload/Yiu.fm.app
           cd output
-          /usr/bin/zip -qry TextDisplay-unsigned.ipa Payload
+          /usr/bin/zip -qry Yiu.fm-unsigned.ipa Payload
           rm -rf Payload
 
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v6
         with:
-          name: TextDisplay-unsigned-ipa
-          path: output/TextDisplay-unsigned.ipa
+          name: Yiu.fm-unsigned-ipa
+          path: output/Yiu.fm-unsigned.ipa
