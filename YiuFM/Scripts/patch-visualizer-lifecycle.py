@@ -12,18 +12,6 @@ def replace_once(name, old, new):
         raise SystemExit(f"{name}: expected exactly one lifecycle patch anchor, found {count}: {old!r}")
     path.write_text(source.replace(old, new, 1), encoding="utf-8")
 
-# A faulty adapter must not prevent the remaining engines from receiving the audio clock.
-replace_once(
-    "visualizer-manager.js",
-    """        var ad = adapterOf(NAMES[i]);
-        if (ad && typeof ad.drive === 'function') ad.drive(ct);""",
-    """        var name = NAMES[i];
-        var ad = adapterOf(name);
-        if (ad && typeof ad.drive === 'function') {
-          try { ad.drive(ct); } catch (e) { warn('drive ' + name, e); }
-        }"""
-)
-
 # Partita suspension is temporary: retain active state, stop DOM work while suspended,
 # and render the latest cached lyric/time state when resumed.
 replace_once(
