@@ -64,6 +64,7 @@ jobs:
           PY
           python3 YiuFM/Scripts/patch-mini-player-refresh.py
           python3 YiuFM/Scripts/patch-mini-bar-events.py
+          python3 YiuFM/Scripts/patch-player-library-consumer.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
@@ -114,6 +115,8 @@ jobs:
           ! grep -q 'npTimer\|setInterval(npRefresh' "$WEB_ROOT/APP/mini-player.js"
           grep -q 'window.YiuPlayback.*subscribe' "$WEB_ROOT/APP/mini-player.js"
           grep -q 'window.YiuLibrary.*subscribe' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'var SL = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
+          grep -q 'var library = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
           echo "Verified Run #13 UI, event-driven mini-player, service facades, migrated iOS import consumer, and all four engine payloads in $WEB_ROOT"
           du -sh "$WEB_ROOT"
 
