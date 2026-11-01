@@ -55,6 +55,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/playback-service.js
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
+          node --test YiuFM/Tests/compatibility-services.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
