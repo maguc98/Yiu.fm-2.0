@@ -210,14 +210,15 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
 });
 
 
+
 test('mini-player refresh is event-driven rather than interval-polled', () => {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'mini-player.js');
   const source = fs.readFileSync(file, 'utf8');
 
-  assert.doesNotMatch(source, /npTimer|setInterval\\(npRefresh/);
-  assert.match(source, /function requestNpRefresh\\(\\)/);
-  assert.match(source, /window\\.YiuPlayback&&typeof window\\.YiuPlayback\\.subscribe/);
-  assert.match(source, /window\\.YiuLibrary&&typeof window\\.YiuLibrary\\.subscribe/);
-  assert.match(source, /npMiniObserver\\.observe\\(mini/);
-  assert.match(source, /requestAnimationFrame\\(function\\(\\)/);
+  assert.doesNotMatch(source, /npTimer|setInterval\(npRefresh/);
+  assert.match(source, /function requestNpRefresh\(\)/);
+  assert.match(source, /window\.YiuPlayback&&typeof window\.YiuPlayback\.subscribe/);
+  assert.match(source, /window\.YiuLibrary&&typeof window\.YiuLibrary\.subscribe/);
+  assert.match(source, /npMiniObserver\.observe\(mini/);
+  assert.match(source, /requestAnimationFrame\(function\(\)/);
 });
