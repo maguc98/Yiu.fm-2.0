@@ -476,8 +476,11 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(playbackPreferences.includes("'playModeV1'"));
   assert.ok(playbackPreferences.includes('getPlayMode'));
   assert.ok(playbackPreferences.includes('setPlayMode'));
-  assert.ok(mini.includes('YiuPlaybackPreferences.getPlayMode()'));
-  assert.ok(mini.includes('YiuPlaybackPreferences.setPlayMode(window.playMode)'));
+  // The build patch binds the facade once, then delegates through the local reference.
+  assert.ok(mini.includes('var playbackPreferences = window.YiuPlaybackPreferences;'));
+  assert.ok(mini.includes('playbackPreferences ? playbackPreferences.getPlayMode() : 0'));
+  assert.ok(mini.includes('playbackPreferences.setPlayMode(window.playMode)'));
+  // Keep the legacy storage fallback for builds where the facade is unavailable.
   assert.ok(mini.includes('localStorage.setItem("playModeV1"'));
 
   assert.ok(sonnet.includes("'sonnetCfg.v1'"));
