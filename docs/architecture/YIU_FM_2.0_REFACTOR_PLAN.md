@@ -284,3 +284,12 @@ This is an audit/documentation milestone only. No stored data, localStorage key,
 Added a compatibility test that pins the observed legacy backup key and payload version, song-library database/store names and key paths, theme metadata/image stores and fallback paths, engine configuration keys, and selected playback/UI preference keys.
 
 These are preservation guards, not a storage migration. They intentionally fail if a future refactor silently renames a key, changes an IndexedDB version/store, or removes a legacy fallback. The new test runs in the existing macOS build workflow before the iOS Release build.
+
+
+### Phase 4B — Visualizer lifecycle regression and drive isolation
+
+Added VM-based tests for serialized engine switching, teardown-before-mount, latest-request coalescing, non-lazy reuse, hide-versus-destroy, and clock/lyric fan-out.
+
+The audit found that an exception thrown by one adapter's `drive(ct)` could abort the manager's fan-out loop. A guarded build-copy patch now isolates each adapter call, logs the first failure, continues sending the clock to subsequent engines, and clears the fault latch after recovery. No adapter timebase or animation code was changed.
+
+Run #62 verified 12/12 tests passing, successful XcodeGen and iOS Release compilation, and all four engine payloads. The generated IPA remains unsigned.
