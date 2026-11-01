@@ -146,4 +146,32 @@ replace_once(
     },"""
 )
 
-print("Hardened visualizer drive fan-out and implemented reversible Partita suspension.")
+# The audio clock can call drive() every frame. Locate the active lyric line with
+# an upper-bound binary search instead of scanning every preceding line.
+replace_once(
+    "partita-adapter.js",
+    """  function findIndex(ct) {
+    var r = -1;
+    for (var i = 0; i < lastLines.length; i++) {
+      if (lastLines[i].startTime <= ct) r = i; else break;
+    }
+    return r;
+  }""",
+    """  function findIndex(ct) {
+    var low = 0, high = lastLines.length - 1, result = -1;
+    // Find the final line whose startTime is <= ct (upper-bound search).
+    // Lyrics are built in timestamp order by loadLyrics().
+    while (low <= high) {
+      var mid = low + ((high - low) >> 1);
+      if (lastLines[mid].startTime <= ct) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
+  }"""
+)
+
+print("Hardened Partita lifecycle and changed per-frame lyric lookup to O(log n).")
