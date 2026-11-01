@@ -39,12 +39,13 @@ jobs:
           test -s YiuFM/Resources/Web/APP/playback-service.js
           test -s YiuFM/Resources/Web/APP/lyrics-service.js
           test -s YiuFM/Resources/Web/APP/library-service.js
+          test -s YiuFM/Resources/Web/APP/playback-preferences-service.js
           python3 - <<'PY'
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           anchor = '<script src="./APP/player.js?v=20261029a"></script>'
-          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>'
+          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>'
           if html.count(anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
@@ -65,10 +66,12 @@ jobs:
           python3 YiuFM/Scripts/patch-mini-player-refresh.py
           python3 YiuFM/Scripts/patch-mini-bar-events.py
           python3 YiuFM/Scripts/patch-player-library-consumer.py
+          python3 YiuFM/Scripts/patch-playback-preferences.py
           python3 YiuFM/Scripts/patch-visualizer-lifecycle.py
           python3 YiuFM/Scripts/patch-visualizer-drive-isolation.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
+          node --check YiuFM/Resources/Web/APP/playback-preferences-service.js
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
           node --check YiuFM/Resources/Web/APP/player.js
@@ -112,6 +115,9 @@ jobs:
           grep -q 'APP/playback-service.js?v=1' "$WEB_ROOT/index.html"
           grep -q 'APP/lyrics-service.js?v=1' "$WEB_ROOT/index.html"
           grep -q 'APP/library-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'APP/playback-preferences-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'YiuPlaybackPreferences.getPlayMode()' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'YiuPlaybackPreferences.setPlayMode(window.playMode)' "$WEB_ROOT/APP/mini-player.js"
           grep -q "YiuPlayback.notify('lyricschange')" "$WEB_ROOT/APP/renderer.js"
           grep -q 'window.YiuLibrary || window.SongLibrary' "$WEB_ROOT/APP/ios-music.js"
           ! grep -q 'npTimer\|setInterval(npRefresh' "$WEB_ROOT/APP/mini-player.js"
