@@ -51,13 +51,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Verify bundled visual engines
+      - name: Bundle and verify legacy visual engines
         run: |
           APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
           test -n "$APP_PATH"
-          INDEX_PATH="$(find "$APP_PATH" -name index.html -print -quit)"
-          test -n "$INDEX_PATH"
-          WEB_ROOT="$(dirname "$INDEX_PATH")"
+          mkdir -p "$APP_PATH/Web"
+          cp -R YiuFM/Resources/Web/. "$APP_PATH/Web/"
+          WEB_ROOT="$APP_PATH/Web"
+          test -s "$WEB_ROOT/index.html"
+          test -s "$WEB_ROOT/style.css"
           test -s "$WEB_ROOT/APP/sonnet/sonnet.js"
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
