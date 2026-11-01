@@ -43,7 +43,7 @@ This is a source audit only. No engine implementation, visual effect, animation,
 
 1. **The lifecycle boundary exists, but its protocol is not uniform.** Sonnet and Tempera use register-only `init`; Lumiere creates its runtime from `init`; Partita creates a React root from `init`. The manager has special lazy-engine handling for the latter two, but the top-level comments still describe only three engines and understate the exception.
 2. **The manager has no dedicated automated lifecycle regression tests yet.** The existing test suite covers playback/lyrics/library facades and mini-player refresh, not serialized engine switching, reuse, teardown, or cancellation.
-3. **The manager's `drive()` fan-out does not isolate exceptions per adapter.** `loadLyrics()` does isolate them. Current adapters generally guard their own work, but one unexpected throw from a `drive` implementation could prevent later adapters from receiving the same clock update.
+3. **The original manager's `drive()` fan-out did not isolate exceptions per adapter.** This has now been hardened in the build copy: one adapter failure is caught and logged once, later adapters still receive the clock update, and a successful later call clears that adapter's fault latch. `loadLyrics()` already had per-adapter isolation.
 4. **Partita's optional `setSuspended(v)` ignores the value and always calls `hide()`.** Current inspected call sites in `bravais.js` suspend/resume Sonnet directly and do not call `VisualizerManager.setSuspended()`, so this mismatch is not currently on the observed active path. It must be corrected before manager-wide suspension is adopted for Partita.
 5. **Partita is a React/DOM renderer, not a Pixi WebGL runtime,** but it is serialized through the same manager. This is safe but the manager's “one WebGL context” comment is not a complete description of its responsibility.
 6. **Lazy adapters cannot use the reuse fast path.** This is an explicit current rule, so switching back to Lumiere or Partita within the 15-second retention window still destroys/recreates rather than reusing. Do not change this without adapter-specific lifecycle tests.
@@ -59,3 +59,17 @@ This is a source audit only. No engine implementation, visual effect, animation,
 ## Next safe step
 
 Add VM-based tests with controlled adapter doubles for serialized switching, teardown-before-mount, reuse eligibility, hide-versus-destroy, latest-request coalescing, and clock/lyric fan-out. Only after those pass should the manager protocol or any adapter lifecycle be changed.
+
+
+## Verification update — Run #62
+
+The VM-based lifecycle regression suite now covers:
+- teardown-before-mount when switching engines;
+- latest-target coalescing while a previous mount is in flight;
+- non-lazy reuse and the distinction between hide and destroy;
+- clock and lyric fan-out;
+- one adapter throwing during `drive()` without starving later adapters.
+
+The drive isolation is applied only to the restored build-workspace copy by `YiuFM/Scripts/patch-visualizer-drive-isolation.py`. The script uses exact single-match anchors and does not edit the pinned source baseline.
+
+Run #62 passed all 12 automated tests, XcodeGen, iOS Release build, four-engine payload verification, and unsigned IPA packaging. No engine rendering code or UI was changed.
