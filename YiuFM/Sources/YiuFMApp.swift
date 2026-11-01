@@ -123,8 +123,7 @@ struct YiuHomeView: View {
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .tracking(2.8)
                     .foregroundStyle(.white.opacity(0.72))
-                Text("让每一段旋律
-都有自己的光。")
+                Text("让每一段旋律\n都有自己的光。")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .tracking(-0.8)
                     .lineSpacing(3)
