@@ -191,8 +191,19 @@ The facade exposes snapshot copies, LRC parse/apply delegation, lyric seeking, a
 
 Contract: `docs/architecture/LYRICS_SERVICE_V1.md`.
 
-Run #19 (`41300690722`) is the first build that includes the lyrics facade and its syntax/package checks. Its final result must be recorded after GitHub Actions completes.
+Run #19 (`41300690722`) completed successfully with the lyrics facade syntax and package checks passing.
 
 ## Next safe step
 
 Audit the existing `SongLibrary` public API and its event notifications, then document a library-service contract around the existing implementation. Do not migrate storage, change IndexedDB schema, or move import ownership until the existing behavior and edge cases have been mapped.
+
+
+### Phase 1D — Library compatibility boundary
+
+Implemented in `YiuFM/Resources/Web/APP/library-service.js`.
+
+The facade standardizes snapshots, subscriptions, song selection/navigation, cover lookup, scanned import, and removal/clear operations by delegating to the existing `SongLibrary` API. IndexedDB, blobs, object URLs, skip records, and import sequencing remain owned by `song-library.js`.
+
+Contract and audited legacy constraints: `docs/architecture/LIBRARY_SERVICE_V1.md`.
+
+Run #21 (`41300807414`) is the first build that includes the library facade and its syntax/package checks. Its final result must be recorded after GitHub Actions completes.
