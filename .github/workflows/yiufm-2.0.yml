@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - development-2.0
+      - refactor/yiu-2.0-layered-architecture
     paths:
       - "YiuFM/**"
       - ".github/workflows/yiufm-2.0.yml"
@@ -24,11 +25,11 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Restore legacy visual resources
+      - name: Restore Run #13 legacy UI baseline
         run: |
           mkdir -p YiuFM/Resources/Web
-          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
-          git archive origin/main index.html style.css APP | tar -x -C YiuFM/Resources/Web
+          git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
+          git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -64,7 +65,7 @@ jobs:
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
-          echo "Verified legacy UI and all four engine payloads in $WEB_ROOT"
+          echo "Verified Run #13 UI and all four engine payloads in $WEB_ROOT"
           du -sh "$WEB_ROOT"
 
       - name: Package IPA
