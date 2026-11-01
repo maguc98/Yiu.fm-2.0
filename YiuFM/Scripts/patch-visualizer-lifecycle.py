@@ -70,7 +70,9 @@ replace_once(
     "partita-adapter.js",
     "    setSuspended: function (v) { this.hide(); },",
     """    setSuspended: function (v) {
-      suspended = !!v;
+      v = !!v;
+      if (v === suspended) return;
+      suspended = v;
       if (!active || !hostEl) return;
       hostEl.style.display = suspended ? 'none' : 'block';
       if (!suspended) this._render();
