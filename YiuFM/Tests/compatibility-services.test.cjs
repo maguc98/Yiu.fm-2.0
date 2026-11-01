@@ -481,3 +481,126 @@ test('legacy persistence keys and database schemas remain pinned', () => {
   assert.ok(partita.includes("'partitaCfgV3'"));
   assert.ok(beat.includes("'yiu.beatTune.v1'"));
 });
+
+
+function createVisualizerHarness(options = {}) {
+  const events = [];
+  const activeClasses = new Set();
+  const stage = { classList: {
+    add: name => activeClasses.add(name),
+    remove: name => activeClasses.delete(name)
+  }};
+  const hosts = {};
+  for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
+    const id = name + 'Host';
+    hosts[id] = { id, innerHTML: '', querySelectorAll: () => [] };
+  }
+
+  let resolveSonnetShow = null;
+  const adapters = {};
+  for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
+    const state = { alive: false, active: false, host: null };
+    adapters[name] = {
+      init(host) { state.host = host; events.push(name + ':init'); },
+      show() {
+        events.push(name + ':show');
+        state.alive = true;
+        state.active = true;
+        if (name === 'sonnet' && options.holdSonnetShow && !resolveSonnetShow) {
+          return new Promise(resolve => { resolveSonnetShow = resolve; });
+        }
+        return Promise.resolve();
+      },
+      whenReady() { return Promise.resolve(); },
+      hide() { events.push(name + ':hide'); state.active = false; },
+      destroy() { events.push(name + ':destroy'); state.alive = false; state.active = false; },
+      drive(ct) { events.push(name + ':drive:' + ct); },
+      loadLyrics() { events.push(name + ':lyrics'); },
+      setSuspended(value) { events.push(name + ':suspend:' + value); },
+      isAlive() { return state.alive; },
+      isActive() { return state.active; },
+      _state: state
+    };
+  }
+
+  const window = {
+    console: { warn() {}, error() {} },
+    SonnetAdapter: adapters.sonnet,
+    TemperaAdapter: adapters.tempera,
+    LumiereAdapter: adapters.lumiere,
+    PartitaAdapter: adapters.partita
+  };
+  const document = {
+    getElementById(id) { return id === 'stage' ? stage : hosts[id] || null; },
+    querySelectorAll() { return []; }
+  };
+  const managerPath = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'visualizer-manager.js');
+  const source = fs.readFileSync(managerPath, 'utf8');
+  vm.runInNewContext(source, {
+    window, document, Promise, Date, Array, Object, setTimeout, clearTimeout,
+    requestAnimationFrame(callback) { callback(); return 1; }
+  });
+  return {
+    manager: window.VisualizerManager,
+    adapters,
+    events,
+    activeClasses,
+    releaseSonnet() { if (resolveSonnetShow) { const done = resolveSonnetShow; resolveSonnetShow = null; done(); } }
+  };
+}
+
+test('visualizer manager destroys the previous engine before mounting the next', async () => {
+  const h = createVisualizerHarness();
+  await h.manager.switchTo('sonnet');
+  await h.manager.switchTo('tempera');
+
+  assert.equal(h.manager.current, 'tempera');
+  assert.ok(h.events.indexOf('sonnet:destroy') < h.events.indexOf('tempera:init'));
+  assert.equal(h.adapters.sonnet._state.alive, false);
+  assert.equal(h.adapters.tempera._state.active, true);
+  assert.deepEqual([...h.activeClasses], ['mode-tempera']);
+});
+
+test('visualizer manager coalesces in-flight switch requests to the latest target', async () => {
+  const h = createVisualizerHarness({ holdSonnetShow: true });
+  const first = h.manager.switchTo('sonnet');
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.ok(h.events.includes('sonnet:show'));
+
+  const second = h.manager.switchTo('tempera');
+  const third = h.manager.switchTo('partita');
+  h.releaseSonnet();
+
+  const results = await Promise.all([first, second, third]);
+  assert.deepEqual(results, ['partita', 'partita', 'partita']);
+  assert.equal(h.manager.current, 'partita');
+  assert.equal(h.adapters.sonnet._state.alive, false);
+  assert.equal(h.adapters.tempera._state.alive, false);
+  assert.equal(h.adapters.partita._state.active, true);
+});
+
+test('visualizer manager keeps non-lazy reuse and separates hide from destroy', async () => {
+  const h = createVisualizerHarness();
+  await h.manager.switchTo('sonnet');
+  await h.manager.switchTo('sonnet', { reuse: true });
+
+  assert.equal(h.events.filter(x => x === 'sonnet:destroy').length, 0);
+  assert.equal(h.events.filter(x => x === 'sonnet:show').length, 2);
+
+  h.manager.hide();
+  assert.equal(h.adapters.sonnet._state.alive, true);
+  assert.equal(h.adapters.sonnet._state.active, false);
+  assert.equal(h.events.filter(x => x === 'sonnet:destroy').length, 0);
+
+  h.manager.drive(12.5);
+  h.manager.loadLyrics([0], [[ [0, 1] ]], ['test']);
+  for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
+    assert.ok(h.events.includes(name + ':drive:12.5'));
+    assert.ok(h.events.includes(name + ':lyrics'));
+  }
+
+  await h.manager.destroy();
+  assert.equal(h.adapters.sonnet._state.alive, false);
+  assert.equal(h.manager.current, null);
+});
