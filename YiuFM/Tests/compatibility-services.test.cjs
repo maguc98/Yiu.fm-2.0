@@ -795,3 +795,14 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
     assert.ok(bridge.includes('case ' + operation), 'native bridge missing operation ' + operation);
   }
   assert.ok(bridge.includes('!name.contains("/")'));
+  assert.ok(bridge.includes('name != ".."'));
+  assert.ok(bridge.includes('8_388_608'));
+  assert.ok(iosMusic.includes('window.YiuLibrary || window.SongLibrary'));
+
+  assert.ok(player.includes("document.getElementById('audio')"));
+  assert.ok(player.includes('audio.play()'));
+  assert.ok(nativeAudio.includes('AVAudioPlayer'));
+  for (const shell of [app, root, stage]) {
+    assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
+  }
+});
