@@ -695,3 +695,35 @@ test('Partita suspension hides temporarily and resumes without destroying the re
 
   window.PartitaAdapter.destroy();
 });
+
+
+test('native music bridge contract remains import-only and HTMLAudio stays authoritative', () => {
+  const sources = path.join(__dirname, '..', 'Sources');
+  const bridge = fs.readFileSync(path.join(sources, 'NativeBridge', 'YiuMusicBridge.swift'), 'utf8');
+  const stage = fs.readFileSync(path.join(sources, 'Web', 'LegacyVisualStage.swift'), 'utf8');
+  const root = fs.readFileSync(path.join(sources, 'AppShell', 'YiuRootView.swift'), 'utf8');
+  const app = fs.readFileSync(path.join(sources, 'YiuFMApp.swift'), 'utf8');
+  const nativeAudio = fs.readFileSync(path.join(sources, 'Playback', 'YiuAudioPlayer.swift'), 'utf8');
+  const iosMusic = fs.readFileSync(path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'ios-music.js'), 'utf8');
+  const player = fs.readFileSync(path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'player.js'), 'utf8');
+
+  assert.ok(stage.includes('name: "yiuMusic"'));
+  assert.ok(iosMusic.includes('messageHandlers.yiuMusic'));
+  assert.ok(iosMusic.includes("call({op: 'list'})"));
+  assert.ok(iosMusic.includes("call({op: 'read'"));
+  assert.ok(iosMusic.includes("call({op: 'text'"));
+  for (const operation of ['"list"', '"read"', '"text"']) {
+    assert.ok(bridge.includes('case ' + operation), 'native bridge missing operation ' + operation);
+  }
+  assert.ok(bridge.includes('!name.contains("/")'));
+  assert.ok(bridge.includes('name != ".."'));
+  assert.ok(bridge.includes('8_388_608'));
+  assert.ok(iosMusic.includes('window.YiuLibrary || window.SongLibrary'));
+
+  assert.ok(player.includes("document.getElementById('audio')"));
+  assert.ok(player.includes('audio.play()'));
+  assert.ok(nativeAudio.includes('AVAudioPlayer'));
+  for (const shell of [app, root, stage]) {
+    assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
+  }
+});
