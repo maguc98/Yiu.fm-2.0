@@ -240,6 +240,7 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
   const patch = fs.readFileSync(patchPath, 'utf8');
   const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
   assert.ok(match, 'event-driven bridge must exist in the build patch');
+  assert.match(patch, /if\\(npRefreshRaf\\)\\{cancelAnimationFrame\\(npRefreshRaf\\);npRefreshRaf=0;\\}/, 'closing the card must cancel and clear a pending refresh frame');
 
   const playbackListeners = [];
   const libraryListeners = [];
@@ -292,6 +293,14 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
   assert.equal(rafQueue.length, 1);
   rafQueue.shift()();
   assert.equal(refreshCount, 1);
+
+  // If the card closes before a queued callback runs, the callback must become a no-op.
+  visible = true;
+  playbackListeners[0]();
+  assert.equal(rafQueue.length, 1);
+  visible = false;
+  rafQueue.shift()();
+  assert.equal(refreshCount, 1, 'a queued refresh must not repaint after the card closes');
 
   // Dragging keeps the card refreshable even if the card is not marked visible.
   visible = false;
