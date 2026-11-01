@@ -63,10 +63,13 @@ jobs:
           music.write_text(source, encoding="utf-8")
           PY
           python3 YiuFM/Scripts/patch-mini-player-refresh.py
+          python3 YiuFM/Scripts/patch-mini-bar-events.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
+          node --check YiuFM/Resources/Web/APP/player.js
+          node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
           node --check YiuFM/Resources/Web/APP/mini-player.js
           node --test YiuFM/Tests/compatibility-services.test.cjs
