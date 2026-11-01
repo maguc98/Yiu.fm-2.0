@@ -623,15 +623,6 @@ test('one visualizer drive exception does not starve later adapters', () => {
 });
 
 
-test('visualizer drive fan-out isolates adapter errors', () => {
-  const h = createVisualizerHarness();
-  h.adapters.sonnet.drive = () => { throw new Error('fixture drive failure'); };
-  assert.doesNotThrow(() => h.manager.drive(7.25));
-  for (const name of ['tempera', 'lumiere', 'partita']) {
-    assert.ok(h.events.includes(name + ':drive:7.25'), name + ' did not receive the clock');
-  }
-});
-
 test('Partita suspension hides temporarily and resumes without destroying the renderer', () => {
   const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
   const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
