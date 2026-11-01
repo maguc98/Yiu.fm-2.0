@@ -1,0 +1,53 @@
+name: Build Yiu.fm 2.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - development-2.0
+    paths:
+      - "YiuFM/**"
+      - ".github/workflows/yiufm-2.0.yml"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate --spec YiuFM/project.yml
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild \
+            -project YiuFM/YiuFM.xcodeproj \
+            -scheme YiuFM \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath YiuFM/build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p YiuFM/output/Payload
+          cp -R YiuFM/build/Build/Products/Release-iphoneos/*.app YiuFM/output/Payload/Yiu.fm.app
+          cd YiuFM/output
+          /usr/bin/zip -qry YiuFM-2.0-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YiuFM-2.0-unsigned-ipa
+          path: YiuFM/output/YiuFM-2.0-unsigned.ipa
