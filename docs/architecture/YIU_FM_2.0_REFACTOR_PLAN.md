@@ -268,3 +268,12 @@ The build now applies `YiuFM/Scripts/patch-player-library-consumer.py` to the re
 The patch is guarded by exact single-match anchors. A regression test verifies both the transformed consumer and facade-first runtime dispatch with the legacy fallback available. The build checks the transformed source in the packaged Web payload.
 
 This completes the remaining direct `SongLibrary` consumer migration in `player.js` without moving IndexedDB, audio Blob/object URL, or import ownership. The next phase is to audit persistence reads/writes and document a non-destructive persistence compatibility contract; no database/schema migration is authorized by this step.
+
+
+### Phase 2A — Persistence discovery and compatibility inventory
+
+Added `docs/architecture/PERSISTENCE_COMPATIBILITY_V1.md` after auditing the pinned Run #13 persistence owners and their storage contracts.
+
+The inventory records the v1 `td_autosave` backup, the `yiufm-songs` IndexedDB database and its `songs` / `files` stores, theme metadata and image storage (`themesV1`, `themeCfgV1`, `themeImgsV1`), engine-specific configuration keys, and related playback/UI preferences. It also records important fallback behavior, including quota preservation, legacy inline theme images, song restoration, and reparsing raw LRC to restore word timing.
+
+This is an audit/documentation milestone only. No stored data, localStorage key, database, object store, schema, or migration path was changed. The next implementation step is to introduce a narrow compatibility boundary for one low-risk preference domain, after mapping its full read/write call sites and initialization order. The primary backup, song library, and theme image stores remain out of scope for that first adapter.
