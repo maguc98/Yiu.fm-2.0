@@ -621,3 +621,86 @@ test('one visualizer drive exception does not starve later adapters', () => {
     assert.ok(h.events.includes(name + ':drive:8.5'));
   }
 });
+
+
+test('visualizer drive fan-out isolates adapter errors', () => {
+  const h = createVisualizerHarness();
+  h.adapters.sonnet.drive = () => { throw new Error('fixture drive failure'); };
+  assert.doesNotThrow(() => h.manager.drive(7.25));
+  for (const name of ['tempera', 'lumiere', 'partita']) {
+    assert.ok(h.events.includes(name + ':drive:7.25'), name + ' did not receive the clock');
+  }
+});
+
+test('Partita suspension hides temporarily and resumes without destroying the renderer', () => {
+  const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
+  let renderCount = 0;
+  const host = {
+    style: {},
+    innerHTML: '',
+    appendChild() {},
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
+  const document = {
+    head: { appendChild() {} },
+    createElement() { return { style: {}, setAttribute() {}, textContent: '' }; }
+  };
+  const Partita = {
+    default: function PartitaView() {},
+    React: {
+      Component: function Component() {},
+      createElement(type, props, children) { return { type, props, children }; }
+    },
+    ReactDOM: {
+      createRoot() {
+        return {
+          render() { renderCount++; },
+          unmount() {}
+        };
+      }
+    },
+    FramerMotion: {
+      motionValue(value) {
+        let current = value;
+        return { get: () => current, set: next => { current = next; } };
+      }
+    }
+  };
+  const window = {
+    Partita,
+    LN: [],
+    TS: [],
+    WT: [],
+    addEventListener() {},
+    console: { warn() {}, error() {} }
+  };
+  vm.runInNewContext(source, {
+    window, document,
+    localStorage: { getItem() { return null; }, setItem() {} },
+    setTimeout() { return 1; },
+    clearTimeout() {},
+    cancelAnimationFrame() {},
+    requestAnimationFrame() { return 1; },
+    Date, Math, Array, Object, String, Number, isFinite
+  });
+
+  window.PartitaAdapter.init(host, {});
+  window.PartitaAdapter.show();
+  assert.equal(host.style.display, 'block');
+  assert.equal(renderCount, 1);
+
+  window.PartitaAdapter.setSuspended(true);
+  assert.equal(host.style.display, 'none');
+  assert.equal(renderCount, 1);
+
+  window.PartitaAdapter.setSuspended(false);
+  assert.equal(host.style.display, 'block');
+  assert.equal(renderCount, 2);
+
+  window.PartitaAdapter.setSuspended(false);
+  assert.equal(renderCount, 2, 'repeated resume should be idempotent');
+
+  window.PartitaAdapter.destroy();
+});
