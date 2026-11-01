@@ -23,6 +23,12 @@ replace_once("player.js",
     "for(var k = 0; k < n; k++) TS.push(d * k / n);",
     "for(var k = 0; k < n; k++) TS.push(d * k / n);\n      if(window.YiuPlayback) window.YiuPlayback.notify('lyricschange');")
 
+# Manual card edits, package restores, and bulk card replacement rebuild LN in renderer.applyItems().
+# Publish only when the actual lyric text array changes; visual-setting-only renders stay silent.
+replace_once("renderer.js",
+    "  if(chg)LN=arr;",
+    "  if(chg){ LN=arr; if(window.YiuPlayback) window.YiuPlayback.notify('lyricschange'); }")
+
 # Song title/cover and mode changes are synchronized through this one function.
 replace_once("song-library.js",
     "window.__musicCover = on ? curCover : '';\n    syncNextLabel();",
