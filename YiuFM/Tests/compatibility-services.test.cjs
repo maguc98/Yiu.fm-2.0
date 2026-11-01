@@ -802,6 +802,8 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
   const player = fs.readFileSync(path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'player.js'), 'utf8');
 
   assert.ok(stage.includes('name: "yiuMusic"'));
+  assert.ok(stage.includes('removeScriptMessageHandler(forName: "yiuMusic", contentWorld: .page)'), 'WebView teardown must remove only its own page-world bridge handler');
+  assert.ok(!stage.includes('removeAllScriptMessageHandlers'), 'WebView teardown must preserve unrelated handlers if added later');
   assert.ok(iosMusic.includes('messageHandlers.yiuMusic'));
   assert.ok(iosMusic.includes("call({op: 'list'})"));
   assert.ok(iosMusic.includes("call({op: 'read'"));
