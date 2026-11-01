@@ -1180,6 +1180,13 @@ body.performance-mode [style*="backdrop-filter"]{
   -webkit-backdrop-filter:var(--perf-glass-blur)!important;
   backdrop-filter:var(--perf-glass-blur)!important;
 }
+/* 性能模式第二轮：降低两层全屏氛围背景的滤镜半径；保留柔焦层次，不触碰主舞台与动效画布。 */
+body.performance-mode #amb{
+  filter:blur(28px) saturate(1.35) brightness(.72)!important;
+}
+body.performance-mode #bgf{
+  filter:blur(30px) saturate(1.1)!important;
+}
 /* 大面积 drop-shadow 是移动端较昂贵的合成操作；用轻量阴影代替，不移除元素和动画。 */
 body.performance-mode.ui-glow #npCard,
 body.performance-mode.ui-glow #mini::before,
