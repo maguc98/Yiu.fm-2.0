@@ -222,3 +222,69 @@ test('mini-player refresh is event-driven rather than interval-polled', () => {
   assert.match(source, /npMiniObserver\.observe\(mini/);
   assert.match(source, /requestAnimationFrame\(function\(\)/);
 });
+
+
+test('mini-player bridge coalesces playback, library, and DOM signals into one frame', () => {
+  const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-mini-player-refresh.py');
+  const patch = fs.readFileSync(patchPath, 'utf8');
+  const match = patch.match(/const bridge = r'''([\\s\\S]*?)''';/);
+  assert.ok(match, 'event-driven bridge must exist in the build patch');
+
+  const playbackListeners = [];
+  const libraryListeners = [];
+  const rafQueue = [];
+  let observerCallback = null;
+  let refreshCount = 0;
+  let visible = false;
+
+  class MutationObserver {
+    constructor(callback) { observerCallback = callback; }
+    observe(target, options) {
+      assert.equal(target, mini);
+      assert.equal(options.subtree, true);
+      assert.deepEqual(Array.from(options.attributeFilter), ['class']);
+    }
+  }
+
+  const mini = {};
+  const window = {
+    MutationObserver,
+    YiuPlayback: { subscribe(fn) { playbackListeners.push(fn); } },
+    YiuLibrary: { subscribe(fn) { libraryListeners.push(fn); } }
+  };
+  const context = vm.createContext({
+    window,
+    mini,
+    npCard: { classList: { contains(name) { return name === 'show' && visible; } } },
+    isNpDragging: false,
+    npRefresh() { refreshCount += 1; },
+    requestAnimationFrame(callback) { rafQueue.push(callback); return rafQueue.length; },
+    cancelAnimationFrame() {}
+  });
+
+  vm.runInContext(match[1], context, { filename: 'mini-player-refresh-bridge.js' });
+  assert.equal(typeof observerCallback, 'function');
+
+  // Hidden and idle: notifications must not schedule work.
+  playbackListeners[0]();
+  libraryListeners[0]();
+  observerCallback([]);
+  assert.equal(rafQueue.length, 0);
+
+  // While visible, many signals in one frame must collapse into one refresh.
+  visible = true;
+  playbackListeners[0]();
+  libraryListeners[0]();
+  observerCallback([]);
+  assert.equal(rafQueue.length, 1);
+  rafQueue.shift()();
+  assert.equal(refreshCount, 1);
+
+  // Dragging keeps the card refreshable even if the card is not marked visible.
+  visible = false;
+  context.isNpDragging = true;
+  playbackListeners[0]();
+  assert.equal(rafQueue.length, 1);
+  rafQueue.shift()();
+  assert.equal(refreshCount, 2);
+});
