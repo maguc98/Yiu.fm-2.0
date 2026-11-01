@@ -2,10 +2,10 @@
 
 ## Status
 
-- Status: proposal baseline; implementation has not started.
+- Status: active incremental refactor; Swift responsibility split and playback/lyrics compatibility facades are implemented on the isolated refactor branch.
 - Base branch: `development-2.0`
 - Working branch: `refactor/yiu-2.0-layered-architecture`
-- UI acceptance baseline: GitHub Actions Run #13 (legacy UI and four visual-engine payloads verified).
+- UI acceptance baseline: GitHub Actions Run #13 (`41293352357`); pinned legacy resource commit: `b070ae110b9cc143e71c8607466f6c1e85467367`.
 - Primary constraint: preserve the Run #13 UI, interaction model, animations, and all four visual engines. This is an internal architecture refactor, not a visual redesign.
 
 ## Goals
@@ -159,3 +159,40 @@ Begin with a behavior-preserving split of `YiuFMApp.swift` into focused Swift fi
 - `Playback/YiuAudioPlayer.swift`: existing AVAudioPlayer class, still not wired into the UI.
 
 This first code change must preserve behavior and avoid changing the Web UI, assets, bridge contract, audio engine selection, build workflows, signing, or provisioning. Build and inspect the diff before proceeding to service redesign.
+
+
+## Implemented progress
+
+### Phase 1A — Swift responsibility split
+
+Completed and build-verified in GitHub Actions Run #14 (`41299881530`):
+
+- `YiuFM/Sources/YiuFMApp.swift`: app entry point.
+- `YiuFM/Sources/AppShell/YiuRootView.swift`: root view.
+- `YiuFM/Sources/Web/LegacyVisualStage.swift`: WKWebView host.
+- `YiuFM/Sources/Playback/YiuAudioPlayer.swift`: existing native audio class, still not wired into active playback.
+- `YiuFM/Sources/NativeBridge/YiuMusicBridge.swift`: existing bridge.
+
+The extracted implementation bodies were checked against the original source. No HTML, CSS, JavaScript engine, signing, provisioning, or unrelated workflow source was rewritten in this split.
+
+### Phase 1B — Playback compatibility boundary
+
+Implemented in `YiuFM/Resources/Web/APP/playback-service.js` and build-verified in Run #17 (`41300349473`).
+
+The facade exposes a snapshot, subscription/unsubscription, play/pause/toggle, seek, lyric jump, and next-track commands. It delegates to the legacy HTML audio element and existing functions. It does not activate the dormant native audio class or replace the legacy player.
+
+Contract: `docs/architecture/PLAYBACK_SERVICE_V1.md`.
+
+### Phase 1C — Lyrics compatibility boundary
+
+Implemented in `YiuFM/Resources/Web/APP/lyrics-service.js`.
+
+The facade exposes snapshot copies, LRC parse/apply delegation, lyric seeking, and subscriptions to lyric application/index events. It does not own lyric state, playback timing, rendering, or visual-engine synchronization.
+
+Contract: `docs/architecture/LYRICS_SERVICE_V1.md`.
+
+Run #19 (`41300690722`) is the first build that includes the lyrics facade and its syntax/package checks. Its final result must be recorded after GitHub Actions completes.
+
+## Next safe step
+
+Audit the existing `SongLibrary` public API and its event notifications, then document a library-service contract around the existing implementation. Do not migrate storage, change IndexedDB schema, or move import ownership until the existing behavior and edge cases have been mapped.
