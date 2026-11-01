@@ -293,3 +293,12 @@ Added VM-based tests for serialized engine switching, teardown-before-mount, lat
 The audit found that an exception thrown by one adapter's `drive(ct)` could abort the manager's fan-out loop. A guarded build-copy patch now isolates each adapter call, logs the first failure, continues sending the clock to subsequent engines, and clears the fault latch after recovery. No adapter timebase or animation code was changed.
 
 Run #62 verified 12/12 tests passing, successful XcodeGen and iOS Release compilation, and all four engine payloads. The generated IPA remains unsigned.
+
+
+### Phase 5A — Native bridge and playback ownership audit
+
+Added `docs/architecture/NATIVE_BRIDGE_COMPATIBILITY_AUDIT_V1.md` after tracing the SwiftUI shell, local WKWebView, `yiuMusic` reply bridge, and web-side iOS music scanner.
+
+The bridge is a file-import adapter: it lists and reads files from Documents/Music, then the existing web library imports them into the legacy IndexedDB store. The web HTMLAudio element remains the active playback authority. `YiuAudioPlayer` is present but is not instantiated by the app shell; it remains dormant and must not be connected during this migration phase.
+
+A regression test now pins the bridge operation names, safe filename checks, bounded chunk reads, and the absence of native audio-player wiring in the shell. The separate Documents/Music and Documents/YiuMusic paths are documented so they are not accidentally merged.
