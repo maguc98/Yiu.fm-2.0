@@ -303,7 +303,7 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
 });
 
 
-test('mini-bar event patch publishes renderer lyric edits and state changes', () => {
+test('mini-bar event patch publishes renderer lyric edits and state changes', async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'yiu-mini-events-'));
   const app = path.join(temp, 'YiuFM', 'Resources', 'Web', 'APP');
   fs.mkdirSync(app, { recursive: true });
