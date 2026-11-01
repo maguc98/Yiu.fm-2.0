@@ -118,6 +118,7 @@ jobs:
           rm -f "$CERT_PATH" "$PROFILE_PATH" "$PROFILE_PLIST" "$ENTITLEMENTS_PATH"
 
       - name: Upload unsigned IPA
+        if: ${{ always() }}
         uses: actions/upload-artifact@v6
         with:
           name: TextDisplay-unsigned-ipa
