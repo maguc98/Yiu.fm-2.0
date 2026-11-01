@@ -197,8 +197,7 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
   snapshot.songs[0].name = 'changed';
   assert.equal(h.window.SongLibrary.list()[0].name, 'Fixture Song');
 
-  h.window.__musicTitle = 'Fixture Song';
-  h.window.__musicCover = 'data:image/fixture';
+  h.window.__musicTitle = 'Fixture Song';  h.window.__musicCover = 'data:image/fixture';
   const enriched = h.window.YiuLibrary.getSnapshot();
   assert.equal(enriched.currentTitle, 'Fixture Song');
   assert.equal(enriched.currentCover, 'data:image/fixture');
@@ -383,9 +382,11 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
   assert.equal(events.length, 3, 'stale async cover completion must not publish a current-song event');
 
   // Execute the transformed mini-bar tick and its subscriptions, not just source-pattern checks.
-  const tickStart = mini.indexOf('  function tick(){');
-  assert.ok(tickStart >= 0, 'patched mini-bar tick and event listeners must be present');
-  const runtimeSource = 'var last = null;\n' + mini.slice(tickStart);
+  const runtimeMini = fs.readFileSync(path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'mini-player.js'), 'utf8');
+  const tickStart = runtimeMini.indexOf('  function tick(){');
+  const tickEnd = runtimeMini.lastIndexOf('\n})();');
+  assert.ok(tickStart >= 0 && tickEnd > tickStart, 'restored and patched mini-player must expose its real tick and event listeners');
+  const runtimeSource = 'var last = null;\n' + runtimeMini.slice(tickStart, tickEnd);
   const playbackSubscribers = [];
   const librarySubscribers = [];
   const paints = [];
@@ -397,8 +398,7 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', as
     YiuLibrary: { subscribe(fn) { librarySubscribers.push(fn); } }
   };
   const runtime = {
-    window: runtimeWindow,
-    LN: ['First lyric', 'Second lyric'],
+    window: runtimeWindow,    LN: ['First lyric', 'Second lyric'],
     idx: 0,
     npT: { textContent: '' },
     miT: { textContent: '' },
@@ -597,8 +597,7 @@ function createVisualizerHarness(options = {}) {
       loadLyrics() { events.push(name + ':lyrics'); },
       setSuspended(value) { events.push(name + ':suspend:' + value); },
       isAlive() { return state.alive; },
-      isActive() { return state.active; },
-      _state: state
+      isActive() { return state.active; },      _state: state
     };
   }
 
