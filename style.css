@@ -2343,3 +2343,140 @@ html body #hub :is(.card,.gh){background:rgba(255,255,255,.16)}
 .gd-set .gd-name{white-space:nowrap}
 .gd-set input[type=range]{display:block;width:100%;margin:0}
 .gd-set em{flex:none;font-style:normal;font-size:12px;color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums}
+
+/* ==========================================================================
+   统一控件标准（2026-11-01）——放在文件最末尾，覆盖前面所有同类规则
+   1) 每个面板里的顺序固定：滑块(.cs-sl) → 选择(.cs-sel) → 开关(.cs-sw) → 颜色(.cs-col)
+   2) 开关行：文字在左、开关在右（用 order 排，不依赖 DOM 里谁在前）
+   3) 颜色：不再是圆圈，改成带 R 角的圆角长方形，从标签右侧一直铺到最右边
+   4) 分段条 / 选项胶囊：浅色半透明，不再是深黑底
+   ========================================================================== */
+:root{--ctl-r:12px;--ctl-h:34px;--lbl-w:92px}
+
+/* ---- 分组块：块与块之间一条淡分隔线 ---- */
+html body .cs{display:block;margin:0;padding:0;min-width:0}
+html body .cs.cs-sel,html body .cs.cs-sw,html body .cs.cs-col{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.10)}
+html body .cs:first-child,html body .mt + .cs{margin-top:0;padding-top:0;border-top:0}
+html body .mt + .cs{margin-top:2px}
+html body .cs > :first-child{margin-top:0!important}
+html body #pdCustom .cs.cs-sel{margin-top:0;padding-top:0;border-top:0}
+html body .cs .tnote{margin:8px 0 0;font-size:11px;line-height:1.5;opacity:.55}
+html body .cs-col .tnote{margin-top:10px}
+/* 海报排版：#pdCustom 由脚本整体显隐，用 display:contents 让它里面的块参与外层排序 */
+html body #posterbox:not(.hide){display:flex;flex-direction:column}
+html body #posterbox > .mt{order:0}
+html body #posterbox .cs-sl{order:1}
+html body #posterbox > .cs-sel,html body #pdCustom .cs-sel{order:2}
+html body #pdCustom:not(.hide){display:contents}
+/* 恢复默认按钮：永远在最底下，和上面留出空隙 */
+html body #sonnetReset,html body #temperaReset,html body #lumiereReset,html body #partitaReset{display:block;margin-top:16px}
+/* 「文字渐变」只对普通文字层有效；商籁 / 凝彩 / 绘光 / 云阶是画布，不显示，避免排在颜色后面 */
+html body:is(.is-sonnet,.is-tempera,.is-lumiere,.is-partita) #gtextRow{display:none!important}
+
+/* ---- 滑块 / 选择行：标签列同宽，控件起点对齐 ---- */
+html body #hub .cs .row > span:first-child{flex:0 0 var(--lbl-w)!important;width:var(--lbl-w);min-width:0!important;box-sizing:border-box;line-height:1.3}
+html body #hub .cs .row > input[type=range]{flex:1 1 0;min-width:0}
+
+/* ---- 开关：文字在左，开关在右 ---- */
+html body .chk:not([style*="none"]):not(.hide){display:flex!important;align-items:center;justify-content:space-between;gap:14px;width:100%;box-sizing:border-box;min-height:40px;margin:8px 0 0;text-align:left;line-height:1.35}
+html body .chk > input[type=checkbox]{order:2;flex:0 0 auto!important;position:relative!important;float:none!important;inset:auto;margin:0!important;transform:none}
+html body .chk > input[type=checkbox]::after{pointer-events:none}
+html body .cs-sw > .chk:first-child{margin-top:0}
+html body .qg .chk{flex:1 1 100%!important;min-width:0!important}
+html body .tpe-line .chk{width:auto!important;min-height:0;margin:0 0 0 auto!important}
+
+/* ---- 颜色：带 R 角的圆角长方形，铺满标签右侧 ---- */
+html body input[type=color]{-webkit-appearance:none;appearance:none;box-sizing:border-box;flex:1 1 0!important;width:auto!important;min-width:0;height:var(--ctl-h)!important;padding:0!important;border:1.5px solid rgba(255,255,255,.38)!important;border-radius:var(--ctl-r)!important;background:none;overflow:hidden;box-shadow:none!important;cursor:pointer}
+html body input[type=color]::-webkit-color-swatch-wrapper{padding:0!important;border:none!important;border-radius:0!important}
+html body input[type=color]::-webkit-color-swatch{border:none!important;border-radius:calc(var(--ctl-r) - 2px)!important}
+html body input[type=color]::-moz-color-swatch{border:none!important;border-radius:calc(var(--ctl-r) - 2px)!important}
+html body .sw4{display:flex;gap:8px;flex:1 1 0;min-width:0}
+html body .sw4 input[type=color]{flex:1 1 0!important}
+html body .crow input[type=color]{flex:0 0 48px!important;width:48px!important;height:30px!important}
+/* 主题编辑器：混色 = 角度 / 流动 在上，四个色块一排铺满；纯色 = 一条长色块 */
+html body #mediaMenu #tpEdit #tpeGrad.tpe-cols,html body #mediaMenu #tpEdit #tpeSolid.tpe-cols{flex-direction:column;align-items:stretch;gap:8px}
+html body #mediaMenu #tpEdit #tpeGrad .tpe-r,html body #mediaMenu #tpEdit #tpeSolid .tpe-r{justify-content:flex-start}
+html body #mediaMenu #tpEdit #tpeGrad .tpe-l,html body #mediaMenu #tpEdit #tpeSolid .tpe-l{flex:none;width:100%;justify-content:stretch;align-items:stretch}
+html body #mediaMenu #tpEdit #tpeGrad .tpe-sw{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:30px;gap:8px;width:100%;justify-content:stretch}
+html body #mediaMenu #tpEdit .tpe-sw input[type=color],html body #mediaMenu #tpEdit #tpeSolidC{width:100%!important;height:30px!important;min-width:0;flex:1 1 0!important;border-radius:var(--ctl-r)!important}
+
+/* ---- 分段条 / 选项胶囊：浅色半透明，和画面融在一起 ---- */
+html body .seg{background:rgba(255,255,255,.16)!important;box-shadow:none!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html body .seg .chip{background:transparent!important;box-shadow:none!important;color:#fff}
+html body .seg:not(.glide) .chip.on{background:rgba(255,255,255,.26)!important}
+html body #hub .glide::before{background:rgba(255,255,255,.22)}
+html body #hub .row .chips .chip,html body #hub .cs-sel .chips .chip{background:rgba(255,255,255,.12)!important}
+html body #hub .row .chips .chip.on,html body #hub .cs-sel .chips .chip.on{background:rgba(255,255,255,.28)!important}
+
+/* ---- 开发者选项：选择胶囊同样浅色半透明；开关行文字不会压到开关 ---- */
+html body #devOptionsGroup .chip{background:rgba(255,255,255,.12)!important;box-shadow:none!important}
+html body #devOptionsGroup .chip:active{background:rgba(255,255,255,.28)!important}
+html body #devOptionsGroup label.chk{gap:14px}
+html body #devOptionsGroup label.chk > span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+html body .chk{overflow-wrap:anywhere}
+html body .chk > input[type=checkbox]{min-width:50px}
+
+/* ==========================================================================
+   统一控件标准 v2（2026-11-01 晚）——手机端实测问题的修正，放在最末尾
+   1) 开关行改两栏网格：文字一栏（自己换行）、开关一栏（固定在右），不再依赖 flex 的 order
+   2) 颜色块给明确宽度，不靠 flex 拉伸（iPhone 上会塌成一条线）
+   3) 滑块标签列变窄，选项（分段条 / 胶囊）统一高度和字号
+   4) 控制窗口「放大」按钮 + 放大状态（#hub.big）
+   ========================================================================== */
+:root{--lbl-w:80px}
+html body #hub .cs .row > span:first-child{font-size:13px}
+
+/* ---- 开关：两栏网格 ---- */
+html body .chk:not([style*="none"]):not(.hide){display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;width:100%;box-sizing:border-box;text-align:left}
+html body .chk > :not(input){grid-column:1;grid-row:1;min-width:0;overflow-wrap:anywhere;text-align:left}
+html body .chk > input[type=checkbox]{grid-column:2!important;grid-row:1!important;justify-self:end;order:0;position:relative!important;margin:0!important;float:none!important;inset:auto;transform:none;width:50px;min-width:50px}
+html body .tpe-line .chk:not([style*="none"]){display:inline-grid!important;width:auto!important}
+
+/* ---- 颜色：明确宽度，flex 只负责"在这个基础上再拉长" ---- */
+html body input[type=color]{flex:1 1 120px!important;width:120px!important;min-width:96px!important;display:block}
+html body .sw4 input[type=color]{flex:1 1 40px!important;width:40px!important;min-width:36px!important}
+html body .crow input[type=color]{flex:0 0 48px!important;width:48px!important;min-width:48px!important}
+html body input[type=color]::-webkit-color-swatch{min-width:100%;min-height:100%}
+
+/* ---- 选项：分段条 / 胶囊统一高度、字号 ---- */
+html body #hub .cs .row > .seg,html body #hub .cs .row > .chips{flex:1 1 0;min-width:0}
+html body #hub .cs .seg .chip{min-height:34px;font-size:12.5px;display:flex;align-items:center;justify-content:center;padding-top:0;padding-bottom:0}
+html body #hub .cs .chips .chip{min-height:34px;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;padding-top:0;padding-bottom:0}
+
+/* ---- 控制窗口：左上角 R 角浮条，按住拖动改变窗口大小（#hub.sized）---- */
+html body #hub.sized{width:var(--hw)!important;height:var(--hh)!important;max-height:none!important}
+html body #hub.sized .dock{flex:1 1 0!important;max-height:none!important}
+html body #hub.sized.cb-hid .dock{flex-basis:0!important;max-height:none!important}
+#hubGripHot{position:absolute;left:0;top:0;width:24px;height:24px;z-index:31;border:0;padding:0;margin:0;outline:none;-webkit-appearance:none;appearance:none;box-shadow:none;border-radius:28px 0 12px 0;background:transparent!important;-webkit-backdrop-filter:none;backdrop-filter:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#hubGrip{position:absolute;left:-16px;top:-16px;width:60px;height:60px;z-index:30;overflow:visible;pointer-events:none;opacity:0;transform:scale(.45);transform-origin:44px 44px;
+  transition:opacity calc(.22s/var(--ui-spd,1)) ease,transform calc(.5s/var(--ui-spd,1)) var(--spring,cubic-bezier(.32,.72,0,1))}
+#hubGrip.on{opacity:1;transform:none}
+#hubGrip,#hubGrip *{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#hubGrip .vis{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 1px 5px rgba(0,0,0,.4));transition:stroke-width .2s ease}
+#hubGrip.drag .vis{stroke-width:6.5}
+#hubGrip .hit{fill:none;stroke:transparent;stroke-width:30;stroke-linecap:round;pointer-events:none}
+#hubGrip.on .hit{pointer-events:stroke}
+
+/* ---- 动效风格选择弹窗：网格高度缩短 1/3（260px → 174px），超出可滑动 ---- */
+html body .gpop .sp-grid{max-height:174px}
+
+
+/* ==========================================================================
+   开关行防重叠（商籁 / 凝彩 / 绘光 面板里开关压到文字上的修正）
+   不再依赖 grid / flex 的列位置：标签右侧固定留出 64px，开关绝对定位贴右边垂直居中。
+   [style*="none"] 这类容易被别的行内样式误伤的条件也不再使用。
+   ========================================================================== */
+html body #hub label.chk{position:relative!important;display:block!important;width:100%!important;box-sizing:border-box!important;min-height:40px!important;padding:0 64px 0 0!important;line-height:40px;text-align:left!important}
+html body #hub label.chk > .chk-t,html body #hub label.chk > span{display:inline-block!important;max-width:100%!important;vertical-align:middle;line-height:1.35!important;overflow-wrap:anywhere;text-align:left!important;position:static!important}
+html body #hub label.chk > input[type=checkbox]{position:absolute!important;right:0!important;left:auto!important;top:50%!important;margin:-15px 0 0 0!important;grid-column:auto!important;grid-row:auto!important;width:50px!important;min-width:50px!important;height:30px!important}
+html body #hub label.chk[style*="display:none"],html body #hub label.chk[style*="display: none"],html body #hub label.chk.hide{display:none!important}
+
+/* 开关被脚本包了一层时（label > 外壳 > input）同样贴右：用 :has 找到含开关的那个子元素 */
+html body #hub label.chk > :has(input[type=checkbox]):not(input){position:absolute!important;right:0!important;left:auto!important;top:50%!important;margin:-15px 0 0 0!important;grid-column:auto!important;grid-row:auto!important;transform:none!important}
+html body #hub label.chk > :has(input[type=checkbox]) input[type=checkbox]{position:relative!important;left:auto!important;right:auto!important;top:auto!important;margin:0!important}
+
+/* 「文字渐变」只对普通文字层有效：商籁 / 凝彩 / 绘光 / 云阶下必须隐藏（优先级高于上面的开关行规则） */
+html body:is(.is-sonnet,.is-tempera,.is-lumiere,.is-partita) #hub label.chk#gtextRow{display:none!important}
+
+/* 拖动 / 回弹窗口大小期间：关掉窗口内部所有过渡与动画，内容直接跟手；顺便让浏览器提前准备合成层 */
+html body #hub.hub-busy,html body #hub.hub-busy *{transition:none!important}

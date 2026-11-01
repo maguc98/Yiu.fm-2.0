@@ -2,14 +2,85 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<!--
+================================================================================
+ Yiu.fm · 面板控件布局标准（所有面板都要遵守；新增或修改面板前先读这里）
+================================================================================
+ 适用范围：App 内所有设置类面板。4 个动效（商籁 / 凝彩 / 绘光 / 云阶）的「动效细节」只是示例，
+ 字体外观、排版、背景弹层、主题编辑器、系统设置、开发者选项等一律同样处理。
+
+ 1) 固定顺序（从上到下）：滑块 → 选择（分段条、选项胶囊）→ 开关 → 颜色。
+    缺哪一类就跳过那一类，不要为了凑数留空块。恢复默认 / 操作按钮永远放在最底下。
+ 2) 开关行：文字在左，开关在右。长文字（如「自定义颜色（关闭时用当前主题色）」）
+    必须自己换行，不能和开关重叠；开关固定 50px 宽，不被挤压。
+ 3) 颜色：不用圆圈，用带 R 角的圆角长方形（圆角 12px），从标签右侧一直铺到最右边。
+    混色四个色块一排铺满；纯色是一条长色块。
+ 4) 分段条和选项胶囊（如「双色 / 单色 / 渐变」）：浅色、半透明、通透，
+    不能是深黑底，要和画面融在一起。
+ 5) 滑块 / 选择行的标签列统一宽 92px，控件起点对齐。
+
+ 怎么写（实现约定）
+ - 每一类控件包在自己的块里：.cs.cs-sl（滑块）/ .cs.cs-sel（选择）/ .cs.cs-sw（开关）/ .cs.cs-col（颜色），
+   块与块之间用一条淡分隔线；块在 DOM 里也按上面的顺序写。
+ - 所有 id 和 data-sk / data-tk / data-lk / data-pk 属性只能保留，不能改名、不能丢。
+ - 样式统一写在 style.css 末尾的「统一控件标准」一节，放最后以覆盖前面同类规则；
+   不要在各面板里再各写一套开关、颜色、胶囊的样式。
+ - 脚本动态生成的面板（devtools.js 的开发者选项、theme-editor.js 的主题编辑器等）
+   不改 DOM 顺序，用 flex 的 order 排：滑块 10 → 开关 20 → 选择 32 → 按钮 40。
+ - 开关行用两栏网格（文字一栏、开关一栏），文字放 <span class="chk-t"> 里；不要依赖 flex 的 order（iPhone 上实测会失效）。
+ - 颜色块必须有明确宽度（不要只写 flex:1 + width:auto，iPhone 上会塌成一条线）。
+ - 控制窗口大小：点窗口左上角圆角出现白色 R 角浮条（#hubGrip），按住拖动改变宽高（#hub.sized），左边 / 上边留安全距离；
+   只改宽高，字号和控件尺寸不变。开关行另有 chkEnforceJS 用行内 !important 兜底。
+ - 「文字渐变」只对普通文字层有效，商籁 / 凝彩 / 绘光 / 云阶（画布）下隐藏。
+ - 改了 style.css / devtools.js / theme-editor.js 之后，同时更新本文件里对应的 ?v= 缓存号，
+   否则手机会继续用旧文件。
+
+ 汇报约定：只写在 Chromium 里看到的结果，不声称 iPhone 真机验证过。
+================================================================================
+-->
 <script src="./APP/cmd-early.js?v=20261030a"></script>
+<script id="errTraceJS">
+/* 诊断用：file:// 下外部脚本抛的错会被 WebKit 抹成「Script error. @:0」，看不到文件和行号。
+   这里包住 rAF / setTimeout / setInterval / 事件回调 / Promise 拒绝，在错误被抹掉之前把真正的 message 和 stack 写进日志（前缀 [trace]），
+   每种错误只记一次、最多 40 条，之后原样抛出，不改变原有行为。排查完把 window.__ERR_TRACE_OFF=true 或删掉本段即可。 */
+(function(){
+  if(window.__ERR_TRACE_OFF||window.__errTrace) return; window.__errTrace=true;
+  var seen={}, n=0;
+  function report(e,tag){
+    try{
+      if(n>=40) return;
+      var msg=(e&&e.message)||String(e), st=String((e&&e.stack)||'').split('\n').slice(0,6).join(' | ');
+      var key=msg+'|'+st.slice(0,160); if(seen[key]) return; seen[key]=1; n++;
+      console.error('[trace]['+tag+'] '+msg+' :: '+st);
+    }catch(_){}
+  }
+  function wrap(fn,tag){
+    if(typeof fn!=='function'||fn.__tr) return fn;
+    var w=function(){ try{ return fn.apply(this,arguments) }catch(e){ report(e,tag); throw e } };
+    w.__tr=1; return w;
+  }
+  var raf=window.requestAnimationFrame; if(raf) window.requestAnimationFrame=function(cb){ return raf.call(window,wrap(cb,'raf')) };
+  var st0=window.setTimeout; window.setTimeout=function(cb){ var a=[].slice.call(arguments); a[0]=wrap(cb,'timeout'); return st0.apply(window,a) };
+  var si0=window.setInterval; window.setInterval=function(cb){ var a=[].slice.call(arguments); a[0]=wrap(cb,'interval'); return si0.apply(window,a) };
+  var map=new WeakMap();
+  var add=EventTarget.prototype.addEventListener, rem=EventTarget.prototype.removeEventListener;
+  EventTarget.prototype.addEventListener=function(t,fn,o){
+    if(typeof fn==='function'){ var w=map.get(fn); if(!w){ w=wrap(fn,'event:'+t); map.set(fn,w) } return add.call(this,t,w,o) }
+    return add.call(this,t,fn,o);
+  };
+  EventTarget.prototype.removeEventListener=function(t,fn,o){
+    return rem.call(this,t,(typeof fn==='function'&&map.get(fn))||fn,o);
+  };
+  window.addEventListener('unhandledrejection',function(ev){ report(ev&&ev.reason,'promise') });
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Yiu.fm</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Yiu.fm">
 <link rel="apple-touch-icon" href="./icon.png">
-<link rel="stylesheet" href="./style.css?v=20261031h">
+<link rel="stylesheet" href="./style.css?v=20261101o">
 <style id="temperaHostCSS">/* #temperaHost 的显示规则（按 #sonnetHost 同构假设写；请对照 style.css 里 #sonnetHost 的规则核对） */#temperaHost{position:absolute;inset:0;display:none}#stage.mode-tempera #temperaHost{display:block}#stage.mode-tempera #one,#stage.mode-tempera #sky{display:none}</style>
 <style id="lumiereHostCSS">#lumiereHost{position:absolute;inset:0;display:none}#stage.mode-lumiere #lumiereHost{display:block}#stage.mode-lumiere #one,#stage.mode-lumiere #sky{display:none}</style>
 <style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>
@@ -17,7 +88,7 @@
 <style id="sonnetHideOneCSS">/* 商籁：切入时立刻隐藏普通文字层，避免切换那一帧文字闪现（与凝彩/绘光/云阶一致） */#stage.mode-sonnet #one,#stage.mode-sonnet #sky{display:none}</style>
 <style id="partitaBoxCSS">#partitabox{display:none}body.is-partita #partitabox{display:block}body.is-partita :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox,#temperabox,#lumierebox){display:none!important}#partitabox .row span{min-width:76px}#partitabox input[type=color]{width:44px;height:28px;padding:0;border:none;background:none;border-radius:8px}#partitabox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}#partitabox #partitaReset{margin-top:14px}</style>
 <style id="temperaBoxCSS">#temperabox{display:none}body.is-tempera #temperabox{display:block}body.is-tempera :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox){display:none!important}#temperabox .row span{min-width:64px}#temperabox.tc-off .tcol{opacity:.45}#temperabox .tcol{transition:opacity .25s ease}#temperabox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}#temperabox #temperaReset{margin-top:14px}</style>
-<style id="styleSelsCSS">html body #styleSels{display:flex;gap:8px;align-items:stretch}html body #styleSels .ssel{flex:1 1 0;min-width:0;width:auto;margin:0}html body #styleSels .ssel{justify-content:center;gap:10px;transition:opacity .25s,background .25s,box-shadow .25s}html body #styleSels .ssel span[id^="styleSelTx"]{display:none}html body #styleSels .ssel svg{flex:none}html body #styleSels .ssel:not(.is-on){opacity:.55;background:rgba(255,255,255,.08);box-shadow:none}html body #styleSels .ssel.is-on{opacity:1;background:rgba(140,155,230,.3);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}html body #styleSels .ssel .si{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;margin:0}html body #styleSels .ssel .si svg{width:28px;height:28px;margin:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform:none!important;rotate:none!important;translate:none!important;transition:none!important}html body #stylePop .sp-grid button.na{opacity:.38}</style>
+<style id="styleSelsCSS">html body #styleSels{display:flex;gap:8px;align-items:stretch}html body #styleSels .ssel{flex:1 1 0;min-width:0;width:auto;margin:0}html body #styleSels .ssel{justify-content:center;gap:10px;transition:opacity .25s,background .25s,box-shadow .25s}html body #styleSels .ssel span[id^="styleSelTx"]{display:none}html body #styleSels .ssel svg{flex:none}html body #styleSels .ssel:not(.is-on){opacity:1;color:rgba(255,255,255,.6);background:rgba(255,255,255,.1);box-shadow:none}html body #styleSels .ssel.is-on{opacity:1;color:#fff;background:rgba(150,165,240,.34);box-shadow:0 0 0 1px rgba(255,255,255,.14)}html body #styleSels .ssel[aria-expanded="true"]{background:rgba(255,255,255,.18)}html body #styleSels .ssel.is-on[aria-expanded="true"]{background:rgba(150,165,240,.48)}html body #styleSels .ssel .si{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;margin:0}html body #styleSels .ssel .si svg{width:28px;height:28px;margin:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform:none!important;rotate:none!important;translate:none!important;transition:none!important}html body #stylePop .sp-grid button.na{opacity:.38}</style>
 <style id="styleIconAnimCSS">
 /* 动效风格图标：自带循环动画（不用选中也在动）；弹层收起时暂停，减少动态效果时关闭 */
 .ai{overflow:visible}
@@ -45,10 +116,15 @@
 .ai .a-sun{animation:aiPulse 2.2s ease-in-out infinite}
 .ai .a-ly1{animation:aiLy 2.4s ease-in-out infinite}
 .ai .a-ly2{animation:aiLy 2.4s ease-in-out infinite reverse}
+.ai .a-st{animation:aiSt 2.8s linear infinite}
 .ai .a-pb1{animation:aiPulse 2.4s ease-in-out infinite}
 .ai .a-pb3{animation:aiPan 2.4s ease-in-out infinite alternate;animation-delay:-.6s}
 #styleSels .si.fb,#stylePop .ic.fb{animation:aiFb 2.4s ease-in-out infinite}
 #stylePop:not(.show) .ai *,#stylePop:not(.show) .fb{animation-play-state:paused}
+/* 光影组四行：图标固定在左侧同一列、文字左对齐；英文名用同一格式淡显 */
+html body #stylePop .sp-grid button.wide{box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding-left:14px;text-align:left}
+html body #stylePop .sp-grid button.wide>span{flex:1 1 auto;min-width:0;text-align:left;white-space:nowrap}
+html body #stylePop .sp-grid button .en{font-style:normal;font-weight:500;font-size:.86em;opacity:.58;margin-left:1px}
 @keyframes aiSc{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--x),var(--y)) rotate(var(--r))}}
 @keyframes aiPan{0%{transform:translateX(-3px)}100%{transform:translateX(3px)}}
 @keyframes aiTw{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.2) rotate(20deg)}}
@@ -67,6 +143,7 @@
 @keyframes aiSpin{to{transform:rotate(360deg)}}
 @keyframes aiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
 @keyframes aiLy{0%,100%{transform:translateY(-1.6px)}50%{transform:translateY(1.6px)}}
+@keyframes aiSt{0%,10%{transform:translate(0,0);opacity:0}14%{opacity:1}24%{transform:translate(0,0)}30%{transform:translate(2px,-6px)}36%,46%{transform:translate(4px,-4px)}52%{transform:translate(6px,-10px)}58%,68%{transform:translate(8px,-8px)}74%{transform:translate(10px,-14px)}80%,92%{transform:translate(12px,-12px);opacity:1}100%{transform:translate(12px,-12px);opacity:0}}
 @keyframes aiFb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.5px) scale(1.08)}}
 @media (prefers-reduced-motion:reduce){.ai *,#styleSels .si.fb,#stylePop .ic.fb{animation:none!important}}
 </style>
@@ -665,24 +742,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div class="seg" id="bgm" style="margin-top:4px; margin-bottom:12px;"></div>
     
     <div id="gbox">
-      <div class="chips" id="themes"></div>
-      <div class="row"><span>混色</span><div class="sw4"><input type="color" id="c1"><input type="color" id="c2"><input type="color" id="c3"><input type="color" id="c4"></div></div>
-      <div class="row"><span>角度</span><input type="range" id="ang" min="0" max="360" value="160"></div>
-      <div class="row"><span>流动</span><label class="chk" style="margin:0"><input type="checkbox" id="gflow"></label></div>
+      <div class="cs cs-sl"><div class="row"><span>角度</span><input type="range" id="ang" min="0" max="360" value="160"></div></div>
+      <div class="cs cs-sel"><div class="chips" id="themes"></div></div>
+      <div class="cs cs-sw"><label class="chk"><span class="chk-t">流动</span><input type="checkbox" id="gflow"></label></div>
+      <div class="cs cs-col"><div class="row"><span>混色</span><div class="sw4"><input type="color" id="c1"><input type="color" id="c2"><input type="color" id="c3"><input type="color" id="c4"></div></div></div>
     </div>
 
     <div id="solidbox" class="hide">
-      <div class="row" style="margin-top:12px"><span>纯色</span><input type="color" id="solidc" value="#1b1b2f"></div>
+      <div class="cs cs-col"><div class="row"><span>纯色</span><input type="color" id="solidc" value="#1b1b2f"></div></div>
     </div>
 
     <div id="ibox" class="hide">
-      <div class="row" style="margin-top:12px"><button class="chip" id="pick"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="4"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/></svg>选择图片</button></div>
-      <div id="noimg" class="hide" style="font-size:12px;color:var(--sub);margin-top:8px">还没选图片，先显示混色背景</div>
+      <div class="cs cs-sl">
       <div class="row"><span>模糊</span><input type="range" id="imgBlur" min="0" max="40" value="8"></div>
       <div class="row"><span>压暗</span><input type="range" id="imgDim" min="0" max="80" value="30"></div>
+      </div>
+      <div class="cs cs-sel">
+      <div class="row"><button class="chip" id="pick"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="4"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/></svg>选择图片</button></div>
+      <div id="noimg" class="hide" style="font-size:12px;color:var(--sub);margin-top:8px">还没选图片，先显示混色背景</div>
+      </div>
     </div>
   </div>
 <div id="hubGlow"></div>
+  <button id="hubGripHot" type="button" aria-label="调整窗口大小"></button>
+  <svg id="hubGrip" viewBox="0 0 60 60" aria-hidden="true"><path class="hit" d="M6.55 35.75A36 36 0 0 1 35.75 6.55"/><path class="vis" d="M6.55 35.75A36 36 0 0 1 35.75 6.55"/></svg>
 <div class="np-info"><div class="np-t" id="npT"></div><div class="np-s cnt"></div></div>
   <div class="statbar" id="statbar">
     <span class="tl-time" id="tlTimeCur">00:00</span>
@@ -768,186 +851,208 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div class="grp" style="margin-top:12px">
           <button class="gh" type="button" aria-expanded="false"><span>动效细节</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="gb"><div class="gi"><div class="gp">
-        <div id="pbox" class="g2 hide" style="margin-top:4px">
-          <div class="mt" style="grid-column:1/-1">镜头平移</div>
-          <div class="row"><span>距离</span><input type="range" id="pdist" min="30" max="200" value="100"></div>
-          <label class="chk" style="display:none"><input type="checkbox" id="pcomb" checked> 结合打散重组</label>
-          <label class="chk"><input type="checkbox" id="camRot" checked> 镜头旋转</label>
-        </div>
-        <div id="sbox"><div class="mt">打散重组</div>
-          <div class="row"><span>幅度</span><input type="range" id="amp" min="20" max="250" value="100"></div>
-          <label class="chk"><input type="checkbox" id="rnd" checked> 无规律从四面八方飞来</label>
-          <div class="row top"><span>入场</span><div class="chips" id="easeIn"></div></div>
-          <div class="row top"><span>出场</span><div class="chips" id="easeOut"></div></div>
-        </div>
-        <div id="starbox" class="hide"><div class="mt">星空飘字 · 星星</div>
-          <div class="row"><span>数量</span><input type="range" id="stN" min="10" max="140" value="55"></div>
-          <div class="row"><span>大小</span><input type="range" id="stS" min="50" max="250" value="100"></div>
-          <div class="row"><span>速度</span><input type="range" id="stV" min="40" max="300" value="100"></div>
-          <div class="mt">流星</div>
-          <label class="chk"><input type="checkbox" id="meteorOn" checked> 显示流星（关闭后只保留星星）</label>
-          <div id="mtbox">
-            <div class="row"><span>数量</span><input type="range" id="mtN" min="1" max="8" value="2"></div>
-            <div class="row"><span>大小</span><input type="range" id="mtS" min="40" max="250" value="100"></div>
-            <div class="row"><span>速度</span><input type="range" id="mtV" min="40" max="300" value="100"></div>
+        <!-- 统一标准：每个动效盒从上到下 = 滑块(.cs-sl) → 选择(.cs-sel) → 开关(.cs-sw) → 颜色(.cs-col)；说明小字(.tnote)与「恢复默认」放各自块的末尾 -->
+        <div id="pbox" class="hide" style="margin-top:4px">
+          <div class="mt">镜头平移</div>
+          <div class="cs cs-sl"><div class="row"><span>距离</span><input type="range" id="pdist" min="30" max="200" value="100"></div></div>
+          <div class="cs cs-sw">
+            <label class="chk" style="display:none"><span class="chk-t">结合打散重组</span><input type="checkbox" id="pcomb" checked></label>
+            <label class="chk"><span class="chk-t">镜头旋转</span><input type="checkbox" id="camRot" checked></label>
           </div>
         </div>
+        <div id="sbox"><div class="mt">打散重组</div>
+          <div class="cs cs-sl"><div class="row"><span>幅度</span><input type="range" id="amp" min="20" max="250" value="100"></div></div>
+          <div class="cs cs-sel">
+            <div class="row top"><span>入场</span><div class="chips" id="easeIn"></div></div>
+            <div class="row top"><span>出场</span><div class="chips" id="easeOut"></div></div>
+          </div>
+          <div class="cs cs-sw"><label class="chk"><span class="chk-t">无规律从四面八方飞来</span><input type="checkbox" id="rnd" checked></label></div>
+        </div>
+        <div id="starbox" class="hide"><div class="mt">星空飘字</div>
+          <div class="cs cs-sl">
+            <div class="row"><span>星星数量</span><input type="range" id="stN" min="10" max="140" value="55"></div>
+            <div class="row"><span>星星大小</span><input type="range" id="stS" min="50" max="250" value="100"></div>
+            <div class="row"><span>星星速度</span><input type="range" id="stV" min="40" max="300" value="100"></div>
+            <div id="mtbox">
+              <div class="row"><span>流星数量</span><input type="range" id="mtN" min="1" max="8" value="2"></div>
+              <div class="row"><span>流星大小</span><input type="range" id="mtS" min="40" max="250" value="100"></div>
+              <div class="row"><span>流星速度</span><input type="range" id="mtV" min="40" max="300" value="100"></div>
+            </div>
+          </div>
+          <div class="cs cs-sw"><label class="chk"><span class="chk-t">显示流星（关闭后只保留星星）</span><input type="checkbox" id="meteorOn" checked></label></div>
+        </div>
         <div id="fadebox" class="hide"><div class="mt">淡入淡出</div>
-          <div class="row"><span>时长</span><input type="range" id="fadeT" min="20" max="200" value="80"></div>
+          <div class="cs cs-sl"><div class="row"><span>时长</span><input type="range" id="fadeT" min="20" max="200" value="80"></div></div>
         </div>
         <div id="typebox" class="hide"><div class="mt">打字机</div>
-          <div class="row"><span>速度</span><input type="range" id="typeV" min="4" max="30" value="12"></div>
-          <label class="chk"><input type="checkbox" id="caret" checked> 显示光标</label>
+          <div class="cs cs-sl"><div class="row"><span>速度</span><input type="range" id="typeV" min="4" max="30" value="12"></div></div>
+          <div class="cs cs-sw"><label class="chk"><span class="chk-t">显示光标</span><input type="checkbox" id="caret" checked></label></div>
         </div>
         <div id="posterbox" class="hide"><div class="mt">海报排版</div>
-          <div class="row"><span>装饰</span><input type="range" id="pdN" min="0" max="12" value="8"></div>
-          <div class="row"><span>对比</span><input type="range" id="pdC" min="50" max="200" value="100"></div>
-          <div class="row"><span>镜头</span><input type="range" id="camFollow" min="0" max="100" value="60"><em id="camFollowV" class="av" style="min-width:34px;flex:none;text-align:right">跟随</em></div>
-          <div class="row"><span>出场</span><div class="seg" id="pdTs" style="flex:1"></div></div>
+          <div class="cs cs-sl">
+            <div class="row"><span>装饰</span><input type="range" id="pdN" min="0" max="12" value="8"></div>
+            <div class="row"><span>对比</span><input type="range" id="pdC" min="50" max="200" value="100"></div>
+            <div class="row"><span>镜头</span><input type="range" id="camFollow" min="0" max="100" value="60"><em id="camFollowV" class="av" style="min-width:34px;flex:none;text-align:right">跟随</em></div>
+          </div>
+          <div class="cs cs-sel"><div class="row"><span>出场</span><div class="seg" id="pdTs" style="flex:1"></div></div></div>
           <input type="hidden" id="pdT" value="0"><input type="hidden" id="pdO" value="0">
+          <!-- #pdCustom 由脚本整体显隐；CSS 里用 display:contents 让里面的「滑块块 / 选择块」参与外层排序，保证滑块仍在最上、选择在滑块之后 -->
           <div id="pdCustom" class="hide">
-            <div class="row"><span>起始</span><input type="range" id="pdD" min="0" max="1500" value="250"></div>
-            <div class="row"><span>间隔</span><input type="range" id="pdS" min="40" max="900" value="300"></div>
-            <div class="row"><span>时长</span><input type="range" id="pdE" min="150" max="1500" value="380"></div>
-            <div class="row"><span>顺序</span><div class="seg" id="pdOs" style="flex:1"></div></div>
+            <div class="cs cs-sl">
+              <div class="row"><span>起始</span><input type="range" id="pdD" min="0" max="1500" value="250"></div>
+              <div class="row"><span>间隔</span><input type="range" id="pdS" min="40" max="900" value="300"></div>
+              <div class="row"><span>时长</span><input type="range" id="pdE" min="150" max="1500" value="380"></div>
+            </div>
+            <div class="cs cs-sel"><div class="row"><span>顺序</span><div class="seg" id="pdOs" style="flex:1"></div></div></div>
           </div>
         </div>
         <div id="fxbox" class="hide"><div class="mt">逐字动效</div>
-          <div class="row"><span>间隔</span><input type="range" id="fxS" min="10" max="220" value="60"></div>
-          <div class="row"><span>力度</span><input type="range" id="fxK" min="20" max="200" value="100"></div>
+          <div class="cs cs-sl">
+            <div class="row"><span>间隔</span><input type="range" id="fxS" min="10" max="220" value="60"></div>
+            <div class="row"><span>力度</span><input type="range" id="fxK" min="20" max="200" value="100"></div>
+          </div>
         </div>
         <div id="sonnetbox" class="hide">
           <div class="mt">商籁 · 动效</div>
-          <div class="row"><span>动效强度</span><input type="range" data-sk="typographyMotion" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>镜头强度</span><input type="range" data-sk="cameraIntensity" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>图形密度</span><input type="range" data-sk="mgDensity" data-scale="100" min="0" max="100" value="50"></div>
-          <div class="row"><span>字号</span><input type="range" data-sk="lyricsFontScale" data-scale="100" min="50" max="200" value="100"></div>
-          <div class="row"><span>字重</span><input type="range" data-sk="fontWeight" min="300" max="900" step="100" value="800"></div>
-          <div class="mt">光效 / 图层</div>
-          <label class="chk"><input type="checkbox" data-sk="showGuide" checked> 光效指引</label>
-          <label class="chk"><input type="checkbox" data-sk="postProcessEnabled"> 后处理光效</label>
-          <label class="chk"><input type="checkbox" data-sk="showBackgroundMg" checked> 背景动态图形</label>
-          <label class="chk"><input type="checkbox" data-sk="showFixedGeo" checked> 固定几何</label>
-          <label class="chk"><input type="checkbox" data-sk="showBackgroundDecor" checked> 背景装饰</label>
-          <label class="chk"><input type="checkbox" data-sk="showGiantDecorativeText" checked> 巨型装饰字</label>
-          <label class="chk"><input type="checkbox" data-sk="showOnlyText"> 只显示文字</label>
-          <label class="chk"><input type="checkbox" data-sk="enableTransitions" checked> 转场动画</label>
-          <label class="chk"><input type="checkbox" data-sk="interludeDots" checked> 间奏圆点</label>
-          <div class="mt">RGB 色散（仅上下两端）</div>
-          <div class="row"><span>强度</span><input type="range" data-sk="edgeDispersion" data-scale="100" min="0" max="200" value="80"></div>
-          <div class="row"><span>范围</span><input type="range" data-sk="edgeDispersionBand" data-scale="100" min="10" max="100" value="70"></div>
-          <div class="mt">RGB 边缘色闪</div>
-          <label class="chk"><input type="checkbox" data-sk="rgbEdge" checked> 屏幕边缘 RGB 色闪</label>
-          <div class="row"><span>强度</span><input type="range" data-sk="rgbEdgeIntensity" data-scale="100" min="0" max="100" value="70"></div>
-          <div class="row"><span>范围</span><input type="range" data-sk="rgbEdgeWidth" data-scale="100" min="4" max="40" value="14"></div>
-          <div class="row"><span>频率</span><input type="range" data-sk="rgbEdgeRate" data-scale="100" min="30" max="300" value="100"></div>
-          <div class="mt">颜色</div>
-          <div class="row"><span>文字</span><input type="color" data-sk="primaryColor" value="#ffffff"></div>
-          <div class="row"><span>次要色</span><input type="color" data-sk="secondaryColor" value="#8899ff"></div>
-          <div class="row"><span>强调/光效</span><input type="color" data-sk="accentColor" value="#ffcc44"></div>
-          <div class="row"><span>背景</span><input type="color" data-sk="backgroundColor" value="#000000"></div>
-          <div class="mt">性能</div>
-          <label class="chk"><input type="checkbox" id="sonnet-dynamic-toggle" checked> 动态性能调节</label>
-          <div style="font-size:11px;opacity:.55;margin:2px 0 6px">根据实时帧率自动降低动效强度</div>
-          <div class="row"><span>渲染分辨率</span><input type="range" id="sonnet-res" min="50" max="400" step="25" value="100"></div>
-          <div style="font-size:11px;opacity:.55;margin:2px 0 6px">调节画面分辨率（最高 4×，可达到 4K 级清晰度），改后重建画面，拖完松手生效</div>
+          <div class="cs cs-sl">
+            <div class="row"><span>动效强度</span><input type="range" data-sk="typographyMotion" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>镜头强度</span><input type="range" data-sk="cameraIntensity" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>图形密度</span><input type="range" data-sk="mgDensity" data-scale="100" min="0" max="100" value="50"></div>
+            <div class="row"><span>字号</span><input type="range" data-sk="lyricsFontScale" data-scale="100" min="50" max="200" value="100"></div>
+            <div class="row"><span>字重</span><input type="range" data-sk="fontWeight" min="300" max="900" step="100" value="800"></div>
+            <div class="row"><span>色散强度</span><input type="range" data-sk="edgeDispersion" data-scale="100" min="0" max="200" value="80"></div>
+            <div class="row"><span>色散范围</span><input type="range" data-sk="edgeDispersionBand" data-scale="100" min="10" max="100" value="70"></div>
+            <div class="row"><span>色闪强度</span><input type="range" data-sk="rgbEdgeIntensity" data-scale="100" min="0" max="100" value="70"></div>
+            <div class="row"><span>色闪范围</span><input type="range" data-sk="rgbEdgeWidth" data-scale="100" min="4" max="40" value="14"></div>
+            <div class="row"><span>色闪频率</span><input type="range" data-sk="rgbEdgeRate" data-scale="100" min="30" max="300" value="100"></div>
+            <div class="row"><span>渲染分辨率</span><input type="range" id="sonnet-res" min="50" max="400" step="25" value="100"></div>
+            <div class="tnote">色散只出现在屏幕上下两端；色闪是屏幕边缘的 RGB 闪烁。渲染分辨率最高 4×（可达 4K 级清晰度），改后重建画面，拖完松手生效。</div>
+          </div>
+          <div class="cs cs-sw">
+            <label class="chk"><span class="chk-t">光效指引</span><input type="checkbox" data-sk="showGuide" checked></label>
+            <label class="chk"><span class="chk-t">后处理光效</span><input type="checkbox" data-sk="postProcessEnabled"></label>
+            <label class="chk"><span class="chk-t">背景动态图形</span><input type="checkbox" data-sk="showBackgroundMg" checked></label>
+            <label class="chk"><span class="chk-t">固定几何</span><input type="checkbox" data-sk="showFixedGeo" checked></label>
+            <label class="chk"><span class="chk-t">背景装饰</span><input type="checkbox" data-sk="showBackgroundDecor" checked></label>
+            <label class="chk"><span class="chk-t">巨型装饰字</span><input type="checkbox" data-sk="showGiantDecorativeText" checked></label>
+            <label class="chk"><span class="chk-t">只显示文字</span><input type="checkbox" data-sk="showOnlyText"></label>
+            <label class="chk"><span class="chk-t">转场动画</span><input type="checkbox" data-sk="enableTransitions" checked></label>
+            <label class="chk"><span class="chk-t">间奏圆点</span><input type="checkbox" data-sk="interludeDots" checked></label>
+            <label class="chk"><span class="chk-t">屏幕边缘 RGB 色闪</span><input type="checkbox" data-sk="rgbEdge" checked></label>
+            <label class="chk"><span class="chk-t">动态性能调节</span><input type="checkbox" id="sonnet-dynamic-toggle" checked></label>
+            <div class="tnote">动态性能调节：根据实时帧率自动降低动效强度。</div>
+          </div>
+          <div class="cs cs-col">
+            <div class="row"><span>文字</span><input type="color" data-sk="primaryColor" value="#ffffff"></div>
+            <div class="row"><span>次要色</span><input type="color" data-sk="secondaryColor" value="#8899ff"></div>
+            <div class="row"><span>强调/光效</span><input type="color" data-sk="accentColor" value="#ffcc44"></div>
+            <div class="row"><span>背景</span><input type="color" data-sk="backgroundColor" value="#000000"></div>
+          </div>
           <button class="chip" id="sonnetReset" type="button">恢复默认</button>
         </div>
         <div id="temperabox">
           <div class="mt">凝彩 · 动效</div>
-          <div class="row"><span>镜头强度</span><input type="range" data-tk="cameraIntensity" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>字动强度</span><input type="range" data-tk="glyphMotion" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>落定拉伸</span><input type="range" data-tk="glyphSettleStretch" data-scale="100" min="0" max="100" value="50"></div>
-          <div class="row"><span>字号</span><input type="range" data-tk="lyricsFontScale" data-scale="100" min="50" max="200" value="100"></div>
-          <label class="chk"><input type="checkbox" data-tk="wholeLineLyrics"> 整句歌词（改后重编歌词）</label>
-          <div class="mt">图层</div>
-          <label class="chk"><input type="checkbox" data-tk="showBlocks"> 背景色块</label>
-          <label class="chk"><input type="checkbox" data-tk="showDecor"> 装饰</label>
-          <label class="chk"><input type="checkbox" data-tk="showCornerMarks"> 角标</label>
-          <label class="chk"><input type="checkbox" data-tk="textInversion"> 文字反相</label>
-          <label class="chk"><input type="checkbox" data-tk="enableTransitions" checked> 转场动画</label>
-          <div class="mt">景深</div>
-          <div class="row"><span>景深模糊</span><input type="range" data-tk="depthOfField" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="row"><span>景深平移</span><input type="range" data-tk="depthPan" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="row"><span>字形深度</span><input type="range" data-tk="glyphDepth" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="mt">配色</div>
-          <div class="row"><span>模式</span><div class="seg" id="tpCm" style="flex:1"><button type="button" class="chip" data-v="duo">双色</button><button type="button" class="chip" data-v="mono">单色</button><button type="button" class="chip" data-v="gradient">渐变</button></div></div>
-          <label class="chk"><input type="checkbox" data-tk="customColors"> 自定义颜色（关闭时用当前主题色）</label>
-          <div class="row tcol"><span>文字</span><input type="color" data-tk="primaryColor" value="#ffffff"></div>
-          <div class="row tcol"><span>次要色</span><input type="color" data-tk="secondaryColor" value="#ffffff"></div>
-          <div class="row tcol"><span>强调色</span><input type="color" data-tk="accentColor" value="#ffff00"></div>
-          <div class="row tcol"><span>背景</span><input type="color" data-tk="backgroundColor" value="#000000"></div>
-          <div class="tnote">单色模式只用「文字」和「背景」；渐变模式还会用到次要色和强调色。改颜色会自动打开自定义</div>
-          <div class="mt">后处理</div>
-          <label class="chk"><input type="checkbox" data-tk="postProcessEnabled"> 启用后处理滤镜</label>
-          <div class="row"><span>颗粒</span><input type="range" data-tk="postProcessGrain" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="row"><span>对比度</span><input type="range" data-tk="postProcessContrast" data-scale="100" min="50" max="150" value="100"></div>
-          <div class="row"><span>RGB 偏移</span><input type="range" data-tk="postProcessRgbShift" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="row"><span>暗角</span><input type="range" data-tk="postProcessVignette" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="row"><span>镜头畸变</span><input type="range" data-tk="postProcessLensDistortion" data-scale="100" min="0" max="100" value="0"></div>
-          <div class="mt">性能</div>
-          <div class="row"><span>渲染分辨率</span><input type="range" data-tk="textureResolution" data-scale="100" min="50" max="400" step="25" value="100"></div>
-          <div class="tnote">背景色块 / 装饰 / 后处理滤镜 / 景深 / 分辨率等会重建画面，拖完约 0.3 秒后生效；开关「启用后处理滤镜」会整体重建，画面会短暂闪一下</div>
+          <div class="cs cs-sl">
+            <div class="row"><span>镜头强度</span><input type="range" data-tk="cameraIntensity" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>字动强度</span><input type="range" data-tk="glyphMotion" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>落定拉伸</span><input type="range" data-tk="glyphSettleStretch" data-scale="100" min="0" max="100" value="50"></div>
+            <div class="row"><span>字号</span><input type="range" data-tk="lyricsFontScale" data-scale="100" min="50" max="200" value="100"></div>
+            <div class="row"><span>景深模糊</span><input type="range" data-tk="depthOfField" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>景深平移</span><input type="range" data-tk="depthPan" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>字形深度</span><input type="range" data-tk="glyphDepth" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>颗粒</span><input type="range" data-tk="postProcessGrain" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>对比度</span><input type="range" data-tk="postProcessContrast" data-scale="100" min="50" max="150" value="100"></div>
+            <div class="row"><span>RGB 偏移</span><input type="range" data-tk="postProcessRgbShift" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>暗角</span><input type="range" data-tk="postProcessVignette" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>镜头畸变</span><input type="range" data-tk="postProcessLensDistortion" data-scale="100" min="0" max="100" value="0"></div>
+            <div class="row"><span>渲染分辨率</span><input type="range" data-tk="textureResolution" data-scale="100" min="50" max="400" step="25" value="100"></div>
+            <div class="tnote">背景色块 / 装饰 / 后处理滤镜 / 景深 / 分辨率等会重建画面，拖完约 0.3 秒后生效；开关「启用后处理滤镜」会整体重建，画面会短暂闪一下</div>
+          </div>
+          <div class="cs cs-sel">
+            <div class="row"><span>配色模式</span><div class="seg" id="tpCm" style="flex:1"><button type="button" class="chip" data-v="duo">双色</button><button type="button" class="chip" data-v="mono">单色</button><button type="button" class="chip" data-v="gradient">渐变</button></div></div>
+          </div>
+          <div class="cs cs-sw">
+            <label class="chk"><span class="chk-t">整句歌词（改后重编歌词）</span><input type="checkbox" data-tk="wholeLineLyrics"></label>
+            <label class="chk"><span class="chk-t">背景色块</span><input type="checkbox" data-tk="showBlocks"></label>
+            <label class="chk"><span class="chk-t">装饰</span><input type="checkbox" data-tk="showDecor"></label>
+            <label class="chk"><span class="chk-t">角标</span><input type="checkbox" data-tk="showCornerMarks"></label>
+            <label class="chk"><span class="chk-t">文字反相</span><input type="checkbox" data-tk="textInversion"></label>
+            <label class="chk"><span class="chk-t">转场动画</span><input type="checkbox" data-tk="enableTransitions" checked></label>
+            <label class="chk"><span class="chk-t">启用后处理滤镜</span><input type="checkbox" data-tk="postProcessEnabled"></label>
+            <label class="chk"><span class="chk-t">自定义颜色（关闭时用当前主题色）</span><input type="checkbox" data-tk="customColors"></label>
+          </div>
+          <div class="cs cs-col">
+            <div class="row tcol"><span>文字</span><input type="color" data-tk="primaryColor" value="#ffffff"></div>
+            <div class="row tcol"><span>次要色</span><input type="color" data-tk="secondaryColor" value="#ffffff"></div>
+            <div class="row tcol"><span>强调色</span><input type="color" data-tk="accentColor" value="#ffff00"></div>
+            <div class="row tcol"><span>背景</span><input type="color" data-tk="backgroundColor" value="#000000"></div>
+            <div class="tnote">单色模式只用「文字」和「背景」；渐变模式还会用到次要色和强调色。改颜色会自动打开自定义</div>
+          </div>
           <button class="chip" id="temperaReset" type="button">恢复默认</button>
         </div>
         <div id="lumierebox">
           <div class="mt">绘光 · 动效</div>
-          <div class="mt">光照</div>
-          <div class="row"><span>光照强度</span><input type="range" data-lk="lightIntensity" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>声音响应</span><input type="range" data-lk="audioResponse" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>雾密度</span><input type="range" data-lk="fogDensity" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>雾层数</span><input type="range" data-lk="fogOctaves" data-scale="1" min="1" max="6" step="1" value="5"></div>
-          <div class="row"><span>暗场</span><input type="range" data-lk="darkField" data-scale="100" min="0" max="100" value="75"></div>
-          <div class="row"><span>未点亮透明度</span><input type="range" data-lk="unlitOpacity" data-scale="100" min="0" max="100" value="22"></div>
-          <div class="mt">光效</div>
-          <div class="row"><span>辉光</span><input type="range" data-lk="bloom" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>文字辉光</span><input type="range" data-lk="textBloom" data-scale="100" min="0" max="200" value="100"></div>
-          <div class="row"><span>光斑数量</span><input type="range" data-lk="moteAmount" data-scale="100" min="0" max="300" value="100"></div>
-          <div class="row"><span>邻句窗口</span><input type="range" data-lk="windowNeighbors" data-scale="1" min="0" max="4" step="1" value="2"></div>
-          <div class="row"><span>衰减</span><input type="range" data-lk="decay" data-scale="100" min="0" max="300" value="100"></div>
-          <div class="row"><span>回声</span><input type="range" data-lk="echo" data-scale="100" min="0" max="300" value="100"></div>
-          <div class="mt">图层</div>
-          <label class="chk"><input type="checkbox" data-lk="lineArt" checked> 线条艺术</label>
-          <label class="chk"><input type="checkbox" data-lk="frontBokeh" checked> 前景虚化</label>
-          <label class="chk"><input type="checkbox" data-lk="trails" checked> 拖尾</label>
-          <label class="chk"><input type="checkbox" data-lk="hideTrails"> 隐藏拖尾</label>
-          <label class="chk"><input type="checkbox" data-lk="overlayFrame" checked> 边框</label>
-          <label class="chk"><input type="checkbox" data-lk="textOnly"> 仅显示文字</label>
-          <label class="chk"><input type="checkbox" data-lk="keywordColors" checked> 关键词着色</label>
-          <label class="chk"><input type="checkbox" data-lk="themeIcons" checked> 主题图标</label>
-          <div class="mt">配色</div>
-          <div class="row"><span>主题色混合</span><input type="range" data-lk="themeColorMix" data-scale="100" min="0" max="100" value="30"></div>
-          <div class="mt">性能</div>
-          <div class="row"><span>画质</span><div class="seg" id="lmQ" style="flex:1"><button type="button" class="chip" data-v="full">完整</button><button type="button" class="chip" data-v="balanced">平衡</button><button type="button" class="chip" data-v="low">低</button></div></div>
-          <div class="row"><span>分辨率</span><div class="seg" id="lmRes" style="flex:1"><button type="button" class="chip" data-v="0">自动</button><button type="button" class="chip" data-v="1">1×</button><button type="button" class="chip" data-v="1.5">1.5×</button><button type="button" class="chip" data-v="2">2×</button></div></div>
-          <div class="mt">切歌</div>
-          <label class="chk"><input type="checkbox" data-lk="seamlessTransitions"> 无缝过渡（实验，下一首生效）</label>
-          <div class="tnote">分辨率：自动 = 跟随屏幕（最高 2×），越高越清晰也越耗电；改后画面会重建一次。画质是降低内部图形精度，两者可以叠加。</div>
-          <div class="tnote">声音响应需要音频分析数据，目前没有接入，调了暂时没有效果。无缝过渡会让切歌时同时存在两套画面，占内存多，关闭可避免切歌闪退。图层、光斑、辉光、衰减、回声等会重建画面，拖完片刻后生效。</div>
+          <div class="cs cs-sl">
+            <div class="row"><span>光照强度</span><input type="range" data-lk="lightIntensity" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>声音响应</span><input type="range" data-lk="audioResponse" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>雾密度</span><input type="range" data-lk="fogDensity" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>雾层数</span><input type="range" data-lk="fogOctaves" data-scale="1" min="1" max="6" step="1" value="5"></div>
+            <div class="row"><span>暗场</span><input type="range" data-lk="darkField" data-scale="100" min="0" max="100" value="75"></div>
+            <div class="row"><span>未点亮透明度</span><input type="range" data-lk="unlitOpacity" data-scale="100" min="0" max="100" value="22"></div>
+            <div class="row"><span>辉光</span><input type="range" data-lk="bloom" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>文字辉光</span><input type="range" data-lk="textBloom" data-scale="100" min="0" max="200" value="100"></div>
+            <div class="row"><span>光斑数量</span><input type="range" data-lk="moteAmount" data-scale="100" min="0" max="300" value="100"></div>
+            <div class="row"><span>邻句窗口</span><input type="range" data-lk="windowNeighbors" data-scale="1" min="0" max="4" step="1" value="2"></div>
+            <div class="row"><span>衰减</span><input type="range" data-lk="decay" data-scale="100" min="0" max="300" value="100"></div>
+            <div class="row"><span>回声</span><input type="range" data-lk="echo" data-scale="100" min="0" max="300" value="100"></div>
+            <div class="row"><span>主题色混合</span><input type="range" data-lk="themeColorMix" data-scale="100" min="0" max="100" value="30"></div>
+            <div class="tnote">声音响应需要音频分析数据，目前没有接入，调了暂时没有效果。图层、光斑、辉光、衰减、回声等会重建画面，拖完片刻后生效。</div>
+          </div>
+          <div class="cs cs-sel">
+            <div class="row"><span>画质</span><div class="seg" id="lmQ" style="flex:1"><button type="button" class="chip" data-v="full">完整</button><button type="button" class="chip" data-v="balanced">平衡</button><button type="button" class="chip" data-v="low">低</button></div></div>
+            <div class="row"><span>分辨率</span><div class="seg" id="lmRes" style="flex:1"><button type="button" class="chip" data-v="0">自动</button><button type="button" class="chip" data-v="1">1×</button><button type="button" class="chip" data-v="1.5">1.5×</button><button type="button" class="chip" data-v="2">2×</button></div></div>
+            <div class="tnote">分辨率：自动 = 跟随屏幕（最高 2×），越高越清晰也越耗电；改后画面会重建一次。画质是降低内部图形精度，两者可以叠加。</div>
+          </div>
+          <div class="cs cs-sw">
+            <label class="chk"><span class="chk-t">线条艺术</span><input type="checkbox" data-lk="lineArt" checked></label>
+            <label class="chk"><span class="chk-t">前景虚化</span><input type="checkbox" data-lk="frontBokeh" checked></label>
+            <label class="chk"><span class="chk-t">拖尾</span><input type="checkbox" data-lk="trails" checked></label>
+            <label class="chk"><span class="chk-t">隐藏拖尾</span><input type="checkbox" data-lk="hideTrails"></label>
+            <label class="chk"><span class="chk-t">边框</span><input type="checkbox" data-lk="overlayFrame" checked></label>
+            <label class="chk"><span class="chk-t">仅显示文字</span><input type="checkbox" data-lk="textOnly"></label>
+            <label class="chk"><span class="chk-t">关键词着色</span><input type="checkbox" data-lk="keywordColors" checked></label>
+            <label class="chk"><span class="chk-t">主题图标</span><input type="checkbox" data-lk="themeIcons" checked></label>
+            <label class="chk"><span class="chk-t">无缝过渡（实验，下一首生效）</span><input type="checkbox" data-lk="seamlessTransitions"></label>
+            <div class="tnote">无缝过渡会让切歌时同时存在两套画面，占内存多，关闭可避免切歌闪退。</div>
+          </div>
           <button class="chip" id="lumiereReset" type="button">恢复默认</button>
         </div>
         <div id="partitabox">
           <div class="mt">云阶 · 动效</div>
-          <div class="mt">动画</div>
-          <div class="row"><span>动画强度</span><div class="seg" id="ptInt" style="flex:1"><button type="button" class="chip" data-v="calm">平静</button><button type="button" class="chip" data-v="normal">标准</button><button type="button" class="chip" data-v="chaotic">混乱</button></div></div>
-          <div class="row"><span>错位·最小</span><input type="range" data-pk="staggerMin" data-scale="1" min="0" max="180" step="5" value="20"></div>
-          <div class="row"><span>错位·最大</span><input type="range" data-pk="staggerMax" data-scale="1" min="0" max="180" step="5" value="100"></div>
-          <div class="mt">文字</div>
-          <div class="row"><span>字体</span><div class="seg" id="ptFont" style="flex:1"><button type="button" class="chip" data-v="sans">黑体</button><button type="button" class="chip" data-v="serif">衬线</button><button type="button" class="chip" data-v="mono">等宽</button></div></div>
-          <div class="row"><span>字重</span><input type="range" data-pk="fontWeight" data-scale="1" min="100" max="900" step="100" value="700"></div>
-          <div class="row"><span>字号缩放</span><input type="range" data-pk="lyricsFontScale" data-scale="100" min="50" max="200" step="5" value="100"></div>
-          <label class="chk"><input type="checkbox" data-pk="showText" checked> 显示文字</label>
-          <div class="mt">排版</div>
-          <label class="chk"><input type="checkbox" data-pk="useSemanticLayout" checked> 语义分词排版</label>
-          <label class="chk"><input type="checkbox" data-pk="showGuideLines" checked> 显示参考线</label>
-          <div class="mt">配色</div>
-          <div class="row"><span>未唱 / 已唱</span><input type="color" data-pk="primaryColor" value="#d9d9d9"></div>
-          <div class="row"><span>正在唱 · 辉光</span><input type="color" data-pk="accentColor" value="#8fe388"></div>
-          <div class="row"><span>占位文字</span><input type="color" data-pk="secondaryColor" value="#9aa0a6"></div>
-          <div class="tnote">参数拖动后即时生效并自动记住。错位最大值小于最小值时按最小值处理。</div>
+          <div class="cs cs-sl">
+            <div class="row"><span>错位·最小</span><input type="range" data-pk="staggerMin" data-scale="1" min="0" max="180" step="5" value="20"></div>
+            <div class="row"><span>错位·最大</span><input type="range" data-pk="staggerMax" data-scale="1" min="0" max="180" step="5" value="100"></div>
+            <div class="row"><span>字重</span><input type="range" data-pk="fontWeight" data-scale="1" min="100" max="900" step="100" value="700"></div>
+            <div class="row"><span>字号缩放</span><input type="range" data-pk="lyricsFontScale" data-scale="100" min="50" max="200" step="5" value="100"></div>
+            <div class="tnote">参数拖动后即时生效并自动记住。错位最大值小于最小值时按最小值处理。</div>
+          </div>
+          <div class="cs cs-sel">
+            <div class="row"><span>动画强度</span><div class="seg" id="ptInt" style="flex:1"><button type="button" class="chip" data-v="calm">平静</button><button type="button" class="chip" data-v="normal">标准</button><button type="button" class="chip" data-v="chaotic">混乱</button></div></div>
+            <div class="row"><span>字体</span><div class="seg" id="ptFont" style="flex:1"><button type="button" class="chip" data-v="sans">黑体</button><button type="button" class="chip" data-v="serif">衬线</button><button type="button" class="chip" data-v="mono">等宽</button></div></div>
+          </div>
+          <div class="cs cs-sw">
+            <label class="chk"><span class="chk-t">显示文字</span><input type="checkbox" data-pk="showText" checked></label>
+            <label class="chk"><span class="chk-t">语义分词排版</span><input type="checkbox" data-pk="useSemanticLayout" checked></label>
+            <label class="chk"><span class="chk-t">显示参考线</span><input type="checkbox" data-pk="showGuideLines" checked></label>
+          </div>
+          <div class="cs cs-col">
+            <div class="row"><span>未唱 / 已唱</span><input type="color" data-pk="primaryColor" value="#d9d9d9"></div>
+            <div class="row"><span>正在唱 · 辉光</span><input type="color" data-pk="accentColor" value="#8fe388"></div>
+            <div class="row"><span>占位文字</span><input type="color" data-pk="secondaryColor" value="#9aa0a6"></div>
+          </div>
           <button class="chip" id="partitaReset" type="button">恢复默认</button>
         </div>
-            <label class="chk" id="gtextRow"><input type="checkbox" id="gtext"> 文字渐变</label>
+            <label class="chk" id="gtextRow"><span class="chk-t">文字渐变</span><input type="checkbox" id="gtext"></label>
           </div></div></div>
         </div>
         <div class="shw" id="sonnetHideWrap"><div class="shw-in">
@@ -961,29 +1066,33 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div class="grp">
           <button class="gh" type="button" aria-expanded="false"><span>字体外观</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="gb"><div class="gi"><div class="gp">
-            <!-- 第一顺位：滑块 -->
-            <div class="row"><span>字号</span><input type="range" id="size" min="14" max="80" value="28"></div>
-            <div class="row"><span>阴影</span><input type="range" id="shd" min="0" max="100" value="0"></div>
-            <div class="row"><span style="white-space:nowrap">RGB分离</span><input type="range" id="rgb" min="0" max="10" step="0.5" value="0"></div>
-            <div class="row"><span>描边</span><input type="range" id="sw" min="0" max="8" value="0"><input type="color" id="sc" value="#000000"></div>
-            <!-- 第四顺位：颜色选择 -->
-            <div class="mt" style="margin-top:14px">字体颜色</div>
-            <div class="row"><span>发光色</span><input type="color" id="fg" value="#ffd60a"></div>
-            <div class="row"><span>文字色</span><input type="color" id="tc" value="#ffffff"></div>
+            <!-- 统一标准：滑块 → 颜色 -->
+            <div class="cs cs-sl">
+              <div class="row"><span>字号</span><input type="range" id="size" min="14" max="80" value="28"></div>
+              <div class="row"><span>阴影</span><input type="range" id="shd" min="0" max="100" value="0"></div>
+              <div class="row"><span>RGB分离</span><input type="range" id="rgb" min="0" max="10" step="0.5" value="0"></div>
+              <div class="row"><span>描边</span><input type="range" id="sw" min="0" max="8" value="0"></div>
+            </div>
+            <div class="cs cs-col">
+              <div class="row"><span>描边色</span><input type="color" id="sc" value="#000000"></div>
+              <div class="row"><span>发光色</span><input type="color" id="fg" value="#ffd60a"></div>
+              <div class="row"><span>文字色</span><input type="color" id="tc" value="#ffffff"></div>
+            </div>
           </div></div></div>
         </div>
         <div class="grp">
           <button class="gh" type="button" aria-expanded="false"><span>排版</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="gb"><div class="gi"><div class="gp">
-            <div class="row"><span>边距</span><input type="range" id="lyPad" min="0" max="80" value="22"></div>
-            <div class="row"><span>粗细</span><input type="range" id="lyFw" min="4" max="9" value="8"></div>
-            <div class="row"><span>行距</span><input type="range" id="lyLh" min="100" max="220" value="135"></div>
-            <div class="mt">水平对齐</div>
-            <div class="seg" id="lyAlign"></div>
-            <div class="mt">垂直位置</div>
-            <div class="seg" id="lyPos"></div>
-            <div class="mt">断行方式</div>
-            <div class="seg" id="lyWrap"></div>
+            <div class="cs cs-sl">
+              <div class="row"><span>边距</span><input type="range" id="lyPad" min="0" max="80" value="22"></div>
+              <div class="row"><span>粗细</span><input type="range" id="lyFw" min="4" max="9" value="8"></div>
+              <div class="row"><span>行距</span><input type="range" id="lyLh" min="100" max="220" value="135"></div>
+            </div>
+            <div class="cs cs-sel">
+              <div class="row"><span>水平对齐</span><div class="seg" id="lyAlign" style="flex:1"></div></div>
+              <div class="row"><span>垂直位置</span><div class="seg" id="lyPos" style="flex:1"></div></div>
+              <div class="row"><span>断行方式</span><div class="seg" id="lyWrap" style="flex:1"></div></div>
+            </div>
             <div class="qtip">按词断行：英文单词不拆开、标点不落行首；均衡断行：各行长度尽量接近。</div>
           </div></div></div>
         </div>
@@ -1121,17 +1230,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div class="qr"><span>5</span><input type="range" id="gbamp" min="5" max="40" value="23" aria-label="模糊强度"><span>40</span></div>
       </div>
       <div class="qg" style="margin-top:6px">
-        <label class="chk" style="display:none"><input type="checkbox" id="qLoop" checked> 循环播放</label>
-        <label class="chk"><input type="checkbox" id="qWake"> 屏幕常亮</label>
-        <label class="chk" style="display:none"><input type="checkbox" id="rainbowMode" checked> 彩虹进度条</label>
+        <label class="chk" style="display:none"><span class="chk-t">循环播放</span><input type="checkbox" id="qLoop" checked></label>
+        <label class="chk"><span class="chk-t">屏幕常亮</span><input type="checkbox" id="qWake"></label>
+        <label class="chk" style="display:none"><span class="chk-t">彩虹进度条</span><input type="checkbox" id="rainbowMode" checked></label>
       </div>
       <button type="button" class="qs-open" id="splashOpen" aria-haspopup="dialog" aria-expanded="false"><span>开屏封面</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       <div id="qOld" style="display:none">
       <div class="mt" style="margin:14px 0 0">快捷开关</div>
       <div class="qg">
-        <label class="chk"><input type="checkbox" id="shuf"> 随机显示</label>
-        <label class="chk"><input type="checkbox" id="live" checked> 实时预览</label>
-        <label class="chk"><input type="checkbox" id="qdemo"> 开关试玩</label>
+        <label class="chk"><span class="chk-t">随机显示</span><input type="checkbox" id="shuf"></label>
+        <label class="chk"><span class="chk-t">实时预览</span><input type="checkbox" id="live" checked></label>
+        <label class="chk"><span class="chk-t">开关试玩</span><input type="checkbox" id="qdemo"></label>
       </div>
       </div>
       </div>
@@ -1250,7 +1359,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <script src="./APP/core.js?v=20261025a"></script>                          <!-- 全局变量、基础状态 -->
     <script src="./APP/utils.js?v=20261021m"></script>                         <!-- 通用工具函数 -->
     <script src="./APP/player.js?v=20261029a"></script>                        <!-- 播放器核心：音频、时间轴 -->
-    <script src="./APP/renderer.js?v=20261105c"></script>                      <!-- 渲染器：文字舞台挂载 -->
+    <script src="./APP/renderer.js?v=20261105d"></script>                      <!-- 渲染器：文字舞台挂载 -->
     <script src="./APP/poster.js?v=20261021m"></script>                        <!-- 海报生成与排版 -->
     <script src="./APP/timeline.js?v=20261031a"></script>                      <!-- 进度条与时间轴控制 -->
     <script src="./APP/cards.js?v=20261021m"></script>                         <!-- 歌词卡片列表 -->
@@ -1265,14 +1374,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <script src="./APP/hub-panel.js?v=20261021m"></script>                     <!-- 底部主控制面板 -->
     <script src="./APP/menus.js?v=20261025b"></script>                         <!-- 弹出菜单 -->
     <script src="./APP/theme-picker.js?v=20261021m"></script>                  <!-- 主题选择器 -->
-    <script src="./APP/theme-editor.js?v=20261026b"></script>                  <!-- 主题编辑器 -->
+    <script src="./APP/theme-editor.js?v=20261101a"></script>                  <!-- 主题编辑器 -->
     <script src="./APP/textbar.js?v=20261021m"></script>                       <!-- 顶部文字输入栏 -->
 
 
     <!-- ========================================== -->
     <!-- 3. 开发者工具、启动与扩展                  -->
     <!-- ========================================== -->
-    <script src="./APP/devtools.js?v=20261030a"></script>                      <!-- 开发者选项与性能 -->
+    <script src="./APP/devtools.js?v=20261101a"></script>                      <!-- 开发者选项与性能 -->
     <script src="./APP/sys-log.js?v=20261023a"></script>                       <!-- 系统日志记录 -->
     <script src="./APP/cmd-console.js?v=20261031a"></script>                   <!-- 命令窗口核心 -->
     <script src="./APP/cmd-keyboard.js?v=20261031a"></script>                  <!-- 命令窗口自带键盘（须在 cmd-console 之后） -->
@@ -1296,6 +1405,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <!--        窗口结束                -->
     <!-- ========================================== -->
 <style id="beatTuneCSS">
+/* 窗口高度硬限制：内容区最高 = 屏幕可用高度（--bv-maxh 由脚本按安全区算出）- 标题栏，超出就在里面滚动，窗口永远不会超出屏幕 */
+#beatViz .bv-in{max-height:calc(var(--bv-maxh,640px) - 40px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#beatViz .bv-in::-webkit-scrollbar{display:none}
+#beatViz .bv-knobs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 0 4px;overscroll-behavior-x:contain}
+#beatViz .bv-knobs::-webkit-scrollbar{display:none}
+#beatViz .bv-kn{flex:none;width:64px;position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#beatViz .bv-kn svg{width:46px;height:46px;display:block;overflow:visible}
+#beatViz .kn-face{fill:rgba(255,255,255,.1);transition:fill .15s ease}
+#beatViz .bv-kn.act .kn-face{fill:rgba(255,255,255,.22)}
+#beatViz .kn-tr{fill:none;stroke:rgba(255,255,255,.16);stroke-width:4;stroke-linecap:round}
+#beatViz .kn-ar{fill:none;stroke:#8fb0ff;stroke-width:4;stroke-linecap:round}
+#beatViz .kn-pt{stroke:#fff;stroke-width:3;stroke-linecap:round}
+#beatViz .bv-kn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;margin:0}
+#beatViz .bv-kn .bv-tv{display:block;width:100%;min-width:0;margin:0;text-align:center;font-size:12px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+#beatViz .bv-kl{font-size:11px;line-height:1.2;color:rgba(255,255,255,.66);white-space:nowrap}
+#beatViz .bv-hint{min-height:15px;margin:2px 0 8px;font-size:11px;line-height:1.3;color:rgba(255,255,255,.5);text-align:center}
 #beatViz #bvTune{display:none;margin:0 0 10px}
 #beatViz.tune #bvTune{display:block}
 #beatViz .bv-tr{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;margin:0 0 10px}
@@ -1324,7 +1449,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #beatViz.min{width:188px;border-radius:23px}
 
 /* ---- 标题栏（拖动把手）---- */
-#beatViz #bvHead{display:flex;align-items:center;gap:8px;height:46px;padding:0 8px 0 16px;box-sizing:border-box;cursor:grab;touch-action:none}
+#beatViz #bvHead{display:flex;align-items:center;gap:8px;height:40px;padding:0 8px 0 16px;box-sizing:border-box;cursor:grab;touch-action:none}
 #beatViz.dragging #bvHead{cursor:grabbing}
 #beatViz #bvLive{flex:none;width:8px;height:8px;border-radius:50%;background:#8fb0ff;box-shadow:0 0 10px 1px rgba(143,176,255,.6)}
 #beatViz #bvLive.ping{animation:bvPing .42s cubic-bezier(.2,.7,.3,1)}
@@ -1354,21 +1479,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #beatViz.min #bvBodyWrap{grid-template-rows:0fr}
 #beatViz #bvBody{min-height:0;overflow:hidden;opacity:1;transition:opacity calc(.25s/var(--ui-spd,1)) ease calc(.08s/var(--ui-spd,1))}
 #beatViz.min #bvBody{opacity:0;transition-delay:0s}
-#beatViz .bv-in{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px}
+#beatViz .bv-in{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}
 
 /* ---- 主读数 + 脉冲圆环 ---- */
 #beatViz #bvHero{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 0 4px}
-#beatViz .bv-hl{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+#beatViz .bv-hl{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 #beatViz .bv-bpmrow{display:flex;align-items:baseline;gap:6px}
-#beatViz #bvBpm{font-size:62px;font-weight:200;letter-spacing:-2.5px;line-height:1;font-variant-numeric:tabular-nums}
+#beatViz #bvBpm{font-size:52px;font-weight:200;letter-spacing:-2.5px;line-height:1;font-variant-numeric:tabular-nums}
 #beatViz .bv-bpmu{font-size:13px;font-weight:600;color:rgba(255,255,255,.5)}
 #beatViz #bvTempo{display:inline-block;padding:3px 10px;border-radius:11px;font-size:12px;font-weight:600;white-space:nowrap;
   color:#c3d3ff;background:rgba(143,176,255,.18);transition:background-color calc(.25s/var(--ui-spd,1)) ease,color calc(.25s/var(--ui-spd,1)) ease}
 #beatViz #bvTempo.idle{color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
 #beatViz .bv-src{display:flex;gap:12px;font-size:11.5px;color:rgba(255,255,255,.5);white-space:nowrap;font-variant-numeric:tabular-nums}
 #beatViz .bv-src b{font-weight:600;color:rgba(255,255,255,.85)}
-#beatViz .bv-hr{flex:none;width:96px;display:flex;flex-direction:column;align-items:center;gap:6px}
-#beatViz #bvOrb{display:block;width:96px;height:96px}
+#beatViz .bv-hr{flex:none;width:80px;display:flex;flex-direction:column;align-items:center;gap:4px}
+#beatViz #bvOrb{display:block;width:80px;height:80px}
 #beatViz #bvDots{display:flex;align-items:center;gap:9px;height:8px}
 #beatViz #bvDots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.22);scale:1;
   transition:background-color calc(.25s/var(--ui-spd,1)) ease,scale calc(.35s/var(--ui-spd,1)) var(--bv-e),box-shadow calc(.25s/var(--ui-spd,1)) ease}
@@ -1376,25 +1501,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #beatViz #bvDots span:first-child.cur{background:#8fb0ff;box-shadow:0 0 8px rgba(143,176,255,.85)}
 
 /* ---- 时间轴示波器 ---- */
-#beatViz #bvScope{position:relative;height:98px;border-radius:18px;overflow:hidden;background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+#beatViz #bvScope{position:relative;height:80px;border-radius:18px;overflow:hidden;background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 #beatViz #bvCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #beatViz #bvTime{position:absolute;top:7px;left:10px;font-size:10.5px;color:rgba(255,255,255,.45);pointer-events:none;font-variant-numeric:tabular-nums}
 
 /* ---- 数据格 ---- */
-#beatViz #bvStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-#beatViz .bv-c{min-width:0;padding:8px 10px 9px;border-radius:15px;background:rgba(255,255,255,.08)}
-#beatViz .bv-l{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;white-space:nowrap}
+#beatViz #bvStats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#beatViz .bv-c{min-width:0;padding:6px 10px 7px;border-radius:15px;background:rgba(255,255,255,.08)}
+#beatViz .bv-l{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:2px;white-space:nowrap}
 #beatViz .bv-v{font-size:17px;font-weight:600;line-height:1.15;letter-spacing:-.2px;white-space:nowrap;font-variant-numeric:tabular-nums;transition:color calc(.25s/var(--ui-spd,1)) ease}
 #beatViz .bv-v small{font-size:10.5px;font-weight:500;color:rgba(255,255,255,.4);margin-left:2px;letter-spacing:0}
 #beatViz .bv-v.hi{color:#ffd60a;text-shadow:0 0 10px rgba(255,214,10,.45)}
 #beatViz .bv-v.warn{color:#ffd60a}
 
 /* ---- 日志（可折叠）---- */
-#beatViz #bvLogWrap{display:grid;grid-template-rows:0fr;margin-top:-10px;opacity:0;
+#beatViz #bvLogWrap{display:grid;grid-template-rows:0fr;margin-top:-8px;opacity:0;
   transition:grid-template-rows calc(.4s/var(--ui-spd,1)) cubic-bezier(.22,1,.36,1),margin-top calc(.4s/var(--ui-spd,1)) cubic-bezier(.22,1,.36,1),opacity calc(.25s/var(--ui-spd,1)) ease}
 #beatViz.logs #bvLogWrap{grid-template-rows:1fr;margin-top:0;opacity:1}
 #beatViz .bv-lgi{min-height:0;overflow:hidden}
-#beatViz #bvLogs{height:92px;box-sizing:border-box;overflow-y:auto;padding:8px 12px;border-radius:15px;background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+#beatViz #bvLogs{height:80px;box-sizing:border-box;overflow-y:auto;padding:8px 12px;border-radius:15px;background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
   font-size:11.5px;line-height:1.7;font-variant-numeric:tabular-nums;-webkit-overflow-scrolling:touch}
 #beatViz #bvLogs div{display:flex;gap:10px;white-space:nowrap}
 #beatViz #bvLogs .t{color:rgba(255,255,255,.34)}
@@ -1406,7 +1531,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 /* ---- 底部操作 ---- */
 #beatViz #bvTools{display:flex;gap:8px}
-#beatViz .bv-tb{flex:1;height:36px;padding:0;margin:0;border:0;border-radius:15px;color:#fff;background:rgba(255,255,255,.1);font:inherit;font-size:13.5px;font-weight:600;
+#beatViz .bv-tb{flex:1;height:32px;padding:0;margin:0;border:0;border-radius:15px;color:#fff;background:rgba(255,255,255,.1);font:inherit;font-size:13.5px;font-weight:600;
   scale:1;touch-action:manipulation;-webkit-appearance:none;appearance:none;
   transition:scale calc(.4s/var(--ui-spd,1)) var(--bv-e),background-color calc(.25s/var(--ui-spd,1)) ease}
 #beatViz .bv-tb:active{scale:.94;transition:scale calc(.12s/var(--ui-spd,1)) cubic-bezier(.2,.8,.3,1)}
@@ -1424,6 +1549,58 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 }
 </style>
 
+<style id="beatLayoutCSS">
+/* Beat.Viz 一屏布局：窗口更宽；示波器 flex 撑满剩余高度（收缩下限 120px），调参 / 日志展开时它自己让位，其余模块定高；
+   旋钮 4×2 网格，不再横向滚动；数据格 4 列 × 3 行。窗口内容仍有 max-height 兜底，极矮屏幕才会出现内部滚动。 */
+#beatViz{width:min(400px,calc(100vw - 16px))}
+#beatViz .bv-in{padding:0 14px 12px;gap:8px;max-height:calc(min(var(--bv-maxh,640px),780px) - 40px)}
+#beatViz .bv-in>*{flex:none}
+
+/* hero：BPM 更大；速度术语 + 拍位点同一行；圆环加大 */
+#beatViz #bvHero{gap:10px;padding:0 2px 0 4px}
+#beatViz .bv-hl{gap:7px;flex:1 1 auto}
+#beatViz #bvBpm{font-size:64px;letter-spacing:-3px}
+#beatViz .bv-trow{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px}
+#beatViz #bvDots{gap:8px;height:10px}
+#beatViz #bvDots span{width:7px;height:7px}
+#beatViz .bv-hr{display:block;width:104px;height:104px}
+#beatViz #bvOrb{width:104px;height:104px}
+
+/* 示波器：主角。基准高度跟屏幕高度走，空间不够时收缩 */
+#beatViz #bvScope{flex:1 1 clamp(130px,25vh,210px);min-height:110px;height:auto;border-radius:20px}
+#beatViz #bvTime{top:9px;left:12px;font-size:11px}
+
+/* 数据格：4 列，更紧凑 */
+#beatViz #bvStats{grid-template-columns:repeat(4,1fr);gap:6px}
+#beatViz .bv-c{padding:6px 8px;border-radius:14px}
+#beatViz .bv-l{font-size:10.5px;margin-bottom:1px}
+#beatViz .bv-v{font-size:16px}
+#beatViz .bv-v small{font-size:10px;margin-left:1px}
+@media (max-width:350px){#beatViz #bvStats{grid-template-columns:repeat(3,1fr)}}
+
+/* 日志 */
+#beatViz #bvLogs{height:64px;padding:6px 12px}
+
+/* 调参：旋钮 4×2 网格 + 提示/恢复默认同一行 */
+#beatViz #bvTune{margin:0}
+#beatViz .bv-knobs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 4px;overflow:visible;padding:0}
+#beatViz .bv-kn{width:auto;min-width:0}
+#beatViz .bv-kn svg{width:40px;height:40px}
+#beatViz .bv-tfoot{display:flex;align-items:center;gap:10px;margin-top:6px}
+#beatViz .bv-tfoot .bv-hint{flex:1;min-width:0;min-height:30px;margin:0;display:flex;align-items:center;text-align:left}
+#beatViz #bvTuneReset{display:block;flex:none;width:auto;height:30px;padding:0 14px;font-size:12.5px}
+
+/* 底部操作 */
+#beatViz .bv-tb{height:34px}
+
+/* 节拍图可左右滑动切换：竖向手势仍交给窗口滚动，横向由脚本接管 */
+#beatViz #bvScope{touch-action:pan-y}
+#beatViz #bvPg{position:absolute;top:5px;right:6px;display:flex;align-items:center;z-index:2}
+#beatViz #bvPgName{margin-right:4px;font-size:11px;font-weight:600;color:rgba(255,255,255,.55)}
+#beatViz #bvPg button{width:20px;height:24px;padding:0;margin:0;border:0;background:none;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;touch-action:manipulation}
+#beatViz #bvPg button::after{content:"";width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.26);scale:1;transition:background-color .2s ease,scale .3s var(--bv-e)}
+#beatViz #bvPg button.on::after{background:#fff;scale:1.3}
+</style>
 <div id="beatViz" role="dialog" aria-label="节拍监视器" aria-hidden="true">
   <div id="bvHead">
     <span id="bvLive"></span>
@@ -1439,50 +1616,57 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <div id="bvHero">
       <div class="bv-hl">
         <div class="bv-bpmrow"><span id="bvBpm">--</span><span class="bv-bpmu">BPM</span></div>
-        <span id="bvTempo" class="idle">等待节拍</span>
+        <div class="bv-trow">
+          <span id="bvTempo" class="idle">等待节拍</span>
+          <div id="bvDots" title="按 4/4 拍估算的拍位"><span></span><span></span><span></span><span></span></div>
+        </div>
         <div class="bv-src"><span>引擎 <b id="bvEng">--</b></span><span>实测 <b id="bvMeas">--</b></span></div>
       </div>
       <div class="bv-hr">
         <canvas id="bvOrb" aria-hidden="true"></canvas>
-        <div id="bvDots" title="按 4/4 拍估算的拍位"><span></span><span></span><span></span><span></span></div>
       </div>
     </div>
 
     <div id="bvScope">
       <canvas id="bvCanvas" aria-hidden="true"></canvas>
       <span id="bvTime">等待第一拍</span>
+      <div id="bvPg"><b id="bvPgName">节拍带</b><button type="button" aria-label="节拍带"></button><button type="button" aria-label="节拍星云"></button><button type="button" aria-label="间隔曲线"></button><button type="button" aria-label="重音"></button></div>
     </div>
 
     <div id="bvStats">
       <div class="bv-c"><div class="bv-l">瞬时 BPM</div><div class="bv-v"><span id="bvInst">--</span></div></div>
       <div class="bv-c"><div class="bv-l">强度</div><div class="bv-v" id="bvStrengthBox"><span id="bvStrength">0.00</span></div></div>
       <div class="bv-c"><div class="bv-l">峰值强度</div><div class="bv-v"><span id="bvPeak">0.00</span></div></div>
+      <div class="bv-c"><div class="bv-l">平均强度</div><div class="bv-v"><span id="bvAvgS">--</span></div></div>
 
       <div class="bv-c"><div class="bv-l">距上一拍</div><div class="bv-v"><span id="bvInterval">--</span><small>ms</small></div></div>
       <div class="bv-c"><div class="bv-l">平均间隔</div><div class="bv-v"><span id="bvAvgInt">--</span><small>ms</small></div></div>
-      <div class="bv-c"><div class="bv-l">抖动</div><div class="bv-v"><span id="bvJitter">--</span><small>ms</small></div></div>
-
-      <div class="bv-c"><div class="bv-l">稳定度</div><div class="bv-v" id="bvStabBox"><span id="bvStab">--</span><small>%</small></div></div>
-      <div class="bv-c"><div class="bv-l">强拍占比</div><div class="bv-v"><span id="bvStrong">--</span><small>%</small></div></div>
-      <div class="bv-c"><div class="bv-l">平均强度</div><div class="bv-v"><span id="bvAvgS">--</span></div></div>
-
-      <div class="bv-c"><div class="bv-l">总节拍</div><div class="bv-v"><span id="bvCount">0</span></div></div>
       <div class="bv-c"><div class="bv-l">最短间隔</div><div class="bv-v"><span id="bvMinInt">--</span><small>ms</small></div></div>
       <div class="bv-c"><div class="bv-l">最长间隔</div><div class="bv-v"><span id="bvMaxInt">--</span><small>ms</small></div></div>
+
+      <div class="bv-c"><div class="bv-l">稳定度</div><div class="bv-v" id="bvStabBox"><span id="bvStab">--</span><small>%</small></div></div>
+      <div class="bv-c"><div class="bv-l">抖动</div><div class="bv-v"><span id="bvJitter">--</span><small>ms</small></div></div>
+      <div class="bv-c"><div class="bv-l">强拍占比</div><div class="bv-v"><span id="bvStrong">--</span><small>%</small></div></div>
+      <div class="bv-c"><div class="bv-l">总节拍</div><div class="bv-v"><span id="bvCount">0</span></div></div>
     </div>
 
     <div id="bvLogWrap"><div class="bv-lgi"><div id="bvLogs"></div></div></div>
 
     <div id="bvTune">
-      <div class="bv-tr"><div class="bv-tl">网格宽容度<small>漏拍调大，多拍调小</small></div><input type="range" data-bt="gridTol" min="0.1" max="0.6" step="0.01"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">解锁灵敏度<small>换段后久不重新锁定就调大</small></div><input type="range" data-bt="unlock" min="0.1" max="0.5" step="0.01"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">阈值硬度<small>整体漏拍调小，噪声误触调大</small></div><input type="range" data-bt="thr" min="0.2" max="0.8" step="0.01"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">底鼓权重<small></small></div><input type="range" data-bt="bw0" min="0" max="2" step="0.05"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">军鼓权重<small>军鼓重的歌加大</small></div><input type="range" data-bt="bw1" min="0" max="1.5" step="0.05"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">帽镲权重<small></small></div><input type="range" data-bt="bw2" min="0" max="1" step="0.05"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">速度倍率<small>快歌被报成一半就拨到偏快，慢歌被报成两倍就拨到偏慢</small></div><input type="range" data-bt="tempoBias" min="-1" max="1" step="1"><b class="bv-tv">--</b></div>
-      <div class="bv-tr"><div class="bv-tl">延迟补偿<small>画面比声音早（蓝牙耳机）就调大，单位毫秒</small></div><input type="range" data-bt="delay" min="0" max="400" step="10"><b class="bv-tv">--</b></div>
-      <button id="bvTuneReset" class="bv-tb" type="button">恢复默认</button>
+      <div class="bv-knobs">
+        <div class="bv-kn" data-h="网格宽容度：漏拍调大，多拍调小"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="gridTol" min="0.1" max="0.6" step="0.01" tabindex="-1" aria-label="网格宽容度"><b class="bv-tv">--</b><span class="bv-kl">网格宽容度</span></div>
+        <div class="bv-kn" data-h="解锁灵敏度：换段后久不重新锁定就调大"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="unlock" min="0.1" max="0.5" step="0.01" tabindex="-1" aria-label="解锁灵敏度"><b class="bv-tv">--</b><span class="bv-kl">解锁灵敏度</span></div>
+        <div class="bv-kn" data-h="阈值硬度：整体漏拍调小，噪声误触调大"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="thr" min="0.2" max="0.8" step="0.01" tabindex="-1" aria-label="阈值硬度"><b class="bv-tv">--</b><span class="bv-kl">阈值硬度</span></div>
+        <div class="bv-kn" data-h="底鼓权重"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="bw0" min="0" max="2" step="0.05" tabindex="-1" aria-label="底鼓权重"><b class="bv-tv">--</b><span class="bv-kl">底鼓权重</span></div>
+        <div class="bv-kn" data-h="军鼓权重：军鼓重的歌加大"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="bw1" min="0" max="1.5" step="0.05" tabindex="-1" aria-label="军鼓权重"><b class="bv-tv">--</b><span class="bv-kl">军鼓权重</span></div>
+        <div class="bv-kn" data-h="帽镲权重"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="bw2" min="0" max="1" step="0.05" tabindex="-1" aria-label="帽镲权重"><b class="bv-tv">--</b><span class="bv-kl">帽镲权重</span></div>
+        <div class="bv-kn" data-h="速度倍率：快歌被报成一半就拨到偏快，慢歌被报成两倍就拨到偏慢"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="tempoBias" min="-1" max="1" step="1" tabindex="-1" aria-label="速度倍率"><b class="bv-tv">--</b><span class="bv-kl">速度倍率</span></div>
+        <div class="bv-kn" data-h="延迟补偿：画面比声音早（蓝牙耳机）就调大，单位毫秒"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="kn-face" cx="24" cy="24" r="14"/><circle class="kn-tr" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="89.5 119.4"/><circle class="kn-ar" cx="24" cy="24" r="19" transform="rotate(135 24 24)" stroke-dasharray="0 119.4"/><line class="kn-pt" x1="24" y1="24" x2="24" y2="13" transform="rotate(-135 24 24)"/></svg><input type="range" data-bt="delay" min="0" max="400" step="10" tabindex="-1" aria-label="延迟补偿"><b class="bv-tv">--</b><span class="bv-kl">延迟补偿</span></div>
+      </div>
+      <div class="bv-tfoot">
+        <div class="bv-hint" id="bvHint">按住旋钮上下拖动调节</div>
+        <button id="bvTuneReset" class="bv-tb" type="button">恢复默认</button>
+      </div>
     </div>
 
     <div id="bvTools">
@@ -1591,7 +1775,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     refreshHero();
   }
   function resetAll(){
-    beats=[]; ints=[]; ripples=[]; recentS=[]; gridP=0; lastStrong=false; count=0; internal=0; peak=0; sumS=0; nS=0; strongN=0; lastS=0; firstT=0; lastT=0;
+    beats=[]; ints=[]; ripples=[]; recentS=[]; pads={}; padBar=-1; padSlide=0; ivSlide=0; nbH=[]; nbSlide=0; nbT=0; gridP=0; lastStrong=false; count=0; internal=0; peak=0; sumS=0; nS=0; strongN=0; lastS=0; firstT=0; lastT=0;
     pausedTotal=0; if(paused) pausedAt=performance.now();
     dispS=0; tgtS=0; pulse=0; ymax=1.5;
     clearStats();
@@ -1620,9 +1804,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var diff=lastT?now-lastT:0; if(diff>3000) diff=0;     // 超过 3 秒当作断档，不进间隔统计
     lastT=now; if(!firstT) firstT=now;
     internal++; count=(+d.count>0)?+d.count:internal;
-    if(diff>=50){ints.push(diff); if(ints.length>16) ints.shift()}
+    if(diff>=50){ints.push(diff); if(ints.length>16) ints.shift(); ivSlide=1; nbH.push(diff); if(nbH.length>24) nbH.shift(); nbSlide=1}
     var st=isStrong(s);                                   // 强拍 = 明显高于最近 12 拍的平均力度
-    beats.push({t:now,s:s,st:st}); ripples.push({t:now,s:s,st:st}); if(ripples.length>4) ripples.shift();
+    beats.push({t:now,s:s,st:st,c:count});
+    pads[count]={t:now,s:s,st:st}; for(var pk in pads) if(+pk<count-40) delete pads[pk];     // 节拍垫：按拍序号存最近 ~10 小节
+    var nb=Math.floor((count-1)/4); if(nb>padBar){padSlide=padBar<0?0:-1; padBar=nb} else if(nb<padBar) padBar=nb; ripples.push({t:now,s:s,st:st}); if(ripples.length>4) ripples.shift();
     recentS.push(s); if(recentS.length>12) recentS.shift();
     tgtS=s; pulse=1; lastS=s; lastStrong=st;
     if(s>peak) peak=s; sumS+=s; nS++; if(st) strongN++;
@@ -1647,7 +1833,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(window.ResizeObserver) new ResizeObserver(fitSoon).observe($('bvScope'));
 
   function drawOrb(now){
-    var W=orbW,H=orbH,c0=W/2,c1=H/2,baseR=22,i;
+    var W=orbW,H=orbH,c0=W/2,c1=H/2,baseR=Math.round(W*0.23),i;
     ox.clearRect(0,0,W,H);
     var g=ox.createRadialGradient(c0,c1,0,c0,c1,W/2);
     g.addColorStop(0,'rgba(143,176,255,'+(0.10+Math.min(dispS,2)*0.10).toFixed(3)+')'); g.addColorStop(1,'rgba(143,176,255,0)');
@@ -1678,11 +1864,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   /* 节拍带：一条时间轴，每一拍是一根圆头竖条（高 = 力度，强拍更亮带光晕），整体向左流动；
      竖线是「现在」，右边留出 1.5 秒的未来区，按当前 BPM 画出下一拍的虚线占位，拍到了就被实心竖条填上 */
-  function drawScope(now){
-    var W=scW,H=scH,padL=12,padR=12,top=30,base=H-28,span=base-top,tNow=paused?pausedAt:now,i,x;
-    var PAST=10000,FUT=1500,TOT=PAST+FUT,t0=tNow-PAST,usable=W-padL-padR,barW=5;
+  function drawBands(now){
+    var W=scW,H=scH,padL=12,padR=12,top=34,base=H-30,span=base-top,tNow=paused?pausedAt:now,i,x;
+    var PAST=10000,FUT=1500,TOT=PAST+FUT,t0=tNow-PAST,usable=W-padL-padR,barW=H>=220?7:6;
     function X(t){return padL+(t-t0)/TOT*usable}
-    cx.clearRect(0,0,W,H);
     if(!scFam) scFam=getComputedStyle(viz).fontFamily||'sans-serif';
     var xn=X(tNow);
     var cut=tNow-PAST-600; while(beats.length&&beats[0].t<cut) beats.shift();
@@ -1695,6 +1880,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     // 基线：过去实线，未来点线
     cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.14)'; cx.beginPath(); cx.moveTo(padL,base+0.5); cx.lineTo(xn,base+0.5); cx.stroke();
     cx.save(); cx.setLineDash([2,4]); cx.strokeStyle='rgba(255,255,255,.12)'; cx.beginPath(); cx.moveTo(xn,base+0.5); cx.lineTo(W-padR,base+0.5); cx.stroke(); cx.restore();
+
+    // 强度 1.0 参考线：条高 = 力度，大图里给个读数基准
+    var y1=base-(8+Math.pow(0.5,0.85)*(span-8));
+    cx.save(); cx.setLineDash([3,5]); cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.1)';
+    cx.beginPath(); cx.moveTo(padL,Math.round(y1)+0.5); cx.lineTo(W-padR,Math.round(y1)+0.5); cx.stroke(); cx.restore();
+    cx.font='10px '+scFam; cx.textAlign='right'; cx.textBaseline='bottom'; cx.fillStyle='rgba(255,255,255,.28)'; cx.fillText('1.0',W-padR,y1-2);
 
     // 秒刻度（每 5 秒一根长的）
     cx.strokeStyle='rgba(255,255,255,.16)'; cx.beginPath();
@@ -1736,10 +1927,260 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
 
     // 文字（画在画布上，不和曲线抢位置）
-    cx.font='10px '+scFam; cx.textBaseline='alphabetic';
-    cx.fillStyle='rgba(255,255,255,.34)'; cx.textAlign='left'; cx.fillText('10 秒前',padL,H-6);
+    cx.font='11px '+scFam; cx.textBaseline='alphabetic';
+    cx.fillStyle='rgba(255,255,255,.34)'; cx.textAlign='left'; cx.fillText('10 秒前',padL,H-7);
     cx.fillStyle='rgba(143,176,255,.85)'; cx.textAlign='center';
-    cx.fillText('现在',Math.min(W-padR-12,Math.max(padL+60,xn)),H-6);
+    cx.fillText('现在',Math.min(W-padR-12,Math.max(padL+60,xn)),H-7);
+  }
+
+  /* ====================== 多张节拍图（左右滑动切换）======================
+     0 节拍带（时间轴竖条）  1 节拍星云（相邻间隔的庞加莱图）  2 间隔曲线（相邻两拍的毫秒数）  3 力度波形（镜像包络）
+     共用同一块画布：chPos 是「页位置」（小数），手指拖动时跟手，松手后带惯性吸附到整数页。 */
+  var nbH=[], nbSlide=0, nbT=0, nbC=0, nbR=1, nbA=0, nbB=0, nbMx=0, nbMy=0, acAvg=[0,0,0,0], acT=0, pads={}, padBar=-1, padSlide=0, ivSlide=0, ivMean=0, ivLo=0, ivHi=0, ivT=0, chDt=16;
+  var TAU=6.2832, CHN=['节拍带','节拍星云','间隔曲线','重音'], K_CH='yiu.beatViz.chart';
+  var chIdx=Math.max(0,Math.min(CHN.length-1,parseInt(lsGet(K_CH),10)||0)), chPos=chIdx, sg=null;
+  var pgBtns=[].slice.call($('bvPg').querySelectorAll('button')), pgName=$('bvPgName');
+  function paintPg(){pgBtns.forEach(function(b,i){b.classList.toggle('on',i===chIdx)}); pgName.textContent=CHN[chIdx]}
+  function setChart(i){chIdx=Math.max(0,Math.min(CHN.length-1,i)); lsSet(K_CH,String(chIdx)); paintPg()}
+  paintPg();
+  pgBtns.forEach(function(b,i){b.addEventListener('click',function(){setChart(i)})});
+  var scopeEl=$('bvScope');
+  scopeEl.addEventListener('pointerdown',function(e){
+    if(e.target.closest('#bvPg')) return;
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    sg={id:e.pointerId,x:e.clientX,y:e.clientY,p:chPos,lock:null,lx:e.clientX,lt:e.timeStamp,v:0};
+  });
+  scopeEl.addEventListener('pointermove',function(e){
+    if(!sg||e.pointerId!==sg.id) return;
+    var dx=e.clientX-sg.x, dy=e.clientY-sg.y;
+    if(!sg.lock){
+      if(Math.abs(dx)<6&&Math.abs(dy)<6) return;
+      sg.lock=Math.abs(dx)>Math.abs(dy)?'h':'v';
+      if(sg.lock==='h'){try{scopeEl.setPointerCapture(e.pointerId)}catch(_){}}
+    }
+    if(sg.lock!=='h') return;
+    var raw=sg.p-dx/Math.max(120,scW), last=CHN.length-1;
+    if(raw<0) raw*=0.35; else if(raw>last) raw=last+(raw-last)*0.35;   // 到头了有阻尼，拉得动但会弹回
+    chPos=raw;
+    var dt=Math.max(1,e.timeStamp-sg.lt); sg.v=sg.v*0.6+(-(e.clientX-sg.lx)/Math.max(120,scW)/dt)*0.4; sg.lx=e.clientX; sg.lt=e.timeStamp;
+  });
+  function endSwipe(e){
+    if(!sg||e.pointerId!==sg.id) return;
+    var s0=sg; sg=null;
+    try{scopeEl.releasePointerCapture(e.pointerId)}catch(_){}
+    if(s0.lock!=='h') return;
+    var step=Math.max(-1,Math.min(1,s0.v*260));           // 甩一下（速度）也能翻页
+    setChart(Math.round(chPos+step));
+  }
+  scopeEl.addEventListener('pointerup',endSwipe); scopeEl.addEventListener('pointercancel',endSwipe);
+
+  function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath()}
+  function niceStep(x){var p=Math.pow(10,Math.floor(Math.log(x)/Math.LN10)),m=x/p; return (m<1.5?1:m<3?2:m<7?5:10)*p}
+
+  /* ---- 节拍星云（庞加莱图）----
+     横轴 = 前一个间隔，纵轴 = 后一个间隔，每一拍是一颗星，最新一颗拖着一条彗尾。
+     拍子稳 → 星星聚成一小团，落在中间的对角线上；云团沿对角线拉长 = 速度在漂移；云团变「胖」= 拍与拍之间忽快忽慢；
+     漏拍 / 多拍的星飞出圈外，贴边变成黄色空心环。两侧读数：左 = 抖动（垂直对角线的散布），右 = 漂移（沿对角线的散布）。 */
+  function nbMad(a){var s=a.slice().sort(function(x,y){return x-y}),m=s[s.length>>1],d=a.map(function(v){return Math.abs(v-m)}).sort(function(x,y){return x-y}); return 1.4826*d[d.length>>1]}
+  function drawNebula(now){
+    var W=scW,H=scH,top=34,bot=H-26,S=Math.max(48,Math.min(bot-top,W-176)),c0=W/2,c1=(top+bot)/2,L=c0-S/2,T=c1-S/2,h=S/2*0.86,n=nbH.length,i,rt=pulse;
+    cx.save(); cx.textBaseline='alphabetic';
+    // 底板：圆角方块 + 随拍呼吸的中心光 + 对角线 + 十字
+    rr(cx,L,T,S,S,16); cx.fillStyle='rgba(255,255,255,.03)'; cx.fill();
+    cx.save(); rr(cx,L,T,S,S,16); cx.clip();
+    var gl=cx.createRadialGradient(c0,c1,0,c0,c1,S*0.62); gl.addColorStop(0,'rgba(143,176,255,'+(0.07+rt*0.13).toFixed(3)+')'); gl.addColorStop(1,'rgba(143,176,255,0)'); cx.fillStyle=gl; cx.fillRect(L,T,S,S);
+    cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.07)'; cx.beginPath(); cx.moveTo(L,Math.round(c1)+.5); cx.lineTo(L+S,Math.round(c1)+.5); cx.moveTo(Math.round(c0)+.5,T); cx.lineTo(Math.round(c0)+.5,T+S); cx.stroke();
+    var dg=cx.createLinearGradient(L,T+S,L+S,T); dg.addColorStop(0,'rgba(255,255,255,0)'); dg.addColorStop(.5,'rgba(255,255,255,.22)'); dg.addColorStop(1,'rgba(255,255,255,0)');
+    cx.setLineDash([2,4]); cx.strokeStyle=dg; cx.beginPath(); cx.moveTo(L,T+S); cx.lineTo(L+S,T); cx.stroke(); cx.setLineDash([]);
+    cx.restore();
+    rr(cx,L+.5,T+.5,S-1,S-1,16); cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.09)'; cx.stroke();
+
+    var sd1=0,sd2=0,sl=0,okE=false,P=[],N=[];
+    if(n>=2){
+      var so=nbH.slice().sort(function(a,b){return a-b}), med=so[so.length>>1], dev=med*0.1, mx=0, my=0;
+      for(i=1;i<n;i++){
+        var x=nbH[i-1], y=nbH[i], o=Math.abs(x-med)>med*0.25||Math.abs(y-med)>med*0.25, p={x:x,y:y,o:o}; P.push(p);
+        if(!o){N.push(p); mx+=x; my+=y; dev=Math.max(dev,Math.abs(x-med)*1.3,Math.abs(y-med)*1.3)}      // 缩放只按正常点，游离点贴边
+      }
+      if(N.length){mx/=N.length; my/=N.length} else {mx=my=med}
+      okE=N.length>=3;
+      if(okE){sd1=Math.max(.3,nbMad(N.map(function(p){return (p.y-p.x)/1.4142}))); sd2=Math.max(.3,nbMad(N.map(function(p){return (p.y+p.x)/1.4142})))}
+      var sx=0,sy=0,sxx=0,sxy=0; for(i=0;i<n;i++){sx+=i; sy+=nbH[i]; sxx+=i*i; sxy+=i*nbH[i]} var dn=n*sxx-sx*sx; sl=dn?(n*sxy-sx*sy)/dn*(n-1)/med:0;   // 整段的相对变化
+      var kk=(!nbT||now-nbT>400)?1:1-Math.exp(-chDt/130); nbT=now;
+      nbC+=(med-nbC)*kk; nbR+=(dev-nbR)*kk; nbA+=(sd2-nbA)*kk; nbB+=(sd1-nbB)*kk; nbMx+=(mx-nbMx)*kk; nbMy+=(my-nbMy)*kk;
+    }
+    function MX(v){return Math.max(L+7,Math.min(L+S-7,c0+(v-nbC)/nbR*h))}
+    function MY(v){return Math.max(T+7,Math.min(T+S-7,c1-(v-nbC)/nbR*h))}
+    var m=P.length;
+    if(m){
+      cx.save(); rr(cx,L,T,S,S,16); cx.clip();
+      var zr=0.05*nbC/nbR*h; if(zr>8&&zr<h*1.3){cx.setLineDash([3,5]); cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.14)'; cx.beginPath(); cx.arc(c0,c1,zr,0,TAU); cx.stroke(); cx.setLineDash([])}   // 虚圈 = ±5% 速度
+      if(okE){                                                // 云团椭圆：长轴沿对角线 = 漂移，短轴 = 抖动
+        var ua=Math.max(6,2*nbA/nbR*h), ub=Math.max(3.5,2*nbB/nbR*h);
+        cx.save(); cx.translate(MX(nbMx),MY(nbMy)); cx.rotate(-Math.PI/4);
+        cx.save(); cx.scale(ua,ub); var eg=cx.createRadialGradient(0,0,0,0,0,1); eg.addColorStop(0,'rgba(150,172,255,'+(0.28+rt*0.2).toFixed(3)+')'); eg.addColorStop(.65,'rgba(176,152,255,.10)'); eg.addColorStop(1,'rgba(176,152,255,0)');
+        cx.beginPath(); cx.arc(0,0,1,0,TAU); cx.fillStyle=eg; cx.fill(); cx.restore();
+        cx.beginPath(); cx.ellipse(0,0,ua,ub,0,0,TAU); cx.lineWidth=1; cx.strokeStyle='rgba(205,218,255,'+(0.3+rt*0.35).toFixed(3)+')'; cx.stroke(); cx.restore();
+      }
+      var e=1-Math.pow(nbSlide,3), pts=P.map(function(p){return [MX(p.x),MY(p.y)]});
+      if(m>=2){var a0=pts[m-2],a1=pts[m-1]; pts[m-1]=[a0[0]+(a1[0]-a0[0])*e,a0[1]+(a1[1]-a0[1])*e]}      // 新星从上一颗滑过去
+      cx.globalCompositeOperation='lighter'; cx.lineCap='round';
+      var kt=Math.min(10,m-1), st0=m-kt;
+      for(i=st0;i<m&&kt>0;i++){if(P[i].o||P[i-1].o) continue; var tf=(i-st0+1)/kt; cx.lineWidth=0.7+tf*1.1; cx.strokeStyle='rgba(176,168,255,'+(0.04+0.4*tf*tf).toFixed(3)+')'; cx.beginPath(); cx.moveTo(pts[i-1][0],pts[i-1][1]); cx.lineTo(pts[i][0],pts[i][1]); cx.stroke()}   // 彗尾
+      for(i=0;i<m;i++){
+        var t=(i+1)/m, px_=pts[i][0], py_=pts[i][1], last=i===m-1, al=(0.16+0.6*t)*(last?e:1);
+        if(P[i].o){cx.globalCompositeOperation='source-over'; cx.beginPath(); cx.arc(px_,py_,3.2,0,TAU); cx.lineWidth=1.2; cx.strokeStyle='rgba(255,214,10,'+(al+.1).toFixed(3)+')'; cx.stroke(); cx.globalCompositeOperation='lighter'; continue}
+        var r=1.5+1.3*t, sg_=cx.createRadialGradient(px_,py_,0,px_,py_,r*3.4); sg_.addColorStop(0,'rgba(215,225,255,'+al.toFixed(3)+')'); sg_.addColorStop(1,'rgba(150,170,255,0)');
+        cx.fillStyle=sg_; cx.beginPath(); cx.arc(px_,py_,r*3.4,0,TAU); cx.fill();
+        if(!last){cx.fillStyle='rgba(255,255,255,'+(al*0.9).toFixed(3)+')'; cx.beginPath(); cx.arc(px_,py_,r*0.62,0,TAU); cx.fill()}
+      }
+      cx.globalCompositeOperation='source-over';
+      var hd=pts[m-1], ho=P[m-1].o;                           // 最新一颗：亮核 + 扩散环
+      cx.lineWidth=1.2; cx.strokeStyle=(ho?'rgba(255,214,10,':'rgba(210,225,255,')+(rt*0.7).toFixed(3)+')'; cx.beginPath(); cx.arc(hd[0],hd[1],6+(1-rt)*10,0,TAU); cx.stroke();
+      cx.save(); cx.shadowColor=ho?'rgba(255,214,10,.9)':'rgba(143,176,255,.95)'; cx.shadowBlur=8+rt*12; cx.beginPath(); cx.arc(hd[0],hd[1],(ho?3.4:3.2)+rt*1.8,0,TAU); cx.fillStyle=ho?'#ffd60a':'#fff'; cx.globalAlpha=Math.max(.2,e); cx.fill(); cx.restore();
+      cx.restore();
+    }
+    // 两侧读数：抖动 / 漂移
+    var med2=nbC||1;
+    function gut(x,right,lab,val,unit,desc,col){
+      cx.font='11px '+scFam; cx.textAlign='left'; cx.fillStyle='rgba(255,255,255,.5)'; var wl=cx.measureText(lab).width;
+      cx.font='600 22px '+scFam; var wv=cx.measureText(val).width; cx.font='11px '+scFam; var wu=cx.measureText(unit).width, wd=cx.measureText(desc).width, wm=Math.max(wl,wv+3+wu,wd), sx0=right?x-wm:x;
+      cx.fillStyle='rgba(255,255,255,.5)'; cx.fillText(lab,sx0,c1-14);
+      cx.font='600 22px '+scFam; cx.fillStyle='#fff'; cx.fillText(val,sx0,c1+9);
+      cx.font='11px '+scFam; cx.fillStyle='rgba(255,255,255,.45)'; cx.fillText(unit,sx0+wv+3,c1+9);
+      cx.fillStyle=col; cx.fillText(desc,sx0,c1+28);
+    }
+    var vJ='--',vD='--',dJ='',dD='',cJ='rgba(143,176,255,.95)',cD=cJ;
+    if(okE){
+      var rj=nbB/med2; vJ='±'+(nbB<10?nbB.toFixed(1):Math.round(nbB)); vD='±'+(nbA<10?nbA.toFixed(1):Math.round(nbA));
+      dJ=rj<.012?'极稳':rj<.03?'很稳':rj<.06?'略晃':'不稳'; if(rj>=.06) cJ='#ffd60a';
+      dD=Math.abs(sl)<.03?'速度平稳':(sl<0?'渐渐变快':'渐渐变慢'); if(Math.abs(sl)>=.1) cD='#ffd60a';
+    }
+    gut(14,false,'抖动',vJ,'ms',dJ,cJ); gut(W-14,true,'漂移',vD,'ms',dD,cD);
+    if(m<3){cx.font='12px '+scFam; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='rgba(255,255,255,.4)'; cx.fillText('等待更多节拍',c0,c1); cx.textBaseline='alphabetic'}
+    cx.font='11px '+scFam; cx.fillStyle='rgba(255,255,255,.4)'; cx.textAlign='left'; cx.fillText('横 前一间隔 · 纵 后一间隔',14,H-8);
+    cx.textAlign='right'; cx.fillText('虚圈 ±5%',W-14,H-8);
+    cx.restore();
+  }
+
+  /* ---- 间隔曲线 ----
+     上：当前间隔读数（大字）+ 与均值的差 + 均值 / 抖动；中：折线 + 均值 ± 抖动色带，右侧是 ms 刻度（刻度在绘图区外，不压线）；
+     下：事件轨道 —— 漏拍 / 多拍的点从折线向下拉一条黄色竖条，落到轨道上变成「漏」「多」小标记，图里不写字。
+     动画：来一拍折线整体左滑一格、新点从右侧淡入；均值线 / 色带 / 纵轴平滑过渡。 */
+  function drawInterval(now){
+    var W=scW,H=scH,padL=14,padR=34,top=62,base=H-38,n=ints.length,i;
+    cx.save(); cx.font='11px '+scFam; cx.textBaseline='alphabetic';
+    if(n<2){cx.fillStyle='rgba(255,255,255,.4)'; cx.textAlign='center'; cx.fillText('等待更多节拍',W/2,H/2); cx.restore(); return}
+    var a=agg(), mean=a.mean, sd=a.sd, dev=mean*0.08;
+    for(i=0;i<n;i++){var dv=Math.abs(ints[i]-mean); if(dv<=mean*0.25&&dv>dev) dev=dv}      // 纵轴只按正常点缩放，漏拍 / 多拍的点贴边显示
+    var spread=dev*1.25;
+    var kk=(!ivT||now-ivT>400)?1:1-Math.exp(-chDt/130); ivT=now;
+    ivMean+=(mean-ivMean)*kk; ivLo+=((mean-spread)-ivLo)*kk; ivHi+=((mean+spread)-ivHi)*kk;
+    var lo=ivLo, hi=ivHi, SL=16, uw=W-padL-padR, sw=uw/(SL-1), right=W-padR;
+    function Y(v){return base-(v-lo)/(hi-lo)*(base-top)}
+    function X(j){return padL+((SL-n)+j)/(SL-1)*uw+ivSlide*sw}
+    // 读数行
+    var lastV=ints[n-1], dl=Math.round(lastV-mean), lastOut=Math.abs(lastV-mean)>mean*0.25;
+    cx.textAlign='left'; cx.font='600 22px '+scFam; cx.fillStyle='#fff'; var vt=String(Math.round(lastV)); cx.fillText(vt,padL,54); var w1=cx.measureText(vt).width;
+    cx.font='11px '+scFam; cx.fillStyle='rgba(255,255,255,.5)'; cx.fillText('ms',padL+w1+3,54); var w2=cx.measureText('ms').width;
+    cx.font='600 12px '+scFam; cx.fillStyle=lastOut?'#ffd60a':'rgba(143,176,255,.95)'; cx.fillText((dl>=0?'+':'')+dl,padL+w1+w2+12,54);
+    cx.font='11px '+scFam; cx.textAlign='right'; cx.fillStyle='rgba(255,255,255,.5)'; cx.fillText('抖动 ±'+Math.round(sd),W-14,54);
+    // 网格 + 右侧刻度
+    var step=niceStep((hi-lo)/3), v0, y0;
+    cx.lineWidth=1; cx.font='10px '+scFam; cx.textAlign='left';
+    for(v0=Math.ceil(lo/step)*step; v0<hi; v0+=step){y0=Math.round(Y(v0))+0.5; if(y0<top-2||y0>base-6||Math.abs(y0-Y(ivMean))<10) continue; cx.strokeStyle='rgba(255,255,255,.07)'; cx.beginPath(); cx.moveTo(padL,y0); cx.lineTo(right,y0); cx.stroke(); cx.fillStyle='rgba(255,255,255,.3)'; cx.fillText(String(Math.round(v0)),right+5,y0+3.5)}
+    var yb=Y(ivMean+sd), yh=Math.max(2,Y(ivMean-sd)-yb);
+    cx.fillStyle='rgba(143,176,255,.11)'; cx.fillRect(padL,yb,uw,yh);
+    cx.setLineDash([3,5]); cx.strokeStyle='rgba(255,255,255,.32)'; cx.beginPath(); cx.moveTo(padL,Math.round(Y(ivMean))+0.5); cx.lineTo(right,Math.round(Y(ivMean))+0.5); cx.stroke(); cx.setLineDash([]);
+    cx.font='600 10px '+scFam; cx.textAlign='left'; cx.fillStyle='rgba(143,176,255,.95)'; cx.fillText(String(Math.round(ivMean)),right+5,Math.round(Y(ivMean))+3.5);
+    cx.strokeStyle='rgba(255,255,255,.14)'; cx.beginPath(); cx.moveTo(padL,base+0.5); cx.lineTo(right,base+0.5); cx.stroke();
+    var pts=[]; for(i=0;i<n;i++) pts.push([X(i),Math.max(top+2,Math.min(base-2,Y(ints[i])))]);
+    function cl(v,a,b){return Math.max(Math.min(a,b),Math.min(Math.max(a,b),v))}
+    function path(){cx.beginPath(); cx.moveTo(pts[0][0],pts[0][1]); for(var j=0;j<n-1;j++){      // Catmull-Rom 平滑，控制点夹在相邻两点之间，不会画出不存在的峰
+      var p0=pts[Math.max(0,j-1)],p1=pts[j],p2=pts[j+1],p3=pts[Math.min(n-1,j+2)];
+      cx.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,cl(p1[1]+(p2[1]-p0[1])/6,p1[1],p2[1]),p2[0]-(p3[0]-p1[0])/6,cl(p2[1]-(p3[1]-p1[1])/6,p1[1],p2[1]),p2[0],p2[1])}}
+    var lg=cx.createLinearGradient(padL,0,right,0); lg.addColorStop(0,'rgba(190,210,255,.18)'); lg.addColorStop(1,'rgba(205,222,255,.95)');
+    path(); cx.lineTo(pts[n-1][0],base); cx.lineTo(pts[0][0],base); cx.closePath();
+    var ag=cx.createLinearGradient(0,top,0,base); ag.addColorStop(0,'rgba(143,176,255,.24)'); ag.addColorStop(1,'rgba(143,176,255,0)'); cx.fillStyle=ag; cx.fill();
+    path(); cx.lineWidth=2; cx.lineJoin='round'; cx.strokeStyle=lg; cx.stroke();
+    var miss=0, extra=0;
+    for(i=0;i<n;i++){                                         // 事件：竖条 + 轨道标记
+      var v=ints[i]; if(v>mean*1.6) miss++; else if(v<mean*0.6) extra++; else continue;
+      var ex=pts[i][0], ea=(i===n-1)?1-ivSlide:Math.max(0.3,i/(n-1)); if(ex<padL-2||ex>right+2) continue;
+      cx.globalAlpha=Math.max(0,Math.min(1,ea));
+      var gy=cx.createLinearGradient(0,pts[i][1],0,base+10); gy.addColorStop(0,'rgba(255,214,10,.34)'); gy.addColorStop(1,'rgba(255,214,10,.08)');
+      cx.fillStyle=gy; rr(cx,ex-1,pts[i][1],2,base+10-pts[i][1],1); cx.fill();
+      rr(cx,ex-7,base+4,14,14,5); cx.fillStyle='#ffd60a'; cx.fill();
+      cx.font='700 9.5px '+scFam; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='rgba(60,40,0,.9)'; cx.fillText(v>mean?'漏':'多',ex,base+11.5); cx.textBaseline='alphabetic'; cx.globalAlpha=1;
+    }
+    for(i=0;i<n;i++){
+      var out=Math.abs(ints[i]-mean)>mean*0.25, lastP=i===n-1, px_=pts[i][0], py_=pts[i][1];
+      if(px_<padL-4) continue; cx.globalAlpha=Math.max(0,Math.min(1,lastP?1-ivSlide:Math.max(0.3,i/(n-1)*0.7+0.3)));
+      if(lastP){cx.save(); cx.beginPath(); cx.rect(0,0,right+3,H); cx.clip(); cx.lineWidth=1.3; cx.strokeStyle=(out?'rgba(255,214,10,':'rgba(200,218,255,')+(pulse*0.7).toFixed(3)+')'; cx.beginPath(); cx.arc(px_,py_,6+(1-pulse)*9,0,TAU); cx.stroke(); cx.restore()}
+      cx.save(); if(lastP){cx.shadowColor=out?'rgba(255,214,10,.8)':'rgba(143,176,255,.85)'; cx.shadowBlur=10+pulse*10}
+      cx.beginPath(); cx.arc(px_,py_,lastP?4.5+pulse*2:3,0,TAU); cx.fillStyle=out?'#ffd60a':'#fff'; cx.fill(); cx.restore(); cx.globalAlpha=1;
+    }
+    cx.font='11px '+scFam; cx.textAlign='left'; cx.fillStyle=(miss+extra)?'#ffd60a':'rgba(255,255,255,.4)'; cx.fillText((miss+extra)?('漏拍 '+miss+'  多拍 '+extra):'无漏拍 / 多拍',padL,H-8);
+    cx.textAlign='right'; cx.fillStyle='rgba(143,176,255,.85)'; cx.fillText('最近 '+n+' 个间隔',W-14,H-8);
+    cx.restore();
+  }
+
+  /* ---- 重音：每个拍位的平均力度 ----
+     4 根柱子 = 4 个拍位，高度 = 最近 6 小节该拍位的平均力度（缓动过渡）；小圆点 = 前几次的落点（散开 = 力度不稳）；
+     白色横线 = 最新一拍，来拍时发光；虚线 = 强度 1.0。下面是拍号 + 平均值，当前该落的拍位更亮。 */
+  function drawAccent(now){
+    var W=scW,H=scH,tNow=paused?pausedAt:now,padL=14,padR=14,top=40,base=H-48,uw=W-padL-padR,colw=uw/4,bw=Math.min(46,colw*0.6),c,i,YM=2;
+    var keys=Object.keys(pads).map(Number).sort(function(x,y){return y-x}), per=[[],[],[],[]];
+    for(i=0;i<keys.length;i++){var ps=((keys[i]-1)%4+4)%4; if(per[ps].length<6) per[ps].push(pads[keys[i]])}
+    var kk=(!acT||now-acT>400)?1:1-Math.exp(-chDt/140); acT=now;
+    function Y(v){return base-Math.min(v,YM)/YM*(base-top)}
+    cx.save(); cx.textBaseline='alphabetic';
+    var any=keys.length>0;
+    if(any){cx.setLineDash([3,5]); cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.22)'; cx.beginPath(); cx.moveTo(padL,Math.round(Y(1))+0.5); cx.lineTo(W-padR,Math.round(Y(1))+0.5); cx.stroke(); cx.setLineDash([])}
+    cx.lineWidth=1; cx.strokeStyle='rgba(255,255,255,.14)'; cx.beginPath(); cx.moveTo(padL,base+0.5); cx.lineTo(W-padR,base+0.5); cx.stroke();
+    var nextCol=count%4;
+    for(c=0;c<4;c++){
+      var arr=per[c], avg=0; for(i=0;i<arr.length;i++) avg+=arr[i].s; avg=arr.length?avg/arr.length:0;
+      acAvg[c]+=(avg-acAvg[c])*kk;
+      var mx=padL+colw*c+colw/2, by=Y(acAvg[c]), bh=Math.max(3,base-by);
+      var ghost=!arr.length; if(ghost){bh=(base-top)*(c===0?.36:.2); by=base-bh}
+      if(c===nextCol&&any){rr(cx,mx-colw/2+3,top-8,colw-6,base-top+12,12); cx.fillStyle='rgba(255,255,255,.04)'; cx.fill()}      // 下一拍该落的拍位
+      var g=cx.createLinearGradient(0,by,0,base); g.addColorStop(0,c===0?'rgba(200,222,255,.92)':'rgba(170,150,255,.78)'); g.addColorStop(1,c===0?'rgba(128,170,255,.34)':'rgba(128,160,255,.28)');     // 第 1 拍（重拍）偏亮蓝
+      cx.globalAlpha=ghost?.2:1; rr(cx,mx-bw/2,base-bh,bw,bh,Math.min(9,bw/2)); cx.fillStyle=g; cx.fill(); cx.globalAlpha=1;
+      for(i=1;i<arr.length;i++){cx.beginPath(); cx.arc(mx,Y(arr[i].s),2.3,0,TAU); cx.fillStyle='rgba(255,255,255,'+(0.42-i*0.05).toFixed(2)+')'; cx.fill()}   // 往期落点
+      if(arr.length){
+        var lt=arr[0], age=tNow-lt.t, fresh=Math.max(0,1-age/500), ly=Y(lt.s);
+        cx.save(); cx.shadowColor='rgba(190,215,255,'+(0.4+0.5*fresh).toFixed(2)+')'; cx.shadowBlur=6+14*fresh;
+        rr(cx,mx-bw/2-5,ly-1.5-fresh,bw+10,3+fresh*2,2); cx.fillStyle=lt.st?'#fff':'rgba(225,235,255,.92)'; cx.fill(); cx.restore();
+      }
+      var num=String(c+1), val=arr.length?acAvg[c].toFixed(1):'--';
+      cx.font='700 13px '+scFam; var wn=cx.measureText(num).width; cx.font='11px '+scFam; var wv=cx.measureText(val).width, sx=mx-(wn+6+wv)/2;
+      cx.textAlign='left'; cx.font='700 13px '+scFam; cx.fillStyle='rgba(255,255,255,'+(c===nextCol?0.95:0.6)+')'; cx.fillText(num,sx,base+19);
+      cx.font='11px '+scFam; cx.fillStyle='rgba(255,255,255,'+(c===nextCol?0.65:0.4)+')'; cx.fillText(val,sx+wn+6,base+19);
+    }
+    if(!any){cx.fillStyle='rgba(255,255,255,.4)'; cx.font='12px '+scFam; cx.textAlign='center'; cx.fillText('等待节拍',W/2,top+2)}
+    if(any){cx.font='10px '+scFam; cx.textAlign='right'; cx.fillStyle='rgba(255,255,255,.3)'; cx.fillText('1.0',W-padR,Math.round(Y(1))-3)}
+    cx.font='11px '+scFam; cx.fillStyle='rgba(255,255,255,.4)'; cx.textAlign='left'; cx.fillText('柱 = 近 6 小节均值',padL,H-8);
+    cx.textAlign='right'; cx.fillText('白线 = 最新一拍',W-padR,H-8);
+    cx.restore();
+  }
+
+  var CHD=[drawBands,drawNebula,drawInterval,drawAccent];
+  function drawCharts(now,dt){
+    if(!scW||!scH) return;
+    chDt=dt; ivSlide*=Math.exp(-dt/150); nbSlide*=Math.exp(-dt/170); padSlide*=Math.exp(-dt/130);
+    if(!scFam) scFam=getComputedStyle(viz).fontFamily||'sans-serif';
+    if(!sg||sg.lock!=='h'){                                   // 松手后吸附到当前页
+      var dd=chIdx-chPos;
+      if(Math.abs(dd)>0.0008) chPos+=dd*(1-Math.exp(-dt/75)); else chPos=chIdx;
+    }
+    var tNow=paused?pausedAt:now, cut=tNow-11000; while(beats.length&&beats[0].t<cut) beats.shift();
+    cx.clearRect(0,0,scW,scH);
+    var a=Math.floor(chPos), f=chPos-a;
+    for(var i=a;i<=a+1;i++){
+      if(i<0||i>=CHD.length) continue; if(i===a+1&&f<0.002) break;
+      cx.save(); cx.beginPath(); cx.rect(0,0,scW,scH); cx.clip(); cx.translate((i-chPos)*scW,0); CHD[i](now); cx.restore();
+    }
   }
 
   /* ---------- 让 AI 灵动岛待在本窗口下面 ----------
@@ -1771,7 +2212,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     var now=performance.now(), dt=lastFrame?Math.min(64,now-lastFrame):16.7, k=dt/16.7; lastFrame=now;
     pulse*=Math.pow(0.92,k); dispS+=(tgtS-dispS)*(1-Math.pow(0.9,k)); tgtS*=Math.pow(0.95,k);
     if(isMin()) return;                 // 胶囊状态不画画布，省电
-    drawOrb(now); drawScope(now);
+    drawOrb(now); drawCharts(now,dt);
   }
   function start(){stop(); lastFrame=0; var tk=0; yieldIsland(); raf=requestAnimationFrame(frame); timer=setInterval(function(){if(++tk%10===0) yieldIsland(); if(!isMin()) refreshHero(); else{var e=engBpm(); if(e&&el.mini.textContent!==String(Math.round(e))) el.mini.textContent=String(Math.round(e))}},100)}
   function stop(){if(raf) cancelAnimationFrame(raf); raf=0; if(timer) clearInterval(timer); timer=0}
@@ -1785,6 +2226,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     w=w||viz.offsetWidth; h=h||viz.offsetHeight;
     var sf=safe(), vw=window.innerWidth, vh=window.innerHeight;
     var maxX=Math.max(8,vw-w-8), minY=sf.t+6, maxY=Math.max(minY,vh-h-sf.b-8);
+    viz.style.setProperty('--bv-maxh',Math.max(160,vh-sf.t-sf.b-20)+'px');
     px=Math.min(maxX,Math.max(8,nx)); py=Math.min(maxY,Math.max(minY,ny));
     viz.style.setProperty('--bv-x',px+'px'); viz.style.setProperty('--bv-y',py+'px');
   }
@@ -1797,7 +2239,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     viz.classList.toggle('min',m);
     el.minBtn.setAttribute('aria-label',m?'展开':'收起'); el.minBtn.title=m?'展开':'收起';
     if(persist) lsSet(K_MIN,m?'1':'0');
-    var w=m?MINW:Math.min(340,window.innerWidth-24), inner=viz.querySelector('.bv-in'), h=46+(m?0:inner.offsetHeight);
+    var w=m?MINW:Math.min(400,window.innerWidth-16), inner=viz.querySelector('.bv-in'), h=46+(m?0:inner.offsetHeight);
     viz.classList.add('settle'); place(px,py,w,h);
     clearTimeout(settleT); settleT=setTimeout(function(){viz.classList.remove('settle')},560);
     if(!m){renderStats(); fitSoon()}
@@ -1827,6 +2269,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   el.head.addEventListener('pointerup',endDrag);
   el.head.addEventListener('pointercancel',endDrag);
+  /* 硬限制：窗口尺寸一变（展开调参、日志、文字换行……）或屏幕变了，都立刻把位置夹回屏幕内，永远不会飞出去 */
+  function reclamp(){ if(drag||!shown()) return; viz.classList.add('settle'); place(px,py); clearTimeout(settleT); settleT=setTimeout(function(){viz.classList.remove('settle')},560); }
+  if(window.ResizeObserver){ try{ new ResizeObserver(reclamp).observe(viz); }catch(e){} }
+  window.addEventListener('resize',reclamp); window.addEventListener('orientationchange',function(){setTimeout(reclamp,300)});
 
   /* ---------- 按钮 ---------- */
   function setPaused(p){
@@ -1869,12 +2315,55 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   /* ---------- 调参（节拍检测参数，写入 Beat.tune） ---------- */
   (function(){
-    var T=window.Beat&&window.Beat.tune, btn=$('bvTuneBtn'), rs=$('bvTuneReset');
+    var T=window.Beat&&window.Beat.tune, btn=$('bvTuneBtn'), rs=$('bvTuneReset'), hint=$('bvHint');
     var ins=[].slice.call(viz.querySelectorAll('#bvTune input[data-bt]'));
+    var kns=[].slice.call(viz.querySelectorAll('#bvTune .bv-kn'));
     function fmt(k,v){if(k==='tempoBias')return ['偏慢','自动','偏快'][(+v)+1];if(k==='delay')return Math.round(+v)+'ms';return (+v).toFixed(2)}
-    function pull(){if(!T)return;var c=T.get();ins.forEach(function(el){var v=c[el.dataset.bt];el.value=v;el.nextElementSibling.textContent=fmt(el.dataset.bt,v)})}
-    if(btn)btn.addEventListener('click',function(){var on=!viz.classList.contains('tune');viz.classList.toggle('tune',on);btn.classList.toggle('on',on);if(on)pull();setTimeout(function(){try{fit()}catch(_){}},60)});
+    function paint(kn){                       // 旋钮外观：值弧 + 指针
+      var el=kn.querySelector('input'), mn=+el.min, mx=+el.max, f=(+el.value-mn)/(mx-mn); f=Math.max(0,Math.min(1,isFinite(f)?f:0));
+      kn.querySelector('.kn-ar').setAttribute('stroke-dasharray',(f*89.5).toFixed(2)+' 119.4');
+      kn.querySelector('.kn-pt').setAttribute('transform','rotate('+(-135+270*f).toFixed(1)+' 24 24)');
+    }
+    function pull(){if(!T)return;var c=T.get();ins.forEach(function(el){var v=c[el.dataset.bt];el.value=v;el.nextElementSibling.textContent=fmt(el.dataset.bt,v)});kns.forEach(paint)}
+    if(btn)btn.addEventListener('click',function(){var on=!viz.classList.contains('tune');viz.classList.toggle('tune',on);btn.classList.toggle('on',on);if(on)pull();setTimeout(function(){try{fit()}catch(_){}try{reclamp()}catch(_){}},60)});
     ins.forEach(function(el){el.addEventListener('input',function(){if(!T)return;T.set(el.dataset.bt,el.value);el.nextElementSibling.textContent=fmt(el.dataset.bt,el.value)})});
+    var row=viz.querySelector('#bvTune .bv-knobs'), fling=0;
+    function stopFling(){ if(fling){cancelAnimationFrame(fling); fling=0} }
+    kns.forEach(function(kn){                 // 旋钮手势：先竖着拖 = 转旋钮（之后左右晃动不会再滚动）；先横着拖 = 滚动这一排
+      var el=kn.querySelector('input'), d=null;
+      kn.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse'&&e.button!==0) return;
+        stopFling();
+        d={id:e.pointerId,x:e.clientX,y:e.clientY,v:+el.value,lock:null,lx:e.clientX,vx:0,lt:e.timeStamp,sl:row?row.scrollLeft:0};
+        try{kn.setPointerCapture(e.pointerId)}catch(_){}
+      });
+      kn.addEventListener('pointermove',function(e){
+        if(!d||e.pointerId!==d.id) return;
+        var dx=e.clientX-d.x, dy=d.y-e.clientY;
+        if(!d.lock){
+          if(Math.abs(dx)<6&&Math.abs(dy)<6) return;                       // 先观察一小段再决定
+          d.lock=(Math.abs(dy)>=Math.abs(dx)||!row)?'v':'h';
+          if(d.lock==='v'){ kn.classList.add('act'); if(hint) hint.textContent=kn.dataset.h||'' }
+        }
+        if(d.lock==='h'){                                                  // 滚动这一排
+          row.scrollLeft=d.sl-dx;
+          var dt=Math.max(1,e.timeStamp-d.lt); d.vx=d.vx*0.6+((d.lx-e.clientX)/dt)*0.4; d.lx=e.clientX; d.lt=e.timeStamp;
+          return;
+        }
+        var mn=+el.min, mx=+el.max, st=+el.step||0.01, raw=Math.max(mn,Math.min(mx,d.v+dy/140*(mx-mn)));   // 转旋钮：只看竖直位移
+        var v=+(Math.round((raw-mn)/st)*st+mn).toFixed(4);
+        if(v!==+el.value){el.value=v; el.dispatchEvent(new Event('input',{bubbles:true})); paint(kn)}
+      });
+      function up(e){
+        if(!d||e.pointerId!==d.id) return;
+        var s=d; d=null; kn.classList.remove('act'); try{kn.releasePointerCapture(e.pointerId)}catch(_){}
+        if(s.lock==='h'&&row&&e.type==='pointerup'&&Math.abs(s.vx)>0.08){   // 松手后带一点惯性，滚得顺
+          var v=s.vx*16, last=0;
+          (function f(t){ v*=0.94; row.scrollLeft+=v; if(Math.abs(v)>0.3) fling=requestAnimationFrame(f); else fling=0 })();
+        }
+      }
+      kn.addEventListener('pointerup',up); kn.addEventListener('pointercancel',up);
+    });
     if(rs)rs.addEventListener('click',function(){if(T){T.reset();pull()}});
     if(!T&&btn)btn.style.display='none';
   })();
@@ -3288,6 +3777,150 @@ body.light-bg #footerText{color:rgba(20,20,20,.6)}
   }
   ['timeupdate','loadedmetadata','durationchange','seeked','playing'].forEach(function(ev){ au.addEventListener(ev,upd); });
   upd();
+})();
+</script>
+
+
+<script id="chkEnforceJS">
+/* 开关行兜底：文字在左、开关在右。用行内 !important 写死位置，防止别的规则（或手机上的差异）把开关挤回左边或和文字重叠 */
+(function(){
+  function P(el,p,v){el.style.setProperty(p,v,'important')}
+  function fix(l){
+    if(!l||l.nodeType!==1||l.closest('.tpe-line')) return;
+    if(/none/.test(l.getAttribute('style')||'')||l.classList.contains('hide')||l.hidden) return;
+    var i=null,t=null,w=null;
+    for(var c=l.firstElementChild;c;c=c.nextElementSibling){
+      if(c.tagName==='INPUT'&&c.type==='checkbox'){ if(!i){ i=c; w=c; } }
+      else if(!w&&c.querySelector&&c.querySelector('input[type=checkbox]')){ w=c; i=c.querySelector('input[type=checkbox]'); }
+      else if(!t) t=c;
+    }
+    if(!i) return;
+    if(l.closest('#hub')){ /* 控制窗口：开关（或其外壳）绝对定位贴右，标签右侧留位 */
+      P(l,'position','relative'); P(l,'width','100%'); P(l,'box-sizing','border-box'); P(l,'min-height','40px'); P(l,'padding','0 64px 0 0');
+      P(w,'position','absolute'); P(w,'right','0'); P(w,'left','auto'); P(w,'top','50%'); P(w,'margin','-15px 0 0 0'); P(w,'grid-column','auto'); P(w,'grid-row','auto'); P(w,'float','none'); P(w,'transform','none');
+      if(w!==i){ P(i,'position','relative'); P(i,'left','auto'); P(i,'right','auto'); P(i,'top','auto'); P(i,'margin','0'); P(i,'float','none'); }
+      if(t){ P(t,'display','inline-block'); P(t,'position','static'); P(t,'text-align','left'); P(t,'max-width','100%'); P(t,'min-width','0'); P(t,'overflow-wrap','anywhere'); P(t,'line-height','1.35'); P(t,'vertical-align','middle'); }
+      return;
+    }
+    var d=getComputedStyle(l).display;
+    if(d!=='grid'&&d!=='flex'&&d!=='inline-grid'&&d!=='inline-flex'&&d!=='none') P(l,'display','grid');
+    P(l,'grid-template-columns','minmax(0,1fr) auto'); P(l,'align-items','center'); P(l,'column-gap','14px'); P(l,'flex-direction','row'); P(l,'direction','ltr');
+    P(i,'grid-column','2'); P(i,'grid-row','1'); P(i,'justify-self','end'); P(i,'order','2'); P(i,'flex','none');
+    P(i,'position','relative'); P(i,'left','auto'); P(i,'right','auto'); P(i,'margin','0'); P(i,'float','none');
+    if(t){ P(t,'grid-column','1'); P(t,'grid-row','1'); P(t,'order','1'); P(t,'flex','1 1 auto'); P(t,'min-width','0'); P(t,'text-align','left'); P(t,'position','static'); P(t,'overflow-wrap','anywhere'); }
+  }
+  function all(){ var a=document.querySelectorAll('label.chk'); for(var k=0;k<a.length;k++) fix(a[k]); }
+  var tm=0; function soon(){ clearTimeout(tm); tm=setTimeout(all,120); }
+  all();
+  document.addEventListener('DOMContentLoaded',all); window.addEventListener('load',function(){all();setTimeout(all,600);setTimeout(all,2000)});
+  try{ new MutationObserver(soon).observe(document.body,{attributes:true,attributeFilter:['class']}); }catch(e){}
+  try{ var h=document.getElementById('hub'); if(h) new MutationObserver(soon).observe(h,{childList:true,subtree:true}); }catch(e){}
+})();
+</script>
+
+<script id="hubSizeJS">
+/* 控制窗口大小：点窗口左上角圆角 → 出现白色 R 角浮条（离圆角留 10px）；按住浮条拖动，窗口左上角跟着手指放大，右下角不动，松手后停留。
+   左边、上边留安全距离；浮条双击还原；几秒不动自动淡出。只改宽高，字号和控件尺寸不变。 */
+(function(){
+  var hub=document.getElementById('hub'), grip=document.getElementById('hubGrip'), hot=document.getElementById('hubGripHot');
+  if(!hub||!grip||!hot) return;
+  var LEFT=12, TOPX=110, MINH=220, hideT=0, drag=null, lastTap=0;
+  var probe=document.createElement('div');
+  probe.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px)';
+  document.body.appendChild(probe);
+  function safeTop(){return parseFloat(getComputedStyle(probe).paddingTop)||0}
+  function minW(){return Math.min(window.innerWidth*0.7,300)}
+  /* 最小高度 = 内边距 + 除内容区外所有在文档流里的部件 + 内容区自己的最小高度。
+     之前写死 220，窗口里的 标签栏 / 控制键 / 进度条 加起来放不下，进度条会掉到窗口外面 */
+  function minH(){
+    var cs=getComputedStyle(hub), gap=parseFloat(cs.rowGap)||0, s=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0), n=0;
+    for(var c=hub.firstElementChild;c;c=c.nextElementSibling){
+      var st=getComputedStyle(c);
+      if(st.display==='none'||st.position==='absolute'||st.position==='fixed'||!c.offsetHeight&&!c.classList.contains('dock')) continue;
+      if(c.classList.contains('dock')) s+=parseFloat(st.minHeight)||90;
+      else s+=c.offsetHeight+(parseFloat(st.marginTop)||0)+(parseFloat(st.marginBottom)||0);
+      n++;
+    }
+    return Math.max(MINH,Math.ceil(s+gap*Math.max(0,n-1)));
+  }
+  /* 挤压：目标值由「越界量」算出，实际显示值每帧用指数平滑追过去（不是直接跳到目标），
+     所以压下去、放开、换方向都是连续柔和的；松手后同样平滑放回 1，没有过冲。 */
+  var sq={cx:1,cy:1,tx:1,ty:1,raf:0,last:0};
+  function rub(x){return 1-Math.exp(-x/110)}   // 越界越多越难压：渐近曲线，开头很轻
+  function sqLoop(t){
+    sq.raf=0;
+    var dt=Math.min(48,sq.last?t-sq.last:16); sq.last=t;
+    var k=1-Math.exp(-dt/(drag?85:130));       // 拖动时跟手一点，松手时放得更慢更柔
+    sq.cx+=(sq.tx-sq.cx)*k; sq.cy+=(sq.ty-sq.cy)*k;
+    if(!drag&&Math.abs(sq.tx-sq.cx)<0.0006&&Math.abs(sq.ty-sq.cy)<0.0006){
+      sq.cx=sq.cy=sq.tx=sq.ty=1; sq.last=0; hub.style.removeProperty('scale'); return;
+    }
+    hub.style.setProperty('scale',sq.cx.toFixed(4)+' '+sq.cy.toFixed(4));
+    sq.raf=requestAnimationFrame(sqLoop);
+  }
+  function sqKick(){ if(!sq.raf){ sq.last=0; sq.raf=requestAnimationFrame(sqLoop) } }
+  function squash(ow,oh){
+    var a=rub(ow), b=rub(oh);
+    sq.tx=1-0.05*a+0.02*b; sq.ty=1-0.07*b+0.02*a;   // 幅度比之前更小
+    sqKick();
+  }
+  function springBack(){ sq.tx=1; sq.ty=1; sqKick() }   // 松手：目标回到 1，由平滑循环放掉
+  function show(){grip.classList.add('on'); arm()}
+  function hide(){grip.classList.remove('on','drag')}
+  function arm(){clearTimeout(hideT); hideT=setTimeout(hide,3500)}
+  function apply(w,h){hub.classList.add('sized'); hub.style.setProperty('--hw',Math.round(w)+'px'); hub.style.setProperty('--hh',Math.round(h)+'px')}
+  function reset(quiet){hub.classList.remove('sized'); hub.style.removeProperty('--hw'); hub.style.removeProperty('--hh'); if(!quiet) refresh()}
+  function refresh(){try{window.dispatchEvent(new Event('resize'))}catch(e){}}
+  var rfT=0; function refreshLater(ms){clearTimeout(rfT); rfT=setTimeout(function(){ if(!drag&&!hub.classList.contains('hub-busy')) refresh() },ms||160)}   // 动画/拖动结束后再统一刷新一次
+  function busy(on){hub.classList.toggle('hub-busy',!!on)}   // 拖动期间关掉内部所有过渡，内容才能跟手
+  function resetAnimated(){   // 回到默认大小：不做回弹，直接还原
+    reset(true); busy(false); refreshLater(120);
+  }
+  hot.addEventListener('click',function(e){e.stopPropagation(); grip.classList.contains('on')?hide():show()});
+  grip.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    var now=Date.now(); if(now-lastTap<320){lastTap=0; resetAnimated(); arm(); return} lastTap=now;
+    var r=hub.getBoundingClientRect();
+    drag={id:e.pointerId,right:r.right,bottom:r.bottom,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,h:r.height,mh:minH(),top:safeTop()+TOPX,ex:0,ey:0,raf:0};
+    sq.tx=sq.ty=1; busy(true);
+    clearTimeout(hideT); grip.classList.add('drag');
+    try{grip.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  });
+  function step(){
+    if(!drag) return; drag.raf=0;
+    var fx=drag.ex-drag.ox, fy=drag.ey-drag.oy;                     // 手指想把左上角带到的位置
+    var cx=Math.max(LEFT,fx), cy=Math.max(drag.top,fy);             // 左、上都不能越过安全线
+    var rw=drag.right-cx, rh=drag.bottom-cy;
+    var w=Math.max(minW(),rw), h=Math.max(drag.mh,rh);
+    drag.w=w; drag.h=h; apply(w,h);
+    /* 每个限位都算「越界量」：最小宽 / 最小高 / 左安全线 / 上安全线，手指顶到哪条边就往哪个方向挤压 */
+    var ow=Math.max(0,minW()-(drag.right-fx))+Math.max(0,LEFT-fx);
+    var oh=Math.max(0,drag.mh-(drag.bottom-fy))+Math.max(0,drag.top-fy);
+    squash(ow,oh);
+  }
+  grip.addEventListener('pointermove',function(e){
+    if(!drag||e.pointerId!==drag.id) return;
+    drag.ex=e.clientX; drag.ey=e.clientY;
+    if(!drag.raf) drag.raf=requestAnimationFrame(step);   // 一帧只算一次布局
+  });
+  function end(e){
+    if(!drag||e.pointerId!==drag.id) return;
+    if(drag.raf){cancelAnimationFrame(drag.raf); step()}
+    var d=drag; drag=null; grip.classList.remove('drag');
+    try{grip.releasePointerCapture(e.pointerId)}catch(_){}
+    springBack();
+    if(d.w<=minW()+6&&d.h<=d.mh+6) resetAnimated(); else { busy(false); refreshLater(120) }   // 拖到最小：弹回默认大小
+    arm();
+  }
+  grip.addEventListener('pointerup',end); grip.addEventListener('pointercancel',end);
+  function clampNow(){   // 转屏 / 缩放后，已放大的窗口也不能超出安全线
+    if(!hub.classList.contains('sized')) return;
+    var r=hub.getBoundingClientRect(), maxW=window.innerWidth-LEFT-12, maxH=r.bottom-(safeTop()+TOPX);
+    apply(Math.min(r.width,maxW),Math.min(r.height,Math.max(minH(),maxH)));
+  }
+  window.addEventListener('resize',clampNow); window.addEventListener('orientationchange',function(){setTimeout(clampNow,300)});
+  new MutationObserver(function(){ if(!document.body.classList.contains('open')) hide() }).observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 </body>
