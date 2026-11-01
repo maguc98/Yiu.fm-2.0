@@ -814,7 +814,7 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
   assert.ok(bridge.includes('8_388_608'));
   assert.ok(bridge.includes('name.contains("\\\\")'), 'bridge must reject backslash path traversal');
   assert.ok(bridge.includes('options: [.skipsHiddenFiles]'), 'file listing must skip hidden files');
-  assert.match(bridge, /let length = max\\(1, min\\(requestedLength, 8_388_608\\)\\)/, 'chunk reads must clamp requested length to 8 MiB');
+  assert.ok(bridge.includes('let length = max(1, min(requestedLength, 8_388_608))'), 'chunk reads must clamp requested length to 8 MiB');
   assert.ok(bridge.includes('if offset < size'), 'chunk reads must not seek beyond EOF');
   assert.ok(bridge.includes('handle.read(upToCount: length)'), 'chunk reads must remain bounded');
   assert.ok(bridge.includes('queue.async') && bridge.includes('DispatchQueue.main.async'), 'file I/O must stay off the WebKit callback thread and reply on main');
