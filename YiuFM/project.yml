@@ -9,8 +9,6 @@ targets:
     platform: iOS
     sources:
       - path: Sources
-    resources:
-      - path: Resources/Web
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.yiufm.placeholder
@@ -18,7 +16,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Yiu.fm
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         MARKETING_VERSION: "2.0"
-        CURRENT_PROJECT_VERSION: "2"
+        CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: YES
