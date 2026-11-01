@@ -24,6 +24,19 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Restore legacy visual resources
+        run: |
+          mkdir -p YiuFM/Resources/Web
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+          git archive origin/main index.html style.css APP | tar -x -C YiuFM/Resources/Web
+          test -s YiuFM/Resources/Web/index.html
+          test -s YiuFM/Resources/Web/style.css
+          test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          test -s YiuFM/Resources/Web/APP/tempera/tempera-pixi.js
+          test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
+          test -s YiuFM/Resources/Web/APP/partita-vendor.js
+          du -sh YiuFM/Resources/Web
+
       - name: Generate project
         run: xcodegen generate --spec YiuFM/project.yml
 
@@ -37,6 +50,20 @@ jobs:
             -derivedDataPath YiuFM/build \
             CODE_SIGNING_ALLOWED=NO \
             build
+
+      - name: Verify bundled visual engines
+        run: |
+          APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP_PATH"
+          INDEX_PATH="$(find "$APP_PATH" -name index.html -print -quit)"
+          test -n "$INDEX_PATH"
+          WEB_ROOT="$(dirname "$INDEX_PATH")"
+          test -s "$WEB_ROOT/APP/sonnet/sonnet.js"
+          test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
+          test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
+          test -s "$WEB_ROOT/APP/partita-vendor.js"
+          echo "Verified legacy UI and all four engine payloads in $WEB_ROOT"
+          du -sh "$WEB_ROOT"
 
       - name: Package IPA
         run: |
