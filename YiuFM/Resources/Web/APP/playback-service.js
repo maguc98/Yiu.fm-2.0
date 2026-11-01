@@ -51,6 +51,7 @@
     version: 1,
     getSnapshot: snapshot,
     subscribe: subscribe,
+    notify: function (type) { emit(type || 'statechange'); },
     play: function () { if (typeof w.setPlay === 'function') w.setPlay(true); },
     pause: function () { if (typeof w.setPlay === 'function') w.setPlay(false); },
     toggle: function () { if (typeof w.setPlay === 'function') w.setPlay(!w.playing); },
