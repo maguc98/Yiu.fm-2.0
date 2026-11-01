@@ -240,3 +240,22 @@ The native directory scanner is the safest first consumer because it has one nar
 The high-frequency mini-player path (50 ms normal refresh / 100 ms performance mode) and the playback end-of-track path remain on the legacy API for now. They will not be migrated until their performance and playback regression tests are ready.
 
 Run #26 (`41301173305`) completed successfully. The exact-source patch guard, migrated iOS scanner syntax check, 3 facade contract tests, XcodeGen generation, iOS Release build, four-engine package verification, and IPA upload all passed. The unsigned IPA artifact is 2,523,532 bytes (artifact ID `13081241729`).
+
+
+### Phase 1G — Event-driven mini-player refresh
+
+The 50 ms normal / 100 ms performance-mode `npRefresh()` interval has been removed from the playback card. The build now applies a guarded patch to the pinned Run #13 mini-player copy:
+
+- Playback and lyric changes are received through `YiuPlayback.subscribe()`.
+- Song-library changes are received through `YiuLibrary.subscribe()`.
+- A scoped MutationObserver reacts to actual changes in the mini-player's existing DOM, including the renderer-owned `.mi-s` status text.
+- All signals are coalesced into one animation-frame refresh.
+- Closing the card cancels a pending frame; the existing drag path and final refresh remain intact.
+- The separate 200 ms mini-bar title/cover `tick()` is deliberately unchanged.
+
+Implementation: `YiuFM/Scripts/patch-mini-player-refresh.py`.
+Contract and limitations: `docs/architecture/MINI_PLAYER_REFRESH_V1.md`.
+
+Run #30 (`41301825919`) completed successfully: 4/4 tests passed, patched mini-player syntax check passed, XcodeGen and iOS Release build passed, all four visual-engine payloads were verified, and the unsigned IPA artifact uploaded (2,523,837 bytes; artifact ID `13081702394`).
+
+This is source/build verification, not yet an on-device runtime performance measurement. The next step is a focused regression audit of the mini-player's open/close, play/pause, lyric switching, song switching, performance-mode toggle, cover updates, and drag gestures before considering changes to the separate 200 ms ticker.
