@@ -395,17 +395,17 @@ test('player end-of-track and next-track consumers prefer YiuLibrary with legacy
   fs.writeFileSync(path.join(app, 'player.js'), [
     '  var SL = window.SongLibrary;',
     '  if(window.SongLibrary && SongLibrary.step && SongLibrary.step(1)) return;'
-  ].join('\\n'));
+  ].join('\n'));
 
   const patch = path.join(__dirname, '..', 'Scripts', 'patch-player-library-consumer.py');
   const result = spawnSync('python3', [patch], { cwd: temp, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 
   const source = fs.readFileSync(path.join(app, 'player.js'), 'utf8');
-  assert.match(source, /var SL = window\\.YiuLibrary \\|\\| window\\.SongLibrary;/);
-  assert.match(source, /var library = window\\.YiuLibrary \\|\\| window\\.SongLibrary;/);
-  assert.doesNotMatch(source, /var SL = window\\.SongLibrary;/);
-  assert.doesNotMatch(source, /window\\.SongLibrary && SongLibrary\\.step/);
+  assert.ok(source.includes('var SL = window.YiuLibrary || window.SongLibrary;'));
+  assert.ok(source.includes('var library = window.YiuLibrary || window.SongLibrary;'));
+  assert.ok(!source.includes('var SL = window.SongLibrary;'));
+  assert.ok(!source.includes('window.SongLibrary && SongLibrary.step'));
 
   const calls = [];
   const context = {
@@ -422,10 +422,13 @@ test('player end-of-track and next-track consumers prefer YiuLibrary with legacy
       }
     }
   };
-  vm.runInNewContext(source + '\\n' +
+  vm.runInNewContext(
+    '(function(window){' +
     'var SL = window.YiuLibrary || window.SongLibrary; SL.isMusic(); SL.autoNext();' +
-    'var library = window.YiuLibrary || window.SongLibrary; library.step(1);',
-    context);
+    'var library = window.YiuLibrary || window.SongLibrary; library.step(1);' +
+    '})(window);',
+    context
+  );
   assert.deepEqual(calls, ['facade:autoNext', 'facade:step:1']);
   fs.rmSync(temp, { recursive: true, force: true });
 });
