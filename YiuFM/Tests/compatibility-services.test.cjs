@@ -867,18 +867,18 @@ test('visualizer clock dispatch skips inactive adapters but preserves legacy fal
     "        if (ad && typeof ad.drive === 'function') ad.drive(ct);",
     '      }',
     '    },'
-  ].join('\\n'));
+  ].join('\n'));
 
   const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-visualizer-drive-isolation.py');
   const patched = spawnSync('python3', [patchPath], { cwd: temp, encoding: 'utf8' });
   assert.equal(patched.status, 0, patched.stderr || patched.stdout);
 
   const manager = fs.readFileSync(path.join(app, 'visualizer-manager.js'), 'utf8');
-  assert.match(manager, /typeof ad\\.isActive === 'function' && !ad\\.isActive\\(\\)/,
+  assert.match(manager, /typeof ad\.isActive === 'function' && !ad\.isActive\(\)/,
     'inactive visualizers must not receive per-frame clock callbacks');
-  assert.match(manager, /typeof ad\\.isActive === 'function' && !ad\\.isActive\\(\\)\\) continue;[\\s\\S]*?ad\\.drive\\(ct\\)/,
+  assert.match(manager, /typeof ad\.isActive === 'function' && !ad\.isActive\(\)\) continue;[\s\S]*?ad\.drive\(ct\)/,
     'active adapters must still receive the audio clock');
-  assert.match(manager, /typeof ad\\.isActive === 'function'/,
+  assert.match(manager, /typeof ad\.isActive === 'function'/,
     'adapters without isActive retain the compatibility fallback');
   fs.rmSync(temp, { recursive: true, force: true });
 });
