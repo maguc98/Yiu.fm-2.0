@@ -251,15 +251,23 @@ The 50 ms normal / 100 ms performance-mode `npRefresh()` interval has been remov
 - A scoped MutationObserver reacts to actual changes in the mini-player's existing DOM, including the renderer-owned `.mi-s` status text.
 - All signals are coalesced into one animation-frame refresh.
 - Closing the card cancels a pending frame; the existing drag path and final refresh remain intact.
-- The separate 200 ms mini-bar title/cover `tick()` is deliberately unchanged.
+- The separate 200 ms mini-bar title/cover `tick()` was deliberately unchanged in the initial Run #30 milestone. It was subsequently removed from the build copy in Phase 1I and replaced by lyric-index, lyric-content, and library-state subscriptions; cover changes are included in the mini-bar deduplication key.
 
 Implementation: `YiuFM/Scripts/patch-mini-player-refresh.py`.
 Contract and limitations: `docs/architecture/MINI_PLAYER_REFRESH_V1.md`.
 
 Run #30 (`41301825919`) completed successfully: 4/4 tests passed, patched mini-player syntax check passed, XcodeGen and iOS Release build passed, all four visual-engine payloads were verified, and the unsigned IPA artifact uploaded (2,523,837 bytes; artifact ID `13081702394`).
 
-This is source/build verification, not yet an on-device runtime performance measurement. The next step is a focused regression audit of the mini-player's open/close, play/pause, lyric switching, song switching, performance-mode toggle, cover updates, and drag gestures before considering changes to the separate 200 ms ticker.
+This is source/build verification, not yet an on-device runtime performance measurement. The later Phase 1I change removes the separate 200 ms mini-bar ticker as well; the build-copy event bridge now refreshes on lyric-index, lyric-content, and library-state changes. A focused on-device regression pass is still required for open/close, play/pause, lyric switching, song switching, performance-mode toggle, cover updates, and drag gestures.
 
+
+### Phase 1I — Event-driven mini-bar title and cover refresh
+
+The initial Phase 1G implementation removed the 50 ms / 100 ms playback-card polling but temporarily retained the separate 200 ms mini-bar ticker. A subsequent guarded build-copy patch, `YiuFM/Scripts/patch-mini-bar-events.py`, removes that remaining ticker and subscribes the mini-bar to explicit playback/lyrics and library events.
+
+The event bridge covers audio-clock and no-audio lyric-index progression, LRC application and lyric-array edits, and current song/title/cover/mode synchronization. The deduplication key includes title, lyric text, and active cover data so a cover-only update is not suppressed. The pinned Run #13 source remains unchanged; all transformations occur after the workflow restores the baseline.
+
+Regression coverage verifies event publication and now exercises the patched mini-bar refresh function against lyric-only, title, cover-only, and custom-cover changes, including duplicate-event suppression. This remains build-time behavior verification; real-device visual and interaction regression is still required.
 
 ### Phase 1H — Playback library consumer migration
 
