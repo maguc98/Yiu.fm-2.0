@@ -256,6 +256,7 @@ test('mini-player bridge coalesces playback, library, and DOM signals into one f
   const context = vm.createContext({
     window,
     mini,
+    MutationObserver,
     npCard: { classList: { contains(name) { return name === 'show' && visible; } } },
     isNpDragging: false,
     npRefresh() { refreshCount += 1; },
