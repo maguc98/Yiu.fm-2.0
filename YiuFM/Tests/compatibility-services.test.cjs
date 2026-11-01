@@ -432,3 +432,52 @@ test('player end-of-track and next-track consumers prefer YiuLibrary with legacy
   assert.deepEqual(calls, ['facade:autoNext', 'facade:step:1']);
   fs.rmSync(temp, { recursive: true, force: true });
 });
+
+
+test('legacy persistence keys and database schemas remain pinned', () => {
+  const root = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const read = name => fs.readFileSync(path.join(root, name), 'utf8');
+  const storage = read('storage.js');
+  const library = read('song-library.js');
+  const themes = read('theme-editor.js');
+  const themePicker = read('theme-picker.js');
+  const core = read('core.js');
+  const mode = read('mode-pref.js');
+  const mini = read('mini-player.js');
+  const sonnet = read('sonnet-adapter.js');
+  const tempera = read('tempera-adapter.js');
+  const lumiere = read('lumiere-adapter.js');
+  const partita = read('partita-adapter.js');
+  const beat = read('beat.js');
+
+  assert.ok(storage.includes('SK="td_autosave"'));
+  assert.ok(storage.includes('o={app:"text-display",v:1}'));
+  assert.ok(storage.includes('localStorage.setItem(SK,str)'));
+  assert.ok(storage.includes('function loadData()'));
+
+  assert.ok(library.includes("DB_NAME = 'yiufm-songs'"));
+  assert.ok(library.includes('indexedDB.open(DB_NAME, 1)'));
+  assert.ok(library.includes("createObjectStore('songs', {keyPath: 'id', autoIncrement: true})"));
+  assert.ok(library.includes("createObjectStore('files', {keyPath: 'id'})"));
+  for (const key of ['song_cur', 'song_order', 'ios_music_skip', 'lyoff_hidden']) {
+    assert.ok(library.includes(key), 'missing song-library persistence key: ' + key);
+  }
+
+  assert.ok(themePicker.includes('localStorage.setItem("themesV1"'));
+  assert.ok(themes.includes('CFG_KEY = "themeCfgV1"'));
+  assert.ok(themes.includes('IMGDB = "themeImgsV1", IMGST = "img"'));
+  assert.ok(themes.includes('function saveLegacy()'));
+  assert.ok(themes.includes('function hydrate()'));
+
+  assert.ok(core.includes('localStorage.getItem("themesV1"'));
+  assert.ok(core.includes("localStorage.getItem('performanceMode')"));
+  assert.ok(mode.includes("'ui_mode_pref'") && mode.includes("'ui_mode_last'"));
+  assert.ok(mini.includes('PM_KEY = "playModeV1"'));
+
+  assert.ok(sonnet.includes("'sonnetCfg.v1'"));
+  assert.ok(sonnet.includes("'folia.sonnet.dynamic'"));
+  assert.ok(tempera.includes("'temperaCfg.v1'"));
+  assert.ok(lumiere.includes("'folia.lumiere.cfg'"));
+  assert.ok(partita.includes("'partitaCfgV3'"));
+  assert.ok(beat.includes("'yiu.beatTune.v1'"));
+});
