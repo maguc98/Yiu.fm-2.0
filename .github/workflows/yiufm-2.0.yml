@@ -6,6 +6,7 @@ on:
     branches:
       - development-2.0
       - refactor/yiu-2.0-layered-architecture
+      - refactor/yiu-2.0-event-driven-regression-tests
     paths:
       - "YiuFM/**"
       - ".github/workflows/yiufm-2.0.yml"
