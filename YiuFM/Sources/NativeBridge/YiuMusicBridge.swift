@@ -77,8 +77,7 @@ final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
             throw BridgeError(message: "bad name")
         }
         let url = musicDirectory.appendingPathComponent(name).standardizedFileURL
-        guard url.deletingLastPathComponent() == musicDirectory.standardizedFileURL.deletingLastPathComponent()
-            || url.deletingLastPathComponent() == musicDirectory.standardizedFileURL else {
+        guard url.deletingLastPathComponent() == musicDirectory.standardizedFileURL else {
             throw BridgeError(message: "bad name")
         }
 
