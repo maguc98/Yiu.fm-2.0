@@ -50,6 +50,7 @@ jobs:
           page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
           PY
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
+          node --check YiuFM/Resources/Web/APP/playback-service.js
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
