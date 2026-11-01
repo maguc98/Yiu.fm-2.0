@@ -227,7 +227,7 @@ test('mini-player refresh is event-driven rather than interval-polled', () => {
 test('mini-player bridge coalesces playback, library, and DOM signals into one frame', () => {
   const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-mini-player-refresh.py');
   const patch = fs.readFileSync(patchPath, 'utf8');
-  const match = patch.match(/bridge = r'''([\s\S]*?)''';/);
+  const match = patch.match(/bridge = r'''([\s\S]*?)'''/);
   assert.ok(match, 'event-driven bridge must exist in the build patch');
 
   const playbackListeners = [];
