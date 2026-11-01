@@ -39,6 +39,6 @@ struct LegacyVisualStage: UIViewRepresentable {
 
     static func dismantleUIView(_ uiView: WKWebView, coordinator: ()) {
         uiView.stopLoading()
-        uiView.configuration.userContentController.removeAllScriptMessageHandlers()
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "yiuMusic", contentWorld: .page)
     }
 }
