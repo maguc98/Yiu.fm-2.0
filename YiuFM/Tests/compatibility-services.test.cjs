@@ -817,6 +817,11 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
   assert.ok(bridge.includes('let length = max(1, min(requestedLength, 8_388_608))'), 'chunk reads must clamp requested length to 8 MiB');
   assert.ok(bridge.includes('if offset < size'), 'chunk reads must not seek beyond EOF');
   assert.ok(bridge.includes('handle.read(upToCount: length)'), 'chunk reads must remain bounded');
+  assert.ok(bridge.includes('.isSymbolicLinkKey') && bridge.includes('values.isSymbolicLink != true'), 'music bridge must reject symbolic-link files');
+  assert.ok(bridge.includes('values.isRegularFile == true'), 'music bridge must only read regular files');
+  assert.ok(bridge.includes('maxTextReadBytes = 8_388_608'), 'text reads must have an 8 MiB memory bound');
+  assert.ok(bridge.includes('values.fileSize ?? 0) <= maxTextReadBytes'), 'oversized text files must be rejected before reading');
+  assert.ok(bridge.includes('Data(contentsOf: url, options: [.mappedIfSafe])'), 'text reads should use safe mapped I/O');
   assert.ok(bridge.includes('queue.async') && bridge.includes('DispatchQueue.main.async'), 'file I/O must stay off the WebKit callback thread and reply on main');
   assert.ok(iosMusic.includes('window.YiuLibrary || window.SongLibrary'));
 
