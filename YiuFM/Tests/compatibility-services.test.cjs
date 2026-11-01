@@ -314,9 +314,9 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
   ].join('\n'));
   fs.writeFileSync(path.join(app, 'renderer.js'), '  if(chg)LN=arr;');
   fs.writeFileSync(path.join(app, 'song-library.js'),
-    "window.__musicCover = on ? curCover : '';\\n    syncNextLabel();");
+    "window.__musicCover = on ? curCover : '';\n    syncNextLabel();");
   fs.writeFileSync(path.join(app, 'mini-player.js'),
-    'var key=mt+"\\\\u0001"+s;\\n  tick();setInterval(tick,200);');
+    'var key=mt+"\\u0001"+s;\n  tick();setInterval(tick,200);');
 
   const patch = path.join(__dirname, '..', 'Scripts', 'patch-mini-bar-events.py');
   const result = spawnSync('python3', [patch], { cwd: temp, encoding: 'utf8' });
@@ -325,10 +325,10 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
   const renderer = fs.readFileSync(path.join(app, 'renderer.js'), 'utf8');
   const player = fs.readFileSync(path.join(app, 'player.js'), 'utf8');
   const mini = fs.readFileSync(path.join(app, 'mini-player.js'), 'utf8');
-  assert.match(renderer, /YiuPlayback\\.notify\\('lyricschange'\\)/);
-  assert.equal((player.match(/notify\\('lyricindexchange'\\)/g) || []).length, 2);
+  assert.match(renderer, /YiuPlayback\.notify\('lyricschange'\)/);
+  assert.equal((player.match(/notify\('lyricindexchange'\)/g) || []).length, 2);
   assert.match(mini, /YiuPlayback.*subscribe/);
   assert.match(mini, /YiuLibrary.*subscribe/);
-  assert.doesNotMatch(mini, /setInterval\\(tick,200\\)/);
+  assert.doesNotMatch(mini, /setInterval\(tick,200\)/);
   fs.rmSync(temp, { recursive: true, force: true });
 });
