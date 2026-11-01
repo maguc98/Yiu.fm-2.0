@@ -854,6 +854,35 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
   }
 });
 
+
+test('visualizer clock dispatch skips inactive adapters but preserves legacy fallback', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'yiu-drive-isolation-'));
+  const app = path.join(temp, 'YiuFM', 'Resources', 'Web', 'APP');
+  fs.mkdirSync(app, { recursive: true });
+  fs.writeFileSync(path.join(app, 'visualizer-manager.js'), [
+    '  var lastError = null;',
+    '    drive: function (ct) {',
+    '      for (var i = 0; i < NAMES.length; i++) {',
+    '        var ad = adapterOf(NAMES[i]);',
+    "        if (ad && typeof ad.drive === 'function') ad.drive(ct);",
+    '      }',
+    '    },'
+  ].join('\\n'));
+
+  const patchPath = path.join(__dirname, '..', 'Scripts', 'patch-visualizer-drive-isolation.py');
+  const patched = spawnSync('python3', [patchPath], { cwd: temp, encoding: 'utf8' });
+  assert.equal(patched.status, 0, patched.stderr || patched.stdout);
+
+  const manager = fs.readFileSync(path.join(app, 'visualizer-manager.js'), 'utf8');
+  assert.match(manager, /typeof ad\\.isActive === 'function' && !ad\\.isActive\\(\\)/,
+    'inactive visualizers must not receive per-frame clock callbacks');
+  assert.match(manager, /typeof ad\\.isActive === 'function' && !ad\\.isActive\\(\\)\\) continue;[\\s\\S]*?ad\\.drive\\(ct\\)/,
+    'active adapters must still receive the audio clock');
+  assert.match(manager, /typeof ad\\.isActive === 'function'/,
+    'adapters without isActive retain the compatibility fallback');
+  fs.rmSync(temp, { recursive: true, force: true });
+});
+
 test('Partita drive locates lyric boundaries correctly across a large timeline', () => {
   const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
   const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
