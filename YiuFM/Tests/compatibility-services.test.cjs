@@ -321,7 +321,7 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
     '  var s = curId != null ? find(curId) : null, on = isMusicMode() && !!s;',
     "  window.__musicTitle = on ? s.name : '';",
     "  window.__musicCover = on ? curCover : '';",
-    '  syncNextLabel();',
+    '    syncNextLabel();',
     '}',
     'function loadCover(id, rec){',
     '  return (rec ? Promise.resolve(rec) : getFile(id))',
