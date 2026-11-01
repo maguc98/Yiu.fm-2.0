@@ -314,8 +314,21 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
   ].join('\n'));
   fs.writeFileSync(path.join(app, 'renderer.js'), '  if(chg)LN=arr;');
   fs.writeFileSync(path.join(app, 'song-library.js'), [
-    "window.__musicCover = on ? curCover : '';",
-    '    syncNextLabel();'
+    'function syncNextLabel() {}',
+    'function isMusicMode() { return musicMode; }',
+    'function find(id) { return id === currentId ? { name: currentName } : null; }',
+    'function syncNow(){',
+    '  var s = curId != null ? find(curId) : null, on = isMusicMode() && !!s;',
+    "  window.__musicTitle = on ? s.name : '';",
+    "  window.__musicCover = on ? curCover : '';",
+    '  syncNextLabel();',
+    '}',
+    'function loadCover(id, rec){',
+    '  return (rec ? Promise.resolve(rec) : getFile(id))',
+    "    .then(function(r){ if(!r) return ['', '']; return ensureCover(id, r).then(function(c){ return [c, r.ucover || '']; }); })",
+    "    .then(function(a){ if(curId === id){ curOrig = a[0] || ''; curCover = a[1] || curOrig; syncNow(); } })",
+    '    .catch(function(){});',
+    '}'
   ].join('\n'));
   fs.writeFileSync(path.join(app, 'mini-player.js'), [
     'var key=mt+"\\u0001"+s;',
@@ -334,5 +347,42 @@ test('mini-bar event patch publishes renderer lyric edits and state changes', ()
   assert.match(mini, /YiuPlayback.*subscribe/);
   assert.match(mini, /YiuLibrary.*subscribe/);
   assert.doesNotMatch(mini, /setInterval\(tick,200\)/);
+
+  const events = [];
+  const context = {
+    window: { YiuLibrary: { notify: type => events.push(type) } },
+    musicMode: true,
+    currentId: 7,
+    currentName: 'Fixture Song',
+    curId: 7,
+    curCover: '',
+    curOrig: '',
+    find: id => id === 7 ? { name: 'Fixture Song' } : null,
+    isMusicMode: () => context.musicMode,
+    syncNextLabel() {},
+    getFile: () => Promise.resolve(null),
+    ensureCover: (id, rec) => Promise.resolve(rec.cover || ''),
+    Promise
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(app, 'song-library.js'), 'utf8'), context);
+  context.syncNow();
+  assert.equal(context.window.__musicTitle, 'Fixture Song');
+  assert.deepEqual(events, ['librarychange']);
+
+  await context.loadCover(7, { cover: 'embedded-cover', ucover: 'user-cover' });
+  assert.equal(context.window.__musicCover, 'user-cover');
+  assert.equal(events.length, 2, 'async cover completion must publish a library event');
+
+  context.musicMode = false;
+  context.syncNow();
+  assert.equal(context.window.__musicTitle, '');
+  assert.equal(context.window.__musicCover, '');
+  assert.equal(events.length, 3, 'mode changes must publish a library event');
+
+  context.curId = 8;
+  await context.loadCover(7, { cover: 'stale-cover', ucover: '' });
+  assert.equal(context.curCover, 'user-cover', 'stale async cover must not overwrite the newly selected song');
+  assert.equal(events.length, 3, 'stale async cover completion must not publish a current-song event');
+
   fs.rmSync(temp, { recursive: true, force: true });
 });
