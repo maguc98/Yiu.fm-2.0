@@ -895,7 +895,7 @@ test('Partita drive locates lyric boundaries correctly across a large timeline',
     createElement() { return { style: {}, setAttribute() {}, textContent: '' }; }
   };
   vm.runInNewContext(source, {
-    window, document,
+    window, document, performance: window.performance,
     localStorage: { getItem() { return null; }, setItem() {} },
     setTimeout() { return ++nextTimer; },
     clearTimeout() {},
