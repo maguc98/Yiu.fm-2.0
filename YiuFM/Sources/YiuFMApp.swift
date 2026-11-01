@@ -1,11 +1,13 @@
 import SwiftUI
+import AVFoundation
+import UniformTypeIdentifiers
 
 @main
 struct YiuFMApp: App {
+    @StateObject private var audioPlayer = YiuAudioPlayer()
     var body: some Scene {
         WindowGroup {
-            YiuHomeView()
-                .preferredColorScheme(.dark)
+            YiuHomeView().environmentObject(audioPlayer).preferredColorScheme(.dark)
         }
     }
 }
@@ -35,8 +37,9 @@ private enum YiuTab: String, CaseIterable {
 }
 
 struct YiuHomeView: View {
+    @EnvironmentObject private var audioPlayer: YiuAudioPlayer
     @State private var selectedTab: YiuTab = .home
-    @State private var isPlaying = false
+    @State private var showingAudioImporter = false
     @State private var glow = false
 
     var body: some View {
@@ -62,6 +65,11 @@ struct YiuHomeView: View {
         .onAppear {
             withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
                 glow = true
+            }
+        }
+        .fileImporter(isPresented: $showingAudioImporter, allowedContentTypes: [.audio], allowsMultipleSelection: false) { result in
+            if case .success(let urls) = result, let url = urls.first {
+                do { try audioPlayer.load(url: url) } catch { audioPlayer.report(error: error) }
             }
         }
     }
@@ -164,10 +172,10 @@ struct YiuHomeView: View {
                 }
                 .frame(width: 68, height: 68)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Midnight Memories")
+                    Text(audioPlayer.title)
                         .font(.system(size: 14, weight: .semibold))
                         .lineLimit(1)
-                    Text("Yiu.fm · Demo Track")
+                    Text(audioPlayer.artist.isEmpty ? "Yiu.fm · 本地音乐" : audioPlayer.artist)
                         .font(.system(size: 11))
                         .foregroundStyle(YiuPalette.muted)
                     HStack(spacing: 3) {
@@ -181,9 +189,9 @@ struct YiuHomeView: View {
                 }
                 Spacer(minLength: 0)
                 Button {
-                    isPlaying.toggle()
+                    audioPlayer.togglePlayback()
                 } label: {
-                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    Image(systemName: audioPlayer.isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(YiuPalette.ink)
                         .frame(width: 45, height: 45)
@@ -194,6 +202,15 @@ struct YiuHomeView: View {
                         .shadow(color: YiuPalette.cyan.opacity(0.35), radius: 13)
                 }
                 .buttonStyle(.plain)
+                .disabled(!audioPlayer.hasTrack)
+                .opacity(audioPlayer.hasTrack ? 1 : 0.55)
+            }
+            if audioPlayer.hasTrack {
+                VStack(spacing: 4) {
+                    Slider(value: Binding(get: { audioPlayer.currentTime }, set: { audioPlayer.seek(to: $0) }), in: 0...max(audioPlayer.duration, 0.1)).tint(YiuPalette.cyan)
+                    HStack { Text(audioPlayer.formattedTime(audioPlayer.currentTime)); Spacer(); Text(audioPlayer.formattedTime(audioPlayer.duration)) }
+                        .font(.system(size: 9, design: .rounded)).foregroundStyle(YiuPalette.muted)
+                }.padding(.horizontal, 3)
             }
             .padding(15)
             .background(.ultraThinMaterial.opacity(0.75), in: RoundedRectangle(cornerRadius: 23, style: .continuous))
@@ -243,6 +260,7 @@ struct YiuHomeView: View {
     private var collectionSection: some View {
         VStack(alignment: .leading, spacing: 13) {
             sectionHeading("你的音乐空间", detail: "YOUR SPACE")
+            Button { showingAudioImporter = true } label: {
             HStack(spacing: 12) {
                 Image(systemName: "music.note.list")
                     .font(.system(size: 21))
@@ -261,6 +279,7 @@ struct YiuHomeView: View {
             .padding(15)
             .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 19).stroke(.white.opacity(0.1), lineWidth: 1))
+            }.buttonStyle(.plain)
         }
     }
 
@@ -366,4 +385,84 @@ private struct OrbitalArtwork: View {
         }
         .allowsHitTesting(false)
     }
+}
+
+
+// MARK: - Native local audio playback
+@MainActor
+final class YiuAudioPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
+    @Published private(set) var title = "选择一首本地歌曲"
+    @Published private(set) var artist = ""
+    @Published private(set) var isPlaying = false
+    @Published private(set) var currentTime: Double = 0
+    @Published private(set) var duration: Double = 0
+    @Published private(set) var hasTrack = false
+    @Published private(set) var errorMessage: String?
+    private var player: AVAudioPlayer?
+    private var progressTimer: Timer?
+
+    func load(url: URL) throws {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        let fm = FileManager.default
+        let folder = fm.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("YiuMusic", isDirectory: true)
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        let destination = folder.appendingPathComponent(url.lastPathComponent)
+        if destination.standardizedFileURL != url.standardizedFileURL {
+            if fm.fileExists(atPath: destination.path) { try fm.removeItem(at: destination) }
+            try fm.copyItem(at: url, to: destination)
+        }
+        let next = try AVAudioPlayer(contentsOf: destination)
+        next.delegate = self
+        next.prepareToPlay()
+        player?.stop()
+        player = next
+        title = destination.deletingPathExtension().lastPathComponent
+        artist = "本地文件"
+        duration = next.duration
+        currentTime = 0
+        hasTrack = true
+        isPlaying = false
+        errorMessage = nil
+        progressTimer?.invalidate()
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+            guard let self, let active = self.player else { return }
+            self.currentTime = active.currentTime
+            self.isPlaying = active.isPlaying
+        }
+    }
+
+    func togglePlayback() {
+        guard let player else { return }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+            if player.isPlaying { player.pause(); isPlaying = false }
+            else if player.play() { isPlaying = true }
+        } catch { report(error: error) }
+    }
+
+    func seek(to value: Double) {
+        guard let player else { return }
+        let target = min(max(value, 0), duration)
+        player.currentTime = target
+        currentTime = target
+    }
+
+    func formattedTime(_ value: Double) -> String {
+        guard value.isFinite, value >= 0 else { return "0:00" }
+        let total = Int(value)
+        return "\(total / 60):" + String(format: "%02d", total % 60)
+    }
+
+    func report(error: Error) { errorMessage = error.localizedDescription }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        isPlaying = false
+        currentTime = 0
+        player.currentTime = 0
+    }
+
+    deinit { progressTimer?.invalidate() }
 }
