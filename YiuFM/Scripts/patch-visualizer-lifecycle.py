@@ -12,6 +12,14 @@ def replace_once(name, old, new):
         raise SystemExit(f"{name}: expected exactly one lifecycle patch anchor, found {count}: {old!r}")
     path.write_text(source.replace(old, new, 1), encoding="utf-8")
 
+# Correct the manager's legacy header: it coordinates four renderers, not three WebGL engines.
+replace_once(
+    "visualizer-manager.js",
+    """/* VisualizerManager：串行管理可视化引擎（Sonnet / Tempera / Lumiere），保证同一时刻最多一个 WebGL Context。""",
+    """/* VisualizerManager：串行协调四个视觉引擎（Sonnet / Tempera / Lumiere / Partita）。
+   同一时刻只挂载一个引擎；前三者使用 WebGL，Partita 使用 React/DOM。"""
+)
+
 # Partita suspension is temporary: retain active state, stop DOM work while suspended,
 # and render the latest cached lyric/time state when resumed.
 replace_once(
