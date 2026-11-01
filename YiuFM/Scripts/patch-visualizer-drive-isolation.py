@@ -22,6 +22,9 @@ new_drive = """    drive: function (ct) {
         var name = NAMES[i], ad = adapterOf(name);
         if (!ad || typeof ad.drive !== 'function') continue;
         try {
+          // Every registered adapter exposes isActive(); don't call inactive renderers
+          // on the audio frame path. Keep the fallback for older third-party adapters.
+          if (typeof ad.isActive === 'function' && !ad.isActive()) continue;
           ad.drive(ct);
           if (driveFaults[name]) { delete driveFaults[name]; warn('drive recovered ' + name); }
         } catch (e) {
