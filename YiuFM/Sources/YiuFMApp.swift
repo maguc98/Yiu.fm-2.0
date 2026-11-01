@@ -1,6 +1,7 @@
 import SwiftUI
 import WebKit
 import AVFoundation
+import CoreFoundation
 
 @main
 struct YiuFMApp: App {
@@ -149,7 +150,6 @@ final class YiuAudioPlayer: ObservableObject {
 // MARK: - Legacy-compatible local music bridge
 /// Keeps the existing APP/ios-music.js contract intact while the audio engine is
 /// migrated independently. The web UI continues to use the same yiuMusic API.
-import CoreFoundation
 
 final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
     static let shared = YiuMusicBridge()
@@ -214,7 +214,7 @@ final class YiuMusicBridge: NSObject, WKScriptMessageHandlerWithReply {
         guard let name = body["name"] as? String,
               !name.isEmpty,
               !name.contains("/"),
-              !name.contains("\\\\"),
+              !name.contains("\\"),
               name != ".",
               name != ".." else {
             throw BridgeError(message: "bad name")
