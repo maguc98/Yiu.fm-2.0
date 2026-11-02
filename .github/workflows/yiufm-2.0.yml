@@ -84,13 +84,15 @@ jobs:
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
           node --check YiuFM/Resources/Web/APP/player.js
-          node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
           node --check YiuFM/Resources/Web/APP/mini-player.js
+          grep -q 'function karaCssEnd' YiuFM/Resources/Web/APP/player.js
+          ! grep -q '间隔太短的字' YiuFM/Resources/Web/APP/player.js
+          grep -q 'var _retireWait=o._kara' YiuFM/Resources/Web/APP/renderer.js
           node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs
           du -sh YiuFM/Resources/Web
 
