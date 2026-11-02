@@ -59,6 +59,11 @@ jobs:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
+          old_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261029a"></script>'
+          new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261102b"></script>'
+          if html.count(old_sonnet) != 1:
+              raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
+          html = html.replace(old_sonnet, new_sonnet, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
           new_partita = '<script src="./APP/partita-adapter.js?v=20261102b"></script>'
           if html.count(old_partita) != 1:
