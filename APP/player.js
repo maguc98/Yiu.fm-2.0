@@ -70,20 +70,9 @@ function karaResumeAll(){
   });
 }
 /* 保证每个字在"下一个字出现"之前已经完整显示：入场时长超过间隔的，压缩到间隔的 90% */
-function karaFit(box, spans, w){
-  // 不按下一个字的时间戳压缩当前字的动画；每个字保留所选动画的完整时长。
-  var lastDur = 0;
-  for(var k = 0; k < spans.length; k++){
-    var ds = getComputedStyle(spans[k]).transitionDuration.split(','), b = 0;
-    ds.forEach(function(v){
-      var x = parseFloat(v) || 0;
-      if(/ms\s*$/.test(v)) x /= 1000;
-      if(x > b) b = x;
-    });
-    spans[k].style.setProperty('--kad', '0.5s');
-    if(k === spans.length - 1) lastDur = b;
-  }
-  box._kd = lastDur;
+function karaFit(box, spans){
+  // glitch 使用固定 0.5s 入场动画；其他风格沿用各自 CSS transition。
+  for(var k = 0; k < spans.length; k++) spans[k].style.setProperty('--kad', '0.5s');
 }
 function karaPaint(ct){
   var w = WT[idx];
