@@ -126,7 +126,19 @@ function karaPaint(ct){
       cur._kDoneAt = Math.max(cur._kTransDoneAt,cur._kAnimDoneAt||0,cur._kPausedAt?now+(cur._kPausedNewAnimMs||0):0);
     }
   } else {
-    for(k = n; k < karaN; k++) karaSpans[k].classList.remove('ki');
+    // seek 回退：撤销尚未到点的字符，并重置旧的动画期限，避免上一次播放留下的 deadline 延迟本轮退场。
+    var rewindTransEnd=0, rewindNow=performance.now();
+    for(k = n; k < karaN; k++){
+      var rewindSpan=karaSpans[k];
+      rewindSpan.classList.remove('ki');
+      var rewindCss=getComputedStyle(rewindSpan);
+      rewindTransEnd=Math.max(rewindTransEnd,karaCssEnd(rewindCss.transitionDuration,rewindCss.transitionDelay,'1',false));
+    }
+    cur._kTransDoneAt=rewindNow+rewindTransEnd;
+    cur._kAnimDoneAt=0;
+    cur._kPausedAnimDeadline=0;
+    cur._kPausedNewAnimMs=0;
+    cur._kDoneAt=cur._kTransDoneAt;
   }
   karaN = n;
 }
