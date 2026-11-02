@@ -222,6 +222,33 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
 
 
 
+
+test('one library render reaches facade subscribers only once across legacy and facade channels', () => {
+  const h = createHarness();
+  h.load('library-service.js');
+  const changes = [];
+  h.window.YiuLibrary.subscribe(value => changes.push(value.currentId));
+
+  // Mirrors song-library render(): legacy notifyChange(), then patched syncNow().
+  h.notifyLibraryChange();
+  h.window.YiuLibrary.notify('librarychange');
+
+  assert.equal(changes.length, 1, 'one render must not fan out twice to facade subscribers');
+});
+
+test('one LRC import publishes one lyricschange when renderer and wrapper both signal', () => {
+  const h = createHarness();
+  h.window.refreshAll = () => h.window.YiuPlayback.notify('lyricschange');
+  h.load('playback-service.js');
+
+  const events = [];
+  h.window.YiuPlayback.subscribe(event => events.push(event.type));
+  h.window.applyLRC({ items: [{ t: 1, text: 'Updated line' }], meta: {} });
+
+  assert.equal(events.filter(type => type === 'lyricschange').length, 1,
+    'renderer change and applyLRC wrapper must coalesce into one import event');
+});
+
 test('mini-player refresh is event-driven rather than interval-polled', () => {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'mini-player.js');
   const source = fs.readFileSync(file, 'utf8');
