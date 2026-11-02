@@ -324,10 +324,35 @@
         var ls = TS[i] || 0;
         var le = TS[i + 1] != null ? TS[i + 1] : ls + 5;
         var per = chars.length ? (le - ls) / chars.length : 0;
+
+        // player.js 的 WT 契约是「每个字的绝对开始秒数」，不是 [start,end] 元组。
+        // 只有整行逐字时间完整、有限且单调时才采用真实时间；普通 LRC 继续走旧兼容回退。
+        var hasWordTimes = Array.isArray(wt) && wt.length === chars.length;
+        if (hasWordTimes) {
+          var prevTime = -Infinity;
+          for (var j = 0; j < wt.length; j++) {
+            if (typeof wt[j] !== 'number' || !isFinite(wt[j]) || wt[j] < prevTime) {
+              hasWordTimes = false;
+              break;
+            }
+            prevTime = wt[j];
+          }
+        }
+
         var words = chars.map(function (ch, idx) {
-          var t = wt[idx];
-          var s = t && t[0] != null ? t[0] : ls + per * idx;
-          var e = t && t[1] != null ? t[1] : ls + per * (idx + 1);
+          var s, e;
+          if (hasWordTimes) {
+            s = wt[idx];
+            // 同一时间标签后的字符应同步出现；结束时间取下一个更晚的真实字时间。
+            var next = idx + 1;
+            while (next < wt.length && wt[next] <= s) next++;
+            e = next < wt.length ? wt[next] : le;
+            if (!(e > s)) e = s + 0.08;
+          } else {
+            // 无逐字时间的普通 LRC 保持既有兼容行为。
+            s = ls + per * idx;
+            e = ls + per * (idx + 1);
+          }
           return { text: ch, startTime: s, endTime: e };
         });
         lines.push({ fullText: text, startTime: ls, endTime: le, words: words });
