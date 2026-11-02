@@ -26,6 +26,8 @@
   }
 
   var runtime = null;          // SonnetPixiRuntime 实例
+  var runtimeTextureResolution = NaN; // 实际创建当前 WebGL canvas 时采用的分辨率
+  var resolutionRebuildPending = false;
   var creating = null;         // 创建中：{ ctrl: AbortController }
   var hostElement = null;      // 画布挂载点（#sonnetHost）
   var active = false;          // 商籁风格是否正在显示
@@ -575,6 +577,7 @@
 
     lastProgram = program; lastSeed = seed;
 
+    var tuningAtCreate = effTuning();
     RT.SonnetPixiRuntime.create({
       host: host,
       signal: ctrl.signal,
@@ -584,7 +587,7 @@
       program: program,
       songSeed: seed,
       theme: curTheme,
-      tuning: effTuning(),
+      tuning: tuningAtCreate,
       smartBeatEnabled: false,
       staticMode: false,
       transparentBackground: true,
@@ -599,6 +602,7 @@
       }
       creating = null;
       runtime = rt;
+      runtimeTextureResolution = Number(tuningAtCreate.textureResolution);
       // perf: 接线动态性能调节器（governor 脚本须先于本文件加载）
       if (window.SonnetPerfGovernor) {
         governor = new window.SonnetPerfGovernor({
@@ -612,6 +616,10 @@
         if (dynamicEnabled()) governor.start();
       }
       if (lyricsDirty) applyLyrics();      // 创建期间又来了新歌词
+      if (resolutionRebuildPending || Math.abs(runtimeTextureResolution - effTuning().textureResolution) > 0.001) {
+        resolutionRebuildPending = false;
+        scheduleResolutionRebuild();
+      }
       syncTime();
       applyRunState();
       flushReady();
@@ -658,6 +666,10 @@
     active = true;
     rgbSync();
     if (runtime) {
+      if (resolutionRebuildPending || (isFinite(runtimeTextureResolution) && Math.abs(runtimeTextureResolution - effTuning().textureResolution) > 0.001)) {
+        scheduleResolutionRebuild();
+        return;
+      }
       if (lyricsDirty) applyLyrics();
       syncTime();                        // 暂停状态下切回来，位置也要对
       applyRunState();                   // 在播放就恢复 Ticker；暂停就停着并补画一帧
@@ -681,6 +693,7 @@
     if (runtime) {
       try { runtime.destroy(); } catch (e) { console.warn('[Sonnet] destroy 失败', e); }
       runtime = null;
+      runtimeTextureResolution = NaN;
     }
     var host = getHost();
     if (host) host.innerHTML = '';       // 保险：清掉残留画布
@@ -693,17 +706,35 @@
   function scheduleResolutionRebuild() {
     clearTimeout(resRebuildT);
     resRebuildT = setTimeout(function () {
-      if (!runtime || !active) return;          // perf: 未创建或未显示时不动，下次 create 自然用新值
+      if (!active) { resolutionRebuildPending = true; return; }
+      var wanted = Number(effTuning().textureResolution);
+      if (!runtime) {
+        if (creating) resolutionRebuildPending = true;
+        else createRuntime();
+        return;
+      }
+      if (isFinite(runtimeTextureResolution) && Math.abs(runtimeTextureResolution - wanted) < 0.001) {
+        resolutionRebuildPending = false;
+        return;
+      }
       if (governor) { try { governor.stop(); } catch (_) {} governor = null; }
       var rt = runtime;
-      runtime = null; creating = null;
+      runtime = null;
+      runtimeTextureResolution = NaN;
       flushReady();
       try { rt.destroy(); } catch (_) {}
       var host = getHost();
       if (host) host.innerHTML = '';
       lastRenderedCt = NaN;
-      createRuntime();                           // perf: 重建 runtime + governor，用已更新的 curTuning
-    }, 400);
+      resolutionRebuildPending = false;
+      // 等两个显示帧，让旧 WebGL canvas/context 完成释放，再创建新分辨率的 runtime。
+      var raf = window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); };
+      raf(function () {
+        raf(function () {
+          if (active && !runtime && !creating) createRuntime();
+        });
+      });
+    }, 250);
   }
 
   // 全局渲染分辨率倍率（开发者选项里设置，localStorage 'qt_res_mul'；1 = 不缩放）。只在 <1 时才改动引擎参数，默认行为不变
@@ -730,17 +761,28 @@
     slider.max = '400';
     slider.step = '25';
     slider.value = String(Math.max(Math.round(min * 100), Math.min(400, Math.round(curTuning.textureResolution * 100))));
-    slider.addEventListener('change', function () {
+    var inputTimer = 0;
+    function applySliderValue() {
+      clearTimeout(inputTimer);
       setTextureResolution(Number(slider.value) / 100);
       slider.value = String(Math.round(curTuning.textureResolution * 100));
+    }
+    slider.addEventListener('input', function () {
+      clearTimeout(inputTimer);
+      inputTimer = setTimeout(applySliderValue, 250);
     });
+    slider.addEventListener('change', applySliderValue);
     slider.__sonnetResolutionBound = true;
   }
 
   function setTextureResolution(res) {
     res = +res;
     if (!isFinite(res) || res <= 0) return getConfig();
-    curTuning.textureResolution = clampTextureResolution(res); // minimum is the device's physical pixel density
+    res = clampTextureResolution(res); // minimum is the device's physical pixel density
+    if (Math.abs(curTuning.textureResolution - res) < 0.001) return getConfig();
+    curTuning.textureResolution = res;
+    var slider = document.getElementById('sonnet-res');
+    if (slider) slider.value = String(Math.round(curTuning.textureResolution * 100));
     saveConfig();
     scheduleResolutionRebuild();
     return getConfig();
@@ -790,7 +832,13 @@
   }
 
   function state() {
-    return { active: active, playing: playing, hasRuntime: !!runtime, creating: !!creating, hasLyrics: !!pendingLyrics, lyricsDirty: lyricsDirty };
+    return {
+      active: active, playing: playing, hasRuntime: !!runtime, creating: !!creating,
+      hasLyrics: !!pendingLyrics, lyricsDirty: lyricsDirty,
+      textureResolution: curTuning.textureResolution,
+      appliedTextureResolution: runtime ? runtimeTextureResolution : null,
+      resolutionRebuildPending: resolutionRebuildPending
+    };
   }
 
   window.SonnetAdapter = { init: init, show: show, hide: hide, destroy: destroy, drive: drive, loadLyrics: loadLyrics, state: state, syncLyrics: syncFromGlobals, setSuspended: setSuspended,
