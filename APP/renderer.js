@@ -264,11 +264,16 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
     // 逐字歌词的已点亮字符必须先完成入场动画，再启动整句退场。
     var _retireWait=o._kara?Math.max(0,(o._kDoneAt||0)-performance.now()+50):0;
     function _retireOld(){
-      if(!o.isConnected)return;
-      o.classList.add("out");
+      if(!o.isConnected||o._retired)return;
+      // 暂停中的 CSS 动画不会前进；等恢复后再按修正后的 deadline 检查。
+      if(o._kPausedAt){o._retirePaused=1;return}
+      var _remain=Math.max(0,(o._kDoneAt||0)-performance.now()+50);
+      if(_remain>0){setTimeout(_retireOld,_remain);return}
+      o._retired=1;o.classList.add("out");
       if(!pan){var _outs=one.querySelectorAll(".one.out");if(_outs.length>2)_outs[0].remove()}
       if(!pan)setTimeout(function(){o.remove()},o.classList.contains("m-poster")?900:1800);
     }
+    o._retireCheck=_retireOld;
     if(_retireWait>0)setTimeout(_retireOld,_retireWait);else _retireOld();
   }
   if(!pan&&(wx||wy||(one.style.transform&&one.style.transform!=="none"))){panGen++;one.style.transition="none";one.style.transform="none";one.style.filter="";wx=0;wy=0}
