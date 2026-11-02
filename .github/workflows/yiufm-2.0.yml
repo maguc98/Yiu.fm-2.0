@@ -38,6 +38,10 @@ jobs:
           cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
           # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
           cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
+          mkdir -p YiuFM/Resources/Web/APP/runtime
+          cp APP/runtime/audio-clock.js YiuFM/Resources/Web/APP/runtime/audio-clock.js
+          cp APP/runtime/timeline-scheduler.js YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
+          cp APP/yiu-runtime.js YiuFM/Resources/Web/APP/yiu-runtime.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -54,7 +58,7 @@ jobs:
           html = page.read_text(encoding="utf-8")
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
           anchor = '<script src="./APP/player.js?v=20261102a"></script>'
-          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>'
+          injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102a"></script>\n<script src="./APP/yiu-runtime.js?v=20261102a"></script>'
           if html.count(old_anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
@@ -112,6 +116,9 @@ jobs:
           node --check YiuFM/Resources/Web/APP/playback-preferences-service.js
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
+          node --check YiuFM/Resources/Web/APP/runtime/audio-clock.js
+          node --check YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
+          node --check YiuFM/Resources/Web/APP/yiu-runtime.js
           node --check YiuFM/Resources/Web/APP/player.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
@@ -131,7 +138,7 @@ jobs:
           grep -q 'y>=b&&y<=h' YiuFM/Resources/Web/APP/P1.js
           grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
-          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs
+          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
@@ -162,6 +169,10 @@ jobs:
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
+          test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
+          test -s "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
+          test -s "$WEB_ROOT/APP/yiu-runtime.js"
+          grep -q 'YiuRuntimeV2.sample(ct)' "$WEB_ROOT/APP/player.js"
           grep -q "adapter-v10-word-clock-suspend" "$WEB_ROOT/APP/partita-adapter.js"
           grep -q 'wordAnimationEnd=' "$WEB_ROOT/APP/P1.js"
           grep -q 'g>=t.startTime&&g<=h' "$WEB_ROOT/APP/P1.js"

@@ -164,6 +164,8 @@ function tick(ts){
 
   if(AUDIO_ON && audio && audio.duration && LN.length){
     var ct = audio.currentTime - LYR_OFF;   // 歌词用的时间 = 音频时间 − 偏移
+    // V2 第一阶段：只在旧播放器现有 tick 中观察时间轴，不接管渲染或驱动旧引擎。
+    if (window.YiuRuntimeV2 && typeof window.YiuRuntimeV2.sample === 'function') window.YiuRuntimeV2.sample(ct);
     var lo = 0, hi = Math.min(TS.length, LN.length) - 1, i = 0;
     while(lo <= hi){
       var mid = (lo + hi) >> 1;
