@@ -76,3 +76,13 @@ test('If both V2 and V1 fail, the coordinator rejects and records the fallback f
  const fallback=m.fallbackController.snapshot();
  assert.equal(fallback.failures,1);assert.equal(fallback.active,false);
 });
+test('Three consecutive V2 drive faults trigger the V1 compatibility bridge',async()=>{
+ const h=harness(),m=h.window.YiuRenderCoordinator;
+ await m.switchTo('sonnet');
+ h.adapters.sonnet.drive=()=>{throw new Error('simulated render tick failure');};
+ m.drive(1);m.drive(2);m.drive(3);
+ await new Promise(resolve=>setTimeout(resolve,0));
+ assert.equal(m.snapshot().mode,'legacy');
+ assert.equal(m.fallbackController.snapshot().runtimeFallbacks,1);
+ assert.ok(h.events.includes('legacy:switch:sonnet:false'));
+});
