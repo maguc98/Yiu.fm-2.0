@@ -657,7 +657,7 @@
 
   var frameRaf = 0, frameCounterGeneration = 0;
   function countFrames(generation) {
-    if (generation !== frameCounterGeneration || !state.jank) { frameRaf = 0; return; }
+    if (generation !== frameCounterGeneration || !state.jank) return;
     frames++;
     frameRaf = origRAF.call(window, function(){ countFrames(generation); });
   }
