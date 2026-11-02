@@ -60,7 +60,7 @@ jobs:
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
-          anchor = '<script src="./APP/player.js?v=20261102a"></script>'
+          anchor = '<script src="./APP/player.js?v=20261102b"></script>'
           injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102b"></script>\n<script src="./APP/yiu-runtime.js?v=20261102b"></script>'
           if html.count(old_anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
