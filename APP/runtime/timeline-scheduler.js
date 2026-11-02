@@ -31,6 +31,7 @@
 
   function create(onEvent) {
     var events = [];
+    var lineStarts = [];
     var cursor = 0;
     var lastTime = -Number.EPSILON;
     var includeCurrentAt = null;
@@ -41,7 +42,7 @@
       WT = Array.isArray(WT) ? WT : [];
       LN = Array.isArray(LN) ? LN : [];
       options = options || {};
-      var next = [];
+      var next = [], nextLineStarts = [];
 
       for (var i = 0; i < TS.length; i++) {
         var start = Number(TS[i]);
@@ -50,6 +51,7 @@
             type: 'line-start', time: start, lineIndex: i,
             wordIndex: null, text: String(LN[i] == null ? '' : LN[i]), priority: 1
           });
+          nextLineStarts.push({ time: start, lineIndex: i });
         }
         if (i + 1 < TS.length) {
           var end = Number(TS[i + 1]);
@@ -78,6 +80,10 @@
       });
 
       events = next;
+      lineStarts = nextLineStarts;
+      lineStarts.sort(function (a, b) {
+        return a.time - b.time || a.lineIndex - b.lineIndex;
+      });
       timelineVersion++;
       if (finite(options.currentTime)) {
         lastTime = options.currentTime;
@@ -125,6 +131,18 @@
       return emitted;
     }
 
+    function getLineIndex(currentTime) {
+      if (!finite(currentTime) || currentTime < 0 || !lineStarts.length) return -1;
+      var lo = 0, hi = lineStarts.length;
+      while (lo < hi) {
+        var mid = (lo + hi) >> 1;
+        if (lineStarts[mid].time <= currentTime) lo = mid + 1;
+        else hi = mid;
+      }
+      // Match the legacy player's initial index (0) before the first timestamp.
+      return lo ? lineStarts[lo - 1].lineIndex : 0;
+    }
+
     function reset(time, options) {
       options = options || {};
       if (!finite(time) || time < 0) time = 0;
@@ -138,9 +156,11 @@
       setTimeline: setTimeline,
       advance: advance,
       reset: reset,
+      getLineIndex: getLineIndex,
       getSnapshot: function () {
         return {
           eventCount: events.length,
+          lineStartCount: lineStarts.length,
           cursor: cursor,
           lastTime: lastTime,
           remainingEvents: Math.max(0, events.length - cursor),
