@@ -4,10 +4,10 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function loadAdapter() {
+function loadAdapter(devicePixelRatio = 2) {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'sonnet-adapter.js');
   const source = fs.readFileSync(file, 'utf8');
-  const window = { devicePixelRatio: 2 };
+  const window = { devicePixelRatio };
   const document = { addEventListener() {}, getElementById() { return null; } };
   vm.runInNewContext(source, {
     window,
@@ -100,6 +100,18 @@ test('Sonnet resolution is clamped to at least native scale', () => {
   const adapter = loadAdapter();
   adapter.setTextureResolution(0.5);
   assert.equal(adapter.getConfig().textureResolution, 1);
+});
+
+test('Sonnet resolution never drops below Retina device pixel density', () => {
+  const adapter = loadAdapter(3);
+  assert.equal(adapter.getConfig().textureResolution, 3,
+    'the default resolution should follow a 3x display');
+  adapter.setTextureResolution(1);
+  assert.equal(adapter.getConfig().textureResolution, 3,
+    'manual 1x values must be raised to the physical display density');
+  adapter.updateConfig({ textureResolution: 1 });
+  assert.equal(adapter.getConfig().textureResolution, 3,
+    'legacy configuration updates must not reintroduce sub-native rendering');
 });
 
 test('The packaged legacy UI receives the current karaoke timing fixes', () => {
