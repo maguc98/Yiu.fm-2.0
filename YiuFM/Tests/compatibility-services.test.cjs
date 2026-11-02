@@ -787,3 +787,71 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
     assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
   }
 });
+
+
+test('Partita maps numeric WT character start times to real per-character intervals', () => {
+  const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
+  let rendered = null;
+  const host = {
+    style: {}, innerHTML: '',
+    appendChild() {},
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
+  const document = {
+    head: { appendChild() {} },
+    createElement() { return { style: {}, setAttribute() {}, textContent: '' }; }
+  };
+  const Partita = {
+    default: function PartitaView() {},
+    React: {
+      Component: function Component() {},
+      createElement(type, props, children) { return { type, props, children }; }
+    },
+    ReactDOM: {
+      createRoot() {
+        return {
+          render(element) { rendered = element.children.props; },
+          unmount() {}
+        };
+      }
+    },
+    FramerMotion: {
+      motionValue(value) {
+        let current = value;
+        return { get: () => current, set: next => { current = next; } };
+      }
+    }
+  };
+  const window = {
+    Partita, LN: [], TS: [], WT: [],
+    addEventListener() {},
+    console: { warn() {}, error() {} }
+  };
+  vm.runInNewContext(source, {
+    window, document,
+    localStorage: { getItem() { return null; }, setItem() {} },
+    setTimeout() { return 1; }, clearTimeout() {},
+    cancelAnimationFrame() {}, requestAnimationFrame() { return 1; },
+    Date, Math, Array, Object, String, Number, isFinite
+  });
+
+  window.PartitaAdapter.init(host, {});
+  window.PartitaAdapter.show();
+  window.PartitaAdapter.loadLyrics(
+    [10, 12],
+    [[10, 10.5, 11.2], [12, 12, 12.8]],
+    ['ABC', 'XYZ']
+  );
+
+  const words = rendered.lines[0].words;
+  assert.deepEqual(Array.from(words, word => word.startTime), [10, 10.5, 11.2]);
+  assert.deepEqual(Array.from(words, word => word.endTime), [10.5, 11.2, 12]);
+
+  const repeated = rendered.lines[1].words;
+  assert.deepEqual(Array.from(repeated, word => word.startTime), [12, 12, 12.8]);
+  assert.deepEqual(Array.from(repeated, word => word.endTime), [12.8, 12.8, 17]);
+
+  window.PartitaAdapter.destroy();
+});
