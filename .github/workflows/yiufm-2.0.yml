@@ -137,6 +137,8 @@ jobs:
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
+          test -s "$WEB_ROOT/APP/partita-adapter.js"
+          grep -q "adapter-v9-word-timestamps" "$WEB_ROOT/APP/partita-adapter.js"
           test -s "$WEB_ROOT/APP/playback-service.js"
           test -s "$WEB_ROOT/APP/lyrics-service.js"
           test -s "$WEB_ROOT/APP/library-service.js"
