@@ -66,6 +66,8 @@ function loadAdapter() {
   window.PartitaAdapter.init(host);
   return {
     adapter: window.PartitaAdapter,
+    host,
+    time() { return rendered.props.children.props.currentTime; },
     load(TS, WT, LN) {
       window.PartitaAdapter.loadLyrics(TS, WT, LN);
       window.PartitaAdapter.show();
@@ -128,4 +130,24 @@ test('Partita retains evenly-spaced fallback for ordinary LRC without word times
   assert.ok(Math.abs(starts[1] - 1.75) < 1e-9);
   assert.ok(Math.abs(starts[2] - 2.5) < 1e-9);
   assert.ok(Math.abs(starts[3] - 3.25) < 1e-9);
+});
+
+test('Partita suspension pauses its clock without deactivating the engine', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
+  const time = harness.time();
+
+  harness.adapter.drive(1.25);
+  assert.equal(time.get(), 1.25);
+
+  harness.adapter.setSuspended(true);
+  assert.equal(harness.adapter.isActive(), true);
+  assert.equal(harness.host.style.display, 'none');
+  harness.adapter.drive(1.75);
+  assert.equal(time.get(), 1.25, 'the clock must remain frozen while suspended');
+
+  harness.adapter.setSuspended(false);
+  assert.equal(harness.host.style.display, 'block');
+  harness.adapter.drive(1.75);
+  assert.equal(time.get(), 1.75, 'the clock must resume after unsuspending');
 });
