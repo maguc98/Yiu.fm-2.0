@@ -60,8 +60,8 @@ jobs:
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
-          anchor = '<script src="./APP/player.js?v=20261102b"></script>'
-          injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102c"></script>\n<script src="./APP/yiu-runtime.js?v=20261102b"></script>'
+          anchor = '<script src="./APP/player.js?v=20261102c"></script>'
+          injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102d"></script>\n<script src="./APP/yiu-runtime.js?v=20261102c"></script>'
           if html.count(old_anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
@@ -186,6 +186,9 @@ jobs:
           grep -q "YiuFrameScheduler.start" "$WEB_ROOT/APP/player.js"
           test -s "$WEB_ROOT/APP/yiu-runtime.js"
           grep -q 'YiuRuntimeV2.sample(ct, i)' "$WEB_ROOT/APP/player.js"
+          grep -q 'resolveLineIndex:resolveLineIndex' "$WEB_ROOT/APP/yiu-runtime.js"
+          grep -q 'getLineIndex: getLineIndex' "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
+          grep -q 'lineIndexMode' "$WEB_ROOT/APP/yiu-runtime.js"
           grep -q "adapter-v10-word-clock-suspend" "$WEB_ROOT/APP/partita-adapter.js"
           grep -q 'wordAnimationEnd=' "$WEB_ROOT/APP/P1.js"
           grep -q 'g>=t.startTime&&g<=h' "$WEB_ROOT/APP/P1.js"
