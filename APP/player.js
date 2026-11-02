@@ -169,14 +169,15 @@ function tick(ts){
 
   if(AUDIO_ON && audio && audio.duration && LN.length){
     var ct = audio.currentTime - LYR_OFF;   // 歌词用的时间 = 音频时间 − 偏移
-    // V2 第一阶段：只在旧播放器现有 tick 中观察时间轴，不接管渲染或驱动旧引擎。
-    if (window.YiuRuntimeV2 && typeof window.YiuRuntimeV2.sample === 'function') window.YiuRuntimeV2.sample(ct);
     var lo = 0, hi = Math.min(TS.length, LN.length) - 1, i = 0;
     while(lo <= hi){
       var mid = (lo + hi) >> 1;
       if((TS[mid] || 0) <= ct){ i = mid; lo = mid + 1; }
       else { hi = mid - 1; }
     }
+    // V2 shadow validation compares its calculated line index with the legacy player's result.
+    // It remains observational: the legacy index and renderer still own playback output.
+    if (window.YiuRuntimeV2 && typeof window.YiuRuntimeV2.sample === 'function') window.YiuRuntimeV2.sample(ct, i);
     if(i !== idx){
       // 切句前先把旧句补绘到当前音频时刻，确保最后一个字也有真实动画结束时间。
       if(cur && cur._kara) karaPaint(ct);
