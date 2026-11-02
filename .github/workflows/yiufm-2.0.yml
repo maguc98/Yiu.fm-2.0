@@ -36,6 +36,8 @@ jobs:
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
           git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
+          # Use the branch's fixed Partita adapter; the restored baseline contains the old numeric-WT bug.
+          cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
