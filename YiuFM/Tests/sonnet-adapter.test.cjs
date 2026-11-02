@@ -128,30 +128,30 @@ test('Sonnet does not spread repeated character timestamps into an even line ani
   );
 });
 
-test('Sonnet resolution is clamped to the device pixel density', () => {
+test('Sonnet resolution supports sub-native rendering for quality control', () => {
   const adapter = loadAdapter();
   adapter.setTextureResolution(0.5);
-  assert.equal(adapter.getConfig().textureResolution, 2);
+  assert.equal(adapter.getConfig().textureResolution, 0.5);
 });
 
-test('Sonnet resolution never drops below Retina device pixel density', () => {
+test('Sonnet resolution can be reduced below Retina device pixel density', () => {
   const adapter = loadAdapter(3);
   assert.equal(adapter.getConfig().textureResolution, 3,
     'the default resolution should follow a 3x display');
   adapter.setTextureResolution(1);
-  assert.equal(adapter.getConfig().textureResolution, 3,
-    'manual 1x values must be raised to the physical display density');
+  assert.equal(adapter.getConfig().textureResolution, 1,
+    'manual 1x values must remain selectable below the physical display density');
   adapter.updateConfig({ textureResolution: 1 });
-  assert.equal(adapter.getConfig().textureResolution, 3,
-    'legacy configuration updates must not reintroduce sub-native rendering');
+  assert.equal(adapter.getConfig().textureResolution, 1,
+    'configuration updates must preserve the selected sub-native resolution');
 });
 
-test('Sonnet upgrades persisted 1x settings to the current Retina DPR', () => {
+test('Sonnet preserves persisted sub-native resolution settings', () => {
   const adapter = loadAdapter(3, null, { textureResolution: 1 });
-  assert.equal(adapter.getConfig().textureResolution, 3);
+  assert.equal(adapter.getConfig().textureResolution, 1);
 });
 
-test('Sonnet resolution slider reflects and enforces the device DPR', async () => {
+test('Sonnet resolution slider exposes the full 0.5x–4x range', async () => {
   const listeners = {};
   const slider = {
     min: '50',
@@ -163,7 +163,7 @@ test('Sonnet resolution slider reflects and enforces the device DPR', async () =
   const adapter = loadAdapter(3, slider);
   await adapter.init();
 
-  assert.equal(slider.min, '300');
+  assert.equal(slider.min, '50');
   assert.equal(slider.value, '300');
   assert.equal(slider.max, '400');
   assert.equal(typeof listeners.input, 'function',
