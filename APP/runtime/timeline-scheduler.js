@@ -33,6 +33,7 @@
     var events = [];
     var cursor = 0;
     var lastTime = -Number.EPSILON;
+    var includeCurrentAt = null;
     var timelineVersion = 0;
 
     function setTimeline(TS, WT, LN, options) {
@@ -79,11 +80,13 @@
       events = next;
       timelineVersion++;
       if (finite(options.currentTime)) {
-        lastTime = options.includeCurrent ? options.currentTime - Number.EPSILON : options.currentTime;
+        lastTime = options.currentTime;
         cursor = options.includeCurrent ? lowerBound(events, options.currentTime) : upperBound(events, options.currentTime);
+        includeCurrentAt = options.includeCurrent ? options.currentTime : null;
       } else {
         lastTime = -Number.EPSILON;
         cursor = 0;
+        includeCurrentAt = null;
       }
       return events.length;
     }
@@ -92,15 +95,16 @@
       if (!finite(currentTime) || currentTime < 0) return [];
       if (currentTime < lastTime) {
         // A seek/restart: include an event exactly at the target timestamp.
-        lastTime = currentTime - Number.EPSILON;
+        lastTime = currentTime;
         cursor = lowerBound(events, currentTime);
+        includeCurrentAt = currentTime;
         return [];
       }
 
       var emitted = [];
       while (cursor < events.length && events[cursor].time <= currentTime) {
         var event = events[cursor++];
-        if (event.time > lastTime || (lastTime < 0 && event.time === 0)) {
+        if (event.time > lastTime || event.time === includeCurrentAt || (lastTime < 0 && event.time === 0)) {
           var copy = {
             type: event.type,
             time: event.time,
@@ -117,14 +121,16 @@
         }
       }
       lastTime = currentTime;
+      includeCurrentAt = null;
       return emitted;
     }
 
     function reset(time, options) {
       options = options || {};
       if (!finite(time) || time < 0) time = 0;
-      lastTime = options.includeCurrent ? time - Number.EPSILON : time;
+      lastTime = time;
       cursor = options.includeCurrent ? lowerBound(events, time) : upperBound(events, time);
+      includeCurrentAt = options.includeCurrent ? time : null;
     }
 
     return {
