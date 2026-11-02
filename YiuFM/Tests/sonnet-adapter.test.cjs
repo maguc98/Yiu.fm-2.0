@@ -4,14 +4,19 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function loadAdapter(devicePixelRatio = 2, slider = null) {
+function loadAdapter(devicePixelRatio = 2, slider = null, storedConfig = null) {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'sonnet-adapter.js');
   const source = fs.readFileSync(file, 'utf8');
   const window = { devicePixelRatio };
   const document = { addEventListener() {}, getElementById(id) { return id === 'sonnet-res' ? slider : null; } };
+  const localStorage = {
+    getItem() { return storedConfig ? JSON.stringify(storedConfig) : null; },
+    setItem() {}
+  };
   vm.runInNewContext(source, {
     window,
     document,
+    localStorage,
     performance: { now: () => 1000 },
     Intl,
     Uint8Array,
@@ -112,6 +117,11 @@ test('Sonnet resolution never drops below Retina device pixel density', () => {
   adapter.updateConfig({ textureResolution: 1 });
   assert.equal(adapter.getConfig().textureResolution, 3,
     'legacy configuration updates must not reintroduce sub-native rendering');
+});
+
+test('Sonnet upgrades persisted 1x settings to the current Retina DPR', () => {
+  const adapter = loadAdapter(3, null, { textureResolution: 1 });
+  assert.equal(adapter.getConfig().textureResolution, 3);
 });
 
 test('Sonnet resolution slider reflects and enforces the device DPR', async () => {
