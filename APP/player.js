@@ -47,6 +47,28 @@ function deferUpdate(){
 
 /* ---- 逐字出现：到了某个字的时间，就给它加 .ki，它才用当前文字动画样式出现 ---- */
 var karaCur = null, karaSpans = null, karaN = 0;
+// CSS animation 会随舞台暂停；完成期限也必须冻结，避免恢复播放后提前退场。
+function karaPauseAll(){
+  var now=performance.now();
+  [].forEach.call(document.querySelectorAll('#one .one'),function(box){
+    if(!box._kara||box._kPausedAt)return;
+    box._kPausedAt=now;
+    box._kPausedAnimDeadline=(box._kAnimDoneAt||0)>now?box._kAnimDoneAt:0;
+    box._kPausedNewAnimMs=0;
+  });
+}
+function karaResumeAll(){
+  var now=performance.now();
+  [].forEach.call(document.querySelectorAll('#one .one'),function(box){
+    if(!box._kPausedAt)return;
+    var oldDeadline=box._kPausedAnimDeadline?box._kPausedAnimDeadline+(now-box._kPausedAt):0;
+    var newDeadline=box._kPausedNewAnimMs?now+box._kPausedNewAnimMs:0;
+    box._kAnimDoneAt=Math.max(oldDeadline,newDeadline);
+    box._kPausedAt=0;box._kPausedAnimDeadline=0;box._kPausedNewAnimMs=0;
+    box._kDoneAt=Math.max(box._kTransDoneAt||0,box._kAnimDoneAt||0);
+    if(box._retirePaused&&box._retireCheck){box._retirePaused=0;box._retireCheck()}
+  });
+}
 /* 保证每个字在"下一个字出现"之前已经完整显示：入场时长超过间隔的，压缩到间隔的 90% */
 function karaFit(box, spans, w){
   // 不按下一个字的时间戳压缩当前字的动画；每个字保留所选动画的完整时长。
@@ -105,7 +127,12 @@ function karaPaint(ct){
       // 只等待有限次入场动画；wave 的 infinite 循环不应阻塞整句退场。
       var animationEnd = cs.animationName === 'none' ? 0 :
         cssEnd(cs.animationDuration, cs.animationDelay, cs.animationIterationCount, true);
-      cur._kDoneAt = Math.max(cur._kDoneAt || 0, now + transitionEnd, now + animationEnd);
+      cur._kTransDoneAt = Math.max(cur._kTransDoneAt || 0, now + transitionEnd);
+      if(animationEnd>0){
+        if(cur._kPausedAt)cur._kPausedNewAnimMs=Math.max(cur._kPausedNewAnimMs||0,animationEnd);
+        else cur._kAnimDoneAt=Math.max(cur._kAnimDoneAt||0,now+animationEnd);
+      }
+      cur._kDoneAt = Math.max(cur._kTransDoneAt,cur._kAnimDoneAt||0,cur._kPausedAt?now+(cur._kPausedNewAnimMs||0):0);
     }
   } else {
     for(k = n; k < karaN; k++) karaSpans[k].classList.remove('ki');
@@ -200,6 +227,7 @@ var IC={
 [].forEach.call(document.querySelectorAll(".ppb"),function(b){b.innerHTML=IC.pause});
 [].forEach.call(document.querySelectorAll(".nxb"),function(b){b.innerHTML=IC.next});
 function setPlay(v){
+  if(v)karaResumeAll();else karaPauseAll();
   playing=v;stage.classList.toggle("paused",!v);
   if(v) startTick();
   if(AUDIO_ON && audio){
@@ -357,8 +385,8 @@ audio.addEventListener('loadedmetadata', function(){
   updateAudioInfo();
   refreshAll();
 });
-audio.addEventListener('play',  function(){ playing = true; startTick(); stage.classList.remove('paused'); [].forEach.call(document.querySelectorAll('.ppb'),function(b){b.innerHTML=IC.pause}); });
-audio.addEventListener('pause', function(){ playing = false; stage.classList.add('paused');    [].forEach.call(document.querySelectorAll('.ppb'),function(b){b.innerHTML=IC.play});  });
+audio.addEventListener('play',  function(){ karaResumeAll(); playing = true; startTick(); stage.classList.remove('paused'); [].forEach.call(document.querySelectorAll('.ppb'),function(b){b.innerHTML=IC.pause}); });
+audio.addEventListener('pause', function(){ karaPauseAll(); playing = false; stage.classList.add('paused');    [].forEach.call(document.querySelectorAll('.ppb'),function(b){b.innerHTML=IC.play});  });
 audio.addEventListener('ended', function(){
   // 诊断信息：记录"结束"时的真实位置，方便判断是不是提前结束
   var endInfo = '结束于 ' + audio.currentTime.toFixed(1) + 's / 总长 ' + fmtDur(audio.duration) +
