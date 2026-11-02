@@ -96,10 +96,10 @@ test('Sonnet does not spread repeated character timestamps into an even line ani
   );
 });
 
-test('Sonnet resolution is clamped to at least native scale', () => {
+test('Sonnet resolution is clamped to the device pixel density', () => {
   const adapter = loadAdapter();
   adapter.setTextureResolution(0.5);
-  assert.equal(adapter.getConfig().textureResolution, 1);
+  assert.equal(adapter.getConfig().textureResolution, 2);
 });
 
 test('Sonnet resolution never drops below Retina device pixel density', () => {
