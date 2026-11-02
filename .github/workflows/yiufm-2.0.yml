@@ -59,6 +59,11 @@ jobs:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
+          old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\', "./APP/sonnet-perf-governor.js?v=20261028a"],"
+          new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\', "./APP/sonnet-perf-governor.js?v=20261028a"],"
+          if html.count(old_sonnet_engine) != 1:
+              raise SystemExit("Expected exactly one Sonnet engine loader entry; refusing to patch.")
+          html = html.replace(old_sonnet_engine, new_sonnet_engine, 1)
           old_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261029a"></script>'
           new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261102b"></script>'
           if html.count(old_sonnet) != 1:
@@ -96,6 +101,7 @@ jobs:
           python3 YiuFM/Scripts/patch-visualizer-lifecycle.py
           python3 YiuFM/Scripts/patch-visualizer-drive-isolation.py
           python3 YiuFM/Scripts/patch-partita-word-clock.py
+          python3 YiuFM/Scripts/patch-sonnet-native-resolution.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
           node --check YiuFM/Resources/Web/APP/playback-preferences-service.js
@@ -114,9 +120,12 @@ jobs:
           ! grep -q '间隔太短的字' YiuFM/Resources/Web/APP/player.js
           grep -q 'var _retireWait=o._kara' YiuFM/Resources/Web/APP/renderer.js
           grep -q 'hasWordTimes' YiuFM/Resources/Web/APP/partita-adapter.js
-          grep -q 'g>=t.startTime&&g<=E+0.08' YiuFM/Resources/Web/APP/P1.js
-          grep -q 'y>=b&&y<=E+0.08' YiuFM/Resources/Web/APP/P1.js
-          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs
+          grep -q 'wordAnimationEnd=' YiuFM/Resources/Web/APP/P1.js
+          grep -q 'g>=t.startTime&&g<=h' YiuFM/Resources/Web/APP/P1.js
+          grep -q 'y>=b&&y<=h' YiuFM/Resources/Web/APP/P1.js
+          grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
