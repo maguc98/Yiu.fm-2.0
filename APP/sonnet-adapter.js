@@ -44,7 +44,7 @@
       feed: function (ct) {                                          // 软对时：播放中每次 drive 喂入
         if (!running()) { t0 = ct; w0 = now(); return; }
         var p = est(), err = ct - p;
-        t0 = (Math.abs(err) > 0.3) ? ct : Math.max(t0, p + err * 0.2); // 小误差只校正 20%，但不允许时间锚点倒退
+        t0 = (Math.abs(err) > 0.3) ? ct : Math.max(p, p + err * 0.2); // 小误差以当前估算时间为下限，播放时钟不倒退
         w0 = now();
       },
       resync: function () { w0 = now(); }                            // 恢复播放时重置起点
