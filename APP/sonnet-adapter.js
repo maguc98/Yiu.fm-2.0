@@ -200,6 +200,7 @@
     if (!patch || typeof patch !== 'object') return getConfig();
     var s = splitPatch(patch);
     Object.assign(curTuning, s.tuning); Object.assign(curTheme, s.theme); Object.assign(curExtra, s.extra); Object.assign(curFx, s.fx);
+    curTuning.textureResolution = Math.max(1, Math.min(4, +curTuning.textureResolution || 1));
     saveConfig(); pushConfig(s);
     return getConfig();
   }
@@ -632,6 +633,7 @@
       var k;
       if (opts.theme) for (k in opts.theme) if (has(opts.theme, k)) curTheme[k] = THEME_COLORS[k] ? toInt(opts.theme[k]) : opts.theme[k];
       if (opts.tuning) for (k in opts.tuning) if (has(opts.tuning, k)) curTuning[k] = opts.tuning[k];
+      curTuning.textureResolution = Math.max(1, Math.min(4, +curTuning.textureResolution || 1));
     }
     bindAudio();
     return Promise.resolve();            // 不在这里创建 WebGL：等用户真的切到商籁再 show()
@@ -702,7 +704,7 @@
     var m = resMul();
     if (m === 1) return curTuning;
     var t = Object.assign({}, curTuning);
-    t.textureResolution = Math.max(0.25, Math.min(4, (+t.textureResolution || 1) * m));
+    t.textureResolution = Math.max(1, Math.min(4, (+t.textureResolution || 1) * m)); // never render below native resolution
     return t;
   }
 
@@ -710,7 +712,7 @@
   function setTextureResolution(res) {
     res = +res;
     if (!isFinite(res) || res <= 0) return getConfig();
-    curTuning.textureResolution = Math.max(0.25, Math.min(4, res));
+    curTuning.textureResolution = Math.max(1, Math.min(4, res)); // 1x is the minimum native-resolution floor
     saveConfig();
     scheduleResolutionRebuild();
     return getConfig();
