@@ -129,7 +129,9 @@ function karaPaint(ct){
         cssEnd(cs.animationDuration, cs.animationDelay, cs.animationIterationCount, true);
       cur._kTransDoneAt = Math.max(cur._kTransDoneAt || 0, now + transitionEnd);
       if(animationEnd>0){
-        if(cur._kPausedAt)cur._kPausedNewAnimMs=Math.max(cur._kPausedNewAnimMs||0,animationEnd);
+        if(!cur._kPausedAt&&stage.classList.contains('paused')){
+          cur._kPausedAt=now;cur._kPausedAnimDeadline=0;cur._kPausedNewAnimMs=animationEnd;
+        }else if(cur._kPausedAt)cur._kPausedNewAnimMs=Math.max(cur._kPausedNewAnimMs||0,animationEnd);
         else cur._kAnimDoneAt=Math.max(cur._kAnimDoneAt||0,now+animationEnd);
       }
       cur._kDoneAt = Math.max(cur._kTransDoneAt,cur._kAnimDoneAt||0,cur._kPausedAt?now+(cur._kPausedNewAnimMs||0):0);
