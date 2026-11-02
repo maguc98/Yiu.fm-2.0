@@ -59,8 +59,8 @@ jobs:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
-          old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\', "./APP/sonnet-perf-governor.js?v=20261028a"],"
-          new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\', "./APP/sonnet-perf-governor.js?v=20261028a"],"
+          old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
+          new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
           if html.count(old_sonnet_engine) != 1:
               raise SystemExit("Expected exactly one Sonnet engine loader entry; refusing to patch.")
           html = html.replace(old_sonnet_engine, new_sonnet_engine, 1)
