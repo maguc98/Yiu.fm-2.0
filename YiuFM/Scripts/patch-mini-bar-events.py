@@ -12,10 +12,12 @@ def replace_once(path, old, new):
         raise SystemExit(f"{path}: expected one patch anchor, found {n}: {old[:90]!r}")
     p.write_text(s.replace(old, new, 1), encoding="utf-8")
 
-# Audio-clock and no-audio lyric progression both assign idx directly in tick().
+# The branch player.js already contains the lyric-animation handoff before idx
+# changes, so match the stable inner assignment sequence rather than assuming
+# the older one-line if-block formatting from the pinned baseline.
 replace_once("player.js",
-    "if(i !== idx){ idx = i; prog = 0; deferUpdate(); return; }",
-    "if(i !== idx){ idx = i; prog = 0; if(window.YiuPlayback) window.YiuPlayback.notify('lyricindexchange'); deferUpdate(); return; }")
+    "idx = i; prog = 0; deferUpdate(); return;",
+    "idx = i; prog = 0; if(window.YiuPlayback) window.YiuPlayback.notify('lyricindexchange'); deferUpdate(); return;")
 replace_once("player.js",
     "if(prog >= 1){ prog = 0; idx = nextIdx(true); deferUpdate(); return; }",
     "if(prog >= 1){ prog = 0; idx = nextIdx(true); if(window.YiuPlayback) window.YiuPlayback.notify('lyricindexchange'); deferUpdate(); return; }")
