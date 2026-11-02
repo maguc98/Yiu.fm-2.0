@@ -60,7 +60,7 @@ jobs:
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
-          new_partita = '<script src="./APP/partita-adapter.js?v=20261102a"></script>'
+          new_partita = '<script src="./APP/partita-adapter.js?v=20261102b"></script>'
           if html.count(old_partita) != 1:
               raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
           html = html.replace(old_partita, new_partita, 1)
@@ -142,7 +142,7 @@ jobs:
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
-          grep -q "adapter-v9-word-timestamps" "$WEB_ROOT/APP/partita-adapter.js"
+          grep -q "adapter-v10-word-clock-suspend" "$WEB_ROOT/APP/partita-adapter.js"
           grep -q 'g>=t.startTime&&g<=E+0.08' "$WEB_ROOT/APP/P1.js"
           grep -q 'y>=b&&y<=E+0.08' "$WEB_ROOT/APP/P1.js"
           test -s "$WEB_ROOT/APP/playback-service.js"
