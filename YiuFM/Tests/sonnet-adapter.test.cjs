@@ -4,11 +4,38 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function loadAdapter(devicePixelRatio = 2, slider = null, storedConfig = null) {
+function loadAdapter(devicePixelRatio = 2, slider = null, storedConfig = null, runtimeHarness = null) {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'sonnet-adapter.js');
   const source = fs.readFileSync(file, 'utf8');
   const window = { devicePixelRatio };
-  const document = { addEventListener() {}, getElementById(id) { return id === 'sonnet-res' ? slider : null; } };
+  if (runtimeHarness) {
+    window.SonnetRuntime = {
+      compileSonnetProgram() { return {}; },
+      SonnetPixiRuntime: {
+        create(options) {
+          runtimeHarness.created.push(Number(options.tuning.textureResolution));
+          return Promise.resolve({
+            options: { currentTime: options.currentTime, paused: options.paused },
+            setPaused(value) { this.options.paused = value; },
+            renderOnce() {},
+            setTuning() {},
+            setModulation() {},
+            destroy() { runtimeHarness.destroyed++; }
+          });
+        }
+      }
+    };
+  }
+  const document = {
+    hidden: false,
+    addEventListener() {},
+    getElementById(id) {
+      if (id === 'sonnet-res') return slider;
+      if (id === 'sonnetHost') return runtimeHarness ? runtimeHarness.host : null;
+      if (id === 'audio') return runtimeHarness ? runtimeHarness.audio : null;
+      return null;
+    }
+  };
   const localStorage = {
     getItem() { return storedConfig ? JSON.stringify(storedConfig) : null; },
     setItem() {}
@@ -165,4 +192,36 @@ test('The packaged legacy UI receives the current karaoke timing fixes', () => {
     'the renderer must wait for character entrance animations before retiring a line');
   assert.ok(renderer.includes('audio.currentTime-LYR_OFF'),
     'the first karaoke paint must use lyric-offset-adjusted audio time');
+});
+
+
+test('Sonnet resolution slider input rebuilds the live renderer at the selected resolution', async () => {
+  const listeners = {};
+  const slider = {
+    min: '50', max: '400', step: '25', value: '200',
+    addEventListener(type, callback) { listeners[type] = callback; }
+  };
+  const runtimeHarness = {
+    created: [],
+    destroyed: 0,
+    host: { id: 'sonnetHost', innerHTML: '', style: {}, clientWidth: 400, clientHeight: 800 },
+    audio: { paused: true, currentTime: 0, addEventListener() {} }
+  };
+  const adapter = loadAdapter(2, slider, null, runtimeHarness);
+  await adapter.init();
+  adapter.show();
+  await adapter.whenReady();
+
+  assert.deepEqual(runtimeHarness.created, [2]);
+  assert.equal(adapter.state().appliedTextureResolution, 2);
+
+  slider.value = '300';
+  listeners.input();
+  await new Promise(resolve => setTimeout(resolve, 650));
+
+  assert.deepEqual(runtimeHarness.created, [2, 3],
+    'the input event must destroy and recreate the Pixi runtime with the selected resolution');
+  assert.equal(runtimeHarness.destroyed, 1);
+  assert.equal(adapter.state().textureResolution, 3);
+  assert.equal(adapter.state().appliedTextureResolution, 3);
 });
