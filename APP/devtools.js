@@ -517,7 +517,6 @@
     try { localStorage.setItem('dev_pause_log', '0'); } catch(_) {}
   }
   window.__logPaused = state.pauseLog;
-  if (state.fps) state.jank = true;
 
   // 2. 右上角 FPS 悬浮窗：胶囊 + 点击向下展开的「采样间隔」面板（胶囊可拖拽）
   var fpsUI = document.getElementById('fpsIndicator');
@@ -657,12 +656,12 @@
 
   var frameRaf = 0, frameCounterGeneration = 0;
   function countFrames(generation) {
-    if (generation !== frameCounterGeneration || !state.jank) return;
+    if (generation !== frameCounterGeneration || (!state.jank && !state.fps)) return;
     frames++;
     frameRaf = origRAF.call(window, function(){ countFrames(generation); });
   }
   function startFrameCounter() {
-    if (!state.jank || frameRaf) return;
+    if ((!state.jank && !state.fps) || frameRaf) return;
     var generation = ++frameCounterGeneration;
     frameRaf = origRAF.call(window, function(){ countFrames(generation); });
   }
@@ -677,7 +676,7 @@
   var fpsTimer = 0;
   function sampleFps() {
     var now = performance.now();
-    if (!state.jank) {
+    if (!state.jank && !state.fps) {
       lastTime = now; frames = 0;
       if (fpsUI.style.opacity !== '0') hideFpsUI();
       return;
@@ -703,26 +702,27 @@
   function restartFpsTimer() {
     if (fpsTimer) { clearInterval(fpsTimer); fpsTimer = 0; }
     frames = 0; lastTime = performance.now();
-    if (state.jank) fpsTimer = setInterval(sampleFps, state.fps ? refreshRate : 1000);
+    if (state.jank || state.fps) fpsTimer = setInterval(sampleFps, state.fps ? refreshRate : 1000);
   }
   function syncJankMonitoring() {
-    if (state.jank) {
+    if (state.jank || state.fps) {
       startFrameCounter();
       restartFpsTimer();
-      startVisualAnomalyDetector();
     } else {
       stopFrameCounter();
       if (fpsTimer) { clearInterval(fpsTimer); fpsTimer = 0; }
       frames = 0; lastTime = performance.now();
       hideFpsUI();
-      stopVisualAnomalyDetector();
     }
+    if (state.jank) startVisualAnomalyDetector();
+    else stopVisualAnomalyDetector();
   }
   window.addEventListener('jank-mode-change', syncJankMonitoring);
-  if (state.jank) {
+  if (state.jank || state.fps) {
     startFrameCounter();
     restartFpsTimer();
   }
+  if (state.jank) startVisualAnomalyDetector();
 
   // perf: 拦截 rAF 抓取卡顿溯源；同时合并 hbLpJS 的低功耗限帧器，避免双层包装
   var rafSeq = 1e9, rafMap = Object.create(null);
@@ -1162,12 +1162,6 @@
     addSwitch('devJank', '卡顿检测', state.jank, function() {
       state.jank = this.checked;
       lsSet('dev_jank', state.jank ? '1' : '0');
-      if (!state.jank && state.fps) {
-        state.fps = false;
-        document.getElementById('devFps').checked = false;
-        lsSet('dev_fps', '0');
-        hideFpsUI();
-      }
       try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: state.jank } })); } catch (_) { syncJankMonitoring(); }
     });
 
@@ -1175,14 +1169,8 @@
     addSwitch('devFps', '实时帧率显示', state.fps, function() {
       state.fps = this.checked;
       lsSet('dev_fps', state.fps ? '1' : '0');
-      if (state.fps && !state.jank) {
-        state.jank = true;
-        document.getElementById('devJank').checked = true;
-        lsSet('dev_jank', '1');
-        try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: true } })); } catch (_) { syncJankMonitoring(); }
-      }
       if (!state.fps) hideFpsUI();
-      restartFpsTimer();
+      syncJankMonitoring();
     });
 
     // D. 悬浮窗日志
@@ -1533,7 +1521,7 @@ function stopVisualAnomalyDetector() {
 // 监控只在「卡顿检测」开启时运行；关闭时完整清理本次会话创建的观察器与定时器
 (function(){
   var on = false;
-  try { on = localStorage.getItem('dev_jank') === '1' || localStorage.getItem('dev_fps') === '1'; } catch (_) {}
+  try { on = localStorage.getItem('dev_jank') === '1'; } catch (_) {}
   if (on) startVisualAnomalyDetector();
   window.addEventListener('jank-mode-change', function(e){
     if (e && e.detail && e.detail.on) startVisualAnomalyDetector();
