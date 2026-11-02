@@ -578,6 +578,7 @@
     lastProgram = program; lastSeed = seed;
 
     var tuningAtCreate = effTuning();
+    var resolutionAtCreate = Number(tuningAtCreate.textureResolution);
     RT.SonnetPixiRuntime.create({
       host: host,
       signal: ctrl.signal,
@@ -602,7 +603,7 @@
       }
       creating = null;
       runtime = rt;
-      runtimeTextureResolution = Number(tuningAtCreate.textureResolution);
+      runtimeTextureResolution = resolutionAtCreate;
       // perf: 接线动态性能调节器（governor 脚本须先于本文件加载）
       if (window.SonnetPerfGovernor) {
         governor = new window.SonnetPerfGovernor({
