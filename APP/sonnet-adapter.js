@@ -712,7 +712,7 @@
     if (m == null) { try { m = parseFloat(localStorage.getItem('qt_res_mul')); } catch (_) { m = NaN; } }
     return (m >= 0.25 && m < 1) ? m : 1;
   }
-  // 创建运行时用的 tuning：倍率为 1 时就是 curTuning 本身；<1 时给一份拷贝并缩小 textureResolution（不污染保存的基线 / 面板显示）
+  // 创建运行时 tuning：<1 的全局省电倍率只缩放到设备 DPR 下限，不污染保存的基线 / 面板显示。
   function effTuning() {
     var m = resMul();
     if (m === 1) return curTuning;
@@ -721,7 +721,7 @@
     return t;
   }
 
-  // perf: 设置纹理渲染分辨率（0.25 ~ 2.0，1 为屏幕原生），更新基线并（若在运行中）重建画面生效
+  // 设置纹理渲染分辨率（最高 4x，最低为当前设备 DPR），更新基线并在运行中重建画面生效。
   function bindResolutionControl() {
     var slider = document.getElementById('sonnet-res');
     if (!slider || slider.__sonnetResolutionBound) return;
