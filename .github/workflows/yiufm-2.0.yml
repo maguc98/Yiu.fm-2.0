@@ -86,7 +86,7 @@ jobs:
               raise SystemExit("Expected exactly one Partita bundle script tag; refusing to patch.")
           html = html.replace(old_p1, new_p1, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
-          new_partita = '<script src="./APP/partita-adapter.js?v=20261102b"></script>'
+          new_partita = '<script src="./APP/partita-adapter.js?v=20261102c"></script>'
           if html.count(old_partita) != 1:
               raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
           html = html.replace(old_partita, new_partita, 1)
