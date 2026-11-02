@@ -65,10 +65,15 @@ jobs:
               raise SystemExit("Expected exactly one Sonnet engine loader entry; refusing to patch.")
           html = html.replace(old_sonnet_engine, new_sonnet_engine, 1)
           old_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261029a"></script>'
-          new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261102b"></script>'
+          new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261102c"></script>'
           if html.count(old_sonnet) != 1:
               raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
           html = html.replace(old_sonnet, new_sonnet, 1)
+          old_p1 = '<script src="./APP/P1.js?v=1"></script>'
+          new_p1 = '<script src="./APP/P1.js?v=20261102c"></script>'
+          if html.count(old_p1) != 1:
+              raise SystemExit("Expected exactly one Partita bundle script tag; refusing to patch.")
+          html = html.replace(old_p1, new_p1, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
           new_partita = '<script src="./APP/partita-adapter.js?v=20261102b"></script>'
           if html.count(old_partita) != 1:
@@ -164,6 +169,8 @@ jobs:
           grep -q 'resolution: options.tuning.textureResolution,' "$WEB_ROOT/APP/sonnet/sonnet.js"
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' "$WEB_ROOT/APP/sonnet/sonnet.js"
           grep -q 'sonnet.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'sonnet-adapter.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'P1.js?v=20261102c' "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/playback-service.js"
           test -s "$WEB_ROOT/APP/lyrics-service.js"
           test -s "$WEB_ROOT/APP/library-service.js"
