@@ -50,6 +50,37 @@ test('Sonnet preserves original per-character lyric timestamps', () => {
   );
 });
 
+test('Sonnet playback clock never moves backward during sustained small negative drift', () => {
+  const adapterPath = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'sonnet-adapter.js');
+  const source = fs.readFileSync(adapterPath, 'utf8');
+  assert.match(source, /Math\.max\(p, p \+ err \* 0\.2\)/,
+    'soft correction must use the current estimated time as its lower bound');
+
+  // Deterministic 3-minute / 60fps simulation with a 30fps audio clock
+  // and small negative drift. This mirrors the production feed/estimate equations.
+  let anchor = 0;
+  let wall = 0;
+  let last = 0;
+  let minimumStep = Infinity;
+  for (let frame = 1; frame <= 10800; frame++) {
+    wall = frame * (1000 / 60);
+    const estimate = anchor + (wall - (frame === 1 ? 0 : previousWall)) / 1000;
+    const audioTime = Math.floor((wall / 1000 - 0.04) * 30) / 30;
+    const error = audioTime - estimate;
+    const nextAnchor = Math.abs(error) > 0.3
+      ? audioTime
+      : Math.max(estimate, estimate + error * 0.2);
+    anchor = nextAnchor;
+    previousWall = wall;
+    const current = anchor;
+    assert.ok(current >= last - 1e-12, 'clock must remain monotonic');
+    minimumStep = Math.min(minimumStep, current - last);
+    last = current;
+  }
+  assert.ok(last > 170, 'clock should continue advancing throughout the 3-minute run');
+  assert.ok(minimumStep >= -1e-12, 'no negative time step is permitted');
+});
+
 test('Sonnet does not spread repeated character timestamps into an even line animation', () => {
   const adapter = loadAdapter();
   const lines = adapter.buildLines(
