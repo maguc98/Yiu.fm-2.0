@@ -3,6 +3,12 @@ import WebKit
 
 @main
 struct TextDisplayApp: App {
+    init() {
+        // Enable Apple's Metal Performance HUD for this app.
+        // Set before the app creates its first Metal-backed view.
+        UserDefaults.standard.set(true, forKey: "MetalHUDForceEnabled")
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
