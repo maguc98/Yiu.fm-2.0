@@ -144,6 +144,11 @@ function karaPaint(ct){
 }
 
 function startTick(){
+  // V2 owns the main player RAF loop; keep the legacy path as a safe loading fallback.
+  if(window.YiuFrameScheduler && typeof window.YiuFrameScheduler.start === 'function'){
+    window.YiuFrameScheduler.start(tick, function(){ return !!playing; });
+    return;
+  }
   if(!tickRaf) tickRaf = requestAnimationFrame(tick);
 }
 function tick(ts){
