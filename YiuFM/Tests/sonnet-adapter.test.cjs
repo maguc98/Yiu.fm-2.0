@@ -105,10 +105,10 @@ test('The packaged legacy UI receives the current karaoke timing fixes', () => {
     'the packaged player must calculate full animation completion deadlines');
   assert.doesNotMatch(player, /间隔太短的字/,
     'the packaged player must not shorten a character animation to fit the next timestamp');
-  assert.match(player, /if\\(cur && cur\\._kara\\) karaPaint\\(ct\\)/,
+  assert.match(player, /if\(cur && cur\._kara\) karaPaint\(ct\)/,
     'the previous lyric line must be painted to the exact cutover time');
-  assert.match(renderer, /var _retireWait=o\\._kara/,
+  assert.match(renderer, /var _retireWait=o\._kara/,
     'the renderer must wait for character entrance animations before retiring a line');
-  assert.match(renderer, /audio\\.currentTime-LYR_OFF/,
+  assert.match(renderer, /audio\.currentTime-LYR_OFF/,
     'the first karaoke paint must use lyric-offset-adjusted audio time');
 });
