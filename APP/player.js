@@ -169,15 +169,25 @@ function tick(ts){
 
   if(AUDIO_ON && audio && audio.duration && LN.length){
     var ct = audio.currentTime - LYR_OFF;   // 歌词用的时间 = 音频时间 − 偏移
-    var lo = 0, hi = Math.min(TS.length, LN.length) - 1, i = 0;
-    while(lo <= hi){
-      var mid = (lo + hi) >> 1;
-      if((TS[mid] || 0) <= ct){ i = mid; lo = mid + 1; }
-      else { hi = mid - 1; }
+    var runtime = window.YiuRuntimeV2, i = null;
+    // Guarded takeover is opt-in. Shadow remains the default; invalid results
+    // or a parity mismatch immediately return control to the legacy calculation.
+    if(runtime && typeof runtime.getLineIndexMode === 'function' &&
+       runtime.getLineIndexMode() === 'takeover' &&
+       typeof runtime.resolveLineIndex === 'function'){
+      try { i = runtime.resolveLineIndex(ct); } catch(_) { i = null; }
     }
-    // V2 shadow validation compares its calculated line index with the legacy player's result.
-    // It remains observational: the legacy index and renderer still own playback output.
-    if (window.YiuRuntimeV2 && typeof window.YiuRuntimeV2.sample === 'function') window.YiuRuntimeV2.sample(ct, i);
+    if(typeof i !== 'number' || !isFinite(i)){
+      var lo = 0, hi = Math.min(TS.length, LN.length) - 1;
+      i = 0;
+      while(lo <= hi){
+        var mid = (lo + hi) >> 1;
+        if((TS[mid] || 0) <= ct){ i = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
+      }
+    }
+    // V2 continues observing timeline events; shadow mode also records parity.
+    if (runtime && typeof runtime.sample === 'function') runtime.sample(ct, i);
     if(i !== idx){
       // 切句前先把旧句补绘到当前音频时刻，确保最后一个字也有真实动画结束时间。
       if(cur && cur._kara) karaPaint(ct);
