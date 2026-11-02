@@ -297,6 +297,7 @@
         }
         if (typeof ct !== 'number' || !isFinite(ct)) return;
         var prev = currentTimeObj.get();
+        if (ct === prev) return; // 备用时钟可能重复提交同一音频时间；不触发无效 MotionValue 更新
         if (ct < prev && prev - ct < 0.25) return;
         currentTimeObj.set(ct);
         var idx = findIndex(ct);
