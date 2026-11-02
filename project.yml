@@ -23,6 +23,7 @@ targets:
         PRODUCT_NAME: Yiu.fm
         INFOPLIST_KEY_CFBundleDisplayName: Yiu.fm
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_MetalHudEnabled: YES
         MARKETING_VERSION: "0.1.1"
         CURRENT_PROJECT_VERSION: "4"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone:
