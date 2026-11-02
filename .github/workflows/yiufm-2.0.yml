@@ -90,6 +90,7 @@ jobs:
           python3 YiuFM/Scripts/patch-playback-preferences.py
           python3 YiuFM/Scripts/patch-visualizer-lifecycle.py
           python3 YiuFM/Scripts/patch-visualizer-drive-isolation.py
+          python3 YiuFM/Scripts/patch-partita-word-clock.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
           node --check YiuFM/Resources/Web/APP/playback-service.js
           node --check YiuFM/Resources/Web/APP/playback-preferences-service.js
@@ -100,6 +101,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
+          node --check YiuFM/Resources/Web/APP/P1.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
           node --check YiuFM/Resources/Web/APP/mini-player.js
@@ -107,7 +109,9 @@ jobs:
           ! grep -q '间隔太短的字' YiuFM/Resources/Web/APP/player.js
           grep -q 'var _retireWait=o._kara' YiuFM/Resources/Web/APP/renderer.js
           grep -q 'hasWordTimes' YiuFM/Resources/Web/APP/partita-adapter.js
-          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/partita-adapter.test.cjs
+          grep -q 'g>=t.startTime&&g<=E+0.08' YiuFM/Resources/Web/APP/P1.js
+          grep -q 'y>=b&&y<=E+0.08' YiuFM/Resources/Web/APP/P1.js
+          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
@@ -139,6 +143,8 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
           grep -q "adapter-v9-word-timestamps" "$WEB_ROOT/APP/partita-adapter.js"
+          grep -q 'g>=t.startTime&&g<=E+0.08' "$WEB_ROOT/APP/P1.js"
+          grep -q 'y>=b&&y<=E+0.08' "$WEB_ROOT/APP/P1.js"
           test -s "$WEB_ROOT/APP/playback-service.js"
           test -s "$WEB_ROOT/APP/lyrics-service.js"
           test -s "$WEB_ROOT/APP/library-service.js"
