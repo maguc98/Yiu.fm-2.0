@@ -110,6 +110,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/player.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
+          node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/P1.js
