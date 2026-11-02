@@ -82,20 +82,30 @@ function karaPaint(ct){
       var sp = karaSpans[k];
       sp.classList.add('ki');
       // 以真实启动时刻计算入场动画结束点，避免掉帧时按歌词时间误判为已播完。
-      var cs = getComputedStyle(sp), now = performance.now(), dur = 0, delay = 0;
-      function maxCssMs(value){
-        var m = 0;
-        String(value || '0s').split(',').forEach(function(v){
+      var cs = getComputedStyle(sp), now = performance.now();
+      function cssTimes(value){
+        return String(value || '0s').split(',').map(function(v){
           v = v.trim();
           var x = parseFloat(v) || 0;
-          if(!/ms$/.test(v)) x *= 1000;
-          if(x > m) m = x;
+          return /ms$/.test(v) ? x : x * 1000;
         });
-        return m;
       }
-      dur = maxCssMs(cs.transitionDuration);
-      delay = maxCssMs(cs.transitionDelay);
-      cur._kDoneAt = Math.max(cur._kDoneAt || 0, now + dur + delay);
+      function cssEnd(durations, delays, counts, finiteOnly){
+        var ds = cssTimes(durations), ls = cssTimes(delays), ns = String(counts || '1').split(','), end = 0;
+        for(var z = 0; z < ds.length; z++){
+          var count = (ns[z % ns.length] || '1').trim();
+          if(finiteOnly && count === 'infinite') continue;
+          var repeat = finiteOnly ? Math.max(0, parseFloat(count) || 0) : 1;
+          var ms = ds[z] * repeat + ls[z % ls.length];
+          if(ms > end) end = ms;
+        }
+        return Math.max(0, end);
+      }
+      var transitionEnd = cssEnd(cs.transitionDuration, cs.transitionDelay, '1', false);
+      // 只等待有限次入场动画；wave 的 infinite 循环不应阻塞整句退场。
+      var animationEnd = cs.animationName === 'none' ? 0 :
+        cssEnd(cs.animationDuration, cs.animationDelay, cs.animationIterationCount, true);
+      cur._kDoneAt = Math.max(cur._kDoneAt || 0, now + transitionEnd, now + animationEnd);
     }
   } else {
     for(k = n; k < karaN; k++) karaSpans[k].classList.remove('ki');
