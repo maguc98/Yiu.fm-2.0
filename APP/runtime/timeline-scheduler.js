@@ -79,8 +79,8 @@
       events = next;
       timelineVersion++;
       if (finite(options.currentTime)) {
-        lastTime = options.currentTime;
-        cursor = upperBound(events, lastTime);
+        lastTime = options.includeCurrent ? options.currentTime - Number.EPSILON : options.currentTime;
+        cursor = options.includeCurrent ? lowerBound(events, options.currentTime) : upperBound(events, options.currentTime);
       } else {
         lastTime = -Number.EPSILON;
         cursor = 0;
