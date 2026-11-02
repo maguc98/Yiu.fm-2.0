@@ -139,7 +139,10 @@ test('Sonnet resolution slider reflects and enforces the device DPR', async () =
   assert.equal(slider.min, '300');
   assert.equal(slider.value, '300');
   assert.equal(slider.max, '400');
-  assert.equal(typeof listeners.change, 'function');
+  assert.equal(typeof listeners.input, 'function',
+    'the resolution control must respond while the slider is being adjusted');
+  assert.equal(typeof listeners.change, 'function',
+    'the resolution control must also apply on release');
 
   slider.value = '350';
   listeners.change();
