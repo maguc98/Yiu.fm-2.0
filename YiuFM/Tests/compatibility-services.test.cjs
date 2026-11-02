@@ -239,6 +239,7 @@ test('one library render reaches facade subscribers only once across legacy and 
 test('one LRC import publishes one lyricschange when renderer and wrapper both signal', () => {
   const h = createHarness();
   h.window.refreshAll = () => h.window.YiuPlayback.notify('lyricschange');
+  h.window.applyLRC = function () { h.window.refreshAll(); };
   h.load('playback-service.js');
 
   const events = [];
