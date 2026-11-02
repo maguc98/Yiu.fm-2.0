@@ -414,6 +414,11 @@ function sonnetLeave(){if(glOn==="sonnet")glLeave()}
 /* 适配器异步建画布失败（WebGL 拿不到等）时调用：退回默认风格，免得一片空白 */
 window.__sonnetFailed=function(){if(style==="sonnet")setStyle("scatter")};
 window.__temperaFailed=function(){if(style==="tempera")setStyle("scatter")};
+window.__yiuRenderFailure=function(name,error){
+  if(style!==name)return;
+  console.warn("视觉引擎回退失败，切换安全默认风格:",name,error||"");
+  setStyle("scatter");
+};
 function modeOf(i){
   if(style==="sonnet")return sonnetOK()?"sonnet":"scatter";   // 商籁不参与逐句覆盖；适配器没加载时退回打散重组
   if(style==="tempera")return temperaOK()?"tempera":"scatter"; // 凝彩同理
