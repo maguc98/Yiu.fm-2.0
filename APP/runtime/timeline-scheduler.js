@@ -91,9 +91,9 @@
     function advance(currentTime) {
       if (!finite(currentTime) || currentTime < 0) return [];
       if (currentTime < lastTime) {
-        // A seek/restart: rebase without replaying historical events.
-        lastTime = currentTime;
-        cursor = upperBound(events, currentTime);
+        // A seek/restart: include an event exactly at the target timestamp.
+        lastTime = currentTime - Number.EPSILON;
+        cursor = lowerBound(events, currentTime);
         return [];
       }
 
