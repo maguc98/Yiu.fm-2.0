@@ -86,3 +86,8 @@ test('Three consecutive V2 drive faults trigger the V1 compatibility bridge',asy
  assert.equal(m.fallbackController.snapshot().runtimeFallbacks,1);
  assert.ok(h.events.includes('legacy:switch:sonnet:false'));
 });
+test('Renderer exposes a safe default-style fallback after both manager paths fail',()=>{
+ const renderer=fs.readFileSync(path.join(__dirname,'..','..','APP','renderer.js'),'utf8');
+ assert.match(renderer,/window\.__yiuRenderFailure=function\(name,error\)/);
+ assert.match(renderer,/setStyle\("scatter"\)/);
+});
