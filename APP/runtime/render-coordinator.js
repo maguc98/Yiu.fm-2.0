@@ -103,7 +103,7 @@ function drain(){
  }).then(drain);
 }
 function request(name,opts){
- opts=opts||{};
+ opts=opts||{};if(name)driveFaults[name]=0;
  if(mode==='legacy'&&!switching){if(!name)return legacy.destroy();stats.legacySwitches++;return legacy.switchTo(name,opts);}
  if(name&&opts.reuse&&canReuse(name)){
   return reuse(name,opts).catch(function(error){return fallbackToLegacy(name,opts,error);});
@@ -147,7 +147,7 @@ function driveV2(time){
 }
 function retryV2(){
  if(mode!=='legacy'||fallbackPending)return Promise.resolve(mode==='v2');
- var target=legacy.current;stats.retryAttempts++;
+ var target=legacy.current;stats.retryAttempts++;if(target)driveFaults[target]=0;
  if(!target){mode='v2';fallbackLocked=false;return Promise.resolve(true);}
  mode='v2';fallbackLocked=false;
  return request(target,{reuse:true}).then(function(){return mode==='v2';},function(){
