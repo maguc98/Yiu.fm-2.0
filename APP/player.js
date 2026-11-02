@@ -14,8 +14,7 @@ var WT = []; // 逐字歌词：WT[i] = 第 i 句每个字的开始时间（秒�
     '.one .c.ki{opacity:1;filter:none;transform:none}' +
     '.one.m-wave .c.ki{animation:wavy calc(2.4s/var(--aspd,1)) ease-in-out infinite;animation-delay:calc(var(--i,0)*-.17s)}' +
     '.one.m-glitch .c.ki{animation:glitchfx var(--kad,.5s) steps(1,end) 1 backwards;animation-delay:calc(var(--dl,0s)/var(--aspd,1))}' +
-    // 间隔太短的字：把入场时长压缩到"下一个字出现之前"一定播完（落下 .out 时不生效，落下动画照旧）
-    '.one:not(.out) .c.ki[data-kd]{transition-duration:var(--kd)!important}';
+    // 字符按各自时间点亮，不再按下一个字的时间戳压缩入场动画。
   var first = document.querySelector('link[rel="stylesheet"]');
   if(first && first.parentNode) first.parentNode.insertBefore(st, first); else document.head.appendChild(st);
 })();
@@ -69,7 +68,7 @@ function karaResumeAll(){
     if(box._retirePaused&&box._retireCheck){box._retirePaused=0;box._retireCheck()}
   });
 }
-/* 保证每个字在"下一个字出现"之前已经完整显示：入场时长超过间隔的，压缩到间隔的 90% */
+/* 每个字保留完整入场动画时长；不按下一个字的时间戳压缩。 */
 function karaFit(box, spans){
   // glitch 使用固定 0.5s 入场动画；其他风格沿用各自 CSS transition。
   for(var k = 0; k < spans.length; k++) spans[k].style.setProperty('--kad', '0.5s');
