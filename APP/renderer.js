@@ -261,9 +261,15 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
     }
     var o=cur;
     if(o._posterCamCleanup)try{o._posterCamCleanup()}catch(_){}
-    o.classList.add("out");
-    if(!pan){var _outs=one.querySelectorAll(".one.out");if(_outs.length>2)_outs[0].remove()}
-    if(!pan)setTimeout(function(){o.remove()},o.classList.contains("m-poster")?900:1800)
+    // 逐字歌词的已点亮字符必须先完成入场动画，再启动整句退场。
+    var _retireWait=o._kara?Math.max(0,(o._kDoneAt||0)-performance.now()+50):0;
+    function _retireOld(){
+      if(!o.isConnected)return;
+      o.classList.add("out");
+      if(!pan){var _outs=one.querySelectorAll(".one.out");if(_outs.length>2)_outs[0].remove()}
+      if(!pan)setTimeout(function(){o.remove()},o.classList.contains("m-poster")?900:1800);
+    }
+    if(_retireWait>0)setTimeout(_retireOld,_retireWait);else _retireOld();
   }
   if(!pan&&(wx||wy||(one.style.transform&&one.style.transform!=="none"))){panGen++;one.style.transition="none";one.style.transform="none";one.style.filter="";wx=0;wy=0}
   if(GLM[m]){                        // 商籁 / 凝彩自己画整首歌：这里不建 DOM 文字，只保证画布已显示
