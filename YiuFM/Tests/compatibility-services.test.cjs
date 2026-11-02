@@ -208,7 +208,7 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
   await h.window.YiuLibrary.select(9, true);
   h.notifyLibraryChange();
   h.window.YiuLibrary.notify('librarychange');
-  assert.deepEqual(changes, [9, 9]);
+  assert.deepEqual(changes, [9], 'legacy and facade notifications must not double-deliver');
 
   assert.equal(h.window.YiuLibrary.step(-1), -1);
   assert.equal(h.window.YiuLibrary.peekNext(), 9);
