@@ -51,8 +51,10 @@
       this._exitSink = false;
       this.levels = [
         { id: 0, kind: "modulation", mod: null },
-        { id: 1, kind: "modulation", mod: { cameraScale: 0.4, breathScale: 0, parallaxScale: 0, motionScale: 0.6, driftScale: 0, mgSwimScale: 0, caScale: 0, ghostScale: 0, transitionMotionScale: 0, transitionBlurScale: 0, transitionGlitchScale: 0 } },
-        { id: 2, kind: "modulation", mod: { cameraScale: 0, breathScale: 0, parallaxScale: 0, motionScale: 0, driftScale: 0, mgSwimScale: 0, caScale: 0, ghostScale: 0, transitionMotionScale: 0, transitionBlurScale: 0, transitionGlitchScale: 0 } },
+        // Camera tracking follows the lyric timeline and must survive adaptive degradation.
+        // Omit cameraScale so the user's cameraIntensity / modulation baseline remains active.
+        { id: 1, kind: "modulation", mod: { breathScale: 0, parallaxScale: 0, motionScale: 0.6, driftScale: 0, mgSwimScale: 0, caScale: 0, ghostScale: 0, transitionMotionScale: 0, transitionBlurScale: 0, transitionGlitchScale: 0 } },
+        { id: 2, kind: "modulation", mod: { breathScale: 0, parallaxScale: 0, motionScale: 0, driftScale: 0, mgSwimScale: 0, caScale: 0, ghostScale: 0, transitionMotionScale: 0, transitionBlurScale: 0, transitionGlitchScale: 0 } },
         { id: 3, kind: "tuning", tuning: { showBackgroundMg: false, showFixedGeo: false, showBackgroundDecor: false, showGiantDecorativeText: false } },
         { id: 4, kind: "tuning", tuning: { showBackgroundMg: false, showFixedGeo: false, showBackgroundDecor: false, showGiantDecorativeText: false, showGuide: false, outerFrameMode: "none", enableTransitions: false } },
         { id: 5, kind: "exit" },
