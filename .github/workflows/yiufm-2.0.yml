@@ -82,7 +82,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
           node --check YiuFM/Resources/Web/APP/mini-player.js
-          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs
+          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
