@@ -4,6 +4,7 @@
 
   var root = null;
   var active = false;
+  var suspended = false;
   var currentTimeObj = null;
   var lastLines = [];
   var lineIndex = -1;
@@ -245,7 +246,7 @@
 
     show: function () {
       active = true;
-      if (hostEl) hostEl.style.display = 'block';
+      if (hostEl) hostEl.style.display = suspended ? 'none' : 'block';
       applyVars();
       applyRes();
       if (!lastLines.length && window.LN && window.LN.length) this.loadLyrics(window.TS || [], window.WT || [], window.LN);
@@ -286,7 +287,7 @@
     // 时间输入：可能同时有多个来源（播放器主循环、partita-connect 备用时钟）。
     // 为避免两个时钟互相拉扯造成文字抽搐：① 主循环在喂数据时，备用时钟自动让位；② 小幅回退的时间戳直接忽略。
     drive: function (ct, fromFallback) {
-      if (!active || !currentTimeObj) return;
+      if (!active || suspended || !currentTimeObj) return;
       try {
         var now = (window.performance && performance.now) ? performance.now() : Date.now();
         if (fromFallback) {
@@ -364,6 +365,7 @@
 
     destroy: function () {
       active = false;
+      suspended = false;
       if (root) { try { root.unmount(); } catch (e) {} root = null; }
       if (hostEl) hostEl.innerHTML = '';
       // 彻底清空内存中的假数据和游标
@@ -392,7 +394,11 @@
 
     isAlive: function () { return active || !!root; },
     isActive: function () { return active; },
-    setSuspended: function (v) { this.hide(); },
+    setSuspended: function (v) {
+      suspended = !!v;
+      if (hostEl) hostEl.style.display = suspended || !active ? 'none' : 'block';
+      if (!suspended && active) this._render();
+    },
     version: VERSION
   };
 
