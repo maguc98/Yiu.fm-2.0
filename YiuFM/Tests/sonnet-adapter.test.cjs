@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function loadAdapter(devicePixelRatio = 2) {
+function loadAdapter(devicePixelRatio = 2, slider = null) {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'sonnet-adapter.js');
   const source = fs.readFileSync(file, 'utf8');
   const window = { devicePixelRatio };
-  const document = { addEventListener() {}, getElementById() { return null; } };
+  const document = { addEventListener() {}, getElementById(id) { return id === 'sonnet-res' ? slider : null; } };
   vm.runInNewContext(source, {
     window,
     document,
@@ -112,6 +112,29 @@ test('Sonnet resolution never drops below Retina device pixel density', () => {
   adapter.updateConfig({ textureResolution: 1 });
   assert.equal(adapter.getConfig().textureResolution, 3,
     'legacy configuration updates must not reintroduce sub-native rendering');
+});
+
+test('Sonnet resolution slider reflects and enforces the device DPR', async () => {
+  const listeners = {};
+  const slider = {
+    min: '50',
+    max: '400',
+    step: '25',
+    value: '100',
+    addEventListener(type, callback) { listeners[type] = callback; }
+  };
+  const adapter = loadAdapter(3, slider);
+  await adapter.init();
+
+  assert.equal(slider.min, '300');
+  assert.equal(slider.value, '300');
+  assert.equal(slider.max, '400');
+  assert.equal(typeof listeners.change, 'function');
+
+  slider.value = '350';
+  listeners.change();
+  assert.equal(adapter.getConfig().textureResolution, 3.5);
+  assert.equal(slider.value, '350');
 });
 
 test('The packaged legacy UI receives the current karaoke timing fixes', () => {
