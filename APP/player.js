@@ -13,8 +13,8 @@ var WT = []; // 逐字歌词：WT[i] = 第 i 句每个字的开始时间（秒�
   st.textContent =
     '.one .c.ki{opacity:1;filter:none;transform:none}' +
     '.one.m-wave .c.ki{animation:wavy calc(2.4s/var(--aspd,1)) ease-in-out infinite;animation-delay:calc(var(--i,0)*-.17s)}' +
-    '.one.m-glitch .c.ki{animation:glitchfx var(--kad,.5s) steps(1,end) 1 backwards;animation-delay:calc(var(--dl,0s)/var(--aspd,1))}' +
-    // 字符按各自时间点亮，不再按下一个字的时间戳压缩入场动画。
+    '.one.m-glitch .c.ki{animation:glitchfx var(--kad,.5s) steps(1,end) 1 backwards;animation-delay:calc(var(--dl,0s)/var(--aspd,1))}';
+  // 字符按各自时间点亮，不再按下一个字的时间戳压缩入场动画。
   var first = document.querySelector('link[rel="stylesheet"]');
   if(first && first.parentNode) first.parentNode.insertBefore(st, first); else document.head.appendChild(st);
 })();
