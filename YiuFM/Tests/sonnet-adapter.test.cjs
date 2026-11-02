@@ -61,6 +61,7 @@ test('Sonnet playback clock never moves backward during sustained small negative
   let anchor = 0;
   let wall = 0;
   let last = 0;
+  let previousWall = 0;
   let minimumStep = Infinity;
   for (let frame = 1; frame <= 10800; frame++) {
     wall = frame * (1000 / 60);
