@@ -347,7 +347,7 @@ if(m!=="poster"){ [].forEach.call(one.children,function(c){ if(c.classList&&(c.c
   if(kara){
     // 逐字歌词：不加 .in，字由 player.js 的 karaPaint 按时间一个个点亮；等两帧后再开始，保证入场动画能播
     box._kara=1;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){box._kgo=1;if(cur===box&&window.karaPaint)karaPaint(audio.currentTime)})});
+    requestAnimationFrame(function(){requestAnimationFrame(function(){box._kgo=1;if(cur===box&&window.karaPaint)karaPaint(audio.currentTime-LYR_OFF)})});
   }else requestAnimationFrame(function(){requestAnimationFrame(function(){box.classList.add("in")})});
 }
 
