@@ -68,6 +68,25 @@ function karaResumeAll(){
     if(box._retirePaused&&box._retireCheck){box._retirePaused=0;box._retireCheck()}
   });
 }
+/* CSS 时间列表解析器：复用函数，避免逐字点亮时反复创建闭包。 */
+function karaCssTimes(value){
+  return String(value || '0s').split(',').map(function(v){
+    v = v.trim();
+    var x = parseFloat(v) || 0;
+    return /ms$/.test(v) ? x : x * 1000;
+  });
+}
+function karaCssEnd(durations, delays, counts, finiteOnly){
+  var ds = karaCssTimes(durations), ls = karaCssTimes(delays), ns = String(counts || '1').split(','), end = 0;
+  for(var z = 0; z < ds.length; z++){
+    var count = (ns[z % ns.length] || '1').trim();
+    if(finiteOnly && count === 'infinite') continue;
+    var repeat = finiteOnly ? Math.max(0, parseFloat(count) || 0) : 1;
+    var ms = ds[z] * repeat + ls[z % ls.length];
+    if(ms > end) end = ms;
+  }
+  return Math.max(0, end);
+}
 /* 每个字保留完整入场动画时长；不按下一个字的时间戳压缩。 */
 function karaFit(box, spans){
   // glitch 使用固定 0.5s 入场动画；其他风格沿用各自 CSS transition。
@@ -93,28 +112,10 @@ function karaPaint(ct){
       sp.classList.add('ki');
       // 以真实启动时刻计算入场动画结束点，避免掉帧时按歌词时间误判为已播完。
       var cs = getComputedStyle(sp), now = performance.now();
-      function cssTimes(value){
-        return String(value || '0s').split(',').map(function(v){
-          v = v.trim();
-          var x = parseFloat(v) || 0;
-          return /ms$/.test(v) ? x : x * 1000;
-        });
-      }
-      function cssEnd(durations, delays, counts, finiteOnly){
-        var ds = cssTimes(durations), ls = cssTimes(delays), ns = String(counts || '1').split(','), end = 0;
-        for(var z = 0; z < ds.length; z++){
-          var count = (ns[z % ns.length] || '1').trim();
-          if(finiteOnly && count === 'infinite') continue;
-          var repeat = finiteOnly ? Math.max(0, parseFloat(count) || 0) : 1;
-          var ms = ds[z] * repeat + ls[z % ls.length];
-          if(ms > end) end = ms;
-        }
-        return Math.max(0, end);
-      }
-      var transitionEnd = cssEnd(cs.transitionDuration, cs.transitionDelay, '1', false);
+      var transitionEnd = karaCssEnd(cs.transitionDuration, cs.transitionDelay, '1', false);
       // 只等待有限次入场动画；wave 的 infinite 循环不应阻塞整句退场。
       var animationEnd = cs.animationName === 'none' ? 0 :
-        cssEnd(cs.animationDuration, cs.animationDelay, cs.animationIterationCount, true);
+        karaCssEnd(cs.animationDuration, cs.animationDelay, cs.animationIterationCount, true);
       cur._kTransDoneAt = Math.max(cur._kTransDoneAt || 0, now + transitionEnd);
       if(animationEnd>0){
         if(!cur._kPausedAt&&stage.classList.contains('paused')){
