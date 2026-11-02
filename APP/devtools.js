@@ -655,11 +655,23 @@
     frames = 0;
   });
 
-  function countFrames() {
-    if (state.jank) frames++;
-    origRAF.call(window, countFrames);
+  var frameRaf = 0, frameCounterGeneration = 0;
+  function countFrames(generation) {
+    if (generation !== frameCounterGeneration || !state.jank) { frameRaf = 0; return; }
+    frames++;
+    frameRaf = origRAF.call(window, function(){ countFrames(generation); });
   }
-  origRAF.call(window, countFrames);
+  function startFrameCounter() {
+    if (!state.jank || frameRaf) return;
+    var generation = ++frameCounterGeneration;
+    frameRaf = origRAF.call(window, function(){ countFrames(generation); });
+  }
+  function stopFrameCounter() {
+    frameCounterGeneration++;
+    if (frameRaf) { try { origCancel.call(window, frameRaf); } catch (_) {} }
+    frameRaf = 0;
+    frames = 0;
+  }
 
   // 采样：定时器按 refreshRate 触发；拖动滑块时 restartFpsTimer 会 clearInterval 旧的再 setInterval 新的
   var fpsTimer = 0;
@@ -689,11 +701,28 @@
     }
   }
   function restartFpsTimer() {
-    if (fpsTimer) clearInterval(fpsTimer);
+    if (fpsTimer) { clearInterval(fpsTimer); fpsTimer = 0; }
     frames = 0; lastTime = performance.now();
-    fpsTimer = setInterval(sampleFps, refreshRate);
+    if (state.jank) fpsTimer = setInterval(sampleFps, state.fps ? refreshRate : 1000);
   }
-  restartFpsTimer();
+  function syncJankMonitoring() {
+    if (state.jank) {
+      startFrameCounter();
+      restartFpsTimer();
+      startVisualAnomalyDetector();
+    } else {
+      stopFrameCounter();
+      if (fpsTimer) { clearInterval(fpsTimer); fpsTimer = 0; }
+      frames = 0; lastTime = performance.now();
+      hideFpsUI();
+      stopVisualAnomalyDetector();
+    }
+  }
+  window.addEventListener('jank-mode-change', syncJankMonitoring);
+  if (state.jank) {
+    startFrameCounter();
+    restartFpsTimer();
+  }
 
   // perf: 拦截 rAF 抓取卡顿溯源；同时合并 hbLpJS 的低功耗限帧器，避免双层包装
   var rafSeq = 1e9, rafMap = Object.create(null);
@@ -1133,15 +1162,13 @@
     addSwitch('devJank', '卡顿检测', state.jank, function() {
       state.jank = this.checked;
       lsSet('dev_jank', state.jank ? '1' : '0');
-      if (state.jank) {
-        try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: true } })); } catch (_) {}
-      }
       if (!state.jank && state.fps) {
         state.fps = false;
         document.getElementById('devFps').checked = false;
         lsSet('dev_fps', '0');
         hideFpsUI();
       }
+      try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: state.jank } })); } catch (_) { syncJankMonitoring(); }
     });
 
     // C. 实时帧率显示
@@ -1152,9 +1179,10 @@
         state.jank = true;
         document.getElementById('devJank').checked = true;
         lsSet('dev_jank', '1');
-        try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: true } })); } catch (_) {}
+        try { window.dispatchEvent(new CustomEvent('jank-mode-change', { detail: { on: true } })); } catch (_) { syncJankMonitoring(); }
       }
       if (!state.fps) hideFpsUI();
+      restartFpsTimer();
     });
 
     // D. 悬浮窗日志
@@ -1335,77 +1363,52 @@
     contentWrap.appendChild(btnWrap);
 
     // G. 强制刷新：点击后弹出确认弹窗（带进入 / 退出动画），确认后清缓存并换新地址重载
-    var btnReload = document.createElement('button');
-    btnReload.type = 'button'; btnReload.className = 'chip force-reload-btn';
-    btnReload.style.cssText = 'width:100%;margin-top:8px;padding:10px 0;font-size:13px;';
-    btnReload.textContent = '强制刷新';
-    btnReload.onclick = showReloadConfirm;
-    ord(btnReload, 41);
-    contentWrap.appendChild(btnReload);
-
-    var ver = null;
-    box.querySelectorAll('.qtip').forEach(function(el){
-      if (el.textContent.indexOf('版本') >= 0) ver = el;
-    });
-    if (ver) ver.parentNode.insertBefore(grp, ver);
-    else box.appendChild(grp);
-  }
-
-  if (document.getElementById('pg5')) injectDevOptions();
-  else {
-    var mo = new MutationObserver(function(){
-      if (document.getElementById('pg5')){ injectDevOptions(); mo.disconnect(); }
-    });
-    mo.observe(document.body, { childList: true, subtree: true });
-  }
-
-})();
-
-/* ==========================================================
- * 视觉异常捕捉器 (抓取闪烁、重排、渲染卡顿)
- * 独立监控，不修改原项目逻辑。回调里只做最轻量的计数，名字在每秒汇总时才生成，
- * 避免监控自身成为新的卡顿来源。
- * ========================================================== */
-function startVisualAnomalyDetector(){
+    vafunction startVisualAnomalyDetector(){
   'use strict';
   if (window.__visualAnomalyDetector) return;
   window.__visualAnomalyDetector = true;
 
   function warn(msg) { if (window.console && console.warn) console.warn(msg); }
-
   function elName(el) {
     var n = (el.tagName || '?').toLowerCase();
     if (el.id) return n + '#' + el.id;
     var c = el.className;
     if (c && typeof c === 'string') {
-      var parts = c.trim().split(/\s+/).slice(0, 2).join('.');
+      var parts = c.trim().split(/\\s+/).slice(0, 2).join('.');
       if (parts) n += '.' + parts;
     }
     return n;
   }
 
-  // 1. 高频 DOM 修改（style / class 被反复改动，是闪烁、重排的常见元凶）
-  var counts = new Map();      // 元素 -> 本秒内被修改的次数（回调里只做这一件事）
+  var counts = new Map();
   var lastWarnTime = 0;
-  var HOT = 25;                // 单个元素 1 秒内被改超过 25 次，视为风险
+  var HOT = 25;
+  var timerId = 0;
+  var observers = [];
+  var observer = null;
+  var stopped = false;
 
-  var observer = new MutationObserver(function(mutations) {
-    for (var i = 0; i < mutations.length; i++) {
-      var t = mutations[i].target;
-      counts.set(t, (counts.get(t) || 0) + 1);
-    }
-  });
+  if (window.MutationObserver) {
+    observer = new MutationObserver(function(mutations) {
+      if (stopped) return;
+      for (var i = 0; i < mutations.length; i++) {
+        var t = mutations[i].target;
+        counts.set(t, (counts.get(t) || 0) + 1);
+      }
+    });
+    var stage = document.getElementById('stage') || document.body;
+    try { observer.observe(stage, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] }); }
+    catch (_) { observer = null; }
+  }
 
-  var stage = document.getElementById('stage') || document.body;
-  observer.observe(stage, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
-
-  setInterval(function() {
-    var groups = {};           // 名字 -> { n: 最高频次, els: 元素个数 }
+  timerId = setInterval(function() {
+    if (stopped) return;
+    var groups = {};
     var any = false;
     counts.forEach(function(n, el) {
       if (n <= HOT) return;
-      if (el.closest && el.closest('#logPanel, #devFloatLog, #fpsIndicator, #devDumpModal')) return; // 忽略开发者工具自身
-      if (el.hasAttribute && el.hasAttribute('data-compositor')) return; // 只改 transform 的合成层动画（如镜头 .cam），不会重排，忽略
+      if (el.closest && el.closest('#logPanel, #devFloatLog, #fpsIndicator, #devDumpModal')) return;
+      if (el.hasAttribute && el.hasAttribute('data-compositor')) return;
       var k = elName(el);
       var g = groups[k] || (groups[k] = { n: 0, els: 0 });
       if (n > g.n) g.n = n;
@@ -1415,19 +1418,19 @@ function startVisualAnomalyDetector(){
     counts.clear();
     if (!any) return;
     var now = Date.now();
-    if (now - lastWarnTime < 2000) return; // 防止刷屏
+    if (now - lastWarnTime < 2000) return;
     lastWarnTime = now;
     var rows = Object.keys(groups).map(function(k){ return [k, groups[k]]; })
       .sort(function(a, b){ return b[1].n - a[1].n; }).slice(0, 3);
-    warn('[视觉异常] 检测到高频重排/闪烁风险:\n' + rows.map(function(r){
+    warn('[视觉异常] 检测到高频重排/闪烁风险:\\n' + rows.map(function(r){
       return '  元素: ' + r[0] + '  频率: ' + r[1].n + ' 次/秒' + (r[1].els > 1 ? '  (共 ' + r[1].els + ' 个同名元素)' : '');
-    }).join('\n'));
+    }).join('\\n'));
   }, 1000);
 
-  // 2. 布局偏移（画面元素突然跳动）
   if (window.PerformanceObserver) {
     try {
-      var po = new PerformanceObserver(function(list) {
+      var poShift = new PerformanceObserver(function(list) {
+        if (stopped) return;
         list.getEntries().forEach(function(entry) {
           if (!entry.hadRecentInput && entry.value > 0.05) {
             var src = '';
@@ -1440,20 +1443,74 @@ function startVisualAnomalyDetector(){
           }
         });
       });
-      po.observe({ type: 'layout-shift', buffered: true });
-    } catch (e) {}
-  }
-
-  // 3. 渲染卡顿：优先用 long-animation-frame（浏览器只会上报 ≥50ms 的长帧），不支持时退回 longtask
-  if (window.PerformanceObserver) {
+      poShift.observe({ type: 'layout-shift', buffered: true });
+      observers.push(poShift);
+    } catch (_) {}
     var useLoaf = false;
     try {
       var poLoaf = new PerformanceObserver(function(list) {
+        if (stopped) return;
         list.getEntries().forEach(function(entry) {
           var who = '';
           try {
-            var s = entry.scripts && entry.scripts[0];
-            if (s) who = ' 主要来源: ' + (s.sourceFunctionName || s.invoker || '?');
+            var source = entry.scripts && entry.scripts[0];
+            if (source) who = ' 主要来源: ' + (source.sourceFunctionName || source.invoker || '?');
+          } catch (_) {}
+          warn('[视觉异常] 长动画帧: 一帧耗时 ' + Math.round(entry.duration) + 'ms' + who);
+        });
+      });
+      poLoaf.observe({ type: 'long-animation-frame', buffered: true });
+      observers.push(poLoaf);
+      useLoaf = true;
+    } catch (_) {}
+    if (!useLoaf) {
+      try {
+        var poTask = new PerformanceObserver(function(list) {
+          if (stopped) return;
+          list.getEntries().forEach(function(entry) {
+            if (entry.duration > 50) warn('[视觉异常] 长任务阻塞主线程: ' + Math.round(entry.duration) + 'ms');
+          });
+        });
+        poTask.observe({ type: 'longtask', buffered: true });
+        observers.push(poTask);
+      } catch (_) {}
+    }
+  }
+
+  window.__stopVisualAnomalyDetector = function() {
+    if (stopped) return;
+    stopped = true;
+    if (timerId) { clearInterval(timerId); timerId = 0; }
+    if (observer) { try { observer.disconnect(); } catch (_) {} observer = null; }
+    for (var i = 0; i < observers.length; i++) {
+      try { observers[i].disconnect(); } catch (_) {}
+    }
+    observers.length = 0;
+    counts.clear();
+    window.__visualAnomalyDetector = false;
+    window.__stopVisualAnomalyDetector = null;
+    if (window.console && console.info) console.info('[系统] 视觉异常捕捉器已停止。');
+  };
+  if (window.console && console.info) console.info('[系统] 视觉异常捕捉器已启动，开始监控重排、闪烁与渲染卡顿。');
+}
+function stopVisualAnomalyDetector() {
+  if (typeof window.__stopVisualAnomalyDetector === 'function') {
+    try { window.__stopVisualAnomalyDetector(); } catch (_) {}
+  }
+}
+// 监控只在「卡顿检测」开启时运行；关闭时完整清理本次会话创建的观察器与定时器
+(function(){
+  var on = false;
+  try { on = localStorage.getItem('dev_jank') === '1' || localStorage.getItem('dev_fps') === '1'; } catch (_) {}
+  if (on) startVisualAnomalyDetector();
+  window.addEventListener('jank-mode-change', function(e){
+    if (e && e.detail && e.detail.on) startVisualAnomalyDetector();
+    else stopVisualAnomalyDetector();
+  });
+})();
+
+
+ || s.invoker || '?');
           } catch (_) {}
           warn('[视觉异常] 长动画帧: 一帧耗时 ' + Math.round(entry.duration) + 'ms' + who);
         });
