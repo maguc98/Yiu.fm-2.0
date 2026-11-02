@@ -6,6 +6,7 @@ const path = require('node:path');
 
 function loadAdapter() {
   let rendered = null;
+  let timeSetCount = 0;
   function Component() {}
   const React = {
     Component,
@@ -28,7 +29,7 @@ function loadAdapter() {
     FramerMotion: {
       motionValue(initial) {
         let value = initial;
-        return { get() { return value; }, set(next) { value = next; } };
+        return { get() { return value; }, set(next) { timeSetCount++; value = next; } };
       }
     },
     default: function PartitaView() {}
@@ -68,6 +69,7 @@ function loadAdapter() {
     adapter: window.PartitaAdapter,
     host,
     time() { return rendered.props.children.props.currentTime; },
+    timeSetCount() { return timeSetCount; },
     load(TS, WT, LN) {
       window.PartitaAdapter.loadLyrics(TS, WT, LN);
       window.PartitaAdapter.show();
@@ -130,6 +132,18 @@ test('Partita retains evenly-spaced fallback for ordinary LRC without word times
   assert.ok(Math.abs(starts[1] - 1.75) < 1e-9);
   assert.ok(Math.abs(starts[2] - 2.5) < 1e-9);
   assert.ok(Math.abs(starts[3] - 3.25) < 1e-9);
+});
+
+test('Partita ignores duplicate timestamps to avoid redundant MotionValue updates', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
+
+  harness.adapter.drive(1.25);
+  const afterFirstUpdate = harness.timeSetCount();
+  assert.equal(harness.time().get(), 1.25);
+
+  harness.adapter.drive(1.25);
+  assert.equal(harness.timeSetCount(), afterFirstUpdate, 'the same timestamp must not be submitted twice');
 });
 
 test('Partita suspension pauses its clock without deactivating the engine', () => {
