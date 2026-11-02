@@ -57,6 +57,11 @@ jobs:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
+          old_res = '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">'
+          new_res = '<input type="range" id="sonnet-res" min="100" max="400" step="25" value="100">'
+          if html.count(old_res) != 1:
+              raise SystemExit("Expected exactly one Sonnet resolution slider; refusing to patch the UI.")
+          html = html.replace(old_res, new_res, 1)
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
