@@ -185,7 +185,7 @@ jobs:
           grep -q "YiuRenderCoordinator" "$WEB_ROOT/APP/runtime/render-coordinator.js"
           grep -q "YiuFrameScheduler.start" "$WEB_ROOT/APP/player.js"
           test -s "$WEB_ROOT/APP/yiu-runtime.js"
-          grep -q 'YiuRuntimeV2.sample(ct, i)' "$WEB_ROOT/APP/player.js"
+          grep -q 'runtime.sample(ct, i)' "$WEB_ROOT/APP/player.js"
           grep -q 'resolveLineIndex:resolveLineIndex' "$WEB_ROOT/APP/yiu-runtime.js"
           grep -q 'getLineIndex: getLineIndex' "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
           grep -q 'lineIndexMode' "$WEB_ROOT/APP/yiu-runtime.js"
