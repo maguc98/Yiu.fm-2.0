@@ -9,7 +9,7 @@
   var lastLines = [];
   var lineIndex = -1;
   var hostEl = null;
-  var VERSION = 'adapter-v9-word-timestamps';
+  var VERSION = 'adapter-v10-word-clock-suspend';
   var Boundary = null;
   var errHooked = false;
   var stylesInjected = false;
