@@ -64,6 +64,14 @@ elif source.count("setSuspended: function (v) {") != 1 or not (
     or "if (!suspended) this._render();" in source
 ):
     raise SystemExit("Partita adapter has no recognized reversible suspension implementation.")
+
+# Repeated suspend/resume calls must not trigger duplicate renders.
+idempotent_guard = "      if (v === suspended) return;\n"
+if idempotent_guard not in source:
+    normalize_anchor = "      suspended = !!v;\n"
+    if source.count(normalize_anchor) != 1:
+        raise SystemExit("Partita suspension state cannot be made idempotent safely.")
+    source = source.replace(normalize_anchor, "      v = !!v;\n" + idempotent_guard + "      suspended = v;\n", 1)
 partita.write_text(source, encoding="utf-8")
 
-print("Hardened visualizer drive fan-out and verified reversible Partita suspension.")
+print("Hardened visualizer drive fan-out and verified idempotent Partita suspension.")
