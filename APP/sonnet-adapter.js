@@ -648,6 +648,7 @@
       curTuning.textureResolution = clampTextureResolution(curTuning.textureResolution);
     }
     bindAudio();
+    bindResolutionControl();
     return Promise.resolve();            // 不在这里创建 WebGL：等用户真的切到商籁再 show()
   }
 
@@ -721,6 +722,21 @@
   }
 
   // perf: 设置纹理渲染分辨率（0.25 ~ 2.0，1 为屏幕原生），更新基线并（若在运行中）重建画面生效
+  function bindResolutionControl() {
+    var slider = document.getElementById('sonnet-res');
+    if (!slider || slider.__sonnetResolutionBound) return;
+    var min = nativeTextureResolution();
+    slider.min = String(Math.round(min * 100));
+    slider.max = '400';
+    slider.step = '25';
+    slider.value = String(Math.max(Math.round(min * 100), Math.min(400, Math.round(curTuning.textureResolution * 100))));
+    slider.addEventListener('change', function () {
+      setTextureResolution(Number(slider.value) / 100);
+      slider.value = String(Math.round(curTuning.textureResolution * 100));
+    });
+    slider.__sonnetResolutionBound = true;
+  }
+
   function setTextureResolution(res) {
     res = +res;
     if (!isFinite(res) || res <= 0) return getConfig();
