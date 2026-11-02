@@ -260,7 +260,7 @@
     },
 
     _render: function () {
-      if (!root || !window.Partita || !active) return;
+      if (!root || !window.Partita || !active || suspended) return;
       try {
         var P = window.Partita;
         var React = P.React;
@@ -395,7 +395,9 @@
     isAlive: function () { return active || !!root; },
     isActive: function () { return active; },
     setSuspended: function (v) {
-      suspended = !!v;
+      v = !!v;
+      if (v === suspended) return;
+      suspended = v;
       if (hostEl) hostEl.style.display = suspended || !active ? 'none' : 'block';
       if (!suspended && active) this._render();
     },
