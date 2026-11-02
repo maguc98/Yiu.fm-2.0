@@ -188,9 +188,12 @@ function tick(ts){
     if(WT[idx] && cur && cur._kara && curMode !== 'pan'){
       var wl = WT[idx], lastT = wl[wl.length - 1];
       var perf = document.body.classList.contains('performance-mode'); // 性能模式下落下动画很短
-      var goOut = ct >= Math.max(lastT + 0.1, end - (perf ? 0.5 : 1.0)) && performance.now() >= (cur._kDoneAt || 0) + 60;
-      if(goOut && !cur._ko){ cur._ko = 1; cur.classList.add('out'); }
-      else if(!goOut && cur._ko){ cur._ko = 0; cur.classList.remove('out'); }
+      // 暂停期间不推进整句退场状态；否则计时器/低频 tick 可能在 CSS 动画冻结时提前加上 .out。
+      if(playing){
+        var goOut = ct >= Math.max(lastT + 0.1, end - (perf ? 0.5 : 1.0)) && performance.now() >= (cur._kDoneAt || 0) + 60;
+        if(goOut && !cur._ko){ cur._ko = 1; cur.classList.add('out'); }
+        else if(!goOut && cur._ko){ cur._ko = 0; cur.classList.remove('out'); }
+      }
     }
     if(!playing){
       var now = performance.now();
