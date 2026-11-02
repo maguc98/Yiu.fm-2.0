@@ -1363,7 +1363,37 @@
     contentWrap.appendChild(btnWrap);
 
     // G. 强制刷新：点击后弹出确认弹窗（带进入 / 退出动画），确认后清缓存并换新地址重载
-    vafunction startVisualAnomalyDetector(){
+    var btnReload = document.createElement('button');
+    btnReload.type = 'button'; btnReload.className = 'chip force-reload-btn';
+    btnReload.style.cssText = 'width:100%;margin-top:8px;padding:10px 0;font-size:13px;';
+    btnReload.textContent = '强制刷新';
+    btnReload.onclick = showReloadConfirm;
+    ord(btnReload, 41);
+    contentWrap.appendChild(btnReload);
+
+    var ver = null;
+    box.querySelectorAll('.qtip').forEach(function(el){
+      if (el.textContent.indexOf('版本') >= 0) ver = el;
+    });
+    if (ver) ver.parentNode.insertBefore(grp, ver);
+    else box.appendChild(grp);
+  }
+
+  if (document.getElementById('pg5')) injectDevOptions();
+  else {
+    var mo = new MutationObserver(function(){
+      if (document.getElementById('pg5')){ injectDevOptions(); mo.disconnect(); }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+})();
+
+/* ==========================================================
+ * 视觉异常捕捉器 (抓取闪烁、重排、渲染卡顿)
+ * 独立监控，不修改原项目逻辑。支持完整启动 / 停止，关闭时释放全部观察器与定时器。
+ * ========================================================== */
+function startVisualAnomalyDetector(){
   'use strict';
   if (window.__visualAnomalyDetector) return;
   window.__visualAnomalyDetector = true;
@@ -1374,7 +1404,7 @@
     if (el.id) return n + '#' + el.id;
     var c = el.className;
     if (c && typeof c === 'string') {
-      var parts = c.trim().split(/\\s+/).slice(0, 2).join('.');
+      var parts = c.trim().split(/\s+/).slice(0, 2).join('.');
       if (parts) n += '.' + parts;
     }
     return n;
@@ -1422,9 +1452,9 @@
     lastWarnTime = now;
     var rows = Object.keys(groups).map(function(k){ return [k, groups[k]]; })
       .sort(function(a, b){ return b[1].n - a[1].n; }).slice(0, 3);
-    warn('[视觉异常] 检测到高频重排/闪烁风险:\\n' + rows.map(function(r){
+    warn('[视觉异常] 检测到高频重排/闪烁风险:\n' + rows.map(function(r){
       return '  元素: ' + r[0] + '  频率: ' + r[1].n + ' 次/秒' + (r[1].els > 1 ? '  (共 ' + r[1].els + ' 个同名元素)' : '');
-    }).join('\\n'));
+    }).join('\n'));
   }, 1000);
 
   if (window.PerformanceObserver) {
@@ -1446,6 +1476,7 @@
       poShift.observe({ type: 'layout-shift', buffered: true });
       observers.push(poShift);
     } catch (_) {}
+
     var useLoaf = false;
     try {
       var poLoaf = new PerformanceObserver(function(list) {
@@ -1463,6 +1494,7 @@
       observers.push(poLoaf);
       useLoaf = true;
     } catch (_) {}
+
     if (!useLoaf) {
       try {
         var poTask = new PerformanceObserver(function(list) {
@@ -1506,41 +1538,6 @@ function stopVisualAnomalyDetector() {
   window.addEventListener('jank-mode-change', function(e){
     if (e && e.detail && e.detail.on) startVisualAnomalyDetector();
     else stopVisualAnomalyDetector();
-  });
-})();
-
-
- || s.invoker || '?');
-          } catch (_) {}
-          warn('[视觉异常] 长动画帧: 一帧耗时 ' + Math.round(entry.duration) + 'ms' + who);
-        });
-      });
-      poLoaf.observe({ type: 'long-animation-frame', buffered: true });
-      useLoaf = true;
-    } catch (e) {}
-    if (!useLoaf) {
-      try {
-        var poTask = new PerformanceObserver(function(list) {
-          list.getEntries().forEach(function(entry) {
-            if (entry.duration > 50) warn('[视觉异常] 长任务阻塞主线程: ' + Math.round(entry.duration) + 'ms');
-          });
-        });
-        poTask.observe({ type: 'longtask', buffered: true });
-      } catch (err) {}
-    }
-  }
-
-  if (window.console && console.info) {
-    console.info('[系统] 视觉异常捕捉器已启动，开始监控重排、闪烁与渲染卡顿。');
-  }
-}
-// 该监控会常驻 MutationObserver + PerformanceObserver，默认不启动；仅在「卡顿检测」开启时启动
-(function(){
-  var on = false;
-  try { on = localStorage.getItem('dev_jank') === '1'; } catch (_) {}
-  if (on) startVisualAnomalyDetector();
-  window.addEventListener('jank-mode-change', function(e){
-    if (e && e.detail && e.detail.on) startVisualAnomalyDetector();
   });
 })();
 
