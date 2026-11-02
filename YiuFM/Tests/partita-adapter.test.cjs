@@ -45,7 +45,7 @@ function loadAdapter() {
     addEventListener() {}
   };
   const source = fs.readFileSync(
-    path.join(__dirname, '..', '..', 'APP', 'partita-adapter.js'),
+    path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'partita-adapter.js'),
     'utf8'
   );
   vm.runInNewContext(source, {
