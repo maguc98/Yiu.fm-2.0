@@ -2,6 +2,7 @@
   'use strict';
   if (w.YiuPlayback && w.YiuPlayback.version === 1) return;
   var listeners = [];
+  var wrappedEmitDepth = Object.create(null);
   var audio = function () { return w.audio || document.getElementById('audio'); };
   function snapshot() {
     var a = audio(), ts = Array.isArray(w.TS) ? w.TS : [];
@@ -17,6 +18,7 @@
     };
   }
   function emit(type) {
+    if (wrappedEmitDepth[type]) return;
     var event = { type: type, snapshot: snapshot() };
     listeners.slice().forEach(function (fn) { try { fn(event); } catch (_) {} });
     w.dispatchEvent(new CustomEvent('yiufm:playback', { detail: event }));
@@ -33,7 +35,15 @@
     var old = w[name];
     if (typeof old !== 'function' || old.__yiuPlaybackWrapped) return;
     var next = function () {
-      var result = old.apply(this, arguments);
+      wrappedEmitDepth[type] = (wrappedEmitDepth[type] || 0) + 1;
+      var result;
+      try {
+        result = old.apply(this, arguments);
+      } catch (error) {
+        wrappedEmitDepth[type] -= 1;
+        throw error;
+      }
+      wrappedEmitDepth[type] -= 1;
       emit(type);
       return result;
     };
