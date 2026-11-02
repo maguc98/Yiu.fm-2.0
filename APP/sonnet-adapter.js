@@ -13,6 +13,18 @@
 (function () {
   'use strict';
 
+  // PIXI 的 resolution 是 backing-store 像素密度；Retina 设备不能低于设备 DPR。
+  function nativeTextureResolution() {
+    var dpr = Number(window.devicePixelRatio) || 1;
+    return Math.max(1, Math.min(4, dpr));
+  }
+  function clampTextureResolution(value) {
+    var min = nativeTextureResolution();
+    var n = Number(value);
+    if (!isFinite(n)) n = min;
+    return Math.max(min, Math.min(4, n));
+  }
+
   var runtime = null;          // SonnetPixiRuntime 实例
   var creating = null;         // 创建中：{ ctrl: AbortController }
   var hostElement = null;      // 画布挂载点（#sonnetHost）
@@ -59,7 +71,7 @@
     showGuide: true, showOnlyText: false, showGiantDecorativeText: false,       // perf: 关闭巨型装饰字
     outerFrameMode: 'full', postProcessEnabled: false,
     edgeDispersion: 0, edgeDispersionBand: 0,    // perf: 关闭上下两端 RGB 色散
-    textureResolution: Math.min(4, Math.max(1, window.devicePixelRatio || 1)), // perf: 跟 DPR 走保证 Retina 清晰，上限 4x（4K）
+    textureResolution: nativeTextureResolution(), // never below the physical display pixel density
     enableTransitions: false, staticMode: false  // perf: 关闭转场
   };
 
@@ -119,10 +131,9 @@
     try {
       var raw = localStorage.getItem(STORE_KEY); if (!raw) return;
       var s = splitPatch(JSON.parse(raw));
-      // perf: 历史配置里存过低分辨率（<1x，来自早期 60FPS 基线的 textureResolution 上限 1x），
-      // 会让画面发虚/锯齿。这里丢弃 <1 的旧值，沿用新的清晰默认值（≥1 的用户值仍保留）。
-      if (s.tuning && isFinite(+s.tuning.textureResolution) && +s.tuning.textureResolution < 1) {
-        delete s.tuning.textureResolution;
+      // 历史配置可能保存了 1x；在 Retina 设备上仍低于物理像素密度，统一抬到当前设备 DPR。
+      if (s.tuning && has(s.tuning, 'textureResolution')) {
+        s.tuning.textureResolution = clampTextureResolution(s.tuning.textureResolution);
       }
       Object.assign(curTuning, s.tuning); Object.assign(curTheme, s.theme); Object.assign(curExtra, s.extra); Object.assign(curFx, s.fx);
     } catch (_) {}
@@ -200,7 +211,8 @@
     if (!patch || typeof patch !== 'object') return getConfig();
     var s = splitPatch(patch);
     Object.assign(curTuning, s.tuning); Object.assign(curTheme, s.theme); Object.assign(curExtra, s.extra); Object.assign(curFx, s.fx);
-    curTuning.textureResolution = Math.max(1, Math.min(4, +curTuning.textureResolution || 1));
+    curTuning.textureResolution = clampTextureResolution(curTuning.textureResolution);
+    if (has(s.tuning, 'textureResolution')) s.tuning.textureResolution = curTuning.textureResolution;
     saveConfig(); pushConfig(s);
     return getConfig();
   }
@@ -633,7 +645,7 @@
       var k;
       if (opts.theme) for (k in opts.theme) if (has(opts.theme, k)) curTheme[k] = THEME_COLORS[k] ? toInt(opts.theme[k]) : opts.theme[k];
       if (opts.tuning) for (k in opts.tuning) if (has(opts.tuning, k)) curTuning[k] = opts.tuning[k];
-      curTuning.textureResolution = Math.max(1, Math.min(4, +curTuning.textureResolution || 1));
+      curTuning.textureResolution = clampTextureResolution(curTuning.textureResolution);
     }
     bindAudio();
     return Promise.resolve();            // 不在这里创建 WebGL：等用户真的切到商籁再 show()
@@ -704,7 +716,7 @@
     var m = resMul();
     if (m === 1) return curTuning;
     var t = Object.assign({}, curTuning);
-    t.textureResolution = Math.max(1, Math.min(4, (+t.textureResolution || 1) * m)); // never render below native resolution
+    t.textureResolution = clampTextureResolution((+t.textureResolution || nativeTextureResolution()) * m); // preserve physical display density even under global power-saving scale
     return t;
   }
 
@@ -712,7 +724,7 @@
   function setTextureResolution(res) {
     res = +res;
     if (!isFinite(res) || res <= 0) return getConfig();
-    curTuning.textureResolution = Math.max(1, Math.min(4, res)); // 1x is the minimum native-resolution floor
+    curTuning.textureResolution = clampTextureResolution(res); // minimum is the device's physical pixel density
     saveConfig();
     scheduleResolutionRebuild();
     return getConfig();
