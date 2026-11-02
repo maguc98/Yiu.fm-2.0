@@ -33,6 +33,9 @@ jobs:
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
           cp APP/sonnet-perf-governor.js YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           cp APP/sonnet-adapter.js YiuFM/Resources/Web/APP/sonnet-adapter.js
+          # Ship the verified lyric timing/retirement fixes without replacing the pinned legacy UI.
+          cp APP/player.js YiuFM/Resources/Web/APP/player.js
+          cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -47,10 +50,13 @@ jobs:
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
-          anchor = '<script src="./APP/player.js?v=20261029a"></script>'
+          old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
+          anchor = '<script src="./APP/player.js?v=20261102a"></script>'
           injected = anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>'
-          if html.count(anchor) != 1:
+          if html.count(old_anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
+          html = html.replace(old_anchor, anchor, 1)
+          html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
@@ -78,6 +84,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/lyrics-service.js
           node --check YiuFM/Resources/Web/APP/library-service.js
           node --check YiuFM/Resources/Web/APP/player.js
+          node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/renderer.js
