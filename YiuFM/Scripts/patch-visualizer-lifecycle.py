@@ -4,68 +4,52 @@ from pathlib import Path
 
 root = Path("YiuFM/Resources/Web/APP")
 
-def replace_once(name, old, new):
+def ensure_replace(name, old, new):
     path = root / name
     source = path.read_text(encoding="utf-8")
+    if source.count(new) == 1:
+        return
     count = source.count(old)
     if count != 1:
-        raise SystemExit(f"{name}: expected exactly one lifecycle patch anchor, found {count}: {old!r}")
+        raise SystemExit(
+            f"{name}: expected one old or already-patched lifecycle anchor; "
+            f"old={count}, new={source.count(new)}"
+        )
     path.write_text(source.replace(old, new, 1), encoding="utf-8")
 
 # Correct the manager's legacy header: it coordinates four renderers, not three WebGL engines.
-replace_once(
+ensure_replace(
     "visualizer-manager.js",
     """/* VisualizerManager：串行管理可视化引擎（Sonnet / Tempera / Lumiere），保证同一时刻最多一个 WebGL Context。""",
     """/* VisualizerManager：串行协调四个视觉引擎（Sonnet / Tempera / Lumiere / Partita）。
    同一时刻只挂载一个引擎；前三者使用 WebGL，Partita 使用 React/DOM。"""
 )
 
-# Partita suspension is temporary: retain active state, stop DOM work while suspended,
-# and render the latest cached lyric/time state when resumed.
-replace_once(
+# The workflow copies the branch's Partita adapter, which may already contain
+# some or all of the suspension work. Make the build patch safe for both that
+# newer adapter and the older pinned baseline.
+ensure_replace(
     "partita-adapter.js",
     "  var active = false;\n",
     "  var active = false;\n  var suspended = false;\n"
 )
-replace_once(
+ensure_replace(
     "partita-adapter.js",
-    """      if (hostEl) hostEl.style.display = 'block';
-      applyVars();
-      applyRes();
-      if (!lastLines.length && window.LN && window.LN.length) this.loadLyrics(window.TS || [], window.WT || [], window.LN);
-      this._render();""",
-    """      if (hostEl) hostEl.style.display = suspended ? 'none' : 'block';
-      applyVars();
-      applyRes();
-      if (!lastLines.length && window.LN && window.LN.length) this.loadLyrics(window.TS || [], window.WT || [], window.LN);
-      if (!suspended) this._render();"""
+    "      if (!root || !window.Partita || !active) return;",
+    "      if (!root || !window.Partita || !active || suspended) return;"
 )
-replace_once(
-    "partita-adapter.js",
-    """    hide: function () {
-      active = false;
-      if (hostEl) hostEl.style.display = 'none';
-    },
-
-    _render: function () {
-      if (!root || !window.Partita || !active) return;""",
-    """    hide: function () {
-      active = false;
-      if (hostEl) hostEl.style.display = 'none';
-    },
-
-    _render: function () {
-      if (!root || !window.Partita || !active || suspended) return;"""
-)
-replace_once(
+ensure_replace(
     "partita-adapter.js",
     "      if (!active || !currentTimeObj) return;",
     "      if (!active || suspended || !currentTimeObj) return;"
 )
-replace_once(
-    "partita-adapter.js",
-    "    setSuspended: function (v) { this.hide(); },",
-    """    setSuspended: function (v) {
+
+# Keep an existing reversible suspension implementation. Upgrade only the old
+# destructive hide() implementation used by the pinned baseline.
+partita = root / "partita-adapter.js"
+source = partita.read_text(encoding="utf-8")
+old_suspend = "    setSuspended: function (v) { this.hide(); },"
+new_suspend = """    setSuspended: function (v) {
       v = !!v;
       if (v === suspended) return;
       suspended = v;
@@ -73,5 +57,13 @@ replace_once(
       hostEl.style.display = suspended ? 'none' : 'block';
       if (!suspended) this._render();
     },"""
-)
-print("Hardened visualizer drive fan-out and implemented reversible Partita suspension.")
+if source.count(old_suspend) == 1:
+    source = source.replace(old_suspend, new_suspend, 1)
+elif source.count("setSuspended: function (v) {") != 1 or not (
+    "if (!suspended && active) this._render();" in source
+    or "if (!suspended) this._render();" in source
+):
+    raise SystemExit("Partita adapter has no recognized reversible suspension implementation.")
+partita.write_text(source, encoding="utf-8")
+
+print("Hardened visualizer drive fan-out and verified reversible Partita suspension.")
