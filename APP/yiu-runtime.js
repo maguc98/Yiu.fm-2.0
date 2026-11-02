@@ -2,7 +2,7 @@
 'use strict';
 if (global.YiuRuntimeV2) return;
 var scheduler=global.YiuTimelineScheduler.create(), clock=global.YiuAudioClock||null;
-var refs={TS:null,WT:null,LN:null}, enabled=true, lineIndexMode='shadow', takeoverTicks=0;
+var refs={TS:null,WT:null,LN:null}, enabled=false, lineIndexMode='shadow', takeoverTicks=0;
 var CANARY_INTERVAL=120;
 var stats={mode:'shadow',samples:0,lineStarts:0,lineEnds:0,wordStarts:0,timelineVersion:0,indexComparisons:0,indexMismatches:0,lastExpectedLineIndex:null,lastLegacyLineIndex:null,lastResolvedLineIndex:null,lineIndexResolutions:0,lineIndexFallbacks:0,lastLyricTime:null,lastAudioTime:null,lastEvent:null,errors:0};
 function refreshTimeline(currentTime) {
