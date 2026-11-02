@@ -19,9 +19,11 @@
     return Math.max(1, Math.min(4, dpr));
   }
   function clampTextureResolution(value) {
-    var min = nativeTextureResolution();
+    // The quality slider must be able to render below device DPR; otherwise
+    // every lower value is silently clamped to native resolution and has no effect.
+    var min = 0.5;
     var n = Number(value);
-    if (!isFinite(n)) n = min;
+    if (!isFinite(n)) n = nativeTextureResolution();
     return Math.max(min, Math.min(4, n));
   }
 
@@ -744,20 +746,20 @@
     if (m == null) { try { m = parseFloat(localStorage.getItem('qt_res_mul')); } catch (_) { m = NaN; } }
     return (m >= 0.25 && m < 1) ? m : 1;
   }
-  // 创建运行时 tuning：<1 的全局省电倍率只缩放到设备 DPR 下限，不污染保存的基线 / 面板显示。
+  // 创建运行时 tuning：全局省电倍率可降低到 0.5x，不污染保存的基线 / 面板显示。
   function effTuning() {
     var m = resMul();
     if (m === 1) return curTuning;
     var t = Object.assign({}, curTuning);
-    t.textureResolution = clampTextureResolution((+t.textureResolution || nativeTextureResolution()) * m); // preserve physical display density even under global power-saving scale
+    t.textureResolution = clampTextureResolution((+t.textureResolution || nativeTextureResolution()) * m);
     return t;
   }
 
-  // 设置纹理渲染分辨率（最高 4x，最低为当前设备 DPR），更新基线并在运行中重建画面生效。
+  // 设置纹理渲染分辨率（0.5x–4x），更新基线并在运行中重建画面生效。
   function bindResolutionControl() {
     var slider = document.getElementById('sonnet-res');
     if (!slider || slider.__sonnetResolutionBound) return;
-    var min = nativeTextureResolution();
+    var min = 0.5;
     slider.min = String(Math.round(min * 100));
     slider.max = '400';
     slider.step = '25';
@@ -779,7 +781,7 @@
   function setTextureResolution(res) {
     res = +res;
     if (!isFinite(res) || res <= 0) return getConfig();
-    res = clampTextureResolution(res); // minimum is the device's physical pixel density
+    res = clampTextureResolution(res); // allow sub-native resolution for a real quality/performance trade-off
     if (Math.abs(curTuning.textureResolution - res) < 0.001) return getConfig();
     curTuning.textureResolution = res;
     var slider = document.getElementById('sonnet-res');
