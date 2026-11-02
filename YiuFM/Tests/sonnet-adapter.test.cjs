@@ -95,3 +95,20 @@ test('Sonnet does not spread repeated character timestamps into an even line ani
     [2.0, 2.0, 2.65, 3.4]
   );
 });
+
+test('The packaged legacy UI receives the current karaoke timing fixes', () => {
+  const webApp = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const player = fs.readFileSync(path.join(webApp, 'player.js'), 'utf8');
+  const renderer = fs.readFileSync(path.join(webApp, 'renderer.js'), 'utf8');
+
+  assert.match(player, /function karaCssEnd\\(/,
+    'the packaged player must calculate full animation completion deadlines');
+  assert.doesNotMatch(player, /间隔太短的字/,
+    'the packaged player must not shorten a character animation to fit the next timestamp');
+  assert.match(player, /if\\(cur && cur\\._kara\\) karaPaint\\(ct\\)/,
+    'the previous lyric line must be painted to the exact cutover time');
+  assert.match(renderer, /var _retireWait=o\\._kara/,
+    'the renderer must wait for character entrance animations before retiring a line');
+  assert.match(renderer, /audio\\.currentTime-LYR_OFF/,
+    'the first karaoke paint must use lyric-offset-adjusted audio time');
+});
