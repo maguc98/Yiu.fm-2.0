@@ -208,7 +208,7 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
   await h.window.YiuLibrary.select(9, true);
   h.notifyLibraryChange();
   h.window.YiuLibrary.notify('librarychange');
-  assert.deepEqual(changes, [9, 9]);
+  assert.deepEqual(changes, [9], 'legacy and facade notifications must not double-deliver');
 
   assert.equal(h.window.YiuLibrary.step(-1), -1);
   assert.equal(h.window.YiuLibrary.peekNext(), 9);
@@ -221,6 +221,34 @@ test('library facade snapshots and delegates to the existing SongLibrary API', a
 });
 
 
+
+
+test('one library render reaches facade subscribers only once across legacy and facade channels', () => {
+  const h = createHarness();
+  h.load('library-service.js');
+  const changes = [];
+  h.window.YiuLibrary.subscribe(value => changes.push(value.currentId));
+
+  // Mirrors song-library render(): legacy notifyChange(), then patched syncNow().
+  h.notifyLibraryChange();
+  h.window.YiuLibrary.notify('librarychange');
+
+  assert.equal(changes.length, 1, 'one render must not fan out twice to facade subscribers');
+});
+
+test('one LRC import publishes one lyricschange when renderer and wrapper both signal', () => {
+  const h = createHarness();
+  h.window.refreshAll = () => h.window.YiuPlayback.notify('lyricschange');
+  h.window.applyLRC = function () { h.window.refreshAll(); };
+  h.load('playback-service.js');
+
+  const events = [];
+  h.window.YiuPlayback.subscribe(event => events.push(event.type));
+  h.window.applyLRC({ items: [{ t: 1, text: 'Updated line' }], meta: {} });
+
+  assert.equal(events.filter(type => type === 'lyricschange').length, 1,
+    'renderer change and applyLRC wrapper must coalesce into one import event');
+});
 
 test('mini-player refresh is event-driven rather than interval-polled', () => {
   const file = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'mini-player.js');
@@ -758,4 +786,72 @@ test('native music bridge contract remains import-only and HTMLAudio stays autho
   for (const shell of [app, root, stage]) {
     assert.ok(!shell.includes('YiuAudioPlayer'), 'native audio player must remain dormant in this phase');
   }
+});
+
+
+test('Partita maps numeric WT character start times to real per-character intervals', () => {
+  const app = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
+  const source = fs.readFileSync(path.join(app, 'partita-adapter.js'), 'utf8');
+  let rendered = null;
+  const host = {
+    style: {}, innerHTML: '',
+    appendChild() {},
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
+  const document = {
+    head: { appendChild() {} },
+    createElement() { return { style: {}, setAttribute() {}, textContent: '' }; }
+  };
+  const Partita = {
+    default: function PartitaView() {},
+    React: {
+      Component: function Component() {},
+      createElement(type, props, children) { return { type, props, children }; }
+    },
+    ReactDOM: {
+      createRoot() {
+        return {
+          render(element) { rendered = element.children.props; },
+          unmount() {}
+        };
+      }
+    },
+    FramerMotion: {
+      motionValue(value) {
+        let current = value;
+        return { get: () => current, set: next => { current = next; } };
+      }
+    }
+  };
+  const window = {
+    Partita, LN: [], TS: [], WT: [],
+    addEventListener() {},
+    console: { warn() {}, error() {} }
+  };
+  vm.runInNewContext(source, {
+    window, document,
+    localStorage: { getItem() { return null; }, setItem() {} },
+    setTimeout() { return 1; }, clearTimeout() {},
+    cancelAnimationFrame() {}, requestAnimationFrame() { return 1; },
+    Date, Math, Array, Object, String, Number, isFinite
+  });
+
+  window.PartitaAdapter.init(host, {});
+  window.PartitaAdapter.show();
+  window.PartitaAdapter.loadLyrics(
+    [10, 12],
+    [[10, 10.5, 11.2], [12, 12, 12.8]],
+    ['ABC', 'XYZ']
+  );
+
+  const words = rendered.lines[0].words;
+  assert.deepEqual(Array.from(words, word => word.startTime), [10, 10.5, 11.2]);
+  assert.deepEqual(Array.from(words, word => word.endTime), [10.5, 11.2, 12]);
+
+  const repeated = rendered.lines[1].words;
+  assert.deepEqual(Array.from(repeated, word => word.startTime), [12, 12, 12.8]);
+  assert.deepEqual(Array.from(repeated, word => word.endTime), [12.8, 12.8, 17]);
+
+  window.PartitaAdapter.destroy();
 });

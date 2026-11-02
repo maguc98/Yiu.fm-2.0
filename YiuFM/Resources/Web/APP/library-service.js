@@ -30,15 +30,10 @@
   }
   function subscribe(callback) {
     if (typeof callback !== 'function') return function () {};
-    listeners.push(callback);
-    var api = legacy();
-    var offLegacy = api && typeof api.onChange === 'function'
-      ? api.onChange(function () { try { callback(getSnapshot(), { type: 'librarychange' }); } catch (_) {} })
-      : function () {};
+    if (listeners.indexOf(callback) < 0) listeners.push(callback);
     return function () {
       var i = listeners.indexOf(callback);
       if (i >= 0) listeners.splice(i, 1);
-      if (typeof offLegacy === 'function') offLegacy();
     };
   }
   w.YiuLibrary = {
