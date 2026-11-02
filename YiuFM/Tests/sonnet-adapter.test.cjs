@@ -96,6 +96,12 @@ test('Sonnet does not spread repeated character timestamps into an even line ani
   );
 });
 
+test('Sonnet resolution is clamped to at least native scale', () => {
+  const adapter = loadAdapter();
+  adapter.setTextureResolution(0.5);
+  assert.equal(adapter.getConfig().textureResolution, 1);
+});
+
 test('The packaged legacy UI receives the current karaoke timing fixes', () => {
   const webApp = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
   const player = fs.readFileSync(path.join(webApp, 'player.js'), 'utf8');
