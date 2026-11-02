@@ -36,6 +36,8 @@ jobs:
           # Ship the verified lyric timing/retirement fixes without replacing the pinned legacy UI.
           cp APP/player.js YiuFM/Resources/Web/APP/player.js
           cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
+          # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
+          cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -57,6 +59,11 @@ jobs:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
+          old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
+          new_partita = '<script src="./APP/partita-adapter.js?v=20261102a"></script>'
+          if html.count(old_partita) != 1:
+              raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
+          html = html.replace(old_partita, new_partita, 1)
           old_res = '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">'
           new_res = '<input type="range" id="sonnet-res" min="100" max="400" step="25" value="100">'
           if html.count(old_res) != 1:
@@ -92,13 +99,15 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/renderer.js
+          node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
           node --check YiuFM/Resources/Web/APP/mini-player.js
           grep -q 'function karaCssEnd' YiuFM/Resources/Web/APP/player.js
           ! grep -q '间隔太短的字' YiuFM/Resources/Web/APP/player.js
           grep -q 'var _retireWait=o._kara' YiuFM/Resources/Web/APP/renderer.js
-          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs
+          grep -q 'hasWordTimes' YiuFM/Resources/Web/APP/partita-adapter.js
+          node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/partita-adapter.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
