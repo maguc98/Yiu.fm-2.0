@@ -49,27 +49,19 @@ function deferUpdate(){
 var karaCur = null, karaSpans = null, karaN = 0;
 /* 保证每个字在"下一个字出现"之前已经完整显示：入场时长超过间隔的，压缩到间隔的 90% */
 function karaFit(box, spans, w){
-  var end = (idx + 1 < TS.length) ? TS[idx + 1] : (audio.duration || (w[w.length - 1] + 1));
-  var gaps = [], base = [], k, j;
-  for(k = 0; k < spans.length; k++){            // 先全部读取（避免读写交替造成反复重算样式）
-    j = k + 1; while(j < w.length && w[j] <= w[k]) j++;
-    gaps.push({gap: (j < w.length ? w[j] : end) - w[k], isLast: j >= w.length});
-    var b = 0;
-    getComputedStyle(spans[k]).transitionDuration.split(',').forEach(function(v){ var x = parseFloat(v) || 0; if(x > b) b = x; });
-    base.push(b);
-  }
+  // 不按下一个字的时间戳压缩当前字的动画；每个字保留所选动画的完整时长。
   var lastDur = 0;
-  for(k = 0; k < spans.length; k++){            // 再统一写入
-    var cap = Math.max(0.05, gaps[k].gap * 0.9), d = base[k];
-    if(base[k] > cap){
-      d = cap;
-      spans[k].style.setProperty('--kd', cap.toFixed(3) + 's');
-      spans[k].setAttribute('data-kd', '1');
-    }
-    spans[k].style.setProperty('--kad', Math.min(0.5, cap).toFixed(3) + 's'); // 故障闪烁样式的动画时长
-    if(gaps[k].isLast && d > lastDur) lastDur = d;
+  for(var k = 0; k < spans.length; k++){
+    var ds = getComputedStyle(spans[k]).transitionDuration.split(','), b = 0;
+    ds.forEach(function(v){
+      var x = parseFloat(v) || 0;
+      if(/ms\s*$/.test(v)) x /= 1000;
+      if(x > b) b = x;
+    });
+    spans[k].style.setProperty('--kad', '0.5s');
+    if(k === spans.length - 1) lastDur = b;
   }
-  box._kd = lastDur;                             // 最后一个字完全显示所需时间，供"落下"时机使用
+  box._kd = lastDur;
 }
 function karaPaint(ct){
   var w = WT[idx];
@@ -85,8 +77,29 @@ function karaPaint(ct){
   while(n < w.length && w[n] <= ct) n++;
   if(n === karaN) return;
   var k;
-  if(n > karaN){ for(k = karaN; k < n; k++) karaSpans[k].classList.add('ki'); }
-  else { for(k = n; k < karaN; k++) karaSpans[k].classList.remove('ki'); }
+  if(n > karaN){
+    for(k = karaN; k < n; k++){
+      var sp = karaSpans[k];
+      sp.classList.add('ki');
+      // 以真实启动时刻计算入场动画结束点，避免掉帧时按歌词时间误判为已播完。
+      var cs = getComputedStyle(sp), now = performance.now(), dur = 0, delay = 0;
+      function maxCssMs(value){
+        var m = 0;
+        String(value || '0s').split(',').forEach(function(v){
+          v = v.trim();
+          var x = parseFloat(v) || 0;
+          if(!/ms$/.test(v)) x *= 1000;
+          if(x > m) m = x;
+        });
+        return m;
+      }
+      dur = maxCssMs(cs.transitionDuration);
+      delay = maxCssMs(cs.transitionDelay);
+      cur._kDoneAt = Math.max(cur._kDoneAt || 0, now + dur + delay);
+    }
+  } else {
+    for(k = n; k < karaN; k++) karaSpans[k].classList.remove('ki');
+  }
   karaN = n;
 }
 
@@ -117,7 +130,11 @@ function tick(ts){
       if((TS[mid] || 0) <= ct){ i = mid; lo = mid + 1; }
       else { hi = mid - 1; }
     }
-    if(i !== idx){ idx = i; prog = 0; deferUpdate(); return; }
+    if(i !== idx){
+      // 切句前先把旧句补绘到当前音频时刻，确保最后一个字也有真实动画结束时间。
+      if(cur && cur._kara) karaPaint(ct);
+      idx = i; prog = 0; deferUpdate(); return;
+    }
     var start = TS[idx] || 0;
     var end = (idx+1 < TS.length) ? TS[idx+1] : ((audio.duration || start + 5) - LYR_OFF);
     prog = Math.min(1, Math.max(0, (ct - start) / Math.max(0.1, end - start)));
@@ -132,7 +149,7 @@ function tick(ts){
     if(WT[idx] && cur && cur._kara && curMode !== 'pan'){
       var wl = WT[idx], lastT = wl[wl.length - 1];
       var perf = document.body.classList.contains('performance-mode'); // 性能模式下落下动画很短
-      var goOut = ct >= Math.max(lastT + (cur._kd || 0.25) + 0.1, end - (perf ? 0.5 : 1.0));
+      var goOut = ct >= Math.max(lastT + 0.1, end - (perf ? 0.5 : 1.0)) && performance.now() >= (cur._kDoneAt || 0) + 60;
       if(goOut && !cur._ko){ cur._ko = 1; cur.classList.add('out'); }
       else if(!goOut && cur._ko){ cur._ko = 0; cur.classList.remove('out'); }
     }
