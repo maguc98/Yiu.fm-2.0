@@ -1,5 +1,7 @@
 import SwiftUI
 import WebKit
+import UIKit
+import QuartzCore
 
 @main
 struct TextDisplayApp: App {
@@ -25,9 +27,12 @@ struct ContentView: View {
 }
 
 struct LocalWebView: UIViewRepresentable {
+    func makeCoordinator() -> YiuPerformanceCoordinator { YiuPerformanceCoordinator() }
+
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
+        configuration.userContentController.add(context.coordinator, name: "yiuPerformance")
 
         // 移除了之前可能导致崩溃的 WebGL 强制开启代码
 
@@ -37,6 +42,7 @@ struct LocalWebView: UIViewRepresentable {
         configuration.userContentController.addScriptMessageHandler(MusicBridge.shared, contentWorld: .page, name: "yiuMusic")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        context.coordinator.attach(webView)
 
         webView.isOpaque = false
         webView.backgroundColor = .black
@@ -51,6 +57,138 @@ struct LocalWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
+
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: YiuPerformanceCoordinator) {
+        coordinator.stop()
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "yiuPerformance")
+        coordinator.detach()
+    }
+}
+
+// MARK: - Opt-in native display-link sampling
+// CADisplayLink measures callback cadence, not GPU utilization or Metal execution time.
+final class YiuPerformanceCoordinator: NSObject, WKScriptMessageHandler {
+    private weak var webView: WKWebView?
+    private var link: CADisplayLink?
+    private var proxy: YiuDisplayLinkProxy?
+    private var requested = false
+    private var startTime: CFTimeInterval = 0
+    private var lastTime: CFTimeInterval = 0
+    private var callbacks = 0
+    private var intervals: [Double] = []
+    private var longGaps = 0
+    private var backgroundToken: NSObjectProtocol?
+    private var foregroundToken: NSObjectProtocol?
+
+    override init() {
+        super.init()
+        backgroundToken = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
+        ) { [weak self] _ in self?.pause() }
+        foregroundToken = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self = self, self.requested else { return }
+            self.start()
+        }
+    }
+
+    deinit {
+        link?.invalidate()
+        if let token = backgroundToken { NotificationCenter.default.removeObserver(token) }
+        if let token = foregroundToken { NotificationCenter.default.removeObserver(token) }
+    }
+
+    func attach(_ view: WKWebView) { webView = view }
+    func detach() { webView = nil }
+
+    func stop() {
+        requested = false
+        pause()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any], let op = body["op"] as? String else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if op == "start" { self.requested = true; self.start() }
+            else if op == "stop" { self.stop() }
+        }
+    }
+
+    private func start() {
+        guard requested, link == nil else { return }
+        reset()
+        let target = YiuDisplayLinkProxy(owner: self)
+        proxy = target
+        let displayLink = CADisplayLink(target: target, selector: #selector(YiuDisplayLinkProxy.tick(_:)))
+        link = displayLink
+        displayLink.add(to: .main, forMode: .common)
+    }
+
+    fileprivate func didTick(_ displayLink: CADisplayLink) {
+        let now = displayLink.timestamp
+        if lastTime > 0 {
+            let ms = (now - lastTime) * 1000
+            if ms.isFinite && ms > 0 {
+                intervals.append(ms)
+                if ms > 33.34 { longGaps += 1 }
+            }
+        } else { startTime = now }
+        lastTime = now
+        callbacks += 1
+        let elapsed = now - startTime
+        guard elapsed >= 1 else { return }
+
+        let sorted = intervals.sorted()
+        let average = sorted.isEmpty ? 0 : sorted.reduce(0, +) / Double(sorted.count)
+        let p95Index = sorted.isEmpty ? 0 : min(sorted.count - 1, Int(Double(sorted.count - 1) * 0.95))
+        let p95 = sorted.isEmpty ? 0 : sorted[p95Index]
+        send([
+            "displayLinkFPS": Double(callbacks) / elapsed,
+            "averageIntervalMs": average,
+            "p95IntervalMs": p95,
+            "gapsOver33ms": longGaps,
+            "screenMaxFPS": UIScreen.main.maximumFramesPerSecond,
+            "thermalState": thermalName()
+        ])
+        reset()
+    }
+
+    private func reset() {
+        startTime = 0; lastTime = 0; callbacks = 0; longGaps = 0
+        intervals.removeAll(keepingCapacity: true)
+    }
+
+    private func pause() {
+        link?.invalidate()
+        link = nil
+        proxy = nil
+        reset()
+    }
+
+    private func thermalName() -> String {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: return "正常"
+        case .fair: return "轻度升温"
+        case .serious: return "温度较高"
+        case .critical: return "温度严重"
+        @unknown default: return "未知"
+        }
+    }
+
+    private func send(_ payload: [String: Any]) {
+        guard let view = webView,
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: [.fragmentsAllowed]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        view.evaluateJavaScript("window.__YiuNativePerf && window.__YiuNativePerf(\(json));", completionHandler: nil)
+    }
+}
+
+private final class YiuDisplayLinkProxy: NSObject {
+    weak var owner: YiuPerformanceCoordinator?
+    init(owner: YiuPerformanceCoordinator) { self.owner = owner }
+    @objc func tick(_ link: CADisplayLink) { owner?.didTick(link) }
 }
 
 // MARK: - Documents/Music 读取桥
