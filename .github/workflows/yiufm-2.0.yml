@@ -30,8 +30,9 @@ jobs:
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
           git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
-          # Ship the branch's fixed Sonnet governor; the UI/assets remain pinned to the legacy baseline.
+          # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
           cp APP/sonnet-perf-governor.js YiuFM/Resources/Web/APP/sonnet-perf-governor.js
+          cp APP/sonnet-adapter.js YiuFM/Resources/Web/APP/sonnet-adapter.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -78,6 +79,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/library-service.js
           node --check YiuFM/Resources/Web/APP/player.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
+          node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
