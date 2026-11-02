@@ -14,8 +14,8 @@ var REG={
  lumiere:{hostId:'lumiereHost',modeClass:'mode-lumiere',adapter:'LumiereAdapter',lazy:true},
  partita:{hostId:'partitaHost',modeClass:'mode-partita',adapter:'PartitaAdapter',lazy:true}
 };
-var NAMES=Object.keys(REG),mode='v2',fallbackLocked=false,current=null,switching=false,want=null,waiters=[],lastError=null;
-var stats={v2Switches:0,v2Failures:0,fallbackAttempts:0,fallbacks:0,fallbackFailures:0,legacySwitches:0,retryAttempts:0,lastTarget:null,lastFallbackEngine:null,lastError:null,lastFallbackError:null};
+var NAMES=Object.keys(REG),mode='v2',fallbackLocked=false,current=null,switching=false,want=null,waiters=[],lastError=null,driveFaults={},fallbackPending=false;
+var stats={v2Switches:0,v2Failures:0,fallbackAttempts:0,fallbacks:0,fallbackFailures:0,legacySwitches:0,retryAttempts:0,driveFailures:0,runtimeFallbacks:0,lastRuntimeError:null,lastTarget:null,lastFallbackEngine:null,lastError:null,lastFallbackError:null};
 function warn(message,error){if(w.console&&console.warn)console.warn('[YiuRenderCoordinator] '+message,error||'');}
 function hostOf(name){return w.document&&w.document.getElementById(REG[name].hostId);}
 function adapterOf(name){return w[REG[name].adapter];}
@@ -118,8 +118,35 @@ function activeName(){
  for(var i=0;i<NAMES.length;i++)if(isActive(NAMES[i]))return NAMES[i];
  return null;
 }
+function triggerRuntimeFallback(name,error){
+ if(mode!=='v2'||fallbackPending||fallbackLocked||!name)return;
+ fallbackPending=true;switching=true;stats.runtimeFallbacks++;
+ stats.lastRuntimeError=error&&error.message?String(error.message):String(error||'runtime drive failed');
+ fallbackToLegacy(name,{reuse:false},error).then(function(){
+  fallbackPending=false;if(want)drain();else finish();
+ },function(fallbackError){
+  fallbackPending=false;current=null;setStageMode(null);lastError=fallbackError;
+  if(w.__yiuRenderFailure){try{w.__yiuRenderFailure(name,fallbackError);}catch(_){}}
+  if(want)drain();else finish();
+ });
+}
+function driveV2(time){
+ if(mode!=='v2'||fallbackPending)return;
+ var name=activeName(),adapter=name&&adapterOf(name);if(!adapter)return;
+ if(typeof adapter.isAlive==='function'&&!adapter.isAlive()){
+  driveFaults[name]=(driveFaults[name]||0)+1;
+  if(driveFaults[name]>=3)triggerRuntimeFallback(name,new Error(name+' runtime stopped responding'));
+  return;
+ }
+ if(typeof adapter.drive!=='function')return;
+ try{var result=adapter.drive(time);driveFaults[name]=0;return result;}
+ catch(error){
+  stats.driveFailures++;driveFaults[name]=(driveFaults[name]||0)+1;warn('drive '+name,error);
+  if(driveFaults[name]>=3)triggerRuntimeFallback(name,error);
+ }
+}
 function retryV2(){
- if(mode!=='legacy')return Promise.resolve(true);
+ if(mode!=='legacy'||fallbackPending)return Promise.resolve(mode==='v2');
  var target=legacy.current;stats.retryAttempts++;
  if(!target){mode='v2';fallbackLocked=false;return Promise.resolve(true);}
  mode='v2';fallbackLocked=false;
@@ -138,8 +165,7 @@ var api={
  switchTo:function(name,opts){if(!REG[name])return Promise.reject(new Error('[YiuRenderCoordinator] unknown engine: '+name));return request(name,opts);},
  drive:function(time){
   if(mode==='legacy')return legacy.drive(time);
-  var name=activeName(),adapter=name&&adapterOf(name);
-  if(adapter&&typeof adapter.drive==='function'){try{return adapter.drive(time);}catch(error){warn('drive '+name,error);}}
+  return driveV2(time);
  },
  loadLyrics:function(TS,WT,LN){
   if(mode==='legacy')return legacy.loadLyrics(TS,WT,LN);
@@ -156,8 +182,8 @@ var api={
  },
  destroy:function(){return mode==='legacy'?legacy.destroy():request(null,{});},
  retryV2:retryV2,
- fallbackController:{retry:retryV2,snapshot:function(){return {active:mode==='legacy',locked:fallbackLocked,attempts:stats.fallbackAttempts,successes:stats.fallbacks,failures:stats.fallbackFailures,lastEngine:stats.lastFallbackEngine,lastError:stats.lastError,lastFallbackError:stats.lastFallbackError};}},
- snapshot:function(){return {version:api.version,mode:mode,fallbackLocked:fallbackLocked,current:api.current,isSwitching:api.isSwitching,v2Current:current,legacyCurrent:legacy.current,stats:{v2Switches:stats.v2Switches,v2Failures:stats.v2Failures,fallbackAttempts:stats.fallbackAttempts,fallbacks:stats.fallbacks,fallbackFailures:stats.fallbackFailures,legacySwitches:stats.legacySwitches,retryAttempts:stats.retryAttempts,lastTarget:stats.lastTarget,lastFallbackEngine:stats.lastFallbackEngine,lastError:stats.lastError,lastFallbackError:stats.lastFallbackError}};},
+ fallbackController:{retry:retryV2,snapshot:function(){return {active:mode==='legacy',locked:fallbackLocked,pending:fallbackPending,attempts:stats.fallbackAttempts,successes:stats.fallbacks,failures:stats.fallbackFailures,runtimeFallbacks:stats.runtimeFallbacks,driveFailures:stats.driveFailures,lastEngine:stats.lastFallbackEngine,lastError:stats.lastError,lastFallbackError:stats.lastFallbackError};}},
+ snapshot:function(){return {version:api.version,mode:mode,fallbackLocked:fallbackLocked,current:api.current,isSwitching:api.isSwitching,v2Current:current,legacyCurrent:legacy.current,stats:{v2Switches:stats.v2Switches,v2Failures:stats.v2Failures,fallbackAttempts:stats.fallbackAttempts,fallbacks:stats.fallbacks,fallbackFailures:stats.fallbackFailures,legacySwitches:stats.legacySwitches,retryAttempts:stats.retryAttempts,driveFailures:stats.driveFailures,runtimeFallbacks:stats.runtimeFallbacks,lastRuntimeError:stats.lastRuntimeError,lastTarget:stats.lastTarget,lastFallbackEngine:stats.lastFallbackEngine,lastError:stats.lastError,lastFallbackError:stats.lastFallbackError}};},
  debug:function(){return {coordinator:api.snapshot(),legacy:typeof legacy.debug==='function'?legacy.debug():null};}
 };
 Object.defineProperties(api,{
