@@ -39,7 +39,7 @@ function harness(options){
  const document={getElementById(id){return id==='stage'?stage:hosts[id]||null;},querySelectorAll(){return [];}};
  window.document=document;window.requestAnimationFrame=callback=>{callback();return 1;};
  vm.runInNewContext(source,{window,document,Promise,Date,Array,Object,String,Error,setTimeout,clearTimeout});
- return {window,legacy,adapters,events,activeClasses};
+ return {window,legacy,adapters,events,activeClasses,options};
 }
 test('V2 RenderCoordinator becomes the single public entry and manages adapters directly',async()=>{
  const h=harness(),m=h.window.VisualizerManager;
@@ -66,7 +66,7 @@ test('Legacy fallback remains locked for the session until an explicit V2 retry'
 test('V2 can be explicitly retried after legacy fallback',async()=>{
  const h=harness({failV2On:'partita'}),m=h.window.YiuRenderCoordinator;
  await m.switchTo('partita');
- h.adapters.partita._state.alive=true;h.adapters.partita._state.active=true;
+ h.options.failV2On=undefined;
  assert.equal(await m.retryV2(),true);
  assert.equal(m.snapshot().mode,'v2');assert.equal(m.current,'partita');
 });
