@@ -224,4 +224,12 @@ test('Sonnet resolution slider input rebuilds the live renderer at the selected 
   assert.equal(runtimeHarness.destroyed, 1);
   assert.equal(adapter.state().textureResolution, 3);
   assert.equal(adapter.state().appliedTextureResolution, 3);
+
+  // The generic configuration entry point must rebuild the WebGL host too.
+  adapter.updateConfig({ tuning: { textureResolution: 2.5 } });
+  await new Promise(resolve => setTimeout(resolve, 650));
+  assert.deepEqual(runtimeHarness.created, [2, 3, 2.5]);
+  assert.equal(runtimeHarness.destroyed, 2);
+  assert.equal(adapter.state().textureResolution, 2.5);
+  assert.equal(adapter.state().appliedTextureResolution, 2.5);
 });
