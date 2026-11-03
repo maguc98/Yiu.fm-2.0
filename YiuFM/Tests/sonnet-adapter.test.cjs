@@ -226,7 +226,7 @@ test('Sonnet resolution slider input rebuilds the live renderer at the selected 
   assert.equal(adapter.state().canvasHeight, 1600);
   assert.equal(adapter.state().canvasCssWidth, 400);
   assert.equal(adapter.state().canvasCssHeight, 800);
-  assert.equal(adapter.state().devicePixelRatio, 1);
+  assert.equal(adapter.state().devicePixelRatio, 2);
 
   slider.value = '300';
   listeners.input();
