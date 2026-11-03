@@ -42,7 +42,7 @@
                         clearInterval(timer); timer = null; return;
                     }
                     var A = window.PartitaAdapter;
-                    if (audioEl && A && A.drive) A.drive(smoothTime(audioEl), true);
+                    if (audioEl && A && A.drive) A.drive(smoothTime(audioEl) - (window.LYR_OFF || 0), true);
                 }, 16);
             }
         } else if (lastMode === 'partita') {
