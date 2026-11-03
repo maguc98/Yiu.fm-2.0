@@ -165,6 +165,7 @@ test('Partita interpolates its MotionValue on display frames between 30Hz player
   assert.ok(Math.abs(harness.time().get() - (1.0 + 2 / 60)) < 0.002);
 
   harness.adapter.drive(1.05);
+  harness.advanceFrame(1000 / 60);
   assert.ok(harness.time().get() >= 1.05 - 0.002,
     'the next audio-clock sample should gently correct the interpolated clock');
 });
