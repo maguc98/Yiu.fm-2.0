@@ -853,6 +853,10 @@
       canvasHeight: canvas ? canvas.height : null,
       canvasCssWidth: rect ? Math.round(rect.width) : null,
       canvasCssHeight: rect ? Math.round(rect.height) : null,
+      canvasPixelRatioX: canvas && rect && rect.width ? +(canvas.width / rect.width).toFixed(3) : null,
+      canvasPixelRatioY: canvas && rect && rect.height ? +(canvas.height / rect.height).toFixed(3) : null,
+      nativeTextureResolution: nativeTextureResolution(),
+      globalResolutionMultiplier: resMul(),
       devicePixelRatio: (typeof window !== 'undefined' && Number(window.devicePixelRatio)) || 1
     };
   }
