@@ -91,7 +91,7 @@ jobs:
               raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
           html = html.replace(old_partita, new_partita, 1)
           old_res = '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">'
-          new_res = '<input type="range" id="sonnet-res" min="100" max="400" step="25" value="100">'
+          new_res = '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">'
           if html.count(old_res) != 1:
               raise SystemExit("Expected exactly one Sonnet resolution slider; refusing to patch the UI.")
           html = html.replace(old_res, new_res, 1)
@@ -145,6 +145,7 @@ jobs:
           grep -q 'wordAnimationEnd=' YiuFM/Resources/Web/APP/P1.js
           grep -q 'g>=t.startTime&&g<=h' YiuFM/Resources/Web/APP/P1.js
           grep -q 'y>=b&&y<=h' YiuFM/Resources/Web/APP/P1.js
+          grep -q '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">' YiuFM/Resources/Web/index.html
           grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --test YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
