@@ -36,6 +36,7 @@ function loadAdapter() {
   };
   const document = {
     head: { appendChild() {} },
+    getElementById() { return null; },
     createElement(tag) {
       return { tag, style: {}, textContent: '', appendChild() {}, removeChild() {} };
     }
