@@ -59,7 +59,7 @@
     // 300ms intervals. Stop after a generous gap so a paused track cannot drift.
     if (!smoothClockReady || now - smoothLastFeedAt > 450) return;
     var elapsed = Math.max(0, now - smoothAnchorWall) / 1000;
-    var audio = document.getElementById('audio');
+    var audio = document && typeof document.getElementById === 'function' ? document.getElementById('audio') : null;
     var rate = audio && isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
     var estimate = smoothAnchorTime + elapsed * rate;
     if (estimate > currentTimeObj.get() + 0.0005) currentTimeObj.set(estimate);
@@ -68,7 +68,7 @@
   function feedSmoothClock(ct, now) {
     var prev = currentTimeObj.get();
     var seek = !smoothClockReady || ct < prev - 0.03;
-    var audio = document.getElementById('audio');
+    var audio = document && typeof document.getElementById === 'function' ? document.getElementById('audio') : null;
     var rate = audio && isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
     var estimate = smoothClockReady
       ? smoothAnchorTime + Math.max(0, now - smoothAnchorWall) / 1000 * rate
@@ -349,7 +349,7 @@
       try {
         var now = clockNow();
         if (fromFallback) {
-          if (now - lastExtDriveAt < 300) return;
+          if (lastExtDriveAt && now - lastExtDriveAt < 300) return;
           // Fallback receives raw audio.currentTime; normalize it to the player's lyric timeline.
           ct -= (typeof window.LYR_OFF === 'number' && isFinite(window.LYR_OFF)) ? window.LYR_OFF : 0;
         } else {
