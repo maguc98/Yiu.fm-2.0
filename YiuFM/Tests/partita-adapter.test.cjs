@@ -40,9 +40,15 @@ function loadAdapter() {
       return { tag, style: {}, textContent: '', appendChild() {}, removeChild() {} };
     }
   };
+  let now = 0;
+  let nextFrameId = 1;
+  const frames = new Map();
   const window = {
     Partita,
     __renderResMul: 1,
+    performance: { now() { return now; } },
+    requestAnimationFrame(callback) { const id = nextFrameId++; frames.set(id, callback); return id; },
+    cancelAnimationFrame(id) { frames.delete(id); },
     addEventListener() {}
   };
   const source = fs.readFileSync(
@@ -53,8 +59,8 @@ function loadAdapter() {
     window, document, console,
     setTimeout() { return 1; },
     clearTimeout() {},
-    requestAnimationFrame() { return 1; },
-    cancelAnimationFrame() {}
+    requestAnimationFrame: window.requestAnimationFrame,
+    cancelAnimationFrame: window.cancelAnimationFrame
   });
 
   const host = {
@@ -68,6 +74,13 @@ function loadAdapter() {
   return {
     adapter: window.PartitaAdapter,
     host,
+    advanceFrame(ms) {
+      now += ms;
+      const pending = Array.from(frames.values());
+      frames.clear();
+      pending.forEach(callback => callback(now));
+    },
+    pendingFrames() { return frames.size; },
     time() { return rendered.props.children.props.currentTime; },
     timeSetCount() { return timeSetCount; },
     lineIndex() { return rendered.props.children.props.currentLineIndex; },
@@ -134,6 +147,37 @@ test('Partita retains evenly-spaced fallback for ordinary LRC without word times
   assert.ok(Math.abs(starts[1] - 1.75) < 1e-9);
   assert.ok(Math.abs(starts[2] - 2.5) < 1e-9);
   assert.ok(Math.abs(starts[3] - 3.25) < 1e-9);
+});
+
+test('Partita interpolates its MotionValue on display frames between 30Hz player clock samples', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
+
+  harness.adapter.drive(1.0);
+  assert.equal(harness.time().get(), 1.0);
+  assert.equal(harness.pendingFrames(), 1);
+
+  harness.advanceFrame(1000 / 60);
+  assert.ok(Math.abs(harness.time().get() - (1.0 + 1 / 60)) < 0.002,
+    'the animation clock should advance on the display frame, not wait for the next player tick');
+
+  harness.advanceFrame(1000 / 60);
+  assert.ok(Math.abs(harness.time().get() - (1.0 + 2 / 60)) < 0.002);
+
+  harness.adapter.drive(1.05);
+  assert.ok(harness.time().get() >= 1.05 - 0.002,
+    'the next audio-clock sample should gently correct the interpolated clock');
+});
+
+test('Partita smooth clock stops after player updates cease and cannot drift while paused', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
+
+  harness.adapter.drive(1.0);
+  harness.advanceFrame(1000 / 60);
+  harness.advanceFrame(500);
+  assert.equal(harness.pendingFrames(), 0,
+    'the independent frame loop must stop when the player clock becomes stale');
 });
 
 test('Partita ignores duplicate timestamps to avoid redundant MotionValue updates', () => {
