@@ -3,6 +3,20 @@ from pathlib import Path
 path = Path("YiuFM/Resources/Web/APP/P1.js")
 source = path.read_text(encoding="utf-8")
 
+# Keep the first lyric chunk anchored at its final horizontal position.
+# The original waiting variants add large x offsets, then animate back to config.x
+# when the word becomes active. On each new lyric this looks like the first chunk
+# appears near the center and slides sideways into place. Preserve opacity/scale/y
+# entrance motion, but remove the horizontal displacement at both nesting levels.
+for old, new, label in (
+    ("x:n.x+Math.sin(n.y)*100", "x:n.x", "per-word horizontal offset"),
+    ('x:p==="waiting"?n.x+(g==="left"?-40:40):n.x', "x:n.x", "chunk horizontal offset"),
+):
+    count = source.count(old)
+    if count != 1:
+        raise SystemExit(f"Expected exactly one {label}, found {count}")
+    source = source.replace(old, new, 1)
+
 # Partita's normal per-character entrance transition lasts 6x that character's
 # timestamp span, and each character is additionally delayed by its offset
 # from the word start. The state must not switch to "passed" until the final
@@ -11,6 +25,13 @@ helper_anchor = "k0=(t,e)=>t.syllables?.length?t.syllables.flatMap(n=>Wd(n.text,
 helper = """k0=(t,e)=>t.syllables?.length?t.syllables.flatMap(n=>Wd(n.text,n.startTime,n.endTime,e)):Wd(t.text,t.startTime,t.endTime,e),wordAnimationEnd=(t,e)=>{let n=k0(t),i=mc(t,e),o=_A(t,e);if(e.wordRevealMode==="normal"&&n.length>1)return Math.max(i,...n.map(a=>a.startTime+Math.max(a.endTime-a.startTime,.001)*6));let r=e.wordRevealMode==="instant"?Math.min(o||.08,.12):e.wordRevealMode==="fast"?Math.min(Math.max(o||.12,.12),.2):o||.1;return Math.max(i,t.startTime+r)},G2="""
 if source.count(helper_anchor) != 1:
     raise SystemExit(f"Expected one Partita character segmentation anchor, found {source.count(helper_anchor)}")
+if "Math.sin(n.y)*100" in source or 'g==="left"?-40:40' in source:
+    raise SystemExit("A Partita horizontal entrance offset remains; refusing to continue.")
+if source.count('waiting:({config:n})=>({opacity:0,scale:.5,x:n.x,y:n.y+Math.cos(n.x)*50') != 1:
+    raise SystemExit("Expected per-word entrance to remain horizontally anchored.")
+if source.count('scale:p==="waiting"?.85:1,x:n.x,y:n.y') != 1:
+    raise SystemExit("Expected lyric chunk entrance to remain horizontally anchored.")
+
 if "wordAnimationEnd=" not in source:
     source = source.replace(helper_anchor, helper, 1)
 
