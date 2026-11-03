@@ -285,7 +285,7 @@
     },
 
     // 时间输入：可能同时有多个来源（播放器主循环、partita-connect 备用时钟）。
-    // 为避免两个时钟互相拉扯造成文字抽搐：① 主循环在喂数据时，备用时钟自动让位；② 小幅回退的时间戳直接忽略。
+    // 为避免两个时钟互相拉扯造成文字抽搐：主循环活跃时备用时钟让位；仅过滤极小的时钟抖动，明显回退作为 seek 同步。
     drive: function (ct, fromFallback) {
       if (!active || suspended || !currentTimeObj) return;
       try {
