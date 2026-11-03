@@ -177,6 +177,33 @@ test('Sonnet resolution slider exposes the full 0.5x–4x range', async () => {
   assert.equal(slider.value, '350');
 });
 
+test('Sonnet diagnostics report actual canvas pixel density and global resolution scaling', async () => {
+  const runtimeHarness = {
+    created: [],
+    destroyed: 0,
+    host: {
+      id: 'sonnetHost', innerHTML: '', style: {}, clientWidth: 400, clientHeight: 800,
+      querySelector() {
+        return {
+          width: 1200, height: 2400,
+          getBoundingClientRect() { return { width: 400, height: 800 }; }
+        };
+      }
+    },
+    audio: { paused: true, currentTime: 0, playbackRate: 1, addEventListener() {} }
+  };
+  const adapter = loadAdapter(3, null, null, runtimeHarness);
+  await adapter.init();
+  adapter.show();
+  await adapter.whenReady();
+
+  const state = adapter.state();
+  assert.equal(state.nativeTextureResolution, 3);
+  assert.equal(state.canvasPixelRatioX, 3);
+  assert.equal(state.canvasPixelRatioY, 3);
+  assert.equal(state.globalResolutionMultiplier, 1);
+});
+
 test('The packaged legacy UI receives the current karaoke timing fixes', () => {
   const webApp = path.join(__dirname, '..', 'Resources', 'Web', 'APP');
   const player = fs.readFileSync(path.join(webApp, 'player.js'), 'utf8');
