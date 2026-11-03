@@ -298,7 +298,8 @@
         if (typeof ct !== 'number' || !isFinite(ct)) return;
         var prev = currentTimeObj.get();
         if (ct === prev) return; // 备用时钟可能重复提交同一音频时间；不触发无效 MotionValue 更新
-        if (ct < prev && prev - ct < 0.25) return;
+        // 忽略不超过 30ms 的微小回退（时钟抖动）；更明显的回退视为 seek，必须同步回去。
+        if (ct < prev && prev - ct < 0.03) return;
         currentTimeObj.set(ct);
         var idx = findIndex(ct);
         if (idx !== lineIndex) {
