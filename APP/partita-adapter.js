@@ -292,6 +292,8 @@
         var now = (window.performance && performance.now) ? performance.now() : Date.now();
         if (fromFallback) {
           if (now - lastExtDriveAt < 300) return;
+          // Fallback receives raw audio.currentTime; normalize it to the player's lyric timeline.
+          ct -= (typeof window.LYR_OFF === 'number' && isFinite(window.LYR_OFF)) ? window.LYR_OFF : 0;
         } else {
           lastExtDriveAt = now;
         }
