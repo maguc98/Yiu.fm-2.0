@@ -838,12 +838,22 @@
   }
 
   function state() {
+    var host = getHost(), canvas = null, rect = null;
+    try {
+      if (host && host.querySelector) canvas = host.querySelector('canvas');
+      if (canvas && canvas.getBoundingClientRect) rect = canvas.getBoundingClientRect();
+    } catch (_) { canvas = null; rect = null; }
     return {
       active: active, playing: playing, hasRuntime: !!runtime, creating: !!creating,
       hasLyrics: !!pendingLyrics, lyricsDirty: lyricsDirty,
       textureResolution: curTuning.textureResolution,
       appliedTextureResolution: runtime ? runtimeTextureResolution : null,
-      resolutionRebuildPending: resolutionRebuildPending
+      resolutionRebuildPending: resolutionRebuildPending,
+      canvasWidth: canvas ? canvas.width : null,
+      canvasHeight: canvas ? canvas.height : null,
+      canvasCssWidth: rect ? Math.round(rect.width) : null,
+      canvasCssHeight: rect ? Math.round(rect.height) : null,
+      devicePixelRatio: (typeof window !== 'undefined' && Number(window.devicePixelRatio)) || 1
     };
   }
 
