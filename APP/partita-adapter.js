@@ -68,8 +68,10 @@
   function feedSmoothClock(ct, now) {
     var prev = currentTimeObj.get();
     var seek = !smoothClockReady || ct < prev - 0.03;
+    var audio = document.getElementById('audio');
+    var rate = audio && isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
     var estimate = smoothClockReady
-      ? smoothAnchorTime + Math.max(0, now - smoothAnchorWall) / 1000
+      ? smoothAnchorTime + Math.max(0, now - smoothAnchorWall) / 1000 * rate
       : ct;
     var error = ct - estimate;
     if (seek || Math.abs(error) > 0.25) {
