@@ -28,4 +28,17 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
   assert.ok(!bundle.includes('startTime-u.wordLookahead'));
   assert.ok(!bundle.includes('b-c.wordLookahead'));
   assert.ok(!bundle.includes('E+0.08'));
+
+  assert.ok(
+    bundle.includes('Pl,{initial:!1,mode:"sync",children:(0,In.jsx)(St.div,'),
+    'the previous keyed lyric line must remain mounted for its exit animation'
+  );
+  assert.ok(
+    bundle.includes('lineAnimationEnd=b?Math.max(0,...v.columns.flatMap'),
+    'the line exit deadline must include every displayed word and its staggered character animation'
+  );
+  assert.ok(
+    bundle.includes('duration:Math.max(E.exit.transition?.duration??0,lineAnimationEnd-e.get())'),
+    'the previous line must not exit before its final word entrance animation completes'
+  );
 });
