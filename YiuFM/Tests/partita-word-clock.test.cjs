@@ -30,6 +30,17 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
   assert.ok(!bundle.includes('E+0.08'));
 
   assert.ok(
+    bundle.includes('waiting:({config:n})=>({opacity:0,scale:.5,x:n.x,y:n.y+Math.cos(n.x)*50'),
+    'per-word entrance must not shift the first lyric chunk horizontally before activation'
+  );
+  assert.ok(
+    bundle.includes('scale:p==="waiting"?.85:1,x:n.x,y:n.y'),
+    'chunk entrance must remain anchored at its final horizontal position'
+  );
+  assert.ok(!bundle.includes('Math.sin(n.y)*100'));
+  assert.ok(!bundle.includes('g==="left"?-40:40'));
+
+  assert.ok(
     bundle.includes('Pl,{initial:!1,mode:"sync",children:(0,In.jsx)(St.div,'),
     'the previous keyed lyric line must remain mounted for its exit animation'
   );
