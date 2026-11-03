@@ -204,7 +204,15 @@ test('Sonnet resolution slider input rebuilds the live renderer at the selected 
   const runtimeHarness = {
     created: [],
     destroyed: 0,
-    host: { id: 'sonnetHost', innerHTML: '', style: {}, clientWidth: 400, clientHeight: 800 },
+    host: {
+      id: 'sonnetHost', innerHTML: '', style: {}, clientWidth: 400, clientHeight: 800,
+      querySelector() {
+        return {
+          width: 800, height: 1600,
+          getBoundingClientRect() { return { width: 400, height: 800 }; }
+        };
+      }
+    },
     audio: { paused: true, currentTime: 0, addEventListener() {} }
   };
   const adapter = loadAdapter(2, slider, null, runtimeHarness);
@@ -214,6 +222,11 @@ test('Sonnet resolution slider input rebuilds the live renderer at the selected 
 
   assert.deepEqual(runtimeHarness.created, [2]);
   assert.equal(adapter.state().appliedTextureResolution, 2);
+  assert.equal(adapter.state().canvasWidth, 800);
+  assert.equal(adapter.state().canvasHeight, 1600);
+  assert.equal(adapter.state().canvasCssWidth, 400);
+  assert.equal(adapter.state().canvasCssHeight, 800);
+  assert.equal(adapter.state().devicePixelRatio, 1);
 
   slider.value = '300';
   listeners.input();
