@@ -196,6 +196,7 @@ test('Partita moves the active line backward after seeking to an earlier lyric',
 
 test('Partita fallback drive applies the current global lyric offset', () => {
   const harness = loadAdapter();
+  harness.load([1.0], [null], ['测试歌词']);
   harness.setLyricOffset(0.5);
 
   harness.adapter.drive(10.0, true);
