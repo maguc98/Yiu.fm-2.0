@@ -33,6 +33,60 @@
     showText: true, lyricsFontScale: 1
   };
   var lastExtDriveAt = 0;
+  // Partita receives lyric-clock corrections from the player's ~30Hz loop.
+  // Drive its MotionValue on its own display-frame loop so Framer Motion can
+  // interpolate between audio-clock samples instead of visibly stepping.
+  var smoothFrameId = 0;
+  var smoothAnchorTime = 0;
+  var smoothAnchorWall = 0;
+  var smoothLastFeedAt = 0;
+  var smoothClockReady = false;
+  function clockNow() {
+    return (window.performance && typeof window.performance.now === 'function')
+      ? window.performance.now() : Date.now();
+  }
+  function stopSmoothClock() {
+    if (smoothFrameId) {
+      (window.cancelAnimationFrame || cancelAnimationFrame)(smoothFrameId);
+      smoothFrameId = 0;
+    }
+  }
+  function smoothClockFrame(timestamp) {
+    smoothFrameId = 0;
+    if (!active || suspended || !currentTimeObj) return;
+    var now = typeof timestamp === 'number' && isFinite(timestamp) ? timestamp : clockNow();
+    // Main player updates arrive every ~33ms; fallback updates can arrive at
+    // 300ms intervals. Stop after a generous gap so a paused track cannot drift.
+    if (!smoothClockReady || now - smoothLastFeedAt > 450) return;
+    var elapsed = Math.max(0, now - smoothAnchorWall) / 1000;
+    var audio = document.getElementById('audio');
+    var rate = audio && isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
+    var estimate = smoothAnchorTime + elapsed * rate;
+    if (estimate > currentTimeObj.get() + 0.0005) currentTimeObj.set(estimate);
+    smoothFrameId = (window.requestAnimationFrame || requestAnimationFrame)(smoothClockFrame);
+  }
+  function feedSmoothClock(ct, now) {
+    var prev = currentTimeObj.get();
+    var seek = !smoothClockReady || ct < prev - 0.03;
+    var estimate = smoothClockReady
+      ? smoothAnchorTime + Math.max(0, now - smoothAnchorWall) / 1000
+      : ct;
+    var error = ct - estimate;
+    if (seek || Math.abs(error) > 0.25) {
+      smoothAnchorTime = ct;
+      smoothAnchorWall = now;
+      currentTimeObj.set(ct);
+    } else {
+      // Ease small audio-clock quantization/drift without moving the visual clock backward.
+      smoothAnchorTime = Math.max(estimate, estimate + error * 0.2);
+      smoothAnchorWall = now;
+    }
+    smoothLastFeedAt = now;
+    smoothClockReady = true;
+    if (!smoothFrameId) {
+      smoothFrameId = (window.requestAnimationFrame || requestAnimationFrame)(smoothClockFrame);
+    }
+  }
   var fitByLine = {}, fitPass = {}, fitTimer = 0;   // 每句歌词的「防出屏」修正：{k: 字号倍率, cap: 左右错位上限(px)}
   var fontComp = 1;   // 低分辨率模式下，如果浏览器没有把 vw 一起缩小，用它补偿字号
   var resTimer = 0;
@@ -256,6 +310,8 @@
 
     hide: function () {
       active = false;
+      stopSmoothClock();
+      smoothClockReady = false;
       if (hostEl) hostEl.style.display = 'none';
     },
 
@@ -289,7 +345,7 @@
     drive: function (ct, fromFallback) {
       if (!active || suspended || !currentTimeObj) return;
       try {
-        var now = (window.performance && performance.now) ? performance.now() : Date.now();
+        var now = clockNow();
         if (fromFallback) {
           if (now - lastExtDriveAt < 300) return;
           // Fallback receives raw audio.currentTime; normalize it to the player's lyric timeline.
@@ -299,10 +355,12 @@
         }
         if (typeof ct !== 'number' || !isFinite(ct)) return;
         var prev = currentTimeObj.get();
-        if (ct === prev) return; // 备用时钟可能重复提交同一音频时间；不触发无效 MotionValue 更新
-        // 忽略不超过 30ms 的微小回退（时钟抖动）；更明显的回退视为 seek，必须同步回去。
-        if (ct < prev && prev - ct < 0.03) return;
-        currentTimeObj.set(ct);
+        // Ignore only tiny backward jitter; a real backward movement is a seek.
+        if (ct < prev && prev - ct < 0.03) {
+          feedSmoothClock(Math.max(ct, prev), now);
+        } else {
+          feedSmoothClock(ct, now);
+        }
         var idx = findIndex(ct);
         if (idx !== lineIndex) {
           lineIndex = idx;
@@ -370,6 +428,8 @@
     destroy: function () {
       active = false;
       suspended = false;
+      stopSmoothClock();
+      smoothClockReady = false;
       if (root) { try { root.unmount(); } catch (e) {} root = null; }
       if (hostEl) hostEl.innerHTML = '';
       // 彻底清空内存中的假数据和游标
@@ -402,6 +462,7 @@
       v = !!v;
       if (v === suspended) return;
       suspended = v;
+      if (suspended) { stopSmoothClock(); smoothClockReady = false; }
       if (hostEl) hostEl.style.display = suspended || !active ? 'none' : 'block';
       if (!suspended && active) this._render();
     },
