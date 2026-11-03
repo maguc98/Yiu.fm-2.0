@@ -55,11 +55,17 @@
     smoothFrameId = 0;
     if (!active || suspended || !currentTimeObj) return;
     var now = typeof timestamp === 'number' && isFinite(timestamp) ? timestamp : clockNow();
+    var audio = document && typeof document.getElementById === 'function' ? document.getElementById('audio') : null;
+    // Never let the visual clock run on after the audio element has paused.
+    // The next real drive sample after resume will establish a fresh anchor.
+    if (audio && audio.paused) {
+      smoothClockReady = false;
+      return;
+    }
     // Main player updates arrive every ~33ms; fallback updates can arrive at
     // 300ms intervals. Stop after a generous gap so a paused track cannot drift.
     if (!smoothClockReady || now - smoothLastFeedAt > 450) return;
     var elapsed = Math.max(0, now - smoothAnchorWall) / 1000;
-    var audio = document && typeof document.getElementById === 'function' ? document.getElementById('audio') : null;
     var rate = audio && isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
     var estimate = smoothAnchorTime + elapsed * rate;
     if (estimate > currentTimeObj.get() + 0.0005) currentTimeObj.set(estimate);
