@@ -70,6 +70,7 @@ function loadAdapter() {
     host,
     time() { return rendered.props.children.props.currentTime; },
     timeSetCount() { return timeSetCount; },
+    lineIndex() { return rendered.props.children.props.currentLineIndex; },
     load(TS, WT, LN) {
       window.PartitaAdapter.loadLyrics(TS, WT, LN);
       window.PartitaAdapter.show();
@@ -164,4 +165,74 @@ test('Partita suspension pauses its clock without deactivating the engine', () =
   assert.equal(harness.host.style.display, 'block');
   harness.adapter.drive(1.75);
   assert.equal(time.get(), 1.75, 'the clock must resume after unsuspending');
+});
+
+
+test('Partita ignores tiny clock jitter but accepts a meaningful backward seek', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['第一句', '第二句']);
+
+  harness.adapter.drive(1.25);
+  harness.adapter.drive(1.24);
+  assert.equal(harness.time().get(), 1.25, 'a 10ms regression should be treated as clock jitter');
+
+  harness.adapter.drive(1.15);
+  assert.equal(harness.time().get(), 1.15, 'a 100ms regression must be accepted as a seek');
+});
+
+test('Partita moves the active line backward after seeking to an earlier lyric', () => {
+  const harness = loadAdapter();
+  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['第一句', '第二句']);
+
+  harness.adapter.drive(3.2);
+  assert.equal(harness.lineIndex(), 1);
+
+  harness.adapter.drive(1.2);
+  assert.equal(harness.time().get(), 1.2);
+  assert.equal(harness.lineIndex(), 0, 'the active lyric line must follow the backward seek');
+});
+
+test('Partita fallback clock applies the current global lyric offset', () => {
+  const timers = [];
+  const drives = [];
+  const audio = { currentTime: 10, playbackRate: 1, paused: false };
+  const window = {
+    LYR_OFF: 0.5,
+    LN: [],
+    TS: [],
+    WT: [],
+    VisualizerManager: {
+      current: 'partita',
+      loadLyrics() {}
+    },
+    PartitaAdapter: {
+      drive(time, fromFallback) { drives.push({ time, fromFallback }); }
+    }
+  };
+  let now = 1000;
+  const document = { getElementById() { return audio; } };
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'partita-connect.js'),
+    'utf8'
+  );
+  vm.runInNewContext(source, {
+    window,
+    document,
+    performance: { now() { return now; } },
+    setInterval(fn, ms) { timers.push({ fn, ms }); return timers.length; },
+    clearInterval() {}
+  });
+
+  timers.find(timer => timer.ms === 100).fn();
+  const fallback = timers.find(timer => timer.ms === 16);
+  assert.ok(fallback, 'the Partita fallback timer should be installed');
+  fallback.fn();
+  assert.equal(drives[0].time, 9.5);
+  assert.equal(drives[0].fromFallback, true);
+
+  audio.currentTime = 10.1;
+  window.LYR_OFF = 0.2;
+  now += 100;
+  fallback.fn();
+  assert.equal(drives[1].time, 9.9, 'the fallback must use the latest per-song offset');
 });
