@@ -3,19 +3,14 @@ from pathlib import Path
 path = Path("YiuFM/Resources/Web/APP/P1.js")
 source = path.read_text(encoding="utf-8")
 
-# Keep the first lyric chunk anchored at its final horizontal position.
-# The original waiting variants add large x offsets, then animate back to config.x
-# when the word becomes active. On each new lyric this looks like the first chunk
-# appears near the center and slides sideways into place. Preserve opacity/scale/y
-# entrance motion, but remove the horizontal displacement at both nesting levels.
-for old, new, label in (
-    ("x:n.x+Math.sin(n.y)*100", "x:n.x", "per-word horizontal offset"),
-    ('x:p==="waiting"?n.x+(g==="left"?-40:40):n.x', "x:n.x", "chunk horizontal offset"),
+# Preserve Folia's original waiting-state entrance offsets. They are intentional motion,
+# not a layout correction. Restore the original AnimatePresence popLayout behavior below.
+for token, label in (
+    ("x:n.x+Math.sin(n.y)*100", "per-word entrance offset"),
+    ('x:p==="waiting"?n.x+(g==="left"?-40:40):n.x', "chunk entrance offset"),
 ):
-    count = source.count(old)
-    if count != 1:
-        raise SystemExit(f"Expected exactly one {label}, found {count}")
-    source = source.replace(old, new, 1)
+    if source.count(token) != 1:
+        raise SystemExit(f"Expected exactly one original {label}, found {source.count(token)}")
 
 # Partita's normal per-character entrance transition lasts 6x that character's
 # timestamp span, and each character is additionally delayed by its offset
@@ -25,12 +20,10 @@ helper_anchor = "k0=(t,e)=>t.syllables?.length?t.syllables.flatMap(n=>Wd(n.text,
 helper = """k0=(t,e)=>t.syllables?.length?t.syllables.flatMap(n=>Wd(n.text,n.startTime,n.endTime,e)):Wd(t.text,t.startTime,t.endTime,e),wordAnimationEnd=(t,e)=>{let n=k0(t),i=mc(t,e),o=_A(t,e);if(e.wordRevealMode==="normal"&&n.length>1)return Math.max(i,...n.map(a=>a.startTime+Math.max(a.endTime-a.startTime,.001)*6));let r=e.wordRevealMode==="instant"?Math.min(o||.08,.12):e.wordRevealMode==="fast"?Math.min(Math.max(o||.12,.12),.2):o||.1;return Math.max(i,t.startTime+r)},G2="""
 if source.count(helper_anchor) != 1:
     raise SystemExit(f"Expected one Partita character segmentation anchor, found {source.count(helper_anchor)}")
-if "Math.sin(n.y)*100" in source or 'g==="left"?-40:40' in source:
-    raise SystemExit("A Partita horizontal entrance offset remains; refusing to continue.")
-if source.count('waiting:({config:n})=>({opacity:0,scale:.5,x:n.x,y:n.y+Math.cos(n.x)*50') != 1:
-    raise SystemExit("Expected per-word entrance to remain horizontally anchored.")
-if source.count('scale:p==="waiting"?.85:1,x:n.x,y:n.y') != 1:
-    raise SystemExit("Expected lyric chunk entrance to remain horizontally anchored.")
+if source.count("x:n.x+Math.sin(n.y)*100") != 1:
+    raise SystemExit("Expected Folia's original per-word horizontal entrance motion.")
+if source.count('x:p==="waiting"?n.x+(g==="left"?-40:40):n.x') != 1:
+    raise SystemExit("Expected Folia's original chunk horizontal entrance motion.")
 
 if "wordAnimationEnd=" not in source:
     source = source.replace(helper_anchor, helper, 1)
@@ -61,7 +54,7 @@ if "E+0.08" in source:
     raise SystemExit("The obsolete fixed 80ms grace remains; refusing to continue.")
 
 line_wrapper_old = 'children:[u&&p&&b&&(0,In.jsx)(St.div,'
-line_wrapper_new = 'children:[u&&p&&b&&(0,In.jsx)(Pl,{initial:!1,mode:"sync",children:(0,In.jsx)(St.div,'
+line_wrapper_new = 'children:[u&&p&&b&&(0,In.jsx)(Pl,{initial:!1,mode:"popLayout",children:(0,In.jsx)(St.div,'
 if source.count(line_wrapper_old) != 1:
     raise SystemExit(f"Expected one active Partita line container, found {source.count(line_wrapper_old)}")
 source = source.replace(line_wrapper_old, line_wrapper_new, 1)
@@ -79,7 +72,7 @@ if source.count("wordAnimationEnd=") != 1:
     raise SystemExit("Expected exactly one actual animation-end helper.")
 if source.count("lineAnimationEnd=b?Math.max(0,...v.columns.flatMap") != 1:
     raise SystemExit("Expected exactly one full-line animation deadline.")
-if source.count('Pl,{initial:!1,mode:"sync",children:(0,In.jsx)(St.div,') != 1:
+if source.count('Pl,{initial:!1,mode:"popLayout",children:(0,In.jsx)(St.div,') != 1:
     raise SystemExit("Expected the active lyric line to be retained by AnimatePresence.")
 if source.count("duration:Math.max(E.exit.transition?.duration??0,lineAnimationEnd-e.get())") != 1:
     raise SystemExit("Expected the line exit to wait for its final word animation.")
