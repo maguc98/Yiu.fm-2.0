@@ -218,6 +218,9 @@
     curTuning.textureResolution = clampTextureResolution(curTuning.textureResolution);
     if (has(s.tuning, 'textureResolution')) s.tuning.textureResolution = curTuning.textureResolution;
     saveConfig(); pushConfig(s);
+    // textureResolution is a WebGL host-creation setting, not a live Pixi tuning value.
+    // Keep the generic config API consistent with setTextureResolution() and resetConfig().
+    if (has(s.tuning, 'textureResolution')) scheduleResolutionRebuild();
     return getConfig();
   }
   function resetConfig() {
