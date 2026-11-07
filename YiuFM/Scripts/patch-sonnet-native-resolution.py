@@ -29,7 +29,7 @@ source = source.replace(font_manager_anchor, font_manager_replacement, 1)
 # Include the active resolution in the cache key so a resolution rebuild
 # cannot silently reuse glyph atlases created at the previous lower density.
 font_cache_anchor = "fontFamilyKey += `-${style.fontWeight}`;"
-font_cache_replacement = "fontFamilyKey += `-${style.fontWeight}`;\\n          fontFamilyKey += `-${this.defaultOptions.resolution}`;"
+font_cache_replacement = "fontFamilyKey += `-${style.fontWeight}`;\n          fontFamilyKey += `-${this.defaultOptions.resolution}`;"
 if source.count(font_cache_anchor) != 1:
     raise SystemExit(f"Expected one Sonnet bitmap-font cache-key anchor, found {source.count(font_cache_anchor)}")
 source = source.replace(font_cache_anchor, font_cache_replacement, 1)
