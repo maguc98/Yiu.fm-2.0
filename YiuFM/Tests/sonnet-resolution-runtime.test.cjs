@@ -33,6 +33,14 @@ test('Sonnet canvas preserves the exact requested texture resolution at creation
     source.includes('pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;'),
     'dynamic BitmapText glyph atlases must be rasterized at the selected texture resolution'
   );
+  assert.ok(
+    !source.includes('resolution: 0.75') && !source.includes('resolution: 0.5'),
+    'Sonnet blur filters must not force the render chain below the input resolution'
+  );
+  assert.ok(
+    source.includes('resolution: "inherit"'),
+    'Sonnet blur filters must inherit the incoming render-target resolution'
+  );
   const resolutionKey = source.indexOf('fontFamilyKey += `-${this.defaultOptions.resolution}`;');
   const cacheLookup = source.indexOf('if (Cache.has(fontFamilyKey))', resolutionKey);
   const earlyCacheLookup = source.indexOf('if (Cache.has(fontFamilyKey))');
