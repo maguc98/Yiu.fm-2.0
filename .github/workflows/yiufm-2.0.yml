@@ -39,6 +39,7 @@ jobs:
           cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
           # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
           cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
+          cp APP/partita-connect.js YiuFM/Resources/Web/APP/partita-connect.js
           mkdir -p YiuFM/Resources/Web/APP/runtime
           cp APP/runtime/audio-clock.js YiuFM/Resources/Web/APP/runtime/audio-clock.js
           cp APP/runtime/timeline-scheduler.js YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
@@ -85,6 +86,11 @@ jobs:
           if html.count(old_p1) != 1:
               raise SystemExit("Expected exactly one Partita bundle script tag; refusing to patch.")
           html = html.replace(old_p1, new_p1, 1)
+          old_connect = '<script src="./APP/partita-connect.js?v=1"></script>'
+          new_connect = '<script src="./APP/partita-connect.js?v=20261107b"></script>'
+          if html.count(old_connect) != 1:
+              raise SystemExit("Expected exactly one Partita connect script tag; refusing to patch.")
+          html = html.replace(old_connect, new_connect, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
           new_partita = '<script src="./APP/partita-adapter.js?v=20261102c"></script>'
           if html.count(old_partita) != 1:
@@ -129,6 +135,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
+          node --check YiuFM/Resources/Web/APP/partita-connect.js
+          grep -q '}, 33);' YiuFM/Resources/Web/APP/partita-connect.js
           node --check YiuFM/Resources/Web/APP/P1.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
