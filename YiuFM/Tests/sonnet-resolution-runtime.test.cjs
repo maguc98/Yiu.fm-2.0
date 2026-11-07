@@ -25,4 +25,12 @@ test('Sonnet canvas preserves the exact requested texture resolution at creation
     !source.includes('snapResolutionToTexturePool(width, height, this.options.tuning.textureResolution)'),
     'subsequent canvas resize must not reduce the requested resolution'
   );
+  assert.ok(
+    source.includes('pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;'),
+    'dynamic BitmapText glyph atlases must be rasterized at the selected texture resolution'
+  );
+  assert.ok(
+    source.includes('fontFamilyKey += `-${this.defaultOptions.resolution}`;'),
+    'resolution changes must not reuse a cached glyph atlas from an older, lower density'
+  );
 });
