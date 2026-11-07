@@ -17,7 +17,15 @@ replacements = {
 # the canvas alone leaves cached glyph raster blurry on Retina screens.
 # Apply the selected resolution before Sonnet installs/builds any scenes.
 font_manager_anchor = "const context2 = await makePixiContext(pixi, contextOptions, options.signal);"
-font_manager_replacement = """if (pixi.BitmapFontManager && pixi.BitmapFontManager.defaultOptions) {
+font_manager_replacement = """// Pixi filters render through intermediate textures. Their stock default
+      // resolution is 1x even when the Application canvas uses a higher density,
+      // which can reintroduce jagged edges after the high-resolution scene render.
+      // Raise implicit-resolution filters to match the selected canvas density.
+      // Explicit per-filter resolutions remain unchanged.
+      if (pixi.Filter && pixi.Filter.defaultOptions) {
+        pixi.Filter.defaultOptions.resolution = options.tuning.textureResolution;
+      }
+      if (pixi.BitmapFontManager && pixi.BitmapFontManager.defaultOptions) {
         pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;
       }
       const context2 = await makePixiContext(pixi, contextOptions, options.signal);"""
