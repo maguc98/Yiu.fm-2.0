@@ -25,15 +25,35 @@ if source.count(font_manager_anchor) != 1:
     raise SystemExit(f"Expected one Sonnet runtime font-manager anchor, found {source.count(font_manager_anchor)}")
 source = source.replace(font_manager_anchor, font_manager_replacement, 1)
 
-# BitmapFontManager caches fonts by style, but not by raster resolution.
-# Include the active resolution in the cache key so a resolution rebuild
-# cannot silently reuse glyph atlases created at the previous lower density.
-font_cache_anchor = "fontFamilyKey += `-${style.fontWeight}`;"
-font_cache_replacement = "fontFamilyKey += `-${style.fontWeight}`;\n          fontFamilyKey += `-${this.defaultOptions.resolution}`;"
-if source.count(font_cache_anchor) != 1:
-    raise SystemExit(f"Expected one Sonnet bitmap-font cache-key anchor, found {source.count(font_cache_anchor)}")
-source = source.replace(font_cache_anchor, font_cache_replacement, 1)
+# BitmapFontManager checks its base cache key before adding style variants.
+# Move that lookup after the resolution suffix is applied; otherwise a 1x atlas
+# can be returned before the resolution-aware key is ever reached.
+font_cache_old = """let fontFamilyKey = `${style.fontFamily}-bitmap`;
+          let overrideFill = true;
+          if (Cache.has(fontFamilyKey)) {
+            const dynamicFont2 = Cache.get(fontFamilyKey);
+            dynamicFont2.ensureCharacters?.(text);
+            return dynamicFont2;
+          }
+          if (style._fill.fill && !style._stroke) {"""
+font_cache_new = """let fontFamilyKey = `${style.fontFamily}-bitmap`;
+          let overrideFill = true;
+          if (style._fill.fill && !style._stroke) {"""
+if source.count(font_cache_old) != 1:
+    raise SystemExit(f"Expected one Sonnet bitmap-font early-cache block, found {source.count(font_cache_old)}")
+source = source.replace(font_cache_old, font_cache_new, 1)
 
+font_cache_anchor = "fontFamilyKey += `-${style.fontStyle}`;"
+font_cache_replacement = """fontFamilyKey += `-${this.defaultOptions.resolution}`;
+          if (Cache.has(fontFamilyKey)) {
+            const dynamicFont2 = Cache.get(fontFamilyKey);
+            dynamicFont2.ensureCharacters?.(text);
+            return dynamicFont2;
+          }
+          fontFamilyKey += `-${style.fontStyle}`;"""
+if source.count(font_cache_anchor) != 1:
+    raise SystemExit(f"Expected one Sonnet bitmap-font style anchor, found {source.count(font_cache_anchor)}")
+source = source.replace(font_cache_anchor, font_cache_replacement, 1)
 for old, new in replacements.items():
     count = source.count(old)
     if count != 1:
