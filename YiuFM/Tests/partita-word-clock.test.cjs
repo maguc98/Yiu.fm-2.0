@@ -27,6 +27,14 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
     'the bundle must calculate the actual entrance-animation completion deadline'
   );
   assert.ok(
+    bundle.includes('t.startTime+.55'),
+    'the word deadline must include the 550ms spring-layout settling allowance'
+  );
+  assert.ok(
+    bundle.includes('wordAnimationEnd(Gt,b)+.5'),
+    'the line deadline must include the word passed-state transition'
+  );
+  assert.ok(
     bundle.includes('Math.max(a.endTime-a.startTime,.001)*6'),
     'normal character entrance duration must account for the six-times timestamp-span transition'
   );
@@ -57,10 +65,10 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
   );
   assert.ok(
     bundle.includes('lineAnimationEnd=b?Math.max(0,...v.columns.flatMap'),
-    'the line exit deadline must include every displayed word and its staggered character animation'
+    'the line exit deadline must include every displayed word, character animation, and word exit transition'
   );
   assert.ok(
-    bundle.includes('duration:Math.max(E.exit.transition?.duration??0,lineAnimationEnd-e.get())'),
-    'the previous line must not exit before its final word entrance animation completes'
+    bundle.includes('delay:Math.max(E.exit.transition?.delay??0,lineAnimationEnd-e.get())'),
+    'the previous line must remain fully visible until its child animations finish, then run the original exit transition'
   );
 });
