@@ -29,8 +29,15 @@ test('Sonnet canvas preserves the exact requested texture resolution at creation
     source.includes('pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;'),
     'dynamic BitmapText glyph atlases must be rasterized at the selected texture resolution'
   );
+  const resolutionKey = source.indexOf('fontFamilyKey += `-${this.defaultOptions.resolution}`;');
+  const cacheLookup = source.indexOf('if (Cache.has(fontFamilyKey))', resolutionKey);
+  const earlyCacheLookup = source.indexOf('if (Cache.has(fontFamilyKey))');
+  assert.ok(resolutionKey >= 0 && cacheLookup > resolutionKey,
+    'bitmap-font cache lookup must happen after the raster-resolution key is added');
+  assert.equal(earlyCacheLookup, cacheLookup,
+    'no early cache lookup may bypass the resolution-aware key');
   assert.ok(
-    source.includes('fontFamilyKey += `-${this.defaultOptions.resolution}`;'),
-    'resolution changes must not reuse a cached glyph atlas from an older, lower density'
+    source.includes('antialias: "on"'),
+    'Sonnet post-process filter passes must retain multisampled render targets'
   );
 });
