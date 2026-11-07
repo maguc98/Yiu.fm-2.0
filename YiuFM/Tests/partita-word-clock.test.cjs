@@ -31,10 +31,6 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
     'the word deadline must include the 550ms spring-layout settling allowance'
   );
   assert.ok(
-    bundle.includes('wordAnimationEnd(Gt,b)+.5'),
-    'the line deadline must include the word passed-state transition'
-  );
-  assert.ok(
     bundle.includes('Math.max(a.endTime-a.startTime,.001)*6'),
     'normal character entrance duration must account for the six-times timestamp-span transition'
   );
@@ -60,15 +56,13 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
   );
 
   assert.ok(
-    bundle.includes('Pl,{initial:!1,mode:"popLayout",children:(0,In.jsx)(St.div,'),
-    'the previous keyed lyric line must use Folia original popLayout exit positioning'
+    bundle.includes('Pl,{initial:!1,mode:"wait",children:(0,In.jsx)(St.div,'),
+    'the next lyric line must wait until the previous line exit animation completes'
   );
   assert.ok(
-    bundle.includes('lineAnimationEnd=b?Math.max(0,...v.columns.flatMap'),
-    'the line exit deadline must include every displayed word, character animation, and word exit transition'
+    bundle.includes('variants:{leave:Y=>Y?LV:E.exit}'),
+    'the original lyric line exit transition must remain unchanged without an incoming-line delay'
   );
-  assert.ok(
-    bundle.includes('delay:Math.max(E.exit.transition?.delay??0,lineAnimationEnd-e.get())'),
-    'the previous line must remain fully visible until its child animations finish, then run the original exit transition'
-  );
+  assert.ok(!bundle.includes('lineAnimationEnd='));
+  assert.ok(!bundle.includes('delay:Math.max(E.exit.transition?.delay??0,lineAnimationEnd-e.get())'));
 });
