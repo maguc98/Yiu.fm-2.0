@@ -37,6 +37,29 @@ if source.count(profile_anchor) != 1:
     raise SystemExit(f"Expected one Partita line-profile anchor, found {source.count(profile_anchor)}")
 source = source.replace(profile_anchor, profile_replacement, 1)
 
+
+# A newly mounted line can already be part-way through playback. MotionValue
+# change subscriptions do not replay their current value, so initializing
+# every word/chunk as "waiting" creates a stale first frame and a spurious
+# horizontal entrance when the next animation frame arrives.
+word_state_old = 'let[m,p]=(0,gc.useState)("waiting"),x=(0,gc.useMemo)(()=>1.5+Math.random()*2,[]),b=_A(t,u),E=mc(t,u),v=(0,gc.useMemo)(()=>k0(t),[t]);'
+word_state_new = 'let[m,p]=(0,gc.useState)(()=>{let g=n.get(),h=wordAnimationEnd(t,u);return g>=t.startTime&&g<=h?"active":g>h?"passed":"waiting"}),x=(0,gc.useMemo)(()=>1.5+Math.random()*2,[]),b=_A(t,u),E=mc(t,u),v=(0,gc.useMemo)(()=>k0(t),[t]);'
+if source.count(word_state_old) != 1:
+    raise SystemExit(f"Expected one GlowWord initial-state anchor, found {source.count(word_state_old)}")
+source = source.replace(word_state_old, word_state_new, 1)
+
+chunk_state_old = 'let[p,x]=(0,cM.useState)("waiting"),b=t[0].startTime,E=mc(t[t.length-1],c);'
+chunk_state_new = 'let[p,x]=(0,cM.useState)(()=>{let y=o.get(),h=Math.max(mc(t[t.length-1],c),...e.map(w=>wordAnimationEnd(w,c)));return y>=t[0].startTime&&y<=h?"active":y>h?"passed":"waiting"}),b=t[0].startTime,E=mc(t[t.length-1],c);'
+if source.count(chunk_state_old) != 1:
+    raise SystemExit(f"Expected one PartitaChunk initial-state anchor, found {source.count(chunk_state_old)}")
+source = source.replace(chunk_state_old, chunk_state_new, 1)
+
+initial_old = 'initial:"waiting",animate:m,className:"inline-block origin-center relative will-change-transform whitespace-nowrap"'
+initial_new = 'initial:m,animate:m,className:"inline-block origin-center relative will-change-transform whitespace-nowrap"'
+if source.count(initial_old) != 1:
+    raise SystemExit(f"Expected one GlowWord initial variant, found {source.count(initial_old)}")
+source = source.replace(initial_old, initial_new, 1)
+
 word_old = 'v=(0,gc.useMemo)(()=>k0(t),[t]);return Yn(n,"change",g=>{let y="waiting";g>=t.startTime-u.wordLookahead&&g<=E?y="active":g>E&&(y="passed")'
 word_new = 'v=(0,gc.useMemo)(()=>k0(t),[t]),h=wordAnimationEnd(t,u);return Yn(n,"change",g=>{let y="waiting";g>=t.startTime&&g<=h?y="active":g>h&&(y="passed")'
 chunk_old = 'b=t[0].startTime,E=mc(t[t.length-1],c);Yn(o,"change",y=>{let S="waiting";y>=b-c.wordLookahead&&y<=E?S="active":y>E&&(S="passed")'
