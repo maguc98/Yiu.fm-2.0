@@ -418,7 +418,6 @@
       v = !!v;
       if (v === suspended) return;
       suspended = v;
-      if (suspended) { stopSmoothClock(); smoothClockReady = false; }
       if (hostEl) hostEl.style.display = suspended || !active ? 'none' : 'block';
       if (!suspended && active) this._render();
     },
