@@ -10,6 +10,19 @@ test('Packaged Partita waits for exact timestamps and the full staggered entranc
   );
 
   assert.ok(
+    bundle.includes('let[m,p]=(0,gc.useState)(()=>{let g=n.get(),h=wordAnimationEnd(t,u);return g>=t.startTime&&g<=h?"active":g>h?"passed":"waiting"})'),
+    'a newly mounted word must initialize from the current playback time rather than wait for the next MotionValue event'
+  );
+  assert.ok(
+    bundle.includes('let[p,x]=(0,cM.useState)(()=>{let y=o.get(),h=Math.max(mc(t[t.length-1],c),...e.map(w=>wordAnimationEnd(w,c)));return y>=t[0].startTime&&y<=h?"active":y>h?"passed":"waiting"})'),
+    'a newly mounted chunk must initialize from the current playback time rather than render one stale waiting frame'
+  );
+  assert.ok(
+    bundle.includes('initial:m,animate:m,className:"inline-block origin-center relative will-change-transform whitespace-nowrap"'),
+    'a word already active at mount must not be forced through the waiting entrance variant'
+  );
+
+  assert.ok(
     bundle.includes('wordAnimationEnd=(t,e)=>'),
     'the bundle must calculate the actual entrance-animation completion deadline'
   );
