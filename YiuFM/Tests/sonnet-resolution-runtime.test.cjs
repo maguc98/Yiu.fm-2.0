@@ -26,6 +26,10 @@ test('Sonnet canvas preserves the exact requested texture resolution at creation
     'subsequent canvas resize must not reduce the requested resolution'
   );
   assert.ok(
+    source.includes('pixi.Filter.defaultOptions.resolution = options.tuning.textureResolution;'),
+    'implicit-resolution post-process filters must use the selected texture resolution'
+  );
+  assert.ok(
     source.includes('pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;'),
     'dynamic BitmapText glyph atlases must be rasterized at the selected texture resolution'
   );
