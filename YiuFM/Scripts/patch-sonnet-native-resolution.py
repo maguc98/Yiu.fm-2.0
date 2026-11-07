@@ -12,6 +12,28 @@ replacements = {
     "this.options.tuning.textureResolution",
 }
 
+# Pixi's BitmapText glyph atlases have their own resolution, independent of
+# the WebGL canvas. The stock BitmapFontManager defaults to 1x, so changing
+# the canvas alone leaves cached glyph raster blurry on Retina screens.
+# Apply the selected resolution before Sonnet installs/builds any scenes.
+font_manager_anchor = "const context2 = await makePixiContext(pixi, contextOptions, options.signal);"
+font_manager_replacement = """if (pixi.BitmapFontManager && pixi.BitmapFontManager.defaultOptions) {
+        pixi.BitmapFontManager.defaultOptions.resolution = options.tuning.textureResolution;
+      }
+      const context2 = await makePixiContext(pixi, contextOptions, options.signal);"""
+if source.count(font_manager_anchor) != 1:
+    raise SystemExit(f"Expected one Sonnet runtime font-manager anchor, found {source.count(font_manager_anchor)}")
+source = source.replace(font_manager_anchor, font_manager_replacement, 1)
+
+# BitmapFontManager caches fonts by style, but not by raster resolution.
+# Include the active resolution in the cache key so a resolution rebuild
+# cannot silently reuse glyph atlases created at the previous lower density.
+font_cache_anchor = "fontFamilyKey += `-${style.fontWeight}`;"
+font_cache_replacement = "fontFamilyKey += `-${style.fontWeight}`;\\n          fontFamilyKey += `-${this.defaultOptions.resolution}`;"
+if source.count(font_cache_anchor) != 1:
+    raise SystemExit(f"Expected one Sonnet bitmap-font cache-key anchor, found {source.count(font_cache_anchor)}")
+source = source.replace(font_cache_anchor, font_cache_replacement, 1)
+
 for old, new in replacements.items():
     count = source.count(old)
     if count != 1:
