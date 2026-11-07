@@ -62,6 +62,16 @@ font_cache_replacement = """fontFamilyKey += `-${this.defaultOptions.resolution}
 if source.count(font_cache_anchor) != 1:
     raise SystemExit(f"Expected one Sonnet bitmap-font style anchor, found {source.count(font_cache_anchor)}")
 source = source.replace(font_cache_anchor, font_cache_replacement, 1)
+# Explicit low-resolution blur filters can still become the bottleneck in a
+# Pixi filter chain: FilterSystem takes the minimum enabled filter resolution.
+# Let these effects inherit the input render-target density instead of forcing
+# the chain down to 0.75x / 0.5x. Blur strength/quality remain unchanged.
+for old, expected in (("resolution: 0.75", 2), ("resolution: 0.5", 1)):
+    count = source.count(old)
+    if count != expected:
+        raise SystemExit(f"Expected {expected} explicit low-resolution blur settings, found {count}: {old}")
+    source = source.replace(old, 'resolution: "inherit"')
+
 for old, new in replacements.items():
     count = source.count(old)
     if count != 1:
