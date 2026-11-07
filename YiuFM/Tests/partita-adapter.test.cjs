@@ -153,82 +153,38 @@ test('Partita retains evenly-spaced fallback for ordinary LRC without word times
   assert.ok(Math.abs(starts[3] - 3.25) < 1e-9);
 });
 
-test('Partita interpolates its MotionValue on display frames between 30Hz player clock samples', () => {
+test('Partita uses authoritative player clock samples without a second RAF loop', () => {
   const harness = loadAdapter();
   harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
 
   harness.adapter.drive(1.0);
   assert.equal(harness.time().get(), 1.0);
-  assert.equal(harness.pendingFrames(), 1);
+  assert.equal(harness.pendingFrames(), 0,
+    'Partita must not schedule a second display-frame loop');
 
   harness.advanceFrame(1000 / 60);
-  assert.ok(Math.abs(harness.time().get() - (1.0 + 1 / 60)) < 0.002,
-    'the animation clock should advance on the display frame, not wait for the next player tick');
-
-  harness.advanceFrame(1000 / 60);
-  assert.ok(Math.abs(harness.time().get() - (1.0 + 2 / 60)) < 0.002);
+  assert.equal(harness.time().get(), 1.0,
+    'the adapter must not synthesize extra MotionValue updates between player samples');
 
   harness.adapter.drive(1.05);
-  harness.advanceFrame(1000 / 60);
-  assert.ok(harness.time().get() >= 1.05 - 0.002,
-    'the next audio-clock sample should gently correct the interpolated clock');
+  assert.equal(harness.time().get(), 1.05,
+    'the next authoritative player sample must update the lyric clock immediately');
+  assert.equal(harness.pendingFrames(), 0);
 });
 
-test('Partita interpolation stops immediately when audio pauses and reanchors on resume', () => {
+test('Partita freezes naturally when no player samples arrive and resumes on the next sample', () => {
   const harness = loadAdapter();
   harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
 
   harness.adapter.drive(1.0);
-  harness.advanceFrame(1000 / 60);
-  const pausedAt = harness.time().get();
-
-  harness.setAudioPaused(true);
-  harness.advanceFrame(1000 / 60);
-  assert.equal(harness.pendingFrames(), 0,
-    'the display-frame loop must stop as soon as it observes a paused audio element');
   harness.advanceFrame(500);
-  assert.equal(harness.time().get(), pausedAt,
-    'the lyric clock must not advance while audio is paused');
+  assert.equal(harness.time().get(), 1.0,
+    'the adapter must not keep advancing a stale clock between player samples');
 
-  harness.setAudioPaused(false);
-  harness.adapter.drive(1.1);
-  assert.ok(Math.abs(harness.time().get() - 1.1) < 0.002,
-    'the first post-resume sample must establish a fresh clock anchor');
-  assert.equal(harness.pendingFrames(), 1);
-});
-
-test('Partita interpolation respects non-1x playback speed', () => {
-  const harness = loadAdapter();
-  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
-
-  harness.setPlaybackRate(1.5);
-  harness.adapter.drive(1.0);
-  harness.advanceFrame(1000 / 60);
-  assert.ok(Math.abs(harness.time().get() - (1.0 + 1.5 / 60)) < 0.002,
-    'the lyric clock should advance at the active audio playback rate');
-});
-
-test('Partita smooth clock stops after player updates cease and cannot drift while paused', () => {
-  const harness = loadAdapter();
-  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
-
-  harness.adapter.drive(1.0);
-  harness.advanceFrame(1000 / 60);
-  harness.advanceFrame(500);
-  assert.equal(harness.pendingFrames(), 0,
-    'the independent frame loop must stop when the player clock becomes stale');
-});
-
-test('Partita ignores duplicate timestamps to avoid redundant MotionValue updates', () => {
-  const harness = loadAdapter();
-  harness.load([1.0, 3.0], [[1.0, 1.5], null], ['云阶', '下一句']);
-
-  harness.adapter.drive(1.25);
-  const afterFirstUpdate = harness.timeSetCount();
-  assert.equal(harness.time().get(), 1.25);
-
-  harness.adapter.drive(1.25);
-  assert.equal(harness.timeSetCount(), afterFirstUpdate, 'the same timestamp must not be submitted twice');
+  harness.adapter.drive(1.5);
+  assert.equal(harness.time().get(), 1.5,
+    'the next player sample must re-synchronize the lyric clock');
+  assert.equal(harness.pendingFrames(), 0);
 });
 
 test('Partita suspension pauses its clock without deactivating the engine', () => {
