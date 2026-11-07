@@ -81,7 +81,7 @@ jobs:
               raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
           html = html.replace(old_sonnet, new_sonnet, 1)
           old_p1 = '<script src="./APP/P1.js?v=1"></script>'
-          new_p1 = '<script src="./APP/P1.js?v=20261102c"></script>'
+          new_p1 = '<script src="./APP/P1.js?v=20261107a"></script>'
           if html.count(old_p1) != 1:
               raise SystemExit("Expected exactly one Partita bundle script tag; refusing to patch.")
           html = html.replace(old_p1, new_p1, 1)
@@ -140,6 +140,7 @@ jobs:
           grep -q 'wordAnimationEnd=' YiuFM/Resources/Web/APP/P1.js
           grep -q 'g>=t.startTime&&g<=h' YiuFM/Resources/Web/APP/P1.js
           grep -q 'y>=b&&y<=h' YiuFM/Resources/Web/APP/P1.js
+          grep -q 'delay:Math.max(E.exit.transition?.delay??0,lineAnimationEnd-e.get())' YiuFM/Resources/Web/APP/P1.js
           grep -q '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">' YiuFM/Resources/Web/index.html
           grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
@@ -193,7 +194,7 @@ jobs:
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' "$WEB_ROOT/APP/sonnet/sonnet.js"
           grep -q 'sonnet.js?v=20261102c' "$WEB_ROOT/index.html"
           grep -q 'sonnet-adapter.js?v=20261102c' "$WEB_ROOT/index.html"
-          grep -q 'P1.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'P1.js?v=20261107a' "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/playback-service.js"
           test -s "$WEB_ROOT/APP/lyrics-service.js"
           test -s "$WEB_ROOT/APP/library-service.js"
