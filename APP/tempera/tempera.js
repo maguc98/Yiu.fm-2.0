@@ -71,14 +71,10 @@ void main(void) {
 
     float distanceToPaper = abs(lum - uPaperLuminance);
     float distanceToInk = abs(lum - uInkLuminance);
-    // Blend across the decision boundary instead of hard-switching each fragment.
-    // fwidth widens the blend only where the boundary changes sharply across pixels.
-    float contrastDelta = distanceToPaper - distanceToInk - uBias;
-    float transitionWidth = max(0.035, fwidth(contrastDelta) * 1.25);
-    float paperMix = smoothstep(-transitionWidth, transitionWidth, contrastDelta);
-    // A soft transition prevents moving artwork from making glyph pixels rapidly
-    // alternate between the two palette tones at the threshold.
-    vec3 tone = mix(uInkColor, uPaperColor, paperMix);
+    // Keep the original deterministic inversion decision while isolating the
+    // transition shader regression; temporal stabilization will be reintroduced
+    // with a WebGL-compatible implementation after runtime validation.
+    vec3 tone = mix(uInkColor, uPaperColor, step(distanceToInk + uBias, distanceToPaper));
 
     // Colour modes tint that choice instead of replacing it: the hue comes from the ramp, the
     // luminance stays the one the inversion just picked. Colouring the text any other way
