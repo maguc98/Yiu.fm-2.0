@@ -95,7 +95,7 @@ jobs:
               raise SystemExit("Expected exactly one Partita connect script tag; refusing to patch.")
           html = html.replace(old_connect, new_connect, 1)
           old_tempera = '<script src="./APP/tempera-adapter.js?v=20261105g"></script>'
-          new_tempera = '<script src="./APP/tempera-adapter.js?v=20261108b"></script>'
+          new_tempera = '<script src="./APP/tempera-adapter.js?v=20261108c"></script>'
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
@@ -209,7 +209,7 @@ jobs:
           grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "shotsAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "filtersAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
-          grep -q "tempera-adapter.js?v=20261108b" "$WEB_ROOT/index.html"
+          grep -q "tempera-adapter.js?v=20261108c" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
           test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
           test -s "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
