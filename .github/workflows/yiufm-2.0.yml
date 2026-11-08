@@ -41,6 +41,8 @@ jobs:
           cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
           cp APP/partita-connect.js YiuFM/Resources/Web/APP/partita-connect.js
           cp APP/tempera-adapter.js YiuFM/Resources/Web/APP/tempera-adapter.js
+          # Ship opt-in frame profiling in the Tempera runtime only.
+          cp APP/tempera/tempera.js YiuFM/Resources/Web/APP/tempera/tempera.js
           mkdir -p YiuFM/Resources/Web/APP/runtime
           cp APP/runtime/audio-clock.js YiuFM/Resources/Web/APP/runtime/audio-clock.js
           cp APP/runtime/timeline-scheduler.js YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
@@ -97,6 +99,11 @@ jobs:
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
+          old_tempera = "'./APP/tempera/tempera.js?v=20261105c'"
+          new_tempera = "'./APP/tempera/tempera.js?v=20261108b'"
+          if html.count(old_tempera) != 1:
+              raise SystemExit("Expected exactly one Tempera runtime loader entry; refusing to patch.")
+          html = html.replace(old_tempera, new_tempera, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
           new_partita = '<script src="./APP/partita-adapter.js?v=20261102c"></script>'
           if html.count(old_partita) != 1:
@@ -141,6 +148,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/tempera-adapter.js
+          node --check YiuFM/Resources/Web/APP/tempera/tempera.js
+          grep -q 'window.__TEMPERA_PROFILE__===true' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'ticker.maxFPS = 30' YiuFM/Resources/Web/APP/tempera-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-connect.js
@@ -193,6 +202,9 @@ jobs:
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
+          test -s "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "tempera.js?v=20261108b" "$WEB_ROOT/index.html"
+          grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "tempera-adapter.js?v=20261108a" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
           test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
