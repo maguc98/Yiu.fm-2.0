@@ -100,7 +100,7 @@ jobs:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
           old_tempera = "'./APP/tempera/tempera.js?v=20261105c'"
-          new_tempera = "'./APP/tempera/tempera.js?v=20261108b'"
+          new_tempera = "'./APP/tempera/tempera.js?v=20261108c'"
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera runtime loader entry; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
@@ -150,6 +150,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/tempera-adapter.js
           node --check YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'window.__TEMPERA_PROFILE__===true' YiuFM/Resources/Web/APP/tempera/tempera.js
+          grep -q 'shotsAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
+          grep -q 'filtersAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'ticker.maxFPS = 30' YiuFM/Resources/Web/APP/tempera-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-connect.js
@@ -203,8 +205,10 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
           test -s "$WEB_ROOT/APP/tempera/tempera.js"
-          grep -q "tempera.js?v=20261108b" "$WEB_ROOT/index.html"
+          grep -q "tempera.js?v=20261108c" "$WEB_ROOT/index.html"
           grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "shotsAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "filtersAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "tempera-adapter.js?v=20261108a" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
           test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
