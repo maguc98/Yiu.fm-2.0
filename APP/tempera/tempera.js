@@ -56,36 +56,23 @@ float backLuminance(vec2 uv) {
     vec3 straight = back.rgb / max(back.a, 1e-4);
     float lum = dot(straight, vec3(0.2126, 0.7152, 0.0722));
     // Where nothing has been drawn, the shell background shows through, which is paper.
-    return clamp(mix(uPaperLuminance, lum, clamp(back.a, 0.0, 1.0)), 0.0, 1.0);
-}
-
-float contrastRatio(float a, float b) {
-    float lighter = max(a, b);
-    float darker = min(a, b);
-    return (lighter + 0.05) / (darker + 0.05);
-}
-
-float prefersPaper(vec2 uv) {
-    float bg = backLuminance(uv);
-    float inkContrast = contrastRatio(bg, uInkLuminance);
-    float paperContrast = contrastRatio(bg, uPaperLuminance);
-    // A tiny margin avoids unstable decisions when both candidates are effectively tied.
-    return step(inkContrast + 0.02 + uBias, paperContrast);
+    return mix(uPaperLuminance, lum, clamp(back.a * 3.0, 0.0, 1.0));
 }
 
 void main(void) {
     vec4 front = texture(uTexture, vTextureCoord);
-    // Compare actual text/background contrast, not raw luminance distance.
-    // A slightly wider neighborhood makes a moving background edge less influential.
-    vec2 texel = uInputSize.zw * 3.0;
-    float centerVote = prefersPaper(vTextureCoord);
-    float voteA = prefersPaper(vTextureCoord + texel);
-    float voteB = prefersPaper(vTextureCoord - texel);
-    float voteC = prefersPaper(vTextureCoord + vec2(texel.x, -texel.y));
-    float voteD = prefersPaper(vTextureCoord + vec2(-texel.x, texel.y));
-    float paperVotes = centerVote + voteA + voteB + voteC + voteD;
-    // Require a clear 4-of-5 neighborhood majority before switching to paper.
-    vec3 tone = mix(uInkColor, uPaperColor, step(3.5, paperVotes));
+    // Match Folia: average the five background luminance samples before making one colour decision.
+    vec2 texel = uInputSize.zw * 1.5;
+    float lum = backLuminance(vTextureCoord) * 0.4
+        + (backLuminance(vTextureCoord + texel)
+            + backLuminance(vTextureCoord - texel)
+            + backLuminance(vTextureCoord + vec2(texel.x, -texel.y))
+            + backLuminance(vTextureCoord + vec2(-texel.x, texel.y))) * 0.15;
+
+    float distanceToPaper = abs(lum - uPaperLuminance);
+    float distanceToInk = abs(lum - uInkLuminance);
+    // Pick the colour that sits further from the backdrop, matching Folia's original decision.
+    vec3 tone = mix(uInkColor, uPaperColor, step(distanceToInk + uBias, distanceToPaper));
 
     // Colour modes tint that choice instead of replacing it: the hue comes from the ramp, the
     // luminance stays the one the inversion just picked. Colouring the text any other way
