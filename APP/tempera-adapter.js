@@ -255,15 +255,71 @@
 
   /* ---------- 歌词转换 ----------
    * TS[i]: 第 i 行开始时间；WT[i]: 该行每个字的【开始时间】数组（数字，也兼容 [start,end]），可为 null；LN[i]: 文本 */
+  // ---------- 间奏圆点（与商籁保持相同的时间策略） ----------
+  var INTERLUDE = { minGap: 5, lead: 0.5, tail: 1.5, step: 2.6, minDots: 2, maxDots: 6, char: '\\u2022' };
+  function isTime(v) { return typeof v === 'number' && isFinite(v); }
+  function sungEndOf(i, TS, WT, LN, startTime, endTime, text) {
+    var n = i + 1, t;
+    while (n < LN.length && String(LN[n] == null ? '' : LN[n]).trim() === '') {
+      if (isTime(TS[n])) return Math.max(startTime, Math.min(TS[n], endTime));
+      n++;
+    }
+    var wt = WT && WT[i];
+    if (wt && wt.length > 1) {
+      var first = wt[0], last = wt[wt.length - 1];
+      first = Array.isArray(first) ? Number(first[0]) : Number(first);
+      last = Array.isArray(last) ? Number(last[0]) : Number(last);
+      if (isFinite(first) && isFinite(last) && last >= first) {
+        var avg = (last - first) / (wt.length - 1);
+        t = last + Math.max(0.3, Math.min(1.5, avg * 1.2));
+        return Math.max(startTime, Math.min(t, endTime));
+      }
+    }
+    var chars = Array.from(text.replace(/\\s+/g, '')).length;
+    t = startTime + Math.min(10, chars * 0.5 + 2);
+    return Math.max(startTime, Math.min(t, endTime));
+  }
+  function withInterludes(lines, sung) {
+    var I = INTERLUDE, res = [];
+    for (var k = 0; k < lines.length; k++) {
+      var cur = lines[k], nx = lines[k + 1];
+      res.push(cur);
+      if (!nx) break;
+      var from = Math.max(cur.startTime + 0.3, Math.min(sung[k], nx.startTime));
+      if (nx.startTime - from < I.minGap) continue;
+      var s0 = from + I.lead, avail = nx.startTime - I.tail - s0;
+      if (avail < 1) continue;
+      var count = Math.max(I.minDots, Math.min(I.maxDots, Math.round(avail / I.step) + 1));
+      var d = avail / (count - 1);
+      if (from < cur.endTime) {
+        cur.endTime = from;
+        if (cur.words.length) {
+          var lw = cur.words[cur.words.length - 1];
+          lw.endTime = Math.max(lw.startTime, Math.min(lw.endTime, from));
+        }
+      }
+      var words = [], text = '';
+      for (var j = 0; j < count; j++) {
+        words.push({ text: I.char, startTime: s0 + j * d, endTime: j + 1 < count ? s0 + (j + 1) * d : nx.startTime });
+        text += I.char;
+      }
+      res.push({ fullText: text, startTime: s0, endTime: nx.startTime, words: words, blockIndex: 1 });
+    }
+    return res;
+  }
+
   function buildLines(TS, WT, LN) {
     TS = TS || []; LN = LN || [];
-    var lines = [];
+    var lines = [], sung = [], prevEnd = 0;
     for (var i = 0; i < LN.length; i++) {
       var text = String(LN[i] == null ? '' : LN[i]);
+      var st = isTime(TS[i]) ? TS[i] : prevEnd;
+      var en = isTime(TS[i + 1]) ? TS[i + 1] : (st + 5);
+      if (en < st) en = st;
+      prevEnd = en;
+      if (!text.trim()) continue;
       var chars = Array.from(text);
       var wt = (WT && WT[i]) || null;
-      var st = Number(TS[i]) || 0;
-      var en = (TS[i + 1] != null && Number(TS[i + 1]) > st) ? Number(TS[i + 1]) : (st + 5);
       var dur = Math.max(en - st, 0.1), n = Math.max(chars.length, 1);
       var perChar = wt && wt.length === chars.length;
       var words = chars.map(function (ch, idx) {
@@ -277,9 +333,11 @@
         }
         return { text: ch, startTime: st + idx * dur / n, endTime: st + (idx + 1) * dur / n };
       });
-      lines.push({ fullText: text, startTime: st, endTime: en, words: words });
+      var line = { fullText: text, startTime: st, endTime: en, words: words, blockIndex: 0 };
+      lines.push(line);
+      sung.push(sungEndOf(i, TS, WT, LN, st, en, text));
     }
-    return lines;
+    return withInterludes(lines, sung);
   }
 
   function sigOf(TS, WT, LN) {
