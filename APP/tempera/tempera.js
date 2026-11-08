@@ -56,32 +56,35 @@ float backLuminance(vec2 uv) {
     vec3 straight = back.rgb / max(back.a, 1e-4);
     float lum = dot(straight, vec3(0.2126, 0.7152, 0.0722));
     // Where nothing has been drawn, the shell background shows through, which is paper.
-    return mix(uPaperLuminance, lum, clamp(back.a, 0.0, 1.0));
+    return clamp(mix(uPaperLuminance, lum, clamp(back.a, 0.0, 1.0)), 0.0, 1.0);
+}
+
+float contrastRatio(float a, float b) {
+    float lighter = max(a, b);
+    float darker = min(a, b);
+    return (lighter + 0.05) / (darker + 0.05);
+}
+
+float prefersPaper(vec2 uv) {
+    float bg = backLuminance(uv);
+    float inkContrast = contrastRatio(bg, uInkLuminance);
+    float paperContrast = contrastRatio(bg, uPaperLuminance);
+    // A tiny margin avoids unstable decisions when both candidates are effectively tied.
+    return step(inkContrast + 0.02 + uBias, paperContrast);
 }
 
 void main(void) {
     vec4 front = texture(uTexture, vTextureCoord);
-    // Vote across the same five background taps instead of averaging luminance.
-    // A single moving edge sample can no longer flip the whole glyph's tone.
-    vec2 texel = uInputSize.zw * 1.5;
-    float centerLum = backLuminance(vTextureCoord);
-    float diagA = backLuminance(vTextureCoord + texel);
-    float diagB = backLuminance(vTextureCoord - texel);
-    float diagC = backLuminance(vTextureCoord + vec2(texel.x, -texel.y));
-    float diagD = backLuminance(vTextureCoord + vec2(-texel.x, texel.y));
-
-    float centerVote = step(abs(centerLum - uInkLuminance) + uBias,
-                            abs(centerLum - uPaperLuminance));
-    float voteA = step(abs(diagA - uInkLuminance) + uBias,
-                       abs(diagA - uPaperLuminance));
-    float voteB = step(abs(diagB - uInkLuminance) + uBias,
-                       abs(diagB - uPaperLuminance));
-    float voteC = step(abs(diagC - uInkLuminance) + uBias,
-                       abs(diagC - uPaperLuminance));
-    float voteD = step(abs(diagD - uInkLuminance) + uBias,
-                       abs(diagD - uPaperLuminance));
+    // Compare actual text/background contrast, not raw luminance distance.
+    // A slightly wider neighborhood makes a moving background edge less influential.
+    vec2 texel = uInputSize.zw * 3.0;
+    float centerVote = prefersPaper(vTextureCoord);
+    float voteA = prefersPaper(vTextureCoord + texel);
+    float voteB = prefersPaper(vTextureCoord - texel);
+    float voteC = prefersPaper(vTextureCoord + vec2(texel.x, -texel.y));
+    float voteD = prefersPaper(vTextureCoord + vec2(-texel.x, texel.y));
     float paperVotes = centerVote + voteA + voteB + voteC + voteD;
-    vec3 tone = mix(uInkColor, uPaperColor, step(2.5, paperVotes));
+    // Require a clear 4-of-5 neighborhood majority before switching to paper.
 
     // Colour modes tint that choice instead of replacing it: the hue comes from the ramp, the
     // luminance stays the one the inversion just picked. Colouring the text any other way
