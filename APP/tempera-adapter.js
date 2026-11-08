@@ -384,6 +384,11 @@
     }).then(function (rt) {
       if (myGen !== generation) { try { rt.destroy(); } catch (e) {} return null; }   // 创建期间被 destroy
       runtime = rt;
+      // The host player clock advances at up to 30 FPS. Pixi's default ticker can
+      // render the same audio timestamp twice; cap Tempera at the clock's cadence.
+      // This removes duplicate GPU work without reducing the animation's actual
+      // time-update rate or changing other visualizers.
+      try { if (rt && rt.app && rt.app.ticker) rt.app.ticker.maxFPS = 30; } catch (_) {}
       creating = false;
       stage = 'ready';
       window.__TemperaRuntime = rt;
