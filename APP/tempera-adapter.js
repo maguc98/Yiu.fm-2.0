@@ -256,7 +256,7 @@
   /* ---------- 歌词转换 ----------
    * TS[i]: 第 i 行开始时间；WT[i]: 该行每个字的【开始时间】数组（数字，也兼容 [start,end]），可为 null；LN[i]: 文本 */
   // ---------- 间奏圆点（与商籁保持相同的时间策略） ----------
-  var INTERLUDE = { minGap: 5, lead: 0.5, tail: 1.5, step: 2.6, minDots: 2, maxDots: 6, char: '\\u2022' };
+  var INTERLUDE = { minGap: 5, lead: 0.5, tail: 1.5, step: 2.6, minDots: 2, maxDots: 6, char: '\u2022' };
   function isTime(v) { return typeof v === 'number' && isFinite(v); }
   function sungEndOf(i, TS, WT, LN, startTime, endTime, text) {
     var n = i + 1, t;
@@ -275,7 +275,7 @@
         return Math.max(startTime, Math.min(t, endTime));
       }
     }
-    var chars = Array.from(text.replace(/\\s+/g, '')).length;
+    var chars = Array.from(text.replace(/\s+/g, '')).length;
     t = startTime + Math.min(10, chars * 0.5 + 2);
     return Math.max(startTime, Math.min(t, endTime));
   }
