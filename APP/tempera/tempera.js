@@ -61,20 +61,27 @@ float backLuminance(vec2 uv) {
 
 void main(void) {
     vec4 front = texture(uTexture, vTextureCoord);
-    // A 5-tap average keeps fine hatch from flickering the inversion decision per pixel.
+    // Vote across the same five background taps instead of averaging luminance.
+    // A single moving edge sample can no longer flip the whole glyph's tone.
     vec2 texel = uInputSize.zw * 1.5;
-    float lum = backLuminance(vTextureCoord) * 0.4
-        + (backLuminance(vTextureCoord + texel)
-            + backLuminance(vTextureCoord - texel)
-            + backLuminance(vTextureCoord + vec2(texel.x, -texel.y))
-            + backLuminance(vTextureCoord + vec2(-texel.x, texel.y))) * 0.15;
+    float centerLum = backLuminance(vTextureCoord);
+    float diagA = backLuminance(vTextureCoord + texel);
+    float diagB = backLuminance(vTextureCoord - texel);
+    float diagC = backLuminance(vTextureCoord + vec2(texel.x, -texel.y));
+    float diagD = backLuminance(vTextureCoord + vec2(-texel.x, texel.y));
 
-    float distanceToPaper = abs(lum - uPaperLuminance);
-    float distanceToInk = abs(lum - uInkLuminance);
-    // Keep the original deterministic inversion decision while isolating the
-    // transition shader regression; temporal stabilization will be reintroduced
-    // with a WebGL-compatible implementation after runtime validation.
-    vec3 tone = mix(uInkColor, uPaperColor, step(distanceToInk + uBias, distanceToPaper));
+    float centerVote = step(abs(centerLum - uInkLuminance) + uBias,
+                            abs(centerLum - uPaperLuminance));
+    float voteA = step(abs(diagA - uInkLuminance) + uBias,
+                       abs(diagA - uPaperLuminance));
+    float voteB = step(abs(diagB - uInkLuminance) + uBias,
+                       abs(diagB - uPaperLuminance));
+    float voteC = step(abs(diagC - uInkLuminance) + uBias,
+                       abs(diagC - uPaperLuminance));
+    float voteD = step(abs(diagD - uInkLuminance) + uBias,
+                       abs(diagD - uPaperLuminance));
+    float paperVotes = centerVote + voteA + voteB + voteC + voteD;
+    vec3 tone = mix(uInkColor, uPaperColor, step(2.5, paperVotes));
 
     // Colour modes tint that choice instead of replacing it: the hue comes from the ramp, the
     // luminance stays the one the inversion just picked. Colouring the text any other way
