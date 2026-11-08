@@ -85,6 +85,7 @@ void main(void) {
     float voteD = prefersPaper(vTextureCoord + vec2(-texel.x, texel.y));
     float paperVotes = centerVote + voteA + voteB + voteC + voteD;
     // Require a clear 4-of-5 neighborhood majority before switching to paper.
+    vec3 tone = mix(uInkColor, uPaperColor, step(3.5, paperVotes));
 
     // Colour modes tint that choice instead of replacing it: the hue comes from the ramp, the
     // luminance stays the one the inversion just picked. Colouring the text any other way
