@@ -100,7 +100,7 @@ jobs:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
           old_tempera = "'./APP/tempera/tempera.js?v=20261105c'"
-          new_tempera = "'./APP/tempera/tempera.js?v=20261108e'"
+          new_tempera = "'./APP/tempera/tempera.js?v=20261108f'"
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera runtime loader entry; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
@@ -205,7 +205,7 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
           test -s "$WEB_ROOT/APP/tempera/tempera.js"
-          grep -q "tempera.js?v=20261108e" "$WEB_ROOT/index.html"
+          grep -q "tempera.js?v=20261108f" "$WEB_ROOT/index.html"
           grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "shotsAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "filtersAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
