@@ -100,7 +100,7 @@ jobs:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
           old_tempera = "'./APP/tempera/tempera.js?v=20261105c'"
-          new_tempera = "'./APP/tempera/tempera.js?v=20261108h'"
+          new_tempera = "'./APP/tempera/tempera.js?v=20261108i'"
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera runtime loader entry; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
