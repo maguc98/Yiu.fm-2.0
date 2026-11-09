@@ -40,6 +40,9 @@ jobs:
           # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
           cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
           cp APP/partita-connect.js YiuFM/Resources/Web/APP/partita-connect.js
+          mkdir -p YiuFM/Resources/Web/APP/fume
+          cp APP/fume/fume.js YiuFM/Resources/Web/APP/fume/fume.js
+          cp APP/fume-adapter.js YiuFM/Resources/Web/APP/fume-adapter.js
           cp APP/tempera-adapter.js YiuFM/Resources/Web/APP/tempera-adapter.js
           # Ship opt-in frame profiling in the Tempera runtime only.
           cp APP/tempera/tempera.js YiuFM/Resources/Web/APP/tempera/tempera.js
@@ -84,6 +87,14 @@ jobs:
           if html.count(old_sonnet) != 1:
               raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
           html = html.replace(old_sonnet, new_sonnet, 1)
+          host_anchor = '<div id="partitaHost"></div>'
+          if html.count(host_anchor) != 1:
+              raise SystemExit("Expected exactly one Partita host; refusing to patch.")
+          html = html.replace(host_anchor, host_anchor + '<div id="fumeHost"></div>', 1)
+          css_anchor = '<style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>'
+          if html.count(css_anchor) != 1:
+              raise SystemExit("Expected exactly one Partita host CSS block; refusing to patch.")
+          html = html.replace(css_anchor, css_anchor + '\n<style id="fumeHostCSS">#fumeHost{position:absolute;inset:0;display:none}#stage.mode-fume #fumeHost{display:block}#stage.mode-fume #one,#stage.mode-fume #sky{display:none}</style>', 1)
           old_p1 = '<script src="./APP/P1.js?v=1"></script>'
           new_p1 = '<script src="./APP/P1.js?v=20261107c"></script>'
           if html.count(old_p1) != 1:
@@ -106,6 +117,14 @@ jobs:
           html = html.replace(old_tempera, new_tempera, 1)
           old_partita = '<script src="./APP/partita-adapter.js?v=1"></script>'
           new_partita = '<script src="./APP/partita-adapter.js?v=20261102c"></script>'
+          if html.count(old_partita) != 1:
+              raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
+          html = html.replace(old_partita, new_partita, 1)
+          old_manager = '<script src="./APP/visualizer-manager.js?v=20261105a"></script>'
+          new_manager = '<script src="./APP/fume/fume.js?v=20261109a"></script>\n<script src="./APP/fume-adapter.js?v=20261109a"></script>\n<script src="./APP/visualizer-manager.js?v=20261109a"></script>'
+          if html.count(old_manager) != 1:
+              raise SystemExit("Expected exactly one visualizer manager script tag; refusing to patch.")
+          html = html.replace(old_manager, new_manager, 1)
           if html.count(old_partita) != 1:
               raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
           html = html.replace(old_partita, new_partita, 1)
@@ -203,6 +222,9 @@ jobs:
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
+          test -s "$WEB_ROOT/APP/fume/fume.js"
+          test -s "$WEB_ROOT/APP/fume-adapter.js"
+          grep -q "fume.js?v=20261109a" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
           test -s "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "tempera.js?v=20261108i" "$WEB_ROOT/index.html"
