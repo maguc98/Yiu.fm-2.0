@@ -177,7 +177,9 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --check YiuFM/Resources/Web/APP/renderer.js
-          node --check YiuFM/Resources/Web/APP/fume/fume.js\n          node --check YiuFM/Resources/Web/APP/fume-folia/fume-folia.js\n          grep -q 'FumeFoliaBundle' YiuFM/Resources/Web/APP/fume-folia/fume-folia.js
+          node --check YiuFM/Resources/Web/APP/fume/fume.js
+          node --check YiuFM/Resources/Web/APP/fume-folia/fume-folia.js
+          grep -q 'FumeFoliaBundle' YiuFM/Resources/Web/APP/fume-folia/fume-folia.js
           node --check YiuFM/Resources/Web/APP/fume-adapter.js
           node --check YiuFM/Resources/Web/APP/tempera-adapter.js
           node --check YiuFM/Resources/Web/APP/tempera/tempera.js
@@ -237,7 +239,9 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/visualizer-manager.js"
           grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
-          test -s "$WEB_ROOT/APP/fume/fume.js"\n          test -s "$WEB_ROOT/APP/fume-folia/fume-folia.js"\n          grep -q "fume-folia.js?v=20261109a" "$WEB_ROOT/index.html"\n          grep -q "FumeFoliaBundle" "$WEB_ROOT/APP/fume-folia/fume-folia.js"
+          test -s "$WEB_ROOT/APP/fume/fume.js"
+          test -s "$WEB_ROOT/APP/fume-folia/fume-folia.js"
+          grep -q "fume-folia.js?v=20261109a" "$WEB_ROOT/index.html"\n          grep -q "FumeFoliaBundle" "$WEB_ROOT/APP/fume-folia/fume-folia.js"
           test -s "$WEB_ROOT/APP/fume-adapter.js"
           grep -q "fume.js?v=20261109c" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
