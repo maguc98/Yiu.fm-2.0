@@ -7,29 +7,23 @@ const splitGraphemes=value=>{
  return Array.from(text);
 };
 const segmentWords=text=>{
- const graphemes=splitGraphemes(text);
- if(typeof Intl!=='undefined'&&Intl.Segmenter){
-  try{
-   const segments=Array.from(new Intl.Segmenter('zh',{granularity:'word'}).segment(text));
-   const tokens=[];let prefix='';
-   for(const part of segments){
-    if(/^\\s+$/u.test(part.segment)){if(tokens.length)tokens[tokens.length-1].suffix+=part.segment;else prefix+=part.segment;continue;}
-    if(part.isWordLike){
-     tokens.push({text:prefix+part.segment,suffix:''});prefix='';
-    }else if(tokens.length)tokens[tokens.length-1].text+=part.segment;
-    else prefix+=part.segment;
-   }
-   if(prefix){if(tokens.length)tokens[tokens.length-1].suffix+=prefix;else tokens.push({text:prefix,suffix:''});}
-   return tokens.map(token=>({...token,graphemes:splitGraphemes(token.text)})).filter(token=>token.graphemes.length);
-  }catch(_){}
+ const chunks=String(text??'').match(/\\s+|[^\\s]+/gu)||[];
+ const tokens=[];let leading='';
+ for(const chunk of chunks){
+  if(/^\\s+$/u.test(chunk)){if(tokens.length)tokens[tokens.length-1].suffix+=chunk;else leading+=chunk;continue;}
+  let parts=[{segment:chunk,isWordLike:true}];
+  if(typeof Intl!=='undefined'&&Intl.Segmenter){
+   try{parts=Array.from(new Intl.Segmenter('zh',{granularity:'word'}).segment(chunk));}catch(_){}
+  }
+  for(const part of parts){
+   if(part.isWordLike){
+    tokens.push({text:(tokens.length?'':leading)+part.segment,suffix:''});leading='';
+   }else if(tokens.length)tokens[tokens.length-1].text+=part.segment;
+   else leading+=part.segment;
+  }
  }
- const tokens=[];let current='';
- for(const g of graphemes){
-  if(/^\\s+$/u.test(g)){if(current){tokens.push(current);current='';}if(tokens.length)tokens[tokens.length-1]+='';continue;}
-  current+=g;
- }
- if(current)tokens.push(current);
- return tokens.map(text=>({text,suffix:'',graphemes:splitGraphemes(text)}));
+ if(leading){if(tokens.length)tokens[tokens.length-1].text+=leading;else tokens.push({text:leading,suffix:''});}
+ return tokens.map(token=>({...token,graphemes:splitGraphemes(token.text)})).filter(token=>token.graphemes.length);
 };
 const readGlyphTiming=(raw,index,start,end,count)=>{
  const value=raw[index],next=raw[index+1];
