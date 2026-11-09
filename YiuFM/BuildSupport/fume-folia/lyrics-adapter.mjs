@@ -7,10 +7,10 @@ const splitGraphemes=value=>{
  return Array.from(text);
 };
 const segmentWords=text=>{
- const chunks=String(text??'').match(/\\s+|[^\\s]+/gu)||[];
+ const chunks=String(text??'').match(/\s+|[^\s]+/gu)||[];
  const tokens=[];let leading='';
  for(const chunk of chunks){
-  if(/^\\s+$/u.test(chunk)){if(tokens.length)tokens[tokens.length-1].suffix+=chunk;else leading+=chunk;continue;}
+  if(/^\s+$/u.test(chunk)){if(tokens.length)tokens[tokens.length-1].suffix+=chunk;else leading+=chunk;continue;}
   let parts=[{segment:chunk,isWordLike:true}];
   if(typeof Intl!=='undefined'&&Intl.Segmenter){
    try{parts=Array.from(new Intl.Segmenter('zh',{granularity:'word'}).segment(chunk));}catch(_){}
