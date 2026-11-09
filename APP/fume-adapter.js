@@ -6,12 +6,21 @@
     var stage=document.getElementById('stage'),cs=stage?getComputedStyle(stage):null;
     var read=function(name,fallback){return cs&&cs.getPropertyValue(name).trim()||fallback;};
     var primary=read('--tx','#f5f3ef');
+    var fontFamily=cs&&cs.fontFamily||getComputedStyle(document.body).fontFamily||'-apple-system,BlinkMacSystemFont,sans-serif';
+    var fontFamilyStack=fontFamily.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(function(item){return item.trim().replace(/^['"]|['"]$/g,'');}).filter(Boolean);
+    var fontWeightValue=cs&&parseInt(cs.fontWeight,10);
+    var fontStyle=/mono/i.test(fontFamily)?'mono':/serif/i.test(fontFamily)?'serif':'sans';
     return {
       textColor:primary,
       primaryColor:primary,
       secondaryColor:read('--sub','#a7a4a0'),
       accentColor:read('--ac','#d8c5a4'),
-      backgroundColor:read('--bg','#101116')
+      backgroundColor:read('--bg','#101116'),
+      fontStyle:fontStyle,
+      fontFamilyStack:fontFamilyStack.length?fontFamilyStack:['-apple-system','BlinkMacSystemFont','sans-serif'],
+      fontWeight:Number.isFinite(fontWeightValue)?fontWeightValue:500,
+      animationIntensity:'normal',
+      wordColors:[]
     };
   }
   function stopAudioAnalysis(){
