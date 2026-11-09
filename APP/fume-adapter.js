@@ -1,7 +1,7 @@
 /* Fume adapter: VisualizerManager lifecycle, driven by Yiu's player clock. */
 (function(global){
   'use strict';
-  var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null,initOptions={},audioGraph=null,audioRaf=0,lastAudioSample=0;
+  var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null,initOptions={},audioGraph=null,audioGraphPromise=null,audioRaf=0,lastAudioSample=0,audioPlayListener=null;
   function readTheme(){
     var stage=document.getElementById('stage'),cs=stage?getComputedStyle(stage):null;
     var read=function(name,fallback){return cs&&cs.getPropertyValue(name).trim()||fallback;};
@@ -30,19 +30,24 @@
   }
   function startAudioAnalysis(){
     if(!global.YiuFumeAudio||!engine)return;
-    try{
-      var audio=document.getElementById('audio');
-      if(audio&&!audioGraph)audioGraph=global.YiuFumeAudio.connect(audio);
-      if(audioGraph)global.YiuFumeAudio.resume(audioGraph);
-    }catch(_){}
-    if(audioGraph&&!audioRaf)audioRaf=requestAnimationFrame(pumpAudioAnalysis);
+    var audio=document.getElementById('audio');
+    if(!audio)return;
+    if(!audioGraph&&!audioGraphPromise){
+      audioGraphPromise=global.YiuFumeAudio.connect(audio).then(function(graph){
+        audioGraph=graph;audioGraphPromise=null;
+        if(audioGraph&&active&&!suspended){global.YiuFumeAudio.resume(audioGraph);if(!audioRaf)audioRaf=requestAnimationFrame(pumpAudioAnalysis);}
+      },function(){audioGraphPromise=null;});
+    }else if(audioGraph){
+      global.YiuFumeAudio.resume(audioGraph);
+      if(!audioRaf)audioRaf=requestAnimationFrame(pumpAudioAnalysis);
+    }
   }
   function applyLyrics(){
     if(engine&&lyrics)engine.setLyrics(lyrics.TS,lyrics.WT,lyrics.LN);
   }
   var Adapter={
     version:'folia-fume-bundle-1.0.0',
-    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};return Adapter;},
+    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};var audio=document.getElementById('audio');if(audio&&!audioPlayListener){audioPlayListener=function(){if(active&&!suspended)startAudioAnalysis();};audio.addEventListener('play',audioPlayListener);}return Adapter;},
     show:function(){
       if(!host)throw new Error('Fume host is not initialized');
       if(engine){active=true;suspended=false;engine.setTheme(readTheme());engine.start();startAudioAnalysis();return Promise.resolve();}
