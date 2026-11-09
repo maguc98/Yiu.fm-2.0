@@ -90,6 +90,7 @@
   };
   FumeCanvas.prototype.lineProgress=function(line,t){
     if(t<line.start)return 0;
+    if(t>=line.end)return 1;
     if(line.timings){
       var n=0;for(var i=0;i<line.timings.length;i++){var q=line.timings[i];if(q&&t>=q.s)n=i+1;else if(!q&&t>=line.start+(line.end-line.start)*(i+1)/Math.max(1,line.graphemes.length))n=i+1;else break;}
       return clamp(n/Math.max(1,line.graphemes.length),0,1);
@@ -119,19 +120,20 @@
     if(this.blocks.length){
       var idx=this.currentBlock(this.time),b=this.blocks[idx],targetY=b.y+b.h*.42;
       var targetX=b.x+b.w*.5,focusScale=clamp(Math.min(w/(b.w*.92),h/(b.h*2.4)),.72,1.12);
-      var camera=this.camera;
-      camera.vx+=(targetX-camera.x)*Math.min(1,dt*3.6);camera.x+=camera.vx*dt*3.6;
-      camera.vs+=(focusScale-camera.scale)*Math.min(1,dt*3);camera.scale+=camera.vs*dt*3;
-      var offsetY=targetY-h*.48;
-      c.save();c.translate(w*.5,h*.48);c.scale(camera.scale,camera.scale);c.translate(-camera.x,-offsetY);
+      var camera=this.camera,follow=1-Math.exp(-dt*3.5);
+      camera.x=mix(camera.x,targetX,follow);camera.y=mix(camera.y,targetY,follow);
+      camera.scale=mix(camera.scale,focusScale,1-Math.exp(-dt*2.8));
+      var visibleTop=camera.y-h*.58/camera.scale,visibleBottom=camera.y+h*.58/camera.scale;
+      c.save();c.translate(w*.5,h*.48);c.scale(camera.scale,camera.scale);c.translate(-camera.x,-camera.y);
       for(var k=0;k<this.blocks.length;k++){
-        var block=this.blocks[k],line=block.line,progress=this.lineProgress(line,this.time);
+        var block=this.blocks[k];
+        if(block.y+block.h<visibleTop||block.y>visibleBottom)continue;
+        var line=block.line,progress=this.lineProgress(line,this.time);
         var passed=this.time>=line.end,alpha=passed?.24:(k===idx?1:(k<idx?.4:.22));
         c.globalAlpha=alpha;c.font='500 '+block.font+'px -apple-system, BlinkMacSystemFont, sans-serif';
         c.textBaseline='top';var visible=Math.floor(progress*line.graphemes.length+(progress>0?1:0)),cursor=0;
         for(var p=0;p<block.parts.length;p++){
-          var part=block.parts[p],count=0;
-          for(var q=0;q<part.text.length;){var g=graphemes(part.text);break;}
+          var part=block.parts[p];
           var remaining=clamp(visible-cursor,0,graphemes(part.text).length);
           c.fillStyle=passed?this.theme.muted:(k===idx?this.theme.text:this.theme.muted);
           c.fillText(graphemes(part.text).slice(0,remaining).join(''),block.x,block.y+p*block.lineH);
