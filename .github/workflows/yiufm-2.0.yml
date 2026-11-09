@@ -37,6 +37,7 @@ jobs:
           # Ship the verified lyric timing/retirement fixes without replacing the pinned legacy UI.
           cp APP/player.js YiuFM/Resources/Web/APP/player.js
           cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
+          cp APP/visualizer-manager.js YiuFM/Resources/Web/APP/visualizer-manager.js
           # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
           cp APP/partita-adapter.js YiuFM/Resources/Web/APP/partita-adapter.js
           cp APP/partita-connect.js YiuFM/Resources/Web/APP/partita-connect.js
@@ -219,6 +220,8 @@ jobs:
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
+          test -s "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
           test -s "$WEB_ROOT/APP/fume/fume.js"
           test -s "$WEB_ROOT/APP/fume-adapter.js"
           grep -q "fume.js?v=20261109a" "$WEB_ROOT/index.html"
