@@ -12,7 +12,8 @@ var REG={
  sonnet:{hostId:'sonnetHost',modeClass:'mode-sonnet',adapter:'SonnetAdapter'},
  tempera:{hostId:'temperaHost',modeClass:'mode-tempera',adapter:'TemperaAdapter'},
  lumiere:{hostId:'lumiereHost',modeClass:'mode-lumiere',adapter:'LumiereAdapter',lazy:true},
- partita:{hostId:'partitaHost',modeClass:'mode-partita',adapter:'PartitaAdapter',lazy:true}
+ partita:{hostId:'partitaHost',modeClass:'mode-partita',adapter:'PartitaAdapter',lazy:true},
+ fume:{hostId:'fumeHost',modeClass:'mode-fume',adapter:'FumeAdapter'}
 };
 var NAMES=Object.keys(REG),mode='v2',fallbackLocked=false,current=null,switching=false,want=null,waiters=[],lastError=null,driveFaults={},fallbackPending=false;
 var stats={v2Switches:0,v2Failures:0,fallbackAttempts:0,fallbacks:0,fallbackFailures:0,legacySwitches:0,retryAttempts:0,driveFailures:0,runtimeFallbacks:0,lastRuntimeError:null,lastTarget:null,lastFallbackEngine:null,lastError:null,lastFallbackError:null};
