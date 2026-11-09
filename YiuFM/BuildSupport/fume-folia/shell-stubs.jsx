@@ -11,6 +11,5 @@ const css=`
 .yiu-folia-fume-shell .justify-center{justify-content:center}
 `;
 export default function VisualizerShell({children}){return <><style>{css}</style><div className="yiu-folia-fume-shell">{children}</div></>;}
-export function VisualizerSubtitleOverlay(){return null;}
 export function useFirstFrameDrawn(){return ()=>{};}
 export const ARRIVING_MARK='data-arriving';

@@ -31,6 +31,19 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Build pinned Folia Fume browser bundle
+        run: |
+          FOLIA_SHA="38f100a3728c23ca71c0d9c58bbede304d97e3b9"
+          FOLIA_DIR="$RUNNER_TEMP/folia-fume-source"
+          git clone --filter=blob:none --no-checkout https://github.com/maguc98/folia-major.git "$FOLIA_DIR"
+          git -C "$FOLIA_DIR" fetch --depth=1 origin "$FOLIA_SHA"
+          git -C "$FOLIA_DIR" checkout --detach "$FOLIA_SHA"
+          test "$(git -C "$FOLIA_DIR" rev-parse HEAD)" = "$FOLIA_SHA"
+          cd YiuFM/BuildSupport/fume-folia
+          npm install --no-audit --no-fund
+          FOLIA_ROOT="$FOLIA_DIR" FUME_OUT_DIR="$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia" npm run build
+          test -s "$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia/fume-folia.js"
+
       - name: Restore Run #13 legacy UI baseline
         run: |
           mkdir -p YiuFM/Resources/Web
@@ -194,19 +207,6 @@ jobs:
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --test YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
           du -sh YiuFM/Resources/Web
-
-      - name: Build pinned Folia Fume browser bundle
-        run: |
-          FOLIA_SHA="38f100a3728c23ca71c0d9c58bbede304d97e3b9"
-          FOLIA_DIR="$RUNNER_TEMP/folia-fume-source"
-          git clone --filter=blob:none --no-checkout https://github.com/maguc98/folia-major.git "$FOLIA_DIR"
-          git -C "$FOLIA_DIR" fetch --depth=1 origin "$FOLIA_SHA"
-          git -C "$FOLIA_DIR" checkout --detach "$FOLIA_SHA"
-          test "$(git -C "$FOLIA_DIR" rev-parse HEAD)" = "$FOLIA_SHA"
-          cd YiuFM/BuildSupport/fume-folia
-          npm install --no-audit --no-fund
-          FOLIA_ROOT="$FOLIA_DIR" FUME_OUT_DIR="$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia" npm run build
-          test -s "$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia/fume-folia.js"
 
       - name: Generate project
         run: xcodegen generate --spec YiuFM/project.yml
