@@ -1,7 +1,7 @@
 /* Fume adapter: VisualizerManager lifecycle, driven by Yiu's player clock. */
 (function(global){
   'use strict';
-  var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null;
+  var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null,initOptions={};
   function readTheme(){
     var stage=document.getElementById('stage'),cs=stage?getComputedStyle(stage):null;
     return {
@@ -16,14 +16,15 @@
     if(engine&&lyrics)engine.setLyrics(lyrics.TS,lyrics.WT,lyrics.LN);
   }
   var Adapter={
-    version:'fume-canvas-0.1',
-    init:function(el,opts){host=el;theme=readTheme();if(opts){};return Adapter;},
+    version:'folia-fume-bundle-1.0.0',
+    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};return Adapter;},
     show:function(){
       if(!host)throw new Error('Fume host is not initialized');
       if(engine){active=true;suspended=false;engine.setTheme(readTheme());engine.start();return Promise.resolve();}
-      if(!global.FumeCanvasEngine)throw new Error('FumeCanvasEngine is not loaded');
+      var factory=global.FumeFoliaBundle&&global.FumeFoliaBundle.create||global.FumeCanvasEngine&&global.FumeCanvasEngine.create;
+      if(typeof factory!=='function')throw new Error('Folia Fume bundle and compatibility fallback are both unavailable');
       try{
-        engine=global.FumeCanvasEngine.create(host,{});
+        engine=factory(host,{theme:readTheme(),tuning:initOptions.tuning||initOptions.fumeTuning||{}});
         engine.setTheme(readTheme());applyLyrics();engine.setTime(lastTime);
         active=true;suspended=false;engine.start();return Promise.resolve();
       }catch(e){engine=null;active=false;return Promise.reject(e);}
@@ -37,8 +38,8 @@
     isActive:function(){return !!(active&&engine&&!suspended);},
     whenReady:function(){return Promise.resolve(engine);},
     getConfig:function(){return {};},
-    updateConfig:function(){return {};},
-    resetConfig:function(){return {};}
+    updateConfig:function(patch){if(engine&&typeof engine.setTuning==='function')engine.setTuning(patch||{});return patch||{};},
+    resetConfig:function(){if(engine&&typeof engine.setTuning==='function')engine.setTuning({});return {};}
   };
   global.FumeAdapter=Adapter;
 })(window);

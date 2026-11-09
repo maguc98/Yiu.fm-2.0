@@ -1,0 +1,1 @@
+{"name":"yiufm-folia-fume-bundle","private":true,"type":"module","scripts":{"build":"vite build --config vite.config.mjs"},"dependencies":{"@chenglou/pretext":"0.0.9","framer-motion":"13.4.3","lucide-react":"1.48.0","react":"19.3.0","react-dom":"19.3.0"},"devDependencies":{"@vitejs/plugin-react":"6.1.1","vite":"8.3.1"}}
