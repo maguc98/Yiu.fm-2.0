@@ -8,9 +8,9 @@ function harness(options){
  options=options||{};const events=[];const activeClasses=new Set();let legacyCurrent=null;
  const stage={classList:{add(name){activeClasses.add(name);},remove(name){activeClasses.delete(name);}}};
  const hosts={};
- for(const id of ['sonnetHost','temperaHost','lumiereHost','partitaHost'])hosts[id]={id,innerHTML:'',querySelectorAll(){return [];}};
+ for(const id of ['sonnetHost','temperaHost','lumiereHost','partitaHost','fumeHost'])hosts[id]={id,innerHTML:'',querySelectorAll(){return [];}};
  const adapters={};
- for(const name of ['sonnet','tempera','lumiere','partita']){
+ for(const name of ['sonnet','tempera','lumiere','partita','fume']){
   const state={alive:false,active:false,host:null};
   adapters[name]={
    init(host){state.host=host;events.push(name+':init');},
@@ -35,7 +35,7 @@ function harness(options){
   destroy(){events.push('legacy:destroy');legacyCurrent=null;return Promise.resolve(null);},
   debug(){return {current:legacyCurrent};}
  };
- const window={VisualizerManager:legacy,document:null,console:{warn(){},error(){}},SonnetAdapter:adapters.sonnet,TemperaAdapter:adapters.tempera,LumiereAdapter:adapters.lumiere,PartitaAdapter:adapters.partita};
+ const window={VisualizerManager:legacy,document:null,console:{warn(){},error(){}},SonnetAdapter:adapters.sonnet,TemperaAdapter:adapters.tempera,LumiereAdapter:adapters.lumiere,PartitaAdapter:adapters.partita,FumeAdapter:adapters.fume};
  const document={getElementById(id){return id==='stage'?stage:hosts[id]||null;},querySelectorAll(){return [];}};
  window.document=document;window.requestAnimationFrame=callback=>{callback();return 1;};
  vm.runInNewContext(source,{window,document,Promise,Date,Array,Object,String,Error,setTimeout,clearTimeout});
@@ -47,6 +47,14 @@ test('V2 RenderCoordinator becomes the single public entry and manages adapters 
  await m.switchTo('sonnet');assert.equal(m.current,'sonnet');assert.ok(h.events.includes('sonnet:show'));assert.ok(!h.events.some(e=>e.startsWith('legacy:switch:')));
  m.drive(3.5);m.loadLyrics([],[],[]);m.setSuspended(true);
  assert.ok(h.events.includes('sonnet:drive:3.5'));assert.ok(h.events.includes('sonnet:lyrics'));assert.ok(h.events.includes('sonnet:suspend:true'));
+ assert.equal(m.snapshot().mode,'v2');
+});
+test('V2 coordinator registers and mounts Fume directly without legacy fallback',async()=>{
+ const h=harness(),m=h.window.VisualizerManager;
+ const result=await m.switchTo('fume');
+ assert.equal(result,'fume');assert.equal(m.current,'fume');
+ assert.ok(h.events.includes('fume:init'));assert.ok(h.events.includes('fume:show'));
+ assert.ok(!h.events.some(e=>e.startsWith('legacy:switch:')));
  assert.equal(m.snapshot().mode,'v2');
 });
 test('V2 mount failure automatically activates the V1 compatibility bridge',async()=>{
