@@ -86,7 +86,7 @@
 <link rel="stylesheet" href="./style.css?v=20261101q">
 <style id="temperaHostCSS">/* #temperaHost 的显示规则（按 #sonnetHost 同构假设写；请对照 style.css 里 #sonnetHost 的规则核对） */#temperaHost{position:absolute;inset:0;display:none}#stage.mode-tempera #temperaHost{display:block}#stage.mode-tempera #one,#stage.mode-tempera #sky{display:none}</style>
 <style id="lumiereHostCSS">#lumiereHost{position:absolute;inset:0;display:none}#stage.mode-lumiere #lumiereHost{display:block}#stage.mode-lumiere #one,#stage.mode-lumiere #sky{display:none}</style>
-<style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>
+<style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>\n<style id="fumeHostCSS">#fumeHost{position:absolute;inset:0;display:none}#stage.mode-fume #fumeHost{display:block}#stage.mode-fume #one,#stage.mode-fume #sky{display:none}</style>
 <style id="sonnetHostSizeCSS">/* 商籁宿主铺满舞台：实测 #sonnetHost 只有 375×240（高度被画布固有尺寸撑出来），歌词画在画布外所以看不见 */#stage #sonnetHost{position:absolute;inset:0;width:100%;height:100%}#stage #sonnetHost canvas{width:100%;height:100%}</style>
 <style id="sonnetHideOneCSS">/* 商籁：切入时立刻隐藏普通文字层，避免切换那一帧文字闪现（与凝彩/绘光/云阶一致） */#stage.mode-sonnet #one,#stage.mode-sonnet #sky{display:none}</style>
 <style id="partitaBoxCSS">#partitabox{display:none}body.is-partita #partitabox{display:block}body.is-partita :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox,#temperabox,#lumierebox){display:none!important}#partitabox .row span{min-width:76px}#partitabox input[type=color]{width:44px;height:28px;padding:0;border:none;background:none;border-radius:8px}#partitabox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}#partitabox #partitaReset{margin-top:14px}</style>
@@ -737,7 +737,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <div id="pgbg"></div>
 <div class="app">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="mblur" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbg" stdDeviation="0 0"/></filter></svg>
-<div id="stage"><div id="bgf"></div><div id="bg"></div><div id="dimv"></div><div id="sky" class="hide"></div><div id="one"></div><div id="sonnetHost"></div><div id="temperaHost"></div><div id="lumiereHost"></div><div id="partitaHost"></div>
+<div id="stage"><div id="bgf"></div><div id="bg"></div><div id="dimv"></div><div id="sky" class="hide"></div><div id="one"></div><div id="sonnetHost"></div><div id="temperaHost"></div><div id="lumiereHost"></div><div id="partitaHost"></div><div id="fumeHost"></div>
     </div>
   <div id="hub">
   <div id="stylePop" class="gpop" role="listbox" aria-hidden="true"><div class="sp-grid"></div></div>
@@ -1352,7 +1352,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <script src="./APP/partita-adapter.js?v=1"></script>                       <!-- Partita 适配器 -->
 
     <!-- 引擎统一管理器 -->
-    <script src="./APP/visualizer-manager.js?v=20261105a"></script>            <!-- 特效切换总管 -->
+    <script src="./APP/fume/fume.js?v=20261109a"></script>\n    <script src="./APP/fume-adapter.js?v=20261109a"></script>\n    <script src="./APP/visualizer-manager.js?v=20261109a"></script>            <!-- 特效切换总管 -->
     <script src="./APP/lum-trace.js?v=1"></script>                             <!-- Lumiere 调试追踪 -->
 
 
