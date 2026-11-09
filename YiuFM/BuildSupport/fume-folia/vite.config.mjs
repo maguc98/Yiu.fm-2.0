@@ -11,7 +11,14 @@ const subtitleShim=path.resolve(here,'subtitle-stub.jsx');
 export default defineConfig({
  root:here,base:'./',
  plugins:[react(),{name:'yiufm-folia-fume-host-boundaries',enforce:'pre',resolveId(source,importer){if(importer&&importer.startsWith(foliaRoot)){if(source==='../VisualizerSubtitleOverlay')return subtitleShim;if(source==='../VisualizerShell'||source==='../styleTransition/firstFrame'||source==='../preview/frozenPicture')return shellShim;}return null;}}],
- resolve:{alias:{'@folia':foliaRoot}},
+ resolve:{alias:[
+   {find:'@folia',replacement:foliaRoot},
+   {find:/^react(?=\\/|$)/,replacement:path.resolve(here,'node_modules/react')},
+   {find:/^react-dom(?=\\/|$)/,replacement:path.resolve(here,'node_modules/react-dom')},
+   {find:/^framer-motion(?=\\/|$)/,replacement:path.resolve(here,'node_modules/framer-motion')},
+   {find:/^lucide-react(?=\\/|$)/,replacement:path.resolve(here,'node_modules/lucide-react')},
+   {find:/^@chenglou\\/pretext(?=\\/|$)/,replacement:path.resolve(here,'node_modules/@chenglou/pretext')}
+ ]},
  build:{target:'safari16',outDir,emptyOutDir:true,sourcemap:false,minify:'esbuild',
   lib:{entry:path.resolve(here,'entry.jsx'),name:'YiuFoliaFume',formats:['iife'],fileName:()=>'fume-folia.js'},
   rollupOptions:{output:{inlineDynamicImports:true,assetFileNames:'fume-folia-[name][extname]'}}
