@@ -121,9 +121,6 @@ jobs:
           if html.count(old_partita) != 1:
               raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
           html = html.replace(old_partita, new_partita, 1)
-          if html.count(old_partita) != 1:
-              raise SystemExit("Expected exactly one Partita adapter script tag; refusing to patch the UI.")
-          html = html.replace(old_partita, new_partita, 1)
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
