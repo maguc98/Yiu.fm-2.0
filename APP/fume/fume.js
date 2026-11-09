@@ -61,8 +61,23 @@
       var timings=[],valid=false;
       for(var j=0;j<gs.length;j++){
         var pair=raw[j];
-        if(Array.isArray(pair)&&Number.isFinite(+pair[0])){timings.push({s:+pair[0],e:Number.isFinite(+pair[1])?+pair[1]:+pair[0]});valid=true;}
-        else timings.push(null);
+        if(Array.isArray(pair)&&pair.length&&Number.isFinite(+pair[0])){
+          var pairStart=+pair[0],pairEnd=Number.isFinite(+pair[1])?+pair[1]:end;
+          timings.push({s:pairStart,e:pairEnd>pairStart?pairEnd:Math.max(pairStart,end)});valid=true;
+        }else if(pair!==null&&pair!==''&&Number.isFinite(+pair)){
+          /* Yiu WT stores one numeric start time per grapheme, not [start,end] pairs. */
+          var charStart=+pair,charEnd=end;
+          for(var k=j+1;k<raw.length;k++){
+            var nextPair=raw[k];
+            if(nextPair!==null&&nextPair!==''&&!Array.isArray(nextPair)&&Number.isFinite(+nextPair)&&+nextPair>charStart){
+              charEnd=+nextPair;break;
+            }
+            if(Array.isArray(nextPair)&&nextPair.length&&Number.isFinite(+nextPair[0])&&+nextPair[0]>charStart){
+              charEnd=+nextPair[0];break;
+            }
+          }
+          timings.push({s:charStart,e:charEnd>charStart?charEnd:Math.max(charStart,end)});valid=true;
+        }else timings.push(null);
       }
       this.lines.push({text:text,graphemes:gs,start:start,end:end,timings:valid?timings:null,index:i});
     }
