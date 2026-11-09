@@ -1,6 +1,6 @@
 // app/renderer.js — 舞台渲染、动效面板
 var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,.3)",CF=[],shownSig="",statT=0,skyT=0,sonnetOn=false,sonnetKillT=0,
-    glOn=null,glKillT=0,glTok=0,GLM={sonnet:1,tempera:1,lumiere:1,partita:1};   // GL 引擎风格：同一时刻最多一个（glOn = 当前显示的引擎名）
+    glOn=null,glKillT=0,glTok=0,GLM={sonnet:1,tempera:1,lumiere:1,partita:1,fume:1};   // GL 引擎风格：同一时刻最多一个（glOn = 当前显示的引擎名）
 /* 把「凝彩」登记进风格列表：放在「商籁」同一个列表里、紧跟其后（chips / 下拉都在下面几行才建，所以必须在这里先插）。
    core.js 不动：这里按 id 找到商籁所在的列表；找不到就放进最后一个存在的列表。图标沿用商籁的。 */
 (function(){
@@ -36,6 +36,16 @@ var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,
     if(typeof FX_IC!=="undefined"&&FX_IC&&!FX_IC[label]&&lLabel&&FX_IC[lLabel])FX_IC[label]=FX_IC[lLabel];
   }catch(e){console.warn("register partita style failed",e)}
 })();
+/* register Fume after Partita; keep its style selectable in the existing visualizer list */
+(function(){
+  try{
+    var lists=[typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].filter(Boolean);
+    var has=false,host=null,pos=-1,label="浮名";
+    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="fume")has=true;if(e[0]==="partita"){host=L;pos=i}})});
+    if(has)return;
+    if(host)host.splice(pos+1,0,["fume",label]);else if(lists.length)lists[lists.length-1].push(["fume",label]);
+  }catch(e){console.warn("register fume style failed",e)}
+})();
 /* group-two style icons (distinct per engine); keyed by id so label changes do not matter */
 (function(){
   try{
@@ -43,7 +53,8 @@ var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,
       sonnet:'<path d="M12 7c-2-1.6-5-2-8-1.5v12c3-.5 6-.1 8 1.5 2-1.6 5-2 8-1.5v-12c-3-.5-6-.1-8 1.5z"/><path d="M12 7v12"/>',
       tempera:'<path d="M12 3.5c3.6 4.3 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.4-6 6-10.3z"/><path d="M9 14.2a3 3 0 0 0 2.3 2.8"/>',
       lumiere:'<circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/>',
-      partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/>'
+      partita:'<path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 19h16" opacity=".4"/>',
+      fume:'<path d="M3 15c3-7 6-7 9 0s6 7 9 0"/><path d="M4 8c2-3 4-3 6 0M14 8c2-3 4-3 6 0" opacity=".45"/>'
     };
     if(typeof FX_IC==="undefined"||!FX_IC)return;
     [typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].forEach(function(L){
@@ -365,7 +376,7 @@ function engLazy(n){var L=window.__EngineLoader;return !!(L&&L.groups&&L.groups[
 function temperaOK(){var A=window.TemperaAdapter;return !!(window.VisualizerManager&&(window.TemperaRuntime||engLazy("tempera"))&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
 function lumiereOK(){var A=window.LumiereAdapter;return !!(window.VisualizerManager&&(window.LumiereRuntime||engLazy("lumiere"))&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
 function partitaOK(){var A=window.PartitaAdapter;return !!(window.VisualizerManager&&window.Partita&&A&&typeof A.show==="function"&&typeof A.hide==="function")}
-function glClassOff(){stage.classList.remove("mode-sonnet","mode-tempera","mode-lumiere","mode-partita")}
+function glClassOff(){stage.classList.remove("mode-sonnet","mode-tempera","mode-lumiere","mode-partita","mode-fume")}
 /* 进入 GL 风格：走 VisualizerManager.switchTo。
    · 先同步挂 mode-xxx 类（CSS 显示对应宿主、隐藏 #one / #sky；StyleFX 入场动画也据此选宿主）
    · {reuse:true}：该引擎正被保留（离开后 15 秒内、且没有别的引擎存活）时只 show()，不销毁重建
@@ -420,6 +431,7 @@ window.__yiuRenderFailure=function(name,error){
   setStyle("scatter");
 };
 function modeOf(i){
+  if(style==="fume")return (window.FumeAdapter&&window.VisualizerManager)?"fume":"scatter";
   if(style==="sonnet")return sonnetOK()?"sonnet":"scatter";   // 商籁不参与逐句覆盖；适配器没加载时退回打散重组
   if(style==="tempera")return temperaOK()?"tempera":"scatter"; // 凝彩同理
   if(style==="lumiere")return lumiereOK()?"lumiere":"scatter";
