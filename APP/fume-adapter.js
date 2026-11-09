@@ -20,7 +20,7 @@
     init:function(el,opts){host=el;theme=readTheme();if(opts){};return Adapter;},
     show:function(){
       if(!host)throw new Error('Fume host is not initialized');
-      if(engine){active=true;engine.setTheme(readTheme());engine.start();return Promise.resolve();}
+      if(engine){active=true;suspended=false;engine.setTheme(readTheme());engine.start();return Promise.resolve();}
       if(!global.FumeCanvasEngine)throw new Error('FumeCanvasEngine is not loaded');
       try{
         engine=global.FumeCanvasEngine.create(host,{});
