@@ -170,28 +170,48 @@
     this.lastFrame=now;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.clearRect(0,0,w,h);
     this.drawBackground(this.time);
     if(this.blocks.length){
-      var idx=this.currentBlock(this.time),b=this.blocks[idx],targetY=b.y+b.h*.42;
-      var targetX=b.x+b.w*.5,focusScale=clamp(Math.min(w/(b.w*.92),h/(b.h*2.4)),.72,1.12);
-      var camera=this.camera,follow=1-Math.exp(-dt*3.5);
+      var idx=this.currentBlock(this.time),b=this.blocks[idx],camera=this.camera;
+      var progress=this.lineProgress(b.line,this.time);
+      var count=Math.min(b.line.graphemes.length,Math.floor(progress*b.line.graphemes.length+(progress>0?1:0)));
+      var targetX=b.x+b.w*.5,targetY=b.y+b.h*.5;
+      if(count>0){
+        var cursor=count-1,partIndex=0,local=cursor;
+        while(partIndex<b.parts.length-1&&local>=b.parts[partIndex].graphemes.length){
+          local-=b.parts[partIndex].graphemes.length;partIndex++;
+        }
+        var part=b.parts[partIndex],prefix=part.graphemes.slice(0,local+1).join('');
+        targetX=b.x+c.measureText(prefix).width;
+        targetY=b.y+partIndex*b.lineH+b.lineH*.5;
+      }
+      var targetScale=clamp((Math.min(w,h)*.115)/Math.max(b.lineH,1),.88,2.2);
+      var follow=1-Math.exp(-dt*3.5);
       camera.x=mix(camera.x,targetX,follow);camera.y=mix(camera.y,targetY,follow);
-      camera.scale=mix(camera.scale,focusScale,1-Math.exp(-dt*2.8));
+      camera.scale=mix(camera.scale,targetScale,1-Math.exp(-dt*2.8));
       var visibleTop=camera.y-h*.58/camera.scale,visibleBottom=camera.y+h*.58/camera.scale;
+      var first=this.blocks[0].line.start,last=this.blocks[this.blocks.length-1].line.end;
+      var fadeDuration=clamp((last-first)*.5,2.4,130);
       c.save();c.translate(w*.5,h*.48);c.scale(camera.scale,camera.scale);c.translate(-camera.x,-camera.y);
       for(var k=0;k<this.blocks.length;k++){
         var block=this.blocks[k];
         if(block.y+block.h<visibleTop||block.y>visibleBottom)continue;
-        var line=block.line,progress=this.lineProgress(line,this.time);
-        var passed=this.time>=line.end,alpha=passed?.24:(k===idx?1:(k<idx?.4:.22));
-        c.globalAlpha=alpha;c.font='500 '+block.font+'px -apple-system, BlinkMacSystemFont, sans-serif';
-        c.textBaseline='top';var visible=Math.floor(progress*line.graphemes.length+(progress>0?1:0)),cursor=0;
-        for(var p=0;p<block.parts.length;p++){
-          var part=block.parts[p];
-          var remaining=clamp(visible-cursor,0,graphemes(part.text).length);
+        var line=block.line,p=this.lineProgress(line,this.time),passed=this.time>=line.end;
+        var base=passed?(block.hero?.74:.58):(k===idx?(block.hero?.985:.92):(block.hero?.06:.035));
+        var fade=passed?clamp(1-(this.time-line.end)/fadeDuration,0,1):1;
+        c.globalAlpha=passed?base*(.12+.88*fade):base;
+        c.font=(block.hero?"700 ":"500 ")+block.font+"px -apple-system, BlinkMacSystemFont, sans-serif";
+        c.textBaseline='top';
+        var visible=Math.min(line.graphemes.length,Math.floor(p*line.graphemes.length+(p>0?1:0))),cursor=0;
+        for(var q=0;q<block.parts.length;q++){
+          var part=block.parts[q],gs=part.graphemes||graphemes(part.text);
+          var remaining=clamp(visible-cursor,0,gs.length);
           c.fillStyle=passed?this.theme.muted:(k===idx?this.theme.text:this.theme.muted);
-          c.fillText(graphemes(part.text).slice(0,remaining).join(''),block.x,block.y+p*block.lineH);
-          cursor+=graphemes(part.text).length;
+          c.fillText(gs.slice(0,remaining).join(''),block.x,block.y+q*block.lineH);
+          cursor+=gs.length;
         }
-        if(k===idx&&visible>0){c.save();c.globalAlpha=.75;c.fillStyle=this.theme.accent;c.fillRect(block.x,block.y+block.h-5,Math.min(block.w,visible*block.font*.48),2);c.restore();}
+        if(k===idx&&visible>0){
+          c.save();c.globalAlpha=.7;c.fillStyle=this.theme.accent;
+          c.fillRect(block.x,block.y+block.h-4,Math.min(block.w,visible*block.font*.42),1.5);c.restore();
+        }
       }
       c.restore();
     }
