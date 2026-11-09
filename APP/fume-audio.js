@@ -9,7 +9,7 @@
   if(!audio||typeof AudioContextCtor!=='function')return Promise.resolve(null);
   var context=null;
   try{context=new AudioContextCtor();}catch(_){return Promise.resolve(null);}
-  var activate=context.state==='running'?Promise.resolve(true):Promise.resolve().then(function(){return context.resume();}).then(function(){return context.state==='running';},function(){return false;});
+  var activate;try{activate=context.state==='running'?Promise.resolve(true):Promise.resolve(context.resume()).then(function(){return context.state==='running';},function(){return false;});}catch(_){activate=Promise.resolve(false);}
   pending=activate.then(function(ready){
    if(!ready){try{if(context.close)context.close();}catch(_){}return null;}
    var source=null,analyser=null;
