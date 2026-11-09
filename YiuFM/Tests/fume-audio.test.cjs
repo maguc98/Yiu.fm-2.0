@@ -54,3 +54,23 @@ test('Fume audio analysis safely falls back when Web Audio is unavailable',async
  assert.equal(await api.connect({}),null);
  global.AudioContext=old;
 });
+
+test('Fume audio analysis preserves direct playback if analyser creation fails',async()=>{
+ const old=global.AudioContext;
+ let context;
+ class FallbackContext{
+  constructor(){this.state='running';this.sampleRate=48000;this.destination={kind:'destination'};this.source={connections:[],connect(node){this.connections.push(node);},disconnect(){this.connections=[];}};context=this;}
+  createMediaElementSource(){return this.source;}
+  createAnalyser(){throw new Error('analyser unavailable');}
+ }
+ global.AudioContext=FallbackContext;
+ delete require.cache[require.resolve('../Resources/Web/APP/fume-audio.js')];
+ const api=require('../Resources/Web/APP/fume-audio.js');
+ const graph=await api.connect({});
+ assert.ok(graph);
+ assert.equal(graph.analyser,null);
+ assert.equal(graph.source.connections[0],context.destination);
+ assert.equal(graph.context.state,'running');
+ assert.equal(api.sample(graph).power,0);
+ global.AudioContext=old;
+});

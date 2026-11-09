@@ -25,7 +25,7 @@
     graph={audio:audio,context:context,source:source,analyser:analyser,data:new Uint8Array(analyser.frequencyBinCount)};
     return graph;
    }catch(error){
-    try{if(source){source.disconnect();source.connect(context.destination);}}catch(_){}
+    if(source){try{source.disconnect();source.connect(context.destination);graph={audio:audio,context:context,source:source,analyser:null,data:new Uint8Array(0)};return graph;}catch(_){}}
     try{if(context.close)context.close();}catch(_){}
     return null;
    }
