@@ -171,6 +171,7 @@
     this.drawBackground(this.time);
     if(this.blocks.length){
       var idx=this.currentBlock(this.time),b=this.blocks[idx],camera=this.camera;
+      c.font=(b.hero?"700 ":"500 ")+b.font+"px -apple-system, BlinkMacSystemFont, sans-serif";
       var progress=this.lineProgress(b.line,this.time);
       var count=Math.min(b.line.graphemes.length,Math.floor(progress*b.line.graphemes.length+(progress>0?1:0)));
       var targetX=b.x+b.w*.5,targetY=b.y+b.h*.5;
