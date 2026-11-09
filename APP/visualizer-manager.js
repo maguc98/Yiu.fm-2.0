@@ -16,7 +16,8 @@
     sonnet:  { hostId: 'sonnetHost',  modeClass: 'mode-sonnet',  adapter: 'SonnetAdapter'  },
     tempera: { hostId: 'temperaHost', modeClass: 'mode-tempera', adapter: 'TemperaAdapter' },
     lumiere: { hostId: 'lumiereHost', modeClass: 'mode-lumiere', adapter: 'LumiereAdapter', lazy: true },
-  partita: { hostId: 'partitaHost', modeClass: 'mode-partita', adapter: 'PartitaAdapter', lazy: true }   
+  partita: { hostId: 'partitaHost', modeClass: 'mode-partita', adapter: 'PartitaAdapter', lazy: true },
+    fume:    { hostId: 'fumeHost',    modeClass: 'mode-fume',    adapter: 'FumeAdapter' }   
   };
   var NAMES = Object.keys(REG);
 
