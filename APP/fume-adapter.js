@@ -4,12 +4,14 @@
   var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null,initOptions={},audioGraph=null,audioRaf=0,lastAudioSample=0;
   function readTheme(){
     var stage=document.getElementById('stage'),cs=stage?getComputedStyle(stage):null;
+    var read=function(name,fallback){return cs&&cs.getPropertyValue(name).trim()||fallback;};
+    var primary=read('--tx','#f5f3ef');
     return {
-      textColor:cs&&cs.getPropertyValue('--tc').trim()||'#f5f3ef',
-      primaryColor:cs&&cs.getPropertyValue('--tc').trim()||'#f5f3ef',
-      secondaryColor:cs&&cs.getPropertyValue('--hl').trim()||'#a7a4a0',
-      accentColor:cs&&cs.getPropertyValue('--hl').trim()||'#d8c5a4',
-      backgroundColor:'#101116'
+      textColor:primary,
+      primaryColor:primary,
+      secondaryColor:read('--sub','#a7a4a0'),
+      accentColor:read('--ac','#d8c5a4'),
+      backgroundColor:read('--bg','#101116')
     };
   }
   function stopAudioAnalysis(){
