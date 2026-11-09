@@ -95,7 +95,7 @@ jobs:
           manager_tag = '<script src="./APP/visualizer-manager.js?v=20261105a"></script>'
           if html.count(manager_tag) != 1:
               raise SystemExit("Expected exactly one visualizer manager script tag; refusing to patch.")
-          html = html.replace(manager_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\n<script src="./APP/fume-audio.js?v=20261109a"></script>\n<script src="./APP/fume-adapter.js?v=20261109e"></script>\n' + manager_tag + '\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
+          html = html.replace(manager_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\n<script src="./APP/fume-audio.js?v=20261109a"></script>\n<script src="./APP/fume-adapter.js?v=20261109f"></script>\n' + manager_tag + '\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
           new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
