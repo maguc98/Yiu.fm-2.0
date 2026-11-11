@@ -509,6 +509,7 @@
   var bootFrameLimit = parseInt(lsGet('yiu.frameLimitFps'), 10);
   window.__rafLimitFps = (bootFrameLimit >= 24 && bootFrameLimit <= 60) ? bootFrameLimit : 30;
   window.__rafLimitEnabled = true;
+  window.__rafCapActive = window.__rafLimitFps < 60;
   var state = {
     jank: lsGet('dev_jank') === '1',
     fps: lsGet('dev_fps') === '1',
@@ -747,7 +748,7 @@
   // perf: 拦截 rAF 抓取卡顿溯源；统一帧率限制与卡顿检测共用同一层包装
   var rafSeq = 1e9, rafMap = Object.create(null);
   window.requestAnimationFrame = function(cb) {
-    if (!state.jank && !window.__rafCap) return origRAF.call(window, cb);
+    if (!state.jank && !window.__rafCapActive) return origRAF.call(window, cb);
     var id = ++rafSeq;
     (function go() {
       rafMap[id] = origRAF.call(window, function(ts) {
@@ -1151,6 +1152,7 @@
         var value = Math.max(24, Math.min(60, parseInt(this.value, 10) || 30));
         fpsValue.textContent = value + ' FPS';
         window.__rafLimitFps = value;
+        window.__rafCapActive = value < 60 || !!window.__lowPower;
         lsSet('yiu.frameLimitFps', String(value));
         if (window.__resetRafCapClock) window.__resetRafCapClock();
       });
