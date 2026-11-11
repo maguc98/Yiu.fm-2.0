@@ -125,7 +125,7 @@ jobs:
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           fps_head_anchor = "</head>"
-          fps_head_script = '<script src="./APP/runtime/frame-rate-limit.js?v=20261111a"></script>' + chr(10)
+          fps_head_script = '<script src="./APP/runtime/frame-rate-limit.js?v=20261111b"></script>' + chr(10)
           if html.count(fps_head_anchor) != 1 or fps_head_script.strip() in html:
               raise SystemExit("Expected one document head and no prior frame-rate controller.")
           html = html.replace(fps_head_anchor, fps_head_script + fps_head_anchor, 1)
@@ -146,7 +146,7 @@ jobs:
               raise SystemExit("Expected exactly one Sonnet engine loader entry; refusing to patch.")
           html = html.replace(old_sonnet_engine, new_sonnet_engine, 1)
           old_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261029a"></script>'
-          new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261102c"></script>'
+          new_sonnet = '<script src="./APP/sonnet-adapter.js?v=20261111a"></script>'
           if html.count(old_sonnet) != 1:
               raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
           html = html.replace(old_sonnet, new_sonnet, 1)
@@ -169,7 +169,7 @@ jobs:
               raise SystemExit("Expected exactly one Partita connect script tag; refusing to patch.")
           html = html.replace(old_connect, new_connect, 1)
           old_tempera = '<script src="./APP/tempera-adapter.js?v=20261105g"></script>'
-          new_tempera = '<script src="./APP/tempera-adapter.js?v=20261108c"></script>'
+          new_tempera = '<script src="./APP/tempera-adapter.js?v=20261111a"></script>'
           if html.count(old_tempera) != 1:
               raise SystemExit("Expected exactly one Tempera adapter script tag; refusing to patch.")
           html = html.replace(old_tempera, new_tempera, 1)
@@ -187,7 +187,7 @@ jobs:
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           html = html.replace(anchor, injected, 1)
           menus_anchor = '<script src="./APP/menus.js?v=20261025b"></script>'
-          fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261111a"></script>'
+          fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261111b"></script>'
           if html.count(menus_anchor) != 1 or fps_settings_script in html:
               raise SystemExit("Expected one menus.js anchor and no prior frame-rate settings script.")
           html = html.replace(menus_anchor, menus_anchor + chr(10) + fps_settings_script, 1)
@@ -260,7 +260,10 @@ jobs:
           grep -q 'window.__TEMPERA_PROFILE__===true' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'shotsAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'filtersAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
-          grep -q 'ticker.maxFPS = 60' YiuFM/Resources/Web/APP/tempera-adapter.js
+          grep -q 'bindRuntime(rt)' YiuFM/Resources/Web/APP/tempera-adapter.js
+          grep -q 'bindRuntime(rt)' YiuFM/Resources/Web/APP/sonnet-adapter.js
+          grep -q 'nextFrameAt+=interval' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
+          grep -q 'measuredFPS' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           grep -q 'yiuFrameRateSlider' YiuFM/Resources/Web/APP/frame-rate-settings.js
           grep -q '24,Math.min(60' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
@@ -329,7 +332,7 @@ jobs:
           grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "shotsAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
           grep -q "filtersAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
-          grep -q "tempera-adapter.js?v=20261108c" "$WEB_ROOT/index.html"
+          grep -q "tempera-adapter.js?v=20261111a" "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/partita-adapter.js"
           test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
           test -s "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
@@ -349,7 +352,7 @@ jobs:
           grep -q 'resolution: options.tuning.textureResolution,' "$WEB_ROOT/APP/sonnet/sonnet.js"
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' "$WEB_ROOT/APP/sonnet/sonnet.js"
           grep -q 'sonnet.js?v=20261102c' "$WEB_ROOT/index.html"
-          grep -q 'sonnet-adapter.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'sonnet-adapter.js?v=20261111a' "$WEB_ROOT/index.html"
           grep -q 'P1.js?v=20261107c' "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/APP/playback-service.js"
           test -s "$WEB_ROOT/APP/lyrics-service.js"
