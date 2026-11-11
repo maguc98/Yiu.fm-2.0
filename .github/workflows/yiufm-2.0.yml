@@ -93,8 +93,8 @@ jobs:
           if html.count(old_devtools) != 1:
               raise SystemExit("Expected exactly one devtools.js script tag; refusing to patch.")
           html = html.replace(old_devtools, new_devtools, 1)
-          old_low_power_cap = "if(merged) window.__rafCap=on?allowed:null; else capFps=on;   // perf: 并入 devtools 的 rAF 包装统一限帧\\n    window.__lowPower=on;"
-          new_low_power_cap = "window.__lowPower=on;   // perf: 低功耗上限由统一 RAF 门控读取，避免覆盖用户帧率设置\\n    window.__rafCapActive=on || Number(window.__rafLimitFps)<60;"
+          old_low_power_cap = "if(merged) window.__rafCap=on?allowed:null; else capFps=on;   // perf: 并入 devtools 的 rAF 包装统一限帧\n    window.__lowPower=on;"
+          new_low_power_cap = "window.__lowPower=on;   // perf: 低功耗上限由统一 RAF 门控读取，避免覆盖用户帧率设置\n    window.__rafCapActive=on || Number(window.__rafLimitFps)<60;"
           if html.count(old_low_power_cap) != 1:
               raise SystemExit("Expected exactly one low-power RAF cap block; refusing to patch.")
           html = html.replace(old_low_power_cap, new_low_power_cap, 1)
