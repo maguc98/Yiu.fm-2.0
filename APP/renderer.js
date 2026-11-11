@@ -36,14 +36,19 @@ var LIVE=true,dirty=0,eIn="cubic-bezier(.2,.8,.2,1)",eOut="cubic-bezier(.4,0,.8,
     if(typeof FX_IC!=="undefined"&&FX_IC&&!FX_IC[label]&&lLabel&&FX_IC[lLabel])FX_IC[label]=FX_IC[lLabel];
   }catch(e){console.warn("register partita style failed",e)}
 })();
-/* register Fume after Partita; keep its style selectable in the existing visualizer list */
+/* register Fume (浮名) immediately before Partita (云阶), in the same 光影 group */
 (function(){
   try{
     var lists=[typeof STY!=="undefined"?STY:null,typeof STY2!=="undefined"?STY2:null,typeof STY3!=="undefined"?STY3:null,typeof STY4!=="undefined"?STY4:null].filter(Boolean);
-    var has=false,host=null,pos=-1,label="浮名";
-    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="fume")has=true;if(e[0]==="partita"){host=L;pos=i}})});
-    if(has)return;
-    if(host)host.splice(pos+1,0,["fume",label]);else if(lists.length)lists[lists.length-1].push(["fume",label]);
+    var entry=null,label="浮名";
+    // If an earlier build already registered Fume, remove it first so this remains idempotent.
+    lists.forEach(function(L){
+      for(var i=L.length-1;i>=0;i--)if(L[i][0]==="fume"){entry=L[i];L.splice(i,1)}
+    });
+    if(!entry)entry=["fume",label];
+    var host=null,pos=-1;
+    lists.forEach(function(L){L.forEach(function(e,i){if(e[0]==="partita"){host=L;pos=i}})});
+    if(host)host.splice(pos,0,entry);else if(lists.length)lists[lists.length-1].push(entry);
   }catch(e){console.warn("register fume style failed",e)}
 })();
 /* group-two style icons (distinct per engine); keyed by id so label changes do not matter */
@@ -77,7 +82,7 @@ chips($("bgm"),[["grad","混色渐变"],["solid","纯色"],["img","自选图片"
 glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
 /* ---- 动效风格下拉：两组并排，共用一个弹层（GNAMES 里改组名） ---- */
 (function(){
-  var GNAMES=["经典","光影"],GB={sonnet:1,tempera:1,lumiere:1,partita:1},EN={sonnet:"Sonnet",tempera:"Tempera",lumiere:"Lumiere",partita:"Partita"};
+  var GNAMES=["经典","光影"],GB={sonnet:1,tempera:1,lumiere:1,fume:1,partita:1},EN={sonnet:"Sonnet",tempera:"Tempera",lumiere:"Lumiere",fume:"Fume",partita:"Partita"};
   var GICON=['<path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/>','<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v5M16.5 17.5h5"/>'];
 
   var AN={
