@@ -505,6 +505,10 @@
   function lsSet(k, v) {
     try { localStorage.setItem(k, v); } catch (_) {}
   }
+  // 全局帧率上限在启动阶段即生效，不必等用户打开开发者选项面板。
+  var bootFrameLimit = parseInt(lsGet('yiu.frameLimitFps'), 10);
+  window.__rafLimitFps = (bootFrameLimit >= 24 && bootFrameLimit <= 60) ? bootFrameLimit : 30;
+  window.__rafLimitEnabled = true;
   var state = {
     jank: lsGet('dev_jank') === '1',
     fps: lsGet('dev_fps') === '1',
