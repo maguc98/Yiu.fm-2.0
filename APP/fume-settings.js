@@ -70,7 +70,7 @@
   }
   function queue(k,v){pend[k]=v;if(!raf)raf=requestAnimationFrame(flush)}
   els.forEach(function(el){
-    el.addEventListener(el.type==='checkbox'?'change':'input',function(){queue(el.dataset.fk,read(el))});
+    el.addEventListener(el.type==='checkbox'?'change':'input',function(){if(el.type==='range'&&typeof sync==='function')sync(el);queue(el.dataset.fk,read(el))});
     if(el.type==='range'&&typeof wrapRange==='function'&&!(el.parentNode&&el.parentNode.classList.contains('rw')))try{wrapRange(el)}catch(_){}
   });
   function paint(id,v){
