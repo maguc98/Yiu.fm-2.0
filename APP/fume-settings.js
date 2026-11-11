@@ -24,7 +24,7 @@
       '</div>'+
       '<div class="cs cs-sw">'+
         '<label class="chk"><span class="chk-t">显示打印符号</span><input type="checkbox" data-fk="hidePrintSymbols" data-invert="1"></label>'+
-        '<label class="chk"><span class="chk-t">几何背景</span><input type="checkbox" data-fk="disableGeometricBackground" data-invert="1"></label>'+
+        '<label class="chk"><span class="chk-t">关闭几何背景</span><input type="checkbox" data-fk="disableGeometricBackground"></label>'+
       '</div>'+
       '<button class="chip" id="fumeReset" type="button">恢复默认</button>'+
     '</div>'
