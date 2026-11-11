@@ -12,7 +12,7 @@
         '<div class="row"><span>镜头速度</span><input type="range" data-fk="cameraSpeed" data-scale="100" min="55" max="185" step="5" value="100"></div>'+
         '<div class="row"><span>辉光强度</span><input type="range" data-fk="glowIntensity" data-scale="100" min="0" max="180" step="5" value="100"></div>'+
         '<div class="row"><span>主视觉缩放</span><input type="range" data-fk="heroScale" data-scale="100" min="82" max="132" step="1" value="100"></div>'+
-        '<div class="row"><span>背景图形</span><input type="range" data-fk="backgroundObjectOpacity" data-scale="100" min="0" max="100" step="5" value="50"></div>'+
+        '<div class="row"><span>图形透明度</span><input type="range" data-fk="backgroundObjectOpacity" data-scale="100" min="0" max="100" step="5" value="50"></div>'+
         '<div class="row"><span>已读文字保留</span><input type="range" data-fk="textHoldRatio" data-scale="100" min="0" max="100" step="5" value="100"></div>'+
         '<div class="tnote">镜头速度控制镜头跟随节奏；主视觉缩放控制重点歌词大小；已读文字保留控制歌词经过后的停留与淡出。</div>'+
       '</div>'+
