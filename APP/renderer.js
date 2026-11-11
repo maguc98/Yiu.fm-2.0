@@ -486,7 +486,7 @@ function syncBoxes(){
   $("fxbox").classList.toggle("hide",!(u.bounce||u.flip||u.focus||u.wave||u.glitch));
   $("posterbox").classList.toggle("hide",!u.poster);
   $("sonnetbox").classList.toggle("hide",style!=="sonnet");
-  var gt=$("gtextRow");if(gt)gt.classList.toggle("hide",style==="sonnet"||style==="tempera"||style==="lumiere"||style==="partita");
+  var gt=$("gtextRow");if(gt)gt.classList.toggle("hide",style==="sonnet"||style==="tempera"||style==="lumiere"||style==="partita"||style==="fume");
   pdSync();
 }
 /* ---- 星空：数量 / 大小 / 速度（星星与流星各自独立） ---- */
