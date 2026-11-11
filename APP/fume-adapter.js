@@ -2,6 +2,38 @@
 (function(global){
   'use strict';
   var host=null,engine=null,active=false,suspended=false,lyrics=null,theme=null,lastTime=0,ready=null,initOptions={},audioGraph=null,audioGraphPromise=null,audioRaf=0,lastAudioSample=0,audioPlayListener=null;
+
+  var DEFAULT_TUNING={hidePrintSymbols:false,disableGeometricBackground:true,backgroundObjectOpacity:0.5,textHoldRatio:1,cameraTrackingMode:'smooth',cameraSpeed:1,glowIntensity:1,heroScale:1};
+  var tuning=Object.assign({},DEFAULT_TUNING);
+  var TUNING_KEY='fume_tuning';
+  function clamp(v,min,max,fallback){v=Number(v);return Number.isFinite(v)?Math.max(min,Math.min(max,v)):fallback;}
+  function normalizeTuning(source){
+    source=source&&typeof source==='object'?source:{};
+    return {
+      hidePrintSymbols:source.hidePrintSymbols==null?DEFAULT_TUNING.hidePrintSymbols:!!source.hidePrintSymbols,
+      disableGeometricBackground:source.disableGeometricBackground==null?DEFAULT_TUNING.disableGeometricBackground:!!source.disableGeometricBackground,
+      backgroundObjectOpacity:clamp(source.backgroundObjectOpacity,0,1,DEFAULT_TUNING.backgroundObjectOpacity),
+      textHoldRatio:clamp(source.textHoldRatio,0,1,DEFAULT_TUNING.textHoldRatio),
+      cameraTrackingMode:source.cameraTrackingMode==='stepped'?'stepped':'smooth',
+      cameraSpeed:clamp(source.cameraSpeed,0.55,1.85,DEFAULT_TUNING.cameraSpeed),
+      glowIntensity:clamp(source.glowIntensity,0,1.8,DEFAULT_TUNING.glowIntensity),
+      heroScale:clamp(source.heroScale,0.82,1.32,DEFAULT_TUNING.heroScale)
+    };
+  }
+  function loadTuning(){
+    var stored={};
+    try{stored=JSON.parse(global.localStorage.getItem(TUNING_KEY)||'{}')||{};}catch(_){}
+    tuning=normalizeTuning(Object.assign({},stored,initOptions.tuning||initOptions.fumeTuning||{}));
+    saveTuning();
+  }
+  function saveTuning(){try{global.localStorage.setItem(TUNING_KEY,JSON.stringify(tuning));}catch(_){}}
+  function applyTuning(patch){
+    var merged=Object.assign({},tuning,patch&&typeof patch==='object'?patch:{});
+    tuning=normalizeTuning(merged);
+    saveTuning();
+    if(engine&&typeof engine.setTuning==='function')engine.setTuning(Object.assign({},tuning));
+    return Object.assign({},tuning);
+  }
   function readTheme(){
     var stage=document.getElementById('stage'),cs=stage?getComputedStyle(stage):null;
     var read=function(name,fallback){return cs&&cs.getPropertyValue(name).trim()||fallback;};
@@ -78,7 +110,7 @@
   }
   var Adapter={
     version:'folia-fume-bundle-1.0.0',
-    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};publishBootDiagnostics();var audio=document.getElementById('audio');if(audio&&!audioPlayListener){audioPlayListener=function(){if(active&&!suspended)startAudioAnalysis();};audio.addEventListener('play',audioPlayListener);}return Adapter;},
+    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};loadTuning();publishBootDiagnostics();var audio=document.getElementById('audio');if(audio&&!audioPlayListener){audioPlayListener=function(){if(active&&!suspended)startAudioAnalysis();};audio.addEventListener('play',audioPlayListener);}return Adapter;},
     show:function(){
       if(!host)throw new Error('Fume host is not initialized');
       if(engine){active=true;suspended=false;engine.setTheme(readTheme());engine.start();startAudioAnalysis();return Promise.resolve();}
@@ -96,7 +128,7 @@
         global.console.warn('[FumeAdapter] Folia bundle is not registered; using Canvas compatibility engine',diagnostics);
       }
       try{
-        engine=factory(host,{theme:readTheme(),tuning:initOptions.tuning||initOptions.fumeTuning||{}});
+        engine=factory(host,{theme:readTheme(),tuning:Object.assign({},tuning)});
         engine.setTheme(readTheme());applyLyrics();engine.setTime(lastTime);
         active=true;suspended=false;engine.start();startAudioAnalysis();return Promise.resolve();
       }catch(e){engine=null;active=false;return Promise.reject(e);}
@@ -109,9 +141,9 @@
     isAlive:function(){return !!engine;},
     isActive:function(){return !!(active&&engine&&!suspended);},
     whenReady:function(){return Promise.resolve(engine);},
-    getConfig:function(){return {};},
-    updateConfig:function(patch){if(engine&&typeof engine.setTuning==='function')engine.setTuning(patch||{});return patch||{};},
-    resetConfig:function(){if(engine&&typeof engine.setTuning==='function')engine.setTuning({});return {};}
+    getConfig:function(){return Object.assign({},tuning);},
+    updateConfig:function(patch){return applyTuning(patch);},
+    resetConfig:function(){tuning=Object.assign({},DEFAULT_TUNING);saveTuning();if(engine&&typeof engine.setTuning==='function')engine.setTuning(Object.assign({},tuning));return Object.assign({},tuning);}
   };
   publishBootDiagnostics();
   global.FumeAdapter=Adapter;
