@@ -107,6 +107,7 @@ jobs:
           node --check APP/fume-settings.js
           grep -q 'body.is-fume #sonnetHideWrap' APP/fume-settings.js
           grep -q 'sync(el)' APP/fume-settings.js
+          grep -q 'setTimeout(enhanceRanges,0)' APP/fume-settings.js
           node --check APP/fume-adapter.js
           test -s YiuFM/Resources/Web/APP/tempera/tempera-pixi.js
           test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
@@ -176,7 +177,7 @@ jobs:
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           html = html.replace(anchor, injected, 1)
-          settings_script = '<script src="./APP/fume-settings.js?v=20261111c"></script>\n'
+          settings_script = '<script src="./APP/fume-settings.js?v=20261111d"></script>\n'
           fx_anchor = '<script id="fxScript">'
           if html.count(fx_anchor) != 1 or settings_script.strip() in html:
               raise SystemExit("Expected one StyleFX script anchor and no prior Fume settings script.")
