@@ -23,6 +23,28 @@
       wordColors:[]
     };
   }
+  function getBootDiagnostics(){
+    var scripts=[];
+    try{
+      Array.prototype.forEach.call(document.querySelectorAll('script[src]'),function(script){
+        var src=String(script.src||script.getAttribute('src')||'');
+        if(/fume/i.test(src))scripts.push({src:src,type:script.type||'classic',async:!!script.async,defer:!!script.defer});
+      });
+    }catch(_){}
+    return {
+      foliaBundleType:typeof global.FumeFoliaBundle,
+      foliaCreateType:global.FumeFoliaBundle?typeof global.FumeFoliaBundle.create:'undefined',
+      canvasEngineType:typeof global.FumeCanvasEngine,
+      canvasCreateType:global.FumeCanvasEngine?typeof global.FumeCanvasEngine.create:'undefined',
+      readyState:document.readyState,
+      scripts:scripts
+    };
+  }
+  function publishBootDiagnostics(){
+    var diagnostics=getBootDiagnostics();
+    try{global.__YIU_FUME_FOLIA_DIAGNOSTICS__=diagnostics;}catch(_){}
+    return diagnostics;
+  }
   function stopAudioAnalysis(){
     if(audioRaf){cancelAnimationFrame(audioRaf);audioRaf=0;}
     lastAudioSample=0;
@@ -56,12 +78,23 @@
   }
   var Adapter={
     version:'folia-fume-bundle-1.0.0',
-    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};var audio=document.getElementById('audio');if(audio&&!audioPlayListener){audioPlayListener=function(){if(active&&!suspended)startAudioAnalysis();};audio.addEventListener('play',audioPlayListener);}return Adapter;},
+    init:function(el,opts){host=el;theme=readTheme();initOptions=opts||{};publishBootDiagnostics();var audio=document.getElementById('audio');if(audio&&!audioPlayListener){audioPlayListener=function(){if(active&&!suspended)startAudioAnalysis();};audio.addEventListener('play',audioPlayListener);}return Adapter;},
     show:function(){
       if(!host)throw new Error('Fume host is not initialized');
       if(engine){active=true;suspended=false;engine.setTheme(readTheme());engine.start();startAudioAnalysis();return Promise.resolve();}
-      var factory=global.FumeFoliaBundle&&global.FumeFoliaBundle.create||global.FumeCanvasEngine&&global.FumeCanvasEngine.create;
-      if(typeof factory!=='function')throw new Error('Folia Fume bundle and compatibility fallback are both unavailable');
+      var diagnostics=publishBootDiagnostics();
+      var foliaFactory=global.FumeFoliaBundle&&global.FumeFoliaBundle.create;
+      var canvasFactory=global.FumeCanvasEngine&&global.FumeCanvasEngine.create;
+      var factory=typeof foliaFactory==='function'?foliaFactory:canvasFactory;
+      if(typeof factory!=='function'){
+        var unavailable=new Error('Folia Fume bundle and compatibility fallback are both unavailable; boot diagnostics: '+JSON.stringify(diagnostics));
+        unavailable.code='FUME_FACTORY_UNAVAILABLE';
+        unavailable.diagnostics=diagnostics;
+        throw unavailable;
+      }
+      if(typeof foliaFactory!=='function'&&typeof canvasFactory==='function'&&global.console&&global.console.warn){
+        global.console.warn('[FumeAdapter] Folia bundle is not registered; using Canvas compatibility engine',diagnostics);
+      }
       try{
         engine=factory(host,{theme:readTheme(),tuning:initOptions.tuning||initOptions.fumeTuning||{}});
         engine.setTheme(readTheme());applyLyrics();engine.setTime(lastTime);
