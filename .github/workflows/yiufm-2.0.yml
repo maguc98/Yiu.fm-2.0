@@ -98,7 +98,7 @@ jobs:
           if html.count(trace_flag) != 1:
               raise SystemExit("Expected exactly one error-trace switch; refusing to patch.")
           html = html.replace(trace_flag, "var traceEnabled=true;", 1)
-          trace_listener = "  window.addEventListener('error',function(ev){ report((ev && (ev.error || ev.message)) || ev,'window-error') });\\n"
+          trace_listener = "  window.addEventListener('error',function(ev){ report((ev && (ev.error || ev.message)) || ev,'window-error') });\n"
           trace_anchor = "  window.addEventListener('unhandledrejection',function(ev){ report(ev&&ev.reason,'promise') });"
           if html.count(trace_anchor) != 1:
               raise SystemExit("Expected exactly one unhandledrejection trace listener; refusing to patch.")
