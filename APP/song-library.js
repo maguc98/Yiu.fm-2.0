@@ -1351,8 +1351,14 @@
           }
         }catch(_){}
       }
-      // 启动恢复不走 applyLRC：这里补告诉商籁一次当前歌词（否则商籁只会显示「加载中...」，要切歌才恢复）
-      try{ if(window.SonnetAdapter && SonnetAdapter.syncLyrics) SonnetAdapter.syncLyrics(); }catch(_){}
+      // 启动恢复不走 applyLRC：必须把已恢复的歌词时间轴同步给所有视觉引擎，
+      // 否则首次启动时 Fume 等引擎拿不到歌词，要等手动切歌才会收到 loadLyrics。
+      try{
+        if(window.VisualizerManager && typeof window.VisualizerManager.loadLyrics === 'function'){
+          window.VisualizerManager.loadLyrics(TS, WT, LN);
+        }
+        if(window.SonnetAdapter && SonnetAdapter.syncLyrics) SonnetAdapter.syncLyrics();
+      }catch(_){}
       myURL = URL.createObjectURL(rec.blob);
       audio.src = myURL;
       audio.load();
