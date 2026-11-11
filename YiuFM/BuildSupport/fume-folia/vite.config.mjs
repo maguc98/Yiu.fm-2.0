@@ -11,6 +11,7 @@ const subtitleShim=path.resolve(here,'subtitle-stub.jsx');
 export default defineConfig({
  root:here,base:'./',
  plugins:[react(),{name:'yiufm-folia-fume-host-boundaries',enforce:'pre',resolveId(source,importer){if(importer&&importer.startsWith(foliaRoot)){if(source==='../VisualizerSubtitleOverlay')return subtitleShim;if(source==='../VisualizerShell'||source==='../styleTransition/firstFrame'||source==='../preview/frozenPicture')return shellShim;}return null;}}],
+ define:{'process.env.NODE_ENV':JSON.stringify('production')},
  resolve:{alias:[
    {find:'@folia',replacement:foliaRoot},
    {find:'react-dom',replacement:path.resolve(here,'node_modules/react-dom')},
