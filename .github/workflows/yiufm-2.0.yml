@@ -55,6 +55,7 @@ jobs:
           cp APP/sonnet-adapter.js YiuFM/Resources/Web/APP/sonnet-adapter.js
           # Ship the verified lyric timing/retirement fixes without replacing the pinned legacy UI.
           cp APP/player.js YiuFM/Resources/Web/APP/player.js
+          cp APP/song-library.js YiuFM/Resources/Web/APP/song-library.js
           cp APP/renderer.js YiuFM/Resources/Web/APP/renderer.js
           cp APP/visualizer-manager.js YiuFM/Resources/Web/APP/visualizer-manager.js
           # Keep the Partita adapter fix in the app payload; the legacy baseline predates it.
@@ -175,6 +176,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/runtime/render-coordinator.js
           node --check YiuFM/Resources/Web/APP/yiu-runtime.js
           node --check YiuFM/Resources/Web/APP/player.js
+          node --check YiuFM/Resources/Web/APP/song-library.js
+          grep -q 'VisualizerManager.loadLyrics(TS, WT, LN)' YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
