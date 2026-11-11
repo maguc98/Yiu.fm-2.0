@@ -94,26 +94,12 @@ jobs:
               raise SystemExit("Expected exactly one devtools.js script tag; refusing to patch.")
           html = html.replace(old_devtools, new_devtools, 1)
           # Temporarily enable callback/error tracing in the diagnostic build.
-          trace_flag = "var traceEnabled=false;"
-          if html.count(trace_flag) != 1:
-              raise SystemExit("Expected exactly one error-trace switch; refusing to patch.")
-          html = html.replace(trace_flag, "var traceEnabled=true;", 1)
-          # The localStorage preference immediately below used to overwrite this forced flag.
-          # Remove that override so the diagnostic wrappers are actually installed in the IPA.
-          trace_pref = "  try{traceEnabled=localStorage.getItem('yiuDebugTrace')==='1'}catch(_){}\n"
-          if html.count(trace_pref) != 1:
-              raise SystemExit("Expected exactly one trace preference override; refusing to patch.")
-          html = html.replace(trace_pref, "", 1)
-          trace_listener = "  window.addEventListener('error',function(ev){ report((ev && (ev.error || ev.message)) || ev,'window-error') });\n"
-          trace_anchor = "  window.addEventListener('unhandledrejection',function(ev){ report(ev&&ev.reason,'promise') });"
-          if html.count(trace_anchor) != 1:
-              raise SystemExit("Expected exactly one unhandledrejection trace listener; refusing to patch.")
-          html = html.replace(trace_anchor, trace_listener + trace_anchor, 1)
+          # Leave the baseline error reporter untouched; do not force diagnostic wrappers in production IPA.
+          # Keep low-power visual behavior, but do not replace or gate native RAF callbacks.
           old_low_power_cap = "if(merged) window.__rafCap=on?allowed:null; else capFps=on;   // perf: 并入 devtools 的 rAF 包装统一限帧\n    window.__lowPower=on;"
-          new_low_power_cap = "window.__lowPower=on;   // perf: 低功耗上限由统一 RAF 门控读取，避免覆盖用户帧率设置\n    window.__rafCapActive=on || Number(window.__rafLimitFps)<60;"
           if html.count(old_low_power_cap) != 1:
               raise SystemExit("Expected exactly one low-power RAF cap block; refusing to patch.")
-          html = html.replace(old_low_power_cap, new_low_power_cap, 1)
+          html = html.replace(old_low_power_cap, "window.__lowPower=on;", 1)
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
           anchor = '<script src="./APP/player.js?v=20261102c"></script>'
           injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102d"></script>\n<script src="./APP/yiu-runtime.js?v=20261102c"></script>'
