@@ -19,7 +19,7 @@ function pump(ts){
  if(nextFrameAt&&ts+0.25<nextFrameAt){schedule();return;}
  nextFrameAt=ts+1000/targetFPS();
  var batch=pending;pending=Object.create(null);
- for(var id in batch){if(!Object.prototype.hasOwnProperty.call(batch,id))continue;try{batch[id](ts);}catch(e){if(w.console&&w.console.error)w.console.error('[YiuFrameRateLimit] callback failed',e);}}
+ for(var id in batch){if(!Object.prototype.hasOwnProperty.call(batch,id))continue;try{batch[id].call(w,ts);}catch(e){if(w.console&&w.console.error)w.console.error('[YiuFrameRateLimit] callback failed',e);}}
  schedule();
 }
 function requestFrame(fn){if(typeof fn!=='function')throw new TypeError('requestAnimationFrame callback must be a function');var id=++sequence;pending[id]=fn;schedule();return id;}
