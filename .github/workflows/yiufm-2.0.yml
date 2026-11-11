@@ -49,6 +49,8 @@ jobs:
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
           git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
+          # Ship the branch devtools build so the adjustable global FPS limiter is included in the IPA.
+          cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
           cp APP/sonnet-perf-governor.js YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           cp APP/sonnet-adapter.js YiuFM/Resources/Web/APP/sonnet-adapter.js
@@ -86,6 +88,16 @@ jobs:
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
+          old_devtools = '<script src="./APP/devtools.js?v=20261101a"></script>'
+          new_devtools = '<script src="./APP/devtools.js?v=20261111b"></script>'
+          if html.count(old_devtools) != 1:
+              raise SystemExit("Expected exactly one devtools.js script tag; refusing to patch.")
+          html = html.replace(old_devtools, new_devtools, 1)
+          old_low_power_cap = "if(merged) window.__rafCap=on?allowed:null; else capFps=on;   // perf: 并入 devtools 的 rAF 包装统一限帧\\n    window.__lowPower=on;"
+          new_low_power_cap = "window.__lowPower=on;   // perf: 低功耗上限由统一 RAF 门控读取，避免覆盖用户帧率设置\\n    window.__rafCapActive=on || Number(window.__rafLimitFps)<60;"
+          if html.count(old_low_power_cap) != 1:
+              raise SystemExit("Expected exactly one low-power RAF cap block; refusing to patch.")
+          html = html.replace(old_low_power_cap, new_low_power_cap, 1)
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
           anchor = '<script src="./APP/player.js?v=20261102c"></script>'
           injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102d"></script>\n<script src="./APP/yiu-runtime.js?v=20261102c"></script>'
@@ -239,6 +251,9 @@ jobs:
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q "devFrameLimit" "$WEB_ROOT/APP/devtools.js"
+          grep -q "devtools.js?v=20261111b" "$WEB_ROOT/index.html"
+          grep -q "window.__rafCapActive=on || Number(window.__rafLimitFps)<60;" "$WEB_ROOT/index.html"
           grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
           test -s "$WEB_ROOT/APP/fume/fume.js"
           test -s "$WEB_ROOT/APP/fume-folia/fume-folia.js"
