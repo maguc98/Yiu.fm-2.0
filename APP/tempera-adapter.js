@@ -442,8 +442,8 @@
     }).then(function (rt) {
       if (myGen !== generation) { try { rt.destroy(); } catch (e) {} return null; }   // 创建期间被 destroy
       runtime = rt;
-      // Shared RAF controller provides 60 FPS by default and applies the optional user cap.
-      try { if (rt && rt.app && rt.app.ticker) rt.app.ticker.maxFPS = 60; } catch (_) {}
+      // Keep the Pixi ticker aligned with the live user cap (60 FPS when disabled).
+      try { if (window.YiuFrameRateLimit) window.YiuFrameRateLimit.bindRuntime(rt); } catch (_) {}
       creating = false;
       stage = 'ready';
       window.__TemperaRuntime = rt;
