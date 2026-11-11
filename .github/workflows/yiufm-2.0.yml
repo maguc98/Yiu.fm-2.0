@@ -172,7 +172,7 @@ jobs:
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           html = html.replace(anchor, injected, 1)
-          settings_script = '<script src="./APP/fume-settings.js?v=20261111a"></script>\\n'
+          settings_script = '<script src="./APP/fume-settings.js?v=20261111a"></script>\n'
           fx_anchor = '<script id="fxScript">'
           if html.count(fx_anchor) != 1 or settings_script.strip() in html:
               raise SystemExit("Expected one StyleFX script anchor and no prior Fume settings script.")
@@ -183,7 +183,7 @@ jobs:
               raise SystemExit("Expected one StyleFX panel ID list; refusing to patch.")
           html = html.replace(ids_old, ids_new, 1)
           host_old = 'if(st.classList.contains("mode-partita"))return document.getElementById("partitaHost");'
-          host_new = host_old + '\\n    if(st.classList.contains("mode-fume"))return document.getElementById("fumeHost");'
+          host_new = host_old + '\n    if(st.classList.contains("mode-fume"))return document.getElementById("fumeHost");'
           if html.count(host_old) != 1:
               raise SystemExit("Expected one Partita StyleFX host branch; refusing to patch.")
           html = html.replace(host_old, host_new, 1)
