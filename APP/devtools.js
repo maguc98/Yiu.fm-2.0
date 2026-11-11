@@ -758,10 +758,11 @@
         var cap = window.__rafCap;
         if (cap && !cap(ts)) { go(); return; }
         delete rafMap[id];
-        if (!state.jank) { if (typeof cb === 'function') cb(ts); return; }
+        // Native requestAnimationFrame invokes callbacks with Window as `this`; preserve that contract.
+        if (!state.jank) { if (typeof cb === 'function') cb.call(window, ts); return; }
         var t0 = performance.now();
         try {
-          if (typeof cb === 'function') cb(ts);
+          if (typeof cb === 'function') cb.call(window, ts);
         } finally {
           var cost = performance.now() - t0;
           // 注意：不能在 finally 里 return，否则会吞掉回调抛出的异常
