@@ -113,5 +113,6 @@
     updateConfig:function(patch){if(engine&&typeof engine.setTuning==='function')engine.setTuning(patch||{});return patch||{};},
     resetConfig:function(){if(engine&&typeof engine.setTuning==='function')engine.setTuning({});return {};}
   };
+  publishBootDiagnostics();
   global.FumeAdapter=Adapter;
 })(window);
