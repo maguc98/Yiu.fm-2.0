@@ -35,6 +35,7 @@
   style.textContent=
     '#fumebox{display:none}'+
     'body.is-fume #fumebox{display:block}'+
+    'body.is-fume #sonnetHideWrap{display:none!important}'+
     'body.is-fume :is(#sbox,#pbox,#starbox,#fadebox,#typebox,#posterbox,#fxbox,#sonnetbox,#temperabox,#lumierebox,#partitabox){display:none!important}'+
     '#fumebox .row span{min-width:92px}'+
     '#fumebox .tnote{font-size:11px;opacity:.55;margin:2px 0 6px}'+
@@ -52,7 +53,15 @@
   function write(el,v){
     if(v==null)return;
     if(el.type==='checkbox')el.checked=el.dataset.invert==='1'?!v:!!v;
-    else el.value=Math.round(v*(+el.dataset.scale||1));
+    else{
+      el.value=Math.round(v*(+el.dataset.scale||1));
+      // Programmatic value changes must also repaint the custom .rw handle and filled track.
+      if(typeof sync==='function')sync(el);
+      else if(typeof paintRange==='function'){
+        var span=(Number(el.max)-Number(el.min))||1;
+        paintRange(el,(Number(el.value)-Number(el.min))/span);
+      }
+    }
   }
   function flush(){
     raf=0;
