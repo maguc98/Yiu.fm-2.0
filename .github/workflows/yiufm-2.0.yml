@@ -98,6 +98,8 @@ jobs:
           cp APP/runtime/audio-clock.js YiuFM/Resources/Web/APP/runtime/audio-clock.js
           cp APP/runtime/timeline-scheduler.js YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
           cp APP/runtime/frame-scheduler.js YiuFM/Resources/Web/APP/runtime/frame-scheduler.js
+          cp APP/runtime/frame-rate-limit.js YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
+          cp APP/frame-rate-settings.js YiuFM/Resources/Web/APP/frame-rate-settings.js
           cp APP/runtime/render-coordinator.js YiuFM/Resources/Web/APP/runtime/render-coordinator.js
           cp APP/yiu-runtime.js YiuFM/Resources/Web/APP/yiu-runtime.js
           test -s YiuFM/Resources/Web/index.html
@@ -105,6 +107,8 @@ jobs:
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
           test -s YiuFM/Resources/Web/APP/fume-settings.js
           node --check APP/fume-settings.js
+          node --check APP/runtime/frame-rate-limit.js
+          node --check APP/frame-rate-settings.js
           grep -q 'body.is-fume #sonnetHideWrap' APP/fume-settings.js
           grep -q 'sync(el)' APP/fume-settings.js
           grep -q 'setTimeout(enhanceRanges,0)' APP/fume-settings.js
@@ -120,6 +124,11 @@ jobs:
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
+          fps_head_anchor = "</head>"
+          fps_head_script = '<script src="./APP/runtime/frame-rate-limit.js?v=20261111a"></script>' + chr(10)
+          if html.count(fps_head_anchor) != 1 or fps_head_script.strip() in html:
+              raise SystemExit("Expected one document head and no prior frame-rate controller.")
+          html = html.replace(fps_head_anchor, fps_head_script + fps_head_anchor, 1)
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
           anchor = '<script src="./APP/player.js?v=20261102c"></script>'
           injected = '<script src="./APP/runtime/frame-scheduler.js?v=20261102a"></script>\n' + anchor + '\n<script src="./APP/playback-service.js?v=1"></script>\n<script src="./APP/playback-preferences-service.js?v=1"></script>\n<script src="./APP/lyrics-service.js?v=1"></script>\n<script src="./APP/library-service.js?v=1"></script>\n<script src="./APP/runtime/audio-clock.js?v=20261102a"></script>\n<script src="./APP/runtime/timeline-scheduler.js?v=20261102d"></script>\n<script src="./APP/yiu-runtime.js?v=20261102c"></script>'
@@ -177,7 +186,12 @@ jobs:
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           html = html.replace(anchor, injected, 1)
-          settings_script = '<script src="./APP/fume-settings.js?v=20261111d"></script>\n'
+          menus_anchor = '<script src="./APP/menus.js?v=20261025b"></script>'
+          fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261111a"></script>'
+          if html.count(menus_anchor) != 1 or fps_settings_script in html:
+              raise SystemExit("Expected one menus.js anchor and no prior frame-rate settings script.")
+          html = html.replace(menus_anchor, menus_anchor + chr(10) + fps_settings_script, 1)
+          settings_script = '<script src="./APP/fume-settings.js?v=20261111d"></script>'\n'
           fx_anchor = '<script id="fxScript">'
           if html.count(fx_anchor) != 1 or settings_script.strip() in html:
               raise SystemExit("Expected one StyleFX script anchor and no prior Fume settings script.")
@@ -226,6 +240,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/runtime/audio-clock.js
           node --check YiuFM/Resources/Web/APP/runtime/timeline-scheduler.js
           node --check YiuFM/Resources/Web/APP/runtime/frame-scheduler.js
+          node --check YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
+          node --check YiuFM/Resources/Web/APP/frame-rate-settings.js
           node --check YiuFM/Resources/Web/APP/runtime/render-coordinator.js
           node --check YiuFM/Resources/Web/APP/yiu-runtime.js
           node --check YiuFM/Resources/Web/APP/player.js
@@ -244,10 +260,12 @@ jobs:
           grep -q 'window.__TEMPERA_PROFILE__===true' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'shotsAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
           grep -q 'filtersAvg:' YiuFM/Resources/Web/APP/tempera/tempera.js
-          grep -q 'ticker.maxFPS = 30' YiuFM/Resources/Web/APP/tempera-adapter.js
+          grep -q 'ticker.maxFPS = 60' YiuFM/Resources/Web/APP/tempera-adapter.js
+          grep -q 'yiuFrameRateSlider' YiuFM/Resources/Web/APP/frame-rate-settings.js
+          grep -q '24,Math.min(60' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-connect.js
-          grep -q '}, 33);' YiuFM/Resources/Web/APP/partita-connect.js
+          grep -q '1000 / 60' YiuFM/Resources/Web/APP/partita-connect.js
           node --check YiuFM/Resources/Web/APP/P1.js
           node --check YiuFM/Resources/Web/APP/song-library.js
           node --check YiuFM/Resources/Web/APP/ios-music.js
@@ -265,7 +283,7 @@ jobs:
           grep -q '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">' YiuFM/Resources/Web/index.html
           grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
-          node --test YiuFM/Tests/player-frame-rate.test.cjs YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
+          node --test YiuFM/Tests/frame-rate-limit.test.cjs YiuFM/Tests/player-frame-rate.test.cjs YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
