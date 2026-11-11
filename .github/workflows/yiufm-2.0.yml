@@ -61,6 +61,8 @@ jobs:
           if text.count(bars_anchor) != 1:
               raise SystemExit("Expected one Fume loading-bar container; refusing to add waiting dots.")
           text = text.replace(bars_anchor, dots + bars_anchor, 1)
+          if text.count('aria-label="等待中"') != 1 or text.count("animate-bounce") < 3:
+              raise SystemExit("Fume waiting-dot indicator was not inserted correctly.")
           source.write_text(text)
           PY
           cd YiuFM/BuildSupport/fume-folia
@@ -124,7 +126,7 @@ jobs:
           manager_tag = '<script src="./APP/visualizer-manager.js?v=20261105a"></script>'
           if html.count(manager_tag) != 1:
               raise SystemExit("Expected exactly one visualizer manager script tag; refusing to patch.")
-          html = html.replace(manager_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\n<script src="./APP/fume-audio.js?v=20261109b"></script>\n<script src="./APP/fume-adapter.js?v=20261109h"></script>\n' + manager_tag + '\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
+          html = html.replace(manager_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\n<script src="./APP/fume-audio.js?v=20261109b"></script>\n<script src="./APP/fume-adapter.js?v=20261111a"></script>\n' + manager_tag + '\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
           new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
