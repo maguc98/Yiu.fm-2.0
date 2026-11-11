@@ -55,12 +55,8 @@
     if(el.type==='checkbox')el.checked=el.dataset.invert==='1'?!v:!!v;
     else{
       el.value=Math.round(v*(+el.dataset.scale||1));
-      // Programmatic value changes must also repaint the custom .rw handle and filled track.
-      if(typeof sync==='function')sync(el);
-      else if(typeof paintRange==='function'){
-        var span=(Number(el.max)-Number(el.min))||1;
-        paintRange(el,(Number(el.value)-Number(el.min))/span);
-      }
+      // Match the established Tempera/Lumiere/Partita slider refresh path.
+      if(typeof sync==='function')try{sync(el)}catch(_){}
     }
   }
   function flush(){
@@ -70,9 +66,23 @@
   }
   function queue(k,v){pend[k]=v;if(!raf)raf=requestAnimationFrame(flush)}
   els.forEach(function(el){
-    el.addEventListener(el.type==='checkbox'?'change':'input',function(){if(el.type==='range'&&typeof sync==='function')sync(el);queue(el.dataset.fk,read(el))});
-    if(el.type==='range'&&typeof wrapRange==='function'&&!(el.parentNode&&el.parentNode.classList.contains('rw')))try{wrapRange(el)}catch(_){}
+    el.addEventListener(el.type==='checkbox'?'change':'input',function(){
+      if(el.type==='range'&&typeof sync==='function')try{sync(el)}catch(_){}
+      queue(el.dataset.fk,read(el));
+    });
   });
+  // This file is injected immediately BEFORE StyleFX, where wrapRange/sync are defined.
+  // Defer wrapping until the following classic script has finished executing.
+  function enhanceRanges(){
+    if(typeof wrapRange!=='function')return false;
+    els.forEach(function(el){
+      if(el.type==='range'&&!(el.parentNode&&el.parentNode.classList.contains('rw')))
+        try{wrapRange(el)}catch(_){}
+    });
+    els.forEach(function(el){if(el.type==='range'&&typeof sync==='function')try{sync(el)}catch(_){}});
+    return true;
+  }
+  setTimeout(enhanceRanges,0);
   function paint(id,v){
     [].forEach.call(document.querySelectorAll('#'+id+' .chip'),function(c){c.classList.toggle('on',c.dataset.v===v)});
   }
