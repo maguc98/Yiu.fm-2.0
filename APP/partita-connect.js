@@ -43,7 +43,7 @@
                     }
                     var A = window.PartitaAdapter;
                     if (audioEl && A && A.drive) A.drive(smoothTime(audioEl), true);
-                }, 33);
+                }, 1000 / 60);
             }
         } else if (lastMode === 'partita') {
             lastMode = current;
