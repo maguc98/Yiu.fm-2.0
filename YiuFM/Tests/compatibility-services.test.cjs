@@ -627,8 +627,14 @@ test('visualizer manager keeps non-lazy reuse and separates hide from destroy', 
   h.manager.drive(12.5);
   h.manager.loadLyrics([0], [[ [0, 1] ]], ['test']);
   for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
-    assert.ok(h.events.includes(name + ':drive:12.5'));
+    assert.ok(!h.events.includes(name + ':drive:12.5'));
     assert.ok(h.events.includes(name + ':lyrics'));
+  }
+  h.adapters.sonnet._state.active = true;
+  h.manager.drive(12.75);
+  assert.ok(h.events.includes('sonnet:drive:12.75'));
+  for (const name of ['tempera', 'lumiere', 'partita']) {
+    assert.ok(!h.events.includes(name + ':drive:12.75'));
   }
 
   await h.manager.destroy();
@@ -639,19 +645,22 @@ test('visualizer manager keeps non-lazy reuse and separates hide from destroy', 
 
 test('one visualizer drive exception does not starve later adapters', () => {
   const h = createVisualizerHarness();
+  h.adapters.sonnet._state.active = true;
+  h.adapters.tempera._state.active = true;
   h.adapters.sonnet.drive = () => { throw new Error('simulated adapter failure'); };
 
   h.manager.drive(7.25);
   assert.ok(!h.events.includes('sonnet:drive:7.25'));
-  for (const name of ['tempera', 'lumiere', 'partita']) {
-    assert.ok(h.events.includes(name + ':drive:7.25'));
-  }
+  assert.ok(h.events.includes('tempera:drive:7.25'));
+  assert.ok(!h.events.includes('lumiere:drive:7.25'));
+  assert.ok(!h.events.includes('partita:drive:7.25'));
 
   h.adapters.sonnet.drive = ct => { h.events.push('sonnet:drive:' + ct); };
   h.manager.drive(8.5);
-  for (const name of ['sonnet', 'tempera', 'lumiere', 'partita']) {
-    assert.ok(h.events.includes(name + ':drive:8.5'));
-  }
+  assert.ok(h.events.includes('sonnet:drive:8.5'));
+  assert.ok(h.events.includes('tempera:drive:8.5'));
+  assert.ok(!h.events.includes('lumiere:drive:8.5'));
+  assert.ok(!h.events.includes('partita:drive:8.5'));
 });
 
 
