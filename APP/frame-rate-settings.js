@@ -11,7 +11,7 @@ function mount(){
  '<label class="chk" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:12px;box-sizing:border-box"><span style="font-size:14px;color:#fff">启用帧率限制</span><input type="checkbox" id="yiuFrameRateEnabled"></label>'+
  '<div style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:13px">帧率上限</b><em id="yiuFrameRateValue" style="font-style:normal;color:var(--sub);font-size:12px">30 FPS</em></div>'+
  '<div class="qr" style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--sub)">24</span><input type="range" id="yiuFrameRateSlider" min="24" max="60" step="1" value="30" aria-label="帧率上限" style="flex:1"><span style="font-size:12px;color:var(--sub)">60</span></div></div>'+
- '<div class="qtip" style="margin:0 4px">默认以 60 FPS 运行。开启后按设定上限运行，最低可调至 24 FPS；不会降低音频播放速度或改变歌词时间轴。</div>';
+ '<div class="qtip" style="margin:0 4px">默认以 60 FPS 运行。开启后限制 JS 动画帧率（24–60 FPS），不改变音频播放速度或歌词时间轴。部分 CSS / WebKit 合成动画不受此限制；可看右上角实测 JS FPS 判断是否生效。</div>';
  var resetButton=d.getElementById('qrstMoved');
  if(resetButton&&resetButton.parentNode)group.insertBefore(panel,resetButton.parentNode);else group.appendChild(panel);
  var enabled=d.getElementById('yiuFrameRateEnabled'),slider=d.getElementById('yiuFrameRateSlider');
