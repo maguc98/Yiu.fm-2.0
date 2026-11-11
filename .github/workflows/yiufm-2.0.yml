@@ -51,6 +51,16 @@ jobs:
           text, icons = re.subn(r"(?m)^[ \t]*<Hourglass\b[^\n]*\n(?:[ \t]+[^\n]*\n){4}", "", text, count=1)
           if imports != 1 or icons != 1 or "Hourglass" in text:
               raise SystemExit(f"Expected one hourglass import and JSX icon; found imports={imports}, icons={icons}.")
+          bars_anchor = '                            <div className="flex w-28 flex-col gap-2.5">'
+          dots = """                            <div className="flex items-center justify-center gap-2" aria-label="等待中">
+                                                  <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: colorWithAlpha(theme.primaryColor, 0.72), animationDelay: '0ms' }} />
+                                                  <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: colorWithAlpha(theme.primaryColor, 0.72), animationDelay: '140ms' }} />
+                                                  <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: colorWithAlpha(theme.primaryColor, 0.72), animationDelay: '280ms' }} />
+                                              </div>
+          """
+          if text.count(bars_anchor) != 1:
+              raise SystemExit("Expected one Fume loading-bar container; refusing to add waiting dots.")
+          text = text.replace(bars_anchor, dots + bars_anchor, 1)
           source.write_text(text)
           PY
           cd YiuFM/BuildSupport/fume-folia
@@ -77,6 +87,7 @@ jobs:
           mkdir -p YiuFM/Resources/Web/APP/fume
           cp APP/fume/fume.js YiuFM/Resources/Web/APP/fume/fume.js
           cp APP/fume-adapter.js YiuFM/Resources/Web/APP/fume-adapter.js
+          cp APP/fume-settings.js YiuFM/Resources/Web/APP/fume-settings.js
           cp APP/fume-audio.js YiuFM/Resources/Web/APP/fume-audio.js
           cp APP/tempera-adapter.js YiuFM/Resources/Web/APP/tempera-adapter.js
           # Ship opt-in frame profiling in the Tempera runtime only.
@@ -90,6 +101,9 @@ jobs:
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          test -s YiuFM/Resources/Web/APP/fume-settings.js
+          node --check APP/fume-settings.js
+          node --check APP/fume-adapter.js
           test -s YiuFM/Resources/Web/APP/tempera/tempera-pixi.js
           test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
           test -s YiuFM/Resources/Web/APP/partita-vendor.js
@@ -157,7 +171,28 @@ jobs:
           html = html.replace(old_partita, new_partita, 1)
           if any(name in html for name in ("playback-service.js", "lyrics-service.js", "library-service.js")):
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
-          page.write_text(html.replace(anchor, injected, 1), encoding="utf-8")
+          html = html.replace(anchor, injected, 1)
+          settings_script = '<script src="./APP/fume-settings.js?v=20261111a"></script>\\n'
+          fx_anchor = '<script id="fxScript">'
+          if html.count(fx_anchor) != 1 or settings_script.strip() in html:
+              raise SystemExit("Expected one StyleFX script anchor and no prior Fume settings script.")
+          html = html.replace(fx_anchor, settings_script + fx_anchor, 1)
+          ids_old = 'IDS=["sbox","pbox","starbox","fadebox","typebox","posterbox","fxbox","sonnetbox"],'
+          ids_new = 'IDS=["sbox","pbox","starbox","fadebox","typebox","posterbox","fxbox","sonnetbox","fumebox"],'
+          if html.count(ids_old) != 1:
+              raise SystemExit("Expected one StyleFX panel ID list; refusing to patch.")
+          html = html.replace(ids_old, ids_new, 1)
+          host_old = 'if(st.classList.contains("mode-partita"))return document.getElementById("partitaHost");'
+          host_new = host_old + '\\n    if(st.classList.contains("mode-fume"))return document.getElementById("fumeHost");'
+          if html.count(host_old) != 1:
+              raise SystemExit("Expected one Partita StyleFX host branch; refusing to patch.")
+          html = html.replace(host_old, host_new, 1)
+          content_old = 'h.id==="partitaHost"||h.childElementCount>0'
+          content_new = 'h.id==="partitaHost"||h.id==="fumeHost"||h.childElementCount>0'
+          if html.count(content_old) != 1:
+              raise SystemExit("Expected one StyleFX host content predicate; refusing to patch.")
+          html = html.replace(content_old, content_new, 1)
+          page.write_text(html, encoding="utf-8")
 
           music = Path("YiuFM/Resources/Web/APP/ios-music.js")
           source = music.read_text(encoding="utf-8")
