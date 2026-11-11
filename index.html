@@ -1824,47 +1824,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 
   /* ---------- 画布 ---------- */
-  // 尺寸缓存：ResizeObserver 可能在布局过程中多次触发；尺寸未变时绝不重设 Canvas。
-  var fitCache={dpr:0,orbW:0,orbH:0,cvW:0,cvH:0};
-  var fitStats=window.__beatVizFitStats={calls:0,changed:0,skipped:0,lastMs:0,maxMs:0};
   function fit(){
-    rq=0;
-    fitStats.calls++;
-    var t0=performance.now();
-    var nextDpr=Math.min(3,window.devicePixelRatio||1);
-    var ow=orb.clientWidth||96, oh=orb.clientHeight||96;
-    var cw=cv.clientWidth, ch=cv.clientHeight;
-    var dprChanged=nextDpr!==fitCache.dpr;
-    var orbChanged=dprChanged||ow!==fitCache.orbW||oh!==fitCache.orbH;
-    var cvChanged=!!(cw&&ch)&&(dprChanged||cw!==fitCache.cvW||ch!==fitCache.cvH);
-
-    // 只有 CSS 尺寸或 DPR 真的变化时才写入 width/height；写入会清空画布并重置 context。
-    if(orbChanged){
-      var opw=Math.round(ow*nextDpr), oph=Math.round(oh*nextDpr);
-      if(orb.width!==opw)orb.width=opw;
-      if(orb.height!==oph)orb.height=oph;
-      ox.setTransform(nextDpr,0,0,nextDpr,0,0);
-      fitCache.orbW=ow;fitCache.orbH=oh;orbW=ow;orbH=oh;
-    }
-    if(cvChanged){
-      var cpw=Math.round(cw*nextDpr), cph=Math.round(ch*nextDpr);
-      if(cv.width!==cpw)cv.width=cpw;
-      if(cv.height!==cph)cv.height=cph;
-      cx.setTransform(nextDpr,0,0,nextDpr,0,0);
-      fitCache.cvW=cw;fitCache.cvH=ch;scW=cw;scH=ch;
-    }
-    if(dprChanged)fitCache.dpr=nextDpr;
-    dpr=nextDpr;
-
-    if(orbChanged||cvChanged){
-      fitStats.changed++;
-      fitStats.lastMs=performance.now()-t0;
-      if(fitStats.lastMs>fitStats.maxMs)fitStats.maxMs=fitStats.lastMs;
-    }else{
-      fitStats.skipped++;
-      fitStats.lastMs=performance.now()-t0;
-      if(fitStats.lastMs>fitStats.maxMs)fitStats.maxMs=fitStats.lastMs;
-    }
+    rq=0; dpr=Math.min(3,window.devicePixelRatio||1);
+    var w=orb.clientWidth||96, h=orb.clientHeight||96;
+    orb.width=Math.round(w*dpr); orb.height=Math.round(h*dpr); ox.setTransform(dpr,0,0,dpr,0,0); orbW=w; orbH=h;
+    w=cv.clientWidth; h=cv.clientHeight;
+    if(w&&h){cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cx.setTransform(dpr,0,0,dpr,0,0); scW=w; scH=h}
   }
   function fitSoon(){if(!rq) rq=requestAnimationFrame(fit)}
   window.addEventListener('resize',function(){fitSoon(); if(shown()) place(px,py)});
