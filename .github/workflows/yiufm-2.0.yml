@@ -6,6 +6,7 @@ on:
     branches:
       - development-2.0
       - refactor/yiu-2.0-layered-architecture
+      - fix/folia-bundle-boot-diagnostics
     paths:
       - "APP/**"
       - "YiuFM/**"
