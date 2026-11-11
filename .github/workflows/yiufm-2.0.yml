@@ -125,7 +125,7 @@ jobs:
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           fps_head_anchor = "</head>"
-          fps_head_script = '<script src="./APP/runtime/frame-rate-limit.js?v=20261111b"></script>' + chr(10)
+          fps_head_script = '<script src="./APP/runtime/frame-rate-limit.js?v=20261111c"></script>' + chr(10)
           if html.count(fps_head_anchor) != 1 or fps_head_script.strip() in html:
               raise SystemExit("Expected one document head and no prior frame-rate controller.")
           html = html.replace(fps_head_anchor, fps_head_script + fps_head_anchor, 1)
@@ -264,6 +264,7 @@ jobs:
           grep -q 'bindRuntime(rt)' YiuFM/Resources/Web/APP/sonnet-adapter.js
           grep -q 'nextFrameAt+=interval' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           grep -q 'measuredFPS' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
+          grep -q 'shouldRender:shouldRender' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           grep -q 'yiuFrameRateSlider' YiuFM/Resources/Web/APP/frame-rate-settings.js
           grep -q '24,Math.min(60' YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
