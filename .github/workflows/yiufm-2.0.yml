@@ -43,11 +43,12 @@ jobs:
           # Remove only the centered hourglass from Fume's loading overlay; keep the loading bars.
           python3 - <<'PY'
           from pathlib import Path
+          import os
           import re
-          source = Path("$FOLIA_DIR/src/components/visualizer/fume/VisualizerFume.tsx")
+          source = Path(os.environ["RUNNER_TEMP"]) / "folia-fume-source/src/components/visualizer/fume/VisualizerFume.tsx"
           text = source.read_text()
-          text, imports = re.subn(r"(?m)^import \\{ Hourglass \\} from 'lucide-react';\\n", "", text, count=1)
-          text, icons = re.subn(r"(?m)^[ \\t]*<Hourglass\\b[^\\n]*\\n(?:[ \\t]+[^\\n]*\\n){4}", "", text, count=1)
+          text, imports = re.subn(r"(?m)^import \{ Hourglass \} from 'lucide-react';\n", "", text, count=1)
+          text, icons = re.subn(r"(?m)^[ \t]*<Hourglass\b[^\n]*\n(?:[ \t]+[^\n]*\n){4}", "", text, count=1)
           if imports != 1 or icons != 1 or "Hourglass" in text:
               raise SystemExit(f"Expected one hourglass import and JSX icon; found imports={imports}, icons={icons}.")
           source.write_text(text)
