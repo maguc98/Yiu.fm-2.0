@@ -40,6 +40,18 @@ jobs:
           git -C "$FOLIA_DIR" fetch --depth=1 origin "$FOLIA_SHA"
           git -C "$FOLIA_DIR" checkout --detach "$FOLIA_SHA"
           test "$(git -C "$FOLIA_DIR" rev-parse HEAD)" = "$FOLIA_SHA"
+          # Remove only the centered hourglass from Fume's loading overlay; keep the loading bars.
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          source = Path("$FOLIA_DIR/src/components/visualizer/fume/VisualizerFume.tsx")
+          text = source.read_text()
+          text, imports = re.subn(r"(?m)^import \\{ Hourglass \\} from 'lucide-react';\\n", "", text, count=1)
+          text, icons = re.subn(r"(?m)^[ \\t]*<Hourglass\\b[^\\n]*\\n(?:[ \\t]+[^\\n]*\\n){4}", "", text, count=1)
+          if imports != 1 or icons != 1 or "Hourglass" in text:
+              raise SystemExit(f"Expected one hourglass import and JSX icon; found imports={imports}, icons={icons}.")
+          source.write_text(text)
+          PY
           cd YiuFM/BuildSupport/fume-folia
           npm install --no-audit --no-fund
           FOLIA_ROOT="$FOLIA_DIR" FUME_OUT_DIR="$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia" npm run build
