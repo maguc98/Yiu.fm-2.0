@@ -510,8 +510,10 @@
   // 全局帧率上限在启动阶段即生效，不必等用户打开开发者选项面板。
   var bootFrameLimit = parseInt(lsGet('yiu.frameLimitFps'), 10);
   window.__rafLimitFps = (bootFrameLimit >= 24 && bootFrameLimit <= 60) ? bootFrameLimit : 30;
-  window.__rafLimitEnabled = true;
-  window.__rafCapActive = window.__rafLimitFps < 60;
+  // Temporarily disable global RAF interception: it can affect every WebKit animation callback.
+  // Keep the saved preference/UI value for a later engine-scoped limiter implementation.
+  window.__rafLimitEnabled = false;
+  window.__rafCapActive = false;
   var state = {
     jank: lsGet('dev_jank') === '1',
     fps: lsGet('dev_fps') === '1',
@@ -1151,17 +1153,12 @@
       var fpsSlider = fpsWrap.querySelector('#devFrameLimit');
       var fpsValue = fpsWrap.querySelector('#devFrameLimitV');
       if (typeof wrapRange === 'function') { try { wrapRange(fpsSlider); } catch (_) {} }
-      fpsSlider.addEventListener('input', function () {
-        var value = Math.max(24, Math.min(60, parseInt(this.value, 10) || 30));
-        fpsValue.textContent = value + ' FPS';
-        window.__rafLimitFps = value;
-        window.__rafCapActive = value < 60 || !!window.__lowPower;
-        lsSet('yiu.frameLimitFps', String(value));
-        if (window.__resetRafCapClock) window.__resetRafCapClock();
-      });
+      fpsSlider.disabled = true;
+      fpsSlider.setAttribute('aria-disabled', 'true');
+      fpsValue.textContent = initialFps + ' FPS（暂时停用）';
       var fpsNote = document.createElement('div');
       fpsNote.style.cssText = 'font-size:11px;opacity:.55;padding:0 2px;';
-      fpsNote.textContent = '限制由统一动画调度层执行，默认 30 FPS；调至 60 FPS 即恢复完整刷新。低功耗模式仍会额外限制在 30 FPS。';
+      fpsNote.textContent = '全局限帧暂时停用：正在排查 WebKit 启动异常。当前保留原生刷新率，低功耗模式不再拦截动画回调。';
       ord(fpsNote, 10);
       contentWrap.appendChild(fpsNote);
     } catch (e) { try { console.warn('[devtools] 全局帧率限制初始化失败', e); } catch (_) {} }
