@@ -36,7 +36,8 @@ function pump(ts){
 }
 function requestFrame(fn){if(typeof fn!=='function')throw new TypeError('requestAnimationFrame callback must be a function');var id=++sequence;pending[id]=fn;schedule();return id;}
 function cancelFrame(id){delete pending[id];if(dispatchBatch)delete dispatchBatch[id];if(!hasPending()&&nativeHandle){if(nativeCAF)nativeCAF(nativeHandle);nativeHandle=0;}}
-function shouldRender(now,key){now=Number(now);if(!Number.isFinite(now))now=Date.now();key=String(key||'default');var interval=1000/targetFPS(),next=renderDeadlines[key];if(next!=null&&now+0.25<next)return false;if(next==null||now-next>interval*4)renderDeadlines[key]=now+interval;else{next+=interval;while(next<=now+0.25)next+=interval;renderDeadlines[key]=next;}return true;}\nfunction getConfig(){return {enabled:config.enabled,fps:config.fps,targetFPS:targetFPS()};}
+function shouldRender(now,key){now=Number(now);if(!Number.isFinite(now))now=Date.now();key=String(key||'default');var interval=1000/targetFPS(),next=renderDeadlines[key];if(next!=null&&now+0.25<next)return false;if(next==null||now-next>interval*4)renderDeadlines[key]=now+interval;else{next+=interval;while(next<=now+0.25)next+=interval;renderDeadlines[key]=next;}return true;}
+function getConfig(){return {enabled:config.enabled,fps:config.fps,targetFPS:targetFPS()};}
 function setConfig(p){p=p&&typeof p==='object'?p:{};if(Object.prototype.hasOwnProperty.call(p,'enabled'))config.enabled=p.enabled===true;if(Object.prototype.hasOwnProperty.call(p,'fps'))config.fps=clampFPS(p.fps);nextFrameAt=0;renderDeadlines=Object.create(null);save();notify();schedule();return getConfig();}
 function reset(){config.enabled=DEFAULTS.enabled;config.fps=DEFAULTS.fps;nextFrameAt=0;renderDeadlines=Object.create(null);save();notify();schedule();return getConfig();}
 function onChange(fn){if(typeof fn!=='function')return function(){};listeners.push(fn);return function(){var i=listeners.indexOf(fn);if(i>=0)listeners.splice(i,1);};}
