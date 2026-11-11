@@ -1,17 +1,19 @@
 // app/devtools.js — 开发者相关
 (function(){
   var el=document.getElementById('performanceMode');
-  if(!el)return;
-  var saved=null;
-  try{saved=localStorage.getItem('performanceMode')}catch(_){}
-  var enabled=saved===null?true:saved==='1';
-  el.checked=enabled;
-  el.addEventListener('change',function(){
-    var on=!!el.checked;
-    document.body.classList.toggle('performance-mode',on);
-    try{localStorage.setItem('performanceMode',on?'1':'0')}catch(_){}
-    window.dispatchEvent(new Event('performance-mode-change'));
-  });
+  // 此开关可能由后续开发者面板动态创建；不存在时只跳过本段绑定，不能中止整个 devtools.js。
+  if(el){
+    var saved=null;
+    try{saved=localStorage.getItem('performanceMode')}catch(_){}
+    var enabled=saved===null?true:saved==='1';
+    el.checked=enabled;
+    el.addEventListener('change',function(){
+      var on=!!el.checked;
+      document.body.classList.toggle('performance-mode',on);
+      try{localStorage.setItem('performanceMode',on?'1':'0')}catch(_){}
+      window.dispatchEvent(new Event('performance-mode-change'));
+    });
+  }
 })();
 /* ==========================================================
  * 实时日志系统
