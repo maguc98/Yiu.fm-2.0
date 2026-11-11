@@ -33,7 +33,6 @@ function nextIdx(auto){
 // 主播放循环只在播放期间持续运行；暂停时停止逐帧回调，恢复播放时再启动。
 var tickRaf = 0;
 var lastUiPaint = 0;  // UI 绘制节流
-var lastTickTime = 0; // 上一次真正执行 tick 逻辑的时间，用于限制到约 30 FPS
 var updatePending = false; // 切句渲染已排队、尚未执行
 /* 切句渲染 update() 很重：不在 tick（rAF 回调）里同步执行，而是排到下一个任务。
    排队期间 idx 已经改了、但画面还是旧句，所以 tick 在此期间暂停推进，
@@ -158,11 +157,8 @@ function tick(ts){
   // 关掉墙面后下一帧会按 audio.currentTime 重新对齐（见 bravais.js 的 deferUpdate）。
   if(window.__bravaisOpen){ last = ts; return; }
 
-  // 降频：播放中最高约 30 FPS（间隔不足 30ms 的帧直接跳过）。
-  // 暂停时不跳过，保证暂停那一帧的状态/时间轴一定会被绘制。
-  if(playing && ts - lastTickTime < 30) return;
-  lastTickTime = ts;
-
+  // 由原生 requestAnimationFrame 决定更新节奏：60Hz 设备可逐帧驱动，
+  // ProMotion 设备可跟随更高刷新率；不要在播放器层额外压到约 30 FPS。
   if(!last)last=ts;
   var dt=Math.min(.1,(ts-last)/1000);last=ts;
   if(updatePending)return; // 等排队的 update() 执行完再继续
