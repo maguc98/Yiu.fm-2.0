@@ -1138,7 +1138,7 @@
       var savedFps = parseInt(lsGet('yiu.frameLimitFps'), 10);
       var initialFps = (savedFps >= 24 && savedFps <= 60) ? savedFps : 30;
       window.__rafLimitFps = initialFps;
-      window.__rafLimitEnabled = true;
+      window.__rafLimitEnabled = false;
       var fpsWrap = document.createElement('div');
       fpsWrap.style.cssText = 'display:flex;flex-direction:column;gap:7px;margin-top:4px;';
       fpsWrap.innerHTML =
