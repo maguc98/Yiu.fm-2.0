@@ -608,6 +608,7 @@
       }
       creating = null;
       runtime = rt;
+      if (window.YiuFrameRateLimit && typeof window.YiuFrameRateLimit.bindRuntime === 'function') window.YiuFrameRateLimit.bindRuntime(rt);
       runtimeTextureResolution = resolutionAtCreate;
       // perf: 接线动态性能调节器（governor 脚本须先于本文件加载）
       if (window.SonnetPerfGovernor) {
