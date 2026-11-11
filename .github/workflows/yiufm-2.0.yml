@@ -106,7 +106,7 @@ jobs:
           test -s YiuFM/Resources/Web/APP/fume-settings.js
           node --check APP/fume-settings.js
           grep -q 'body.is-fume #sonnetHideWrap' APP/fume-settings.js
-          grep -q 'typeof sync==="function"' APP/fume-settings.js
+          grep -q 'sync(el)' APP/fume-settings.js
           node --check APP/fume-adapter.js
           test -s YiuFM/Resources/Web/APP/tempera/tempera-pixi.js
           test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
