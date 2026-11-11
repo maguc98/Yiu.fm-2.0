@@ -724,7 +724,23 @@
   }
   if (state.jank) startVisualAnomalyDetector();
 
-  // perf: 拦截 rAF 抓取卡顿溯源；同时合并 hbLpJS 的低功耗限帧器，避免双层包装
+  // 全局帧率门控：多个 RAF 回调共享同一时间桶；低功耗模式最多 30 FPS。
+  var rafCapLastTs = -1, rafCapLastBucket = -1, rafCapLastOk = true;
+  function resetRafCapClock() { rafCapLastTs = -1; rafCapLastBucket = -1; rafCapLastOk = true; }
+  window.__resetRafCapClock = resetRafCapClock;
+  window.__rafCap = function (ts) {
+    if (ts === rafCapLastTs) return rafCapLastOk;
+    var fps = Math.max(24, Math.min(60, Number(window.__rafLimitFps) || 30));
+    if (window.__lowPower) fps = Math.min(fps, 30);
+    if (fps >= 59.5) { rafCapLastTs = ts; rafCapLastOk = true; return true; }
+    var bucket = Math.floor(ts * fps / 1000);
+    rafCapLastTs = ts;
+    rafCapLastOk = bucket !== rafCapLastBucket;
+    if (rafCapLastOk) rafCapLastBucket = bucket;
+    return rafCapLastOk;
+  };
+
+  // perf: 拦截 rAF 抓取卡顿溯源；统一帧率限制与卡顿检测共用同一层包装
   var rafSeq = 1e9, rafMap = Object.create(null);
   window.requestAnimationFrame = function(cb) {
     if (!state.jank && !window.__rafCap) return origRAF.call(window, cb);
@@ -1106,6 +1122,40 @@
       ord(perfWrap, 20);
       contentWrap.appendChild(perfWrap);
     }
+
+    // A1. 全局帧率限制：统一限制 requestAnimationFrame 驱动的渲染循环（24–60 FPS，默认 30）
+    try {
+      var savedFps = parseInt(lsGet('yiu.frameLimitFps'), 10);
+      var initialFps = (savedFps >= 24 && savedFps <= 60) ? savedFps : 30;
+      window.__rafLimitFps = initialFps;
+      window.__rafLimitEnabled = true;
+      var fpsWrap = document.createElement('div');
+      fpsWrap.style.cssText = 'display:flex;flex-direction:column;gap:7px;margin-top:4px;';
+      fpsWrap.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">' +
+          '<span style="font-size:14px;">全局帧率限制</span>' +
+          '<em id="devFrameLimitV" style="font-style:normal;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;">' + initialFps + ' FPS</em>' +
+        '</div>' +
+        '<input type="range" id="devFrameLimit" min="24" max="60" step="1" value="' + initialFps + '" style="width:100%;">' +
+        '<div style="display:flex;justify-content:space-between;padding:0 2px;font-size:11px;opacity:.55;"><span>24 FPS</span><span>60 FPS</span></div>';
+      ord(fpsWrap, 10);
+      contentWrap.appendChild(fpsWrap);
+      var fpsSlider = fpsWrap.querySelector('#devFrameLimit');
+      var fpsValue = fpsWrap.querySelector('#devFrameLimitV');
+      if (typeof wrapRange === 'function') { try { wrapRange(fpsSlider); } catch (_) {} }
+      fpsSlider.addEventListener('input', function () {
+        var value = Math.max(24, Math.min(60, parseInt(this.value, 10) || 30));
+        fpsValue.textContent = value + ' FPS';
+        window.__rafLimitFps = value;
+        lsSet('yiu.frameLimitFps', String(value));
+        if (window.__resetRafCapClock) window.__resetRafCapClock();
+      });
+      var fpsNote = document.createElement('div');
+      fpsNote.style.cssText = 'font-size:11px;opacity:.55;padding:0 2px;';
+      fpsNote.textContent = '限制由统一动画调度层执行，默认 30 FPS；调至 60 FPS 即恢复完整刷新。低功耗模式仍会额外限制在 30 FPS。';
+      ord(fpsNote, 10);
+      contentWrap.appendChild(fpsNote);
+    } catch (e) { try { console.warn('[devtools] 全局帧率限制初始化失败', e); } catch (_) {} }
 
     // A2. 全局渲染分辨率：在各引擎自己的分辨率设置上再乘一个比例（商籁 / 凝彩 / 绘光 / 云阶），5 档滑块
     try {
