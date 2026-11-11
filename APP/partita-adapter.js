@@ -304,6 +304,8 @@
       if (!active || suspended || !currentTimeObj) return;
       try {
         var now = clockNow();
+        if (fromFallback && window.YiuFrameRateLimit &&
+            !window.YiuFrameRateLimit.shouldRender(now, 'partita-fallback')) return;
         if (fromFallback) {
           if (lastExtDriveAt && now - lastExtDriveAt < 300) return;
           // Fallback receives raw audio.currentTime; normalize it to the player's lyric timeline.
