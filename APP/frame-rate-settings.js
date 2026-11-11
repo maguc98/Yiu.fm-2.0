@@ -16,12 +16,12 @@ function mount(){
  if(resetButton&&resetButton.parentNode)group.insertBefore(panel,resetButton.parentNode);else group.appendChild(panel);
  var enabled=d.getElementById('yiuFrameRateEnabled'),slider=d.getElementById('yiuFrameRateSlider');
  var value=d.getElementById('yiuFrameRateValue'),status=d.getElementById('yiuFrameRateStatus');
- function refresh(){var c=api.getConfig();enabled.checked=c.enabled;slider.value=String(c.fps);value.textContent=c.fps+' FPS';status.textContent=c.enabled?'已限制 · '+c.targetFPS+' FPS':'未限制 · 60 FPS';if(typeof w.sync==='function')try{w.sync(slider)}catch(_){}}
+ function refresh(){var c=api.getConfig(),s=api.getSnapshot?api.getSnapshot():null,actual=s&&s.measuredFPS>0?' · 实测 JS '+Math.round(s.measuredFPS)+' FPS':'';enabled.checked=c.enabled;slider.value=String(c.fps);value.textContent=c.fps+' FPS';status.textContent=(c.enabled?'已限制 · '+c.targetFPS+' FPS':'未限制 · 60 FPS')+actual;if(typeof w.sync==='function')try{w.sync(slider)}catch(_){}}
  if(typeof w.wrapRange==='function')try{w.wrapRange(slider)}catch(_){}
  enabled.addEventListener('change',function(){api.setConfig({enabled:enabled.checked});refresh();});
  slider.addEventListener('input',function(){api.setConfig({fps:Number(slider.value)});refresh();});
  if(resetButton)resetButton.addEventListener('click',function(){api.reset();refresh();});
- refresh();return true;
+ refresh();var meter=setInterval(function(){if(!d.getElementById('yiuFrameRateSettings')){clearInterval(meter);return;}refresh();},1000);return true;
 }
 if(!mount()){var attempts=0,timer=setInterval(function(){if(mount()||++attempts>=20)clearInterval(timer);},50);}
 })(window,document);
