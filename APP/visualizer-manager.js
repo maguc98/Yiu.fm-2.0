@@ -5,8 +5,8 @@
        destroy()         销毁运行时并释放 WebGL
        drive(ct) / loadLyrics(TS,WT,LN) / isAlive() / isActive() / whenReady()（后两者可选）
    - 切换：销毁所有存活引擎 → 等两帧 → init + show 新引擎。绝不并行。
-   - drive / loadLyrics 转发给所有已注册适配器（各适配器自己在未激活时忽略 drive，
-     并且 loadLyrics 要在未激活时也缓存最新歌词，这是 SonnetAdapter 现有约定）。
+   - drive 只转发给当前激活的适配器，避免每帧调用所有休眠引擎；
+     loadLyrics 仍转发给所有适配器，确保下次切换时拿到最新歌词。
    - 不创建 Pixi Application，不碰 renderer.js 里 Sonnet 的 show/hide 流程。
 */
 (function () {
@@ -204,7 +204,11 @@
     drive: function (ct) {
       for (var i = 0; i < NAMES.length; i++) {
         var ad = adapterOf(NAMES[i]);
-        if (ad && typeof ad.drive === 'function') ad.drive(ct);
+        if (!ad || typeof ad.drive !== 'function') continue;
+        // isActive is optional for legacy adapters; when provided, use it to
+        // keep hidden engines completely out of the per-frame hot path.
+        if (typeof ad.isActive === 'function' && !ad.isActive()) continue;
+        try { ad.drive(ct); } catch (e) { warn('drive ' + NAMES[i], e); }
       }
     },
 
