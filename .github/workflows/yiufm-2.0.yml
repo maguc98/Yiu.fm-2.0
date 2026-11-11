@@ -302,7 +302,7 @@ jobs:
           test -s "$WEB_ROOT/APP/visualizer-manager.js"
           grep -q "devFrameLimit" "$WEB_ROOT/APP/devtools.js"
           grep -q "devtools.js?v=20261111b" "$WEB_ROOT/index.html"
-          grep -q "window.__rafCapActive=on || Number(window.__rafLimitFps)<60;" "$WEB_ROOT/index.html"
+          grep -q "window.__lowPower=on;" "$WEB_ROOT/index.html"
           grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
           test -s "$WEB_ROOT/APP/fume/fume.js"
           test -s "$WEB_ROOT/APP/fume-folia/fume-folia.js"
