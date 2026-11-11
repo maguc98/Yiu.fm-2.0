@@ -98,6 +98,12 @@ jobs:
           if html.count(trace_flag) != 1:
               raise SystemExit("Expected exactly one error-trace switch; refusing to patch.")
           html = html.replace(trace_flag, "var traceEnabled=true;", 1)
+          # The localStorage preference immediately below used to overwrite this forced flag.
+          # Remove that override so the diagnostic wrappers are actually installed in the IPA.
+          trace_pref = "  try{traceEnabled=localStorage.getItem('yiuDebugTrace')==='1'}catch(_){}\n"
+          if html.count(trace_pref) != 1:
+              raise SystemExit("Expected exactly one trace preference override; refusing to patch.")
+          html = html.replace(trace_pref, "", 1)
           trace_listener = "  window.addEventListener('error',function(ev){ report((ev && (ev.error || ev.message)) || ev,'window-error') });\n"
           trace_anchor = "  window.addEventListener('unhandledrejection',function(ev){ report(ev&&ev.reason,'promise') });"
           if html.count(trace_anchor) != 1:
