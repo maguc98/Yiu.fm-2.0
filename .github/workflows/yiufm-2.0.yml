@@ -305,7 +305,7 @@ jobs:
               "note": "This artifact is a compatibility build, not a full snapshot of every file on the source branch."
           }
           out = Path("YiuFM/Resources/Web/BUILD-INFO.json")
-          out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+          out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           print(out.read_text(encoding="utf-8"))
           PY
 
