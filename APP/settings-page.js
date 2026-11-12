@@ -94,7 +94,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:38px!important;height:26px!important;transform:translate(-50%,-50%)!important;border:0!important;border-radius:999px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,20,40,.22)!important;transition:transform .12s ease,box-shadow .12s ease!important}
 #yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.06)!important}
 #yiuSettingsPage .m3-system-section{margin:0 0 16px!important}
-#yiuSettingsPage .m3-system-section .m3-hierarchy-title{margin:0 3px 9px!important;color:#625c70!important;font-size:12px!important;font-weight:750!important;letter-spacing:.2px!important}
+#yiuSettingsPage .m3-system-section .m3-hierarchy-title{margin:0 3px 9px!important;color:var(--yiu-theme-ink)!important;font-size:12px!important;font-weight:750!important;letter-spacing:.2px!important}
 #yiuSettingsPage .m3-system-section-body{display:flex!important;flex-direction:column!important;gap:9px!important}
 #yiuSettingsPage .m3-system-control-card{padding:13px 14px!important;border:1px solid #e8e2ef!important;border-radius:15px!important;background:#fff!important;box-shadow:0 2px 8px rgba(48,38,75,.035)!important}
 #yiuSettingsPage .m3-system-control-card>.row{margin:0!important}
