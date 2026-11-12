@@ -109,6 +109,20 @@ function mount(){
 #yiuSettingsPage .m3-subpage input[type=checkbox]{accent-color:var(--yiu-m3-primary)}
 #yiuSettingsPage .m3-subpage .m3-group-title{margin:0 0 12px;font-size:17px;font-weight:700}
 #yiuSettingsPage .m3-empty{padding:20px;border-radius:18px;background:#fff;color:var(--yiu-m3-sub);font-size:13px}
+
+/* High-contrast typography: pastel surfaces stay soft, text stays readable. */
+#yiuSettingsPage .m3-subpage .m3-settings-body,
+#yiuSettingsPage .m3-subpage .m3-setting-item{color:#19171f!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qh,strong,b,label,.row,.chk span,.m3-group-title){color:#19171f!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qr,.qtip,.hint,.desc,.subtext,small,p){color:#48434f!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qtip{background:#fff!important;color:#48434f!important;border:1px solid #e4dfeb}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chk{background:#fff!important;border-color:#d9d3e1!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chk span{color:#211e28!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item button,
+#yiuSettingsPage .m3-subpage .m3-setting-item .chip{color:#49366f!important}
+#yiuSettingsPage .m3-subpage .m3-hierarchy-title{color:var(--cat-ink,#49366f)!important}
+#yiuSettingsPage .m3-subdesc{color:#45404c!important}
+
 #yiuSettingsPage .m3-footer{padding:22px 0 5px;text-align:center;font-size:11px;color:#817b88}
 @media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open{animation:none}}
 `;
