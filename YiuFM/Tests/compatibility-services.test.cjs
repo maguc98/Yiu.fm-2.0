@@ -517,6 +517,7 @@ test('playback preferences preserve the legacy playModeV1 values and fallback be
 
 function createVisualizerHarness(options = {}) {
   const events = [];
+  const warnings = [];
   const activeClasses = new Set();
   const stage = { classList: {
     add: name => activeClasses.add(name),
@@ -556,7 +557,7 @@ function createVisualizerHarness(options = {}) {
   }
 
   const window = {
-    console: { warn() {}, error() {} },
+    console: { warn(...args) { warnings.push(args); }, error() {} },
     SonnetAdapter: adapters.sonnet,
     TemperaAdapter: adapters.tempera,
     LumiereAdapter: adapters.lumiere,
@@ -576,6 +577,7 @@ function createVisualizerHarness(options = {}) {
     manager: window.VisualizerManager,
     adapters,
     events,
+    warnings,
     activeClasses,
     releaseSonnet() { if (resolveSonnetShow) { const done = resolveSonnetShow; resolveSonnetShow = null; done(); } }
   };
@@ -650,6 +652,9 @@ test('one visualizer drive exception does not starve later adapters', () => {
   h.adapters.sonnet.drive = () => { throw new Error('simulated adapter failure'); };
 
   h.manager.drive(7.25);
+  h.manager.drive(7.5);
+  assert.equal(h.warnings.filter(args => String(args[0]).includes('drive sonnet')).length, 1,
+    'a failing adapter should only warn once until it recovers');
   assert.ok(!h.events.includes('sonnet:drive:7.25'));
   assert.ok(h.events.includes('tempera:drive:7.25'));
   assert.ok(!h.events.includes('lumiere:drive:7.25'));
@@ -658,6 +663,8 @@ test('one visualizer drive exception does not starve later adapters', () => {
   h.adapters.sonnet.drive = ct => { h.events.push('sonnet:drive:' + ct); };
   h.manager.drive(8.5);
   assert.ok(h.events.includes('sonnet:drive:8.5'));
+  assert.equal(h.warnings.filter(args => String(args[0]).includes('drive recovered sonnet')).length, 1,
+    'recovery should be reported once when the adapter resumes');
   assert.ok(h.events.includes('tempera:drive:8.5'));
   assert.ok(!h.events.includes('lumiere:drive:8.5'));
   assert.ok(!h.events.includes('partita:drive:8.5'));
