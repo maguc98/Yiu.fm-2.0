@@ -70,12 +70,21 @@ jobs:
           FOLIA_ROOT="$FOLIA_DIR" FUME_OUT_DIR="$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia" npm run build
           test -s "$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia/fume-folia.js"
 
-      - name: Restore Run #13 legacy UI baseline
+      - name: Stage current branch UI and app sources
         run: |
           mkdir -p YiuFM/Resources/Web
-          git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
-          git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
-          # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
+          # The Folia bundle was built in the previous step. Preserve it while
+          # staging the current branch so no historical UI baseline can return.
+          FOLIA_BUNDLE="$RUNNER_TEMP/yiu-fume-folia.js"
+          cp YiuFM/Resources/Web/APP/fume-folia/fume-folia.js "$FOLIA_BUNDLE"
+          cp index.html YiuFM/Resources/Web/index.html
+          cp style.css YiuFM/Resources/Web/style.css
+          mkdir -p YiuFM/Resources/Web/APP
+          cp -R APP/. YiuFM/Resources/Web/APP/
+          cp "$FOLIA_BUNDLE" YiuFM/Resources/Web/APP/fume-folia/fume-folia.js
+          test -s YiuFM/Resources/Web/index.html
+          test -s YiuFM/Resources/Web/style.css
+          # From this point on, the current checked-out branch is the only UI source.
           cp APP/sonnet-perf-governor.js YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           cp APP/sonnet-adapter.js YiuFM/Resources/Web/APP/sonnet-adapter.js
           # Ship the verified lyric timing/retirement fixes without replacing the pinned legacy UI.
