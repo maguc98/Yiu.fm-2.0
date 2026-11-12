@@ -132,6 +132,27 @@ function mount(){
 #yiuSettingsPage .m3-theme-reset{min-height:40px;padding:0 15px;border:0;border-radius:12px;background:color-mix(in srgb,var(--yiu-theme-accent) 12%,var(--yiu-theme-card));color:var(--yiu-theme-accent);font-size:13px;font-weight:700}
 @media(max-width:380px){#yiuSettingsPage .m3-theme-presets{gap:5px}#yiuSettingsPage .m3-theme-preset{font-size:9px}}
 
+/* Dedicated controls: native inputs are data-only; all visible interaction is rendered by our own components. */
+#yiuSettingsPage .m3-settings-body input.yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;opacity:0!important;pointer-events:none!important}
+#yiuSettingsPage .yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;position:relative!important;display:inline-flex!important;align-items:center!important;width:58px!important;min-width:58px!important;height:34px!important;min-height:34px!important;margin:0!important;padding:0!important;border:1.5px solid #aaa5b4!important;border-radius:999px!important;background:#e2dfe7!important;box-shadow:inset 0 1px 2px rgba(35,25,50,.08)!important;cursor:pointer!important;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease!important;-webkit-tap-highlight-color:transparent!important}
+#yiuSettingsPage .yiu-switch:before{content:""!important;position:absolute!important;left:4px!important;top:4px!important;width:24px!important;height:24px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 4px rgba(30,24,40,.24)!important;transform:translateX(0)!important;transition:transform .2s cubic-bezier(.2,.8,.2,1)!important}
+#yiuSettingsPage .yiu-switch.is-on{border-color:var(--yiu-theme-accent,#7565dc)!important;background:var(--yiu-theme-accent,#7565dc)!important;box-shadow:inset 0 1px 2px rgba(35,25,50,.08),0 2px 5px rgba(80,65,150,.12)!important}
+#yiuSettingsPage .yiu-switch.is-on:before{transform:translateX(24px)!important}
+#yiuSettingsPage .yiu-switch:focus-visible{outline:3px solid color-mix(in srgb,var(--yiu-theme-accent,#7565dc) 25%,transparent)!important;outline-offset:3px!important}
+#yiuSettingsPage .yiu-switch:disabled{opacity:.45!important;cursor:not-allowed!important}
+#yiuSettingsPage .yiu-slider{grid-column:2!important;position:relative!important;display:block!important;width:100%!important;min-width:0!important;height:46px!important;min-height:46px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;touch-action:pan-y!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;-webkit-tap-highlight-color:transparent!important}
+#yiuSettingsPage .yiu-slider-track{position:absolute!important;left:0!important;right:0!important;top:50%!important;height:9px!important;transform:translateY(-50%)!important;border:1px solid #c9c3d2!important;border-radius:999px!important;background:#e5e1e9!important;overflow:visible!important}
+#yiuSettingsPage .yiu-slider-fill{position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:var(--yiu-slider-progress,0%)!important;border-radius:999px!important;background:var(--yiu-theme-accent,#7565dc)!important}
+#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:25px!important;height:25px!important;transform:translate(-50%,-50%)!important;border:3px solid #fff!important;border-radius:50%!important;background:var(--yiu-theme-accent,#7565dc)!important;box-shadow:0 2px 6px rgba(35,25,55,.24),0 0 0 1px rgba(67,49,103,.14)!important;transition:box-shadow .12s ease!important}
+#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{box-shadow:0 2px 8px rgba(35,25,55,.3),0 0 0 5px color-mix(in srgb,var(--yiu-theme-accent,#7565dc) 16%,transparent)!important}
+#yiuSettingsPage .yiu-slider:focus-visible{outline:3px solid color-mix(in srgb,var(--yiu-theme-accent,#7565dc) 22%,transparent)!important;outline-offset:4px!important;border-radius:999px!important}
+#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.45!important;cursor:not-allowed!important}
+#yiuSettingsPage .m3-setting-item .qr:has(.yiu-slider){display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important}
+#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important}
+#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch){display:grid!important;grid-template-columns:minmax(0,1fr) 58px!important;align-items:center!important;column-gap:12px!important;min-height:58px!important}
+#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch)>span{grid-column:1!important;grid-row:1!important}
+
+
 `;
   d.head.appendChild(style);
 
@@ -311,6 +332,100 @@ function mount(){
     categories.push({cfg:cfg,card:card,panel:panel,clone:body});
     applySettingsTheme(false);
   }
+
+  function buildDedicatedControls(root){
+    [].slice.call(root.querySelectorAll('input[type="checkbox"],input[type="range"]')).forEach(function(input){
+      if(input.hasAttribute('data-yiu-control-built'))return;
+      var sourceIndex=input.getAttribute('data-yiu-source-index');
+      if(sourceIndex===null)return;
+      input.setAttribute('data-yiu-control-built','1');
+      input.classList.add('yiu-native-control');
+      input.setAttribute('aria-hidden','true');
+      input.tabIndex=-1;
+      if(input.type==='checkbox'){
+        var toggle=d.createElement('button');
+        toggle.type='button';
+        toggle.className='yiu-switch'+(input.checked?' is-on':'');
+        toggle.setAttribute('role','switch');
+        toggle.setAttribute('data-yiu-control','switch');
+        toggle.setAttribute('data-yiu-source-index',sourceIndex);
+        toggle.setAttribute('aria-checked',input.checked?'true':'false');
+        toggle.setAttribute('aria-label',input.getAttribute('aria-label')||'切换设置');
+        toggle.disabled=!!input.disabled;
+        input.insertAdjacentElement('afterend',toggle);
+        mirrorNodes.push(toggle);
+        return;
+      }
+      var slider=d.createElement('div');
+      slider.className='yiu-slider';
+      slider.setAttribute('role','slider');
+      slider.setAttribute('tabindex',input.disabled?'-1':'0');
+      slider.setAttribute('data-yiu-control','range');
+      slider.setAttribute('data-yiu-source-index',sourceIndex);
+      slider.setAttribute('aria-label',input.getAttribute('aria-label')||'数值调节');
+      slider.setAttribute('aria-valuemin',input.min||'0');
+      slider.setAttribute('aria-valuemax',input.max||'100');
+      slider.setAttribute('aria-valuenow',input.value);
+      slider.setAttribute('aria-disabled',input.disabled?'true':'false');
+      var track=d.createElement('span');track.className='yiu-slider-track';
+      var fill=d.createElement('span');fill.className='yiu-slider-fill';
+      var thumb=d.createElement('span');thumb.className='yiu-slider-thumb';
+      track.appendChild(fill);track.appendChild(thumb);slider.appendChild(track);
+      input.insertAdjacentElement('afterend',slider);
+      mirrorNodes.push(slider);
+      paintDedicatedSlider(slider,input);
+      slider.addEventListener('pointerdown',function(e){
+        if(input.disabled)return;
+        e.preventDefault();
+        slider.setPointerCapture&&slider.setPointerCapture(e.pointerId);
+        updateDedicatedSlider(slider,input,e);
+      });
+      slider.addEventListener('pointermove',function(e){
+        if(input.disabled||!slider.hasPointerCapture||!slider.hasPointerCapture(e.pointerId))return;
+        updateDedicatedSlider(slider,input,e);
+      });
+      function finish(e){
+        if(input.disabled)return;
+        if(slider.hasPointerCapture&&slider.hasPointerCapture(e.pointerId))slider.releasePointerCapture(e.pointerId);
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+      slider.addEventListener('pointerup',finish);
+      slider.addEventListener('pointercancel',finish);
+      slider.addEventListener('keydown',function(e){
+        if(input.disabled)return;
+        var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1),v=Number(input.value||0);
+        if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;
+        else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;
+        else if(e.key==='Home')v=min;
+        else if(e.key==='End')v=max;
+        else return;
+        e.preventDefault();input.value=String(Math.max(min,Math.min(max,v)));
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        paintDedicatedSlider(slider,input);
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+    });
+  }
+  function paintDedicatedSlider(slider,input){
+    if(!slider||!input)return;
+    var min=Number(input.min||0),max=Number(input.max||100),value=Number(input.value||0);
+    var p=max>min?Math.max(0,Math.min(1,(value-min)/(max-min))):0;
+    slider.style.setProperty('--yiu-slider-progress',(p*100).toFixed(2)+'%');
+    slider.setAttribute('aria-valuenow',String(value));
+    slider.setAttribute('aria-valuetext',String(value));
+  }
+  function updateDedicatedSlider(slider,input,e){
+    var rect=slider.getBoundingClientRect();
+    var p=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+    var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1);
+    var raw=min+(max-min)*p;
+    var value=min+Math.round((raw-min)/step)*step;
+    value=Math.max(min,Math.min(max,value));
+    input.value=String(value);
+    paintDedicatedSlider(slider,input);
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
   function rebuildCategories(){
     sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
     mirrorNodes=[];
@@ -365,6 +480,7 @@ function mount(){
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
       organizeSettingsHierarchy(clone,cfg);
+      buildDedicatedControls(clone);
       var card=d.createElement('button');
       card.type='button';card.className='m3-category';
       card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
@@ -417,6 +533,18 @@ function mount(){
     mirrorNodes.forEach(function(el){
       if(el===skipNode)return;
       var src=sourceFor(el);if(!src)return;
+      if(el.getAttribute&&el.getAttribute('data-yiu-control')==='switch'){
+        el.classList.toggle('is-on',!!src.checked);
+        el.setAttribute('aria-checked',src.checked?'true':'false');
+        el.disabled=!!src.disabled;
+        return;
+      }
+      if(el.getAttribute&&el.getAttribute('data-yiu-control')==='range'){
+        el.setAttribute('aria-disabled',src.disabled?'true':'false');
+        el.tabIndex=src.disabled?-1:0;
+        paintDedicatedSlider(el,src);
+        return;
+      }
       if('checked' in src)el.checked=src.checked;
       if('value' in src&&src.type!=='button')el.value=src.value;
       if(src.tagName==='SELECT')el.selectedIndex=src.selectedIndex;
@@ -512,6 +640,14 @@ function mount(){
   subpage.addEventListener('click',function(e){
     var control=e.target.closest('button,[role="button"]');
     if(!control)return;
+    if(control.getAttribute('data-yiu-control')==='switch'){
+      e.preventDefault();e.stopPropagation();
+      var toggleSource=sourceFor(control);if(!toggleSource||toggleSource.disabled)return;
+      toggleSource.checked=!toggleSource.checked;
+      toggleSource.dispatchEvent(new Event('input',{bubbles:true}));
+      toggleSource.dispatchEvent(new Event('change',{bubbles:true}));
+      sync();return;
+    }
     var preset=control.getAttribute('data-theme-preset');
     if(preset&&themePresets[preset]){settingsTheme=Object.assign({},themePresets[preset]);applySettingsTheme(true);return;}
     if(control.hasAttribute('data-theme-reset')){settingsTheme=Object.assign({},themeDefaults);applySettingsTheme(true);return;}
@@ -543,8 +679,14 @@ function mount(){
     src.dispatchEvent(new Event(e.type,{bubbles:true}));
     sync(clone);
   }
-  subpage.addEventListener('input',forwardValue);
-  subpage.addEventListener('change',forwardValue);
+  subpage.addEventListener('input',function(e){
+    if(e.target&&e.target.classList&&e.target.classList.contains('yiu-native-control'))return;
+    forwardValue(e);
+  });
+  subpage.addEventListener('change',function(e){
+    if(e.target&&e.target.classList&&e.target.classList.contains('yiu-native-control'))return;
+    forwardValue(e);
+  });
   subpage.addEventListener('pointercancel',function(e){
     if(activeRange&&e.target===activeRange){activeRange=null;sync();}
   },true);
