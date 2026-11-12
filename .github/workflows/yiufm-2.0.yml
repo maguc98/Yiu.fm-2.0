@@ -369,7 +369,7 @@ jobs:
           test -s "$WEB_ROOT/APP/fume-audio.js"
           grep -q "fume-audio.js?v=20261109b" "$WEB_ROOT/index.html"
           grep -q "fume.js?v=20261109c" "$WEB_ROOT/index.html"
-          grep -q 'APP/settings-page.js?v=20261112z' "$WEB_ROOT/index.html"
+          grep -q 'APP/settings-page.js?v=20261112aa' "$WEB_ROOT/index.html"
           grep -q 'APP/frame-rate-settings.js?v=20261111c' "$WEB_ROOT/index.html"
           grep -q 'function scrubLegacyInline' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'yf-skin-v2' "$WEB_ROOT/APP/settings-page.js"
