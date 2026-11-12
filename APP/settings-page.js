@@ -203,20 +203,17 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ad';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · mirror-ui 20261112z';
   page.appendChild(foot);
   d.body.appendChild(page);
 
   w.__yiuSettingsDiag=function(){
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
-      ui:'dedicated-ui 20261112ad-direct-controls',
-      settingsDataRoot:!!(sourceRoot&&sourceRoot.isConnected),
-      settingsDataSource:!!(source&&source.isConnected),
-      settingsPage:!!d.getElementById('yiuSettingsPage'),
-      settingsLauncher:!!d.getElementById('cmore'),
-      isOpen:!!isOpen,
-      events:(events||[]).slice(-12),
+      ui:'mirror-ui 20261112z',
+      legacyPg5:!!d.getElementById('pg5'),
+      mirrorPage:!!d.getElementById('yiuSettingsPage'),
+      launcher:!!d.getElementById('yiuSettingsLauncher'),
       scripts:[].map.call(d.scripts,function(s){return tag(s.src)}).filter(function(s){return /settings|frame-rate|devtools/.test(s)}),
       subVar:getComputedStyle(page).getPropertyValue('--sub'),
       whiteInline:page.querySelectorAll('[style*="255,255,255"],[style*="#fff"],[style*="var(--sub)"]').length,
