@@ -39,17 +39,17 @@ function mount(){
 #yiuSettingsPage .m3-top.sub .m3-title{font-size:20px}
 #yiuSettingsPage .m3-search{display:flex;align-items:center;gap:10px;margin:12px 0 18px;padding:0 16px;height:54px;border-radius:18px;background:var(--yiu-m3-surface2);color:var(--yiu-m3-sub)}
 #yiuSettingsPage .m3-search svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8}
-#yiuSettingsPage .m3-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--yiu-m3-ink);font-size:15px}
+#yiuSettingsPage .m3-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--yiu-m3-ink);font-size:15px}#yiuSettingsPage .m3-search:focus-within{background:#e8e1f1;box-shadow:0 0 0 2px rgba(103,80,164,.14)}#yiuSettingsPage .m3-search input:focus{outline:0}
 #yiuSettingsPage .m3-search input::placeholder{color:#77717f}
 #yiuSettingsPage .m3-hero{display:flex;align-items:center;gap:15px;margin:0 0 23px;padding:19px;border-radius:24px;background:#e8def8;color:#302747}
 #yiuSettingsPage .m3-logo{display:flex;align-items:center;justify-content:center;flex:none;width:52px;height:52px;border-radius:17px;background:#d0bcf2;color:#4d3a79;font-size:24px;font-weight:800}
 #yiuSettingsPage .m3-hero strong{display:block;font-size:18px;font-weight:700}
 #yiuSettingsPage .m3-hero small{display:block;margin-top:4px;font-size:12px;line-height:1.5;color:#594f6b}
-#yiuSettingsPage .m3-section-title{margin:20px 4px 9px;font-size:14px;font-weight:700;color:#514b59}
+#yiuSettingsPage .m3-section-title{margin:20px 4px 9px;font-size:14px;font-weight:700;color:#514b59;letter-spacing:.1px}
 #yiuSettingsPage .m3-list{overflow:hidden;border-radius:22px;background:var(--yiu-m3-surface);box-shadow:0 1px 2px rgba(35,25,50,.04)}#yiuSettingsPage .m3-empty{margin-top:12px;padding:22px 18px;border-radius:20px;background:#fff;text-align:center;color:var(--yiu-m3-sub);box-shadow:0 1px 2px rgba(35,25,50,.04)}#yiuSettingsPage .m3-empty strong{display:block;margin-bottom:5px;color:var(--yiu-m3-ink);font-size:15px}#yiuSettingsPage .m3-empty button{margin-top:12px;padding:9px 15px;border:0;border-radius:999px;background:#eee7f8;color:#59458b;font-size:13px;font-weight:650}
 #yiuSettingsPage .m3-category{display:flex;align-items:center;gap:15px;width:100%;min-height:76px;padding:12px 16px;border:0;border-bottom:1px solid #eeeaf1;background:transparent;text-align:left;color:var(--yiu-m3-ink);-webkit-tap-highlight-color:transparent}
 #yiuSettingsPage .m3-category:last-child{border-bottom:0}
-#yiuSettingsPage .m3-category:active{background:#f1edf6}
+#yiuSettingsPage .m3-category{cursor:pointer;transition:background .16s ease,transform .16s ease}#yiuSettingsPage .m3-category:active{background:#f1edf6;transform:scale(.995)}#yiuSettingsPage .m3-chevron{transition:transform .16s ease}#yiuSettingsPage .m3-category:active .m3-chevron{transform:translateX(2px)}
 #yiuSettingsPage .m3-icon{display:flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;border-radius:15px;background:#eee7f8;color:#6750a4}#yiuSettingsPage .m3-icon svg{display:block;width:27px;height:27px;overflow:visible}#yiuSettingsPage .m3-category[data-category=system] .m3-icon{background:#e6eafa;color:#5369b4}#yiuSettingsPage .m3-category[data-category=beta] .m3-icon{background:#fcebdc;color:#b66a35}#yiuSettingsPage .m3-category[data-category=developer] .m3-icon{background:#e2f2e9;color:#3e8060}
 #yiuSettingsPage .m3-cat-copy{flex:1;min-width:0}
 #yiuSettingsPage .m3-cat-copy strong{display:block;font-size:15px;font-weight:650}
@@ -86,7 +86,7 @@ function mount(){
   home.className='m3-home';
   var search=d.createElement('label');
   search.className='m3-search';
-  search.innerHTML='<svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg><input type="search" placeholder="搜索设置" aria-label="搜索设置">';
+  search.innerHTML='<svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg><input type="search" placeholder="搜索设置" aria-label="搜索设置" enterkeyhint="search" autocapitalize="off" spellcheck="false">';
   home.appendChild(search);
 
   var hero=d.createElement('section');
@@ -96,6 +96,8 @@ function mount(){
 
   var sectionTitle=d.createElement('div');
   sectionTitle.className='m3-section-title';
+  sectionTitle.setAttribute('aria-live','polite');
+  sectionTitle.setAttribute('role','status');
   sectionTitle.textContent='所有设置';
   home.appendChild(sectionTitle);
   var list=d.createElement('div');
@@ -103,6 +105,8 @@ function mount(){
   home.appendChild(list);
   var empty=d.createElement('div');
   empty.className='m3-empty';
+  empty.setAttribute('role','status');
+  empty.setAttribute('aria-live','polite');
   empty.hidden=true;
   empty.innerHTML='<strong>没有找到相关设置</strong><span>试试其他关键词，或查看全部设置分类。</span><br><button type="button">清除搜索</button>';
   home.appendChild(empty);
@@ -245,6 +249,14 @@ function mount(){
   subpage.addEventListener('input',forwardValue);
   subpage.addEventListener('change',forwardValue);
   top.querySelector('.m3-back').addEventListener('click',function(){if(!subpage.hidden)showHome();else close()});
+  page.addEventListener('keydown',function(e){
+    if(e.key!=='Tab')return;
+    var focusable=[].slice.call(page.querySelectorAll('button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(function(el){return !el.closest('[hidden]')&&el.getAttribute('aria-hidden')!=='true'});
+    if(!focusable.length){e.preventDefault();top.querySelector('.m3-back').focus();return;}
+    var first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey&&d.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&d.activeElement===last){e.preventDefault();first.focus();}
+  });
 
   var previousFocus=null;
   var previousBodyOverflow='';
