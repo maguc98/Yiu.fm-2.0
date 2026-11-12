@@ -66,6 +66,14 @@ function mount(){
 #yiuSettingsPage .m3-subpage .gp{padding:0!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body{display:flex!important;flex-direction:column!important;gap:15px!important;width:100%;min-width:0;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important;padding:18px!important;border-radius:22px!important;background:#fff!important;color:var(--yiu-m3-ink)!important;box-shadow:0 2px 8px rgba(45,35,65,.045)!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body>*{visibility:visible!important;opacity:1!important;max-height:none}
+#yiuSettingsPage .m3-setting-item{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;padding:14px 0;border-bottom:1px solid #eeeaf3}
+#yiuSettingsPage .m3-setting-item:first-child{padding-top:0}
+#yiuSettingsPage .m3-setting-item:last-child{padding-bottom:0;border-bottom:0}
+#yiuSettingsPage .m3-setting-item>*{max-width:100%;min-width:0}
+#yiuSettingsPage .m3-setting-item .qtip{background:#f5f2fa;color:#625d6b!important}
+#yiuSettingsPage .m3-setting-item .chk{background:#f8f6fb!important;border:1px solid #eee9f4;border-radius:16px!important;padding:13px 14px!important}
+#yiuSettingsPage .m3-setting-item .chk span{color:#282431!important}
+#yiuSettingsPage .m3-setting-item input[type=range]{accent-color:#8b78c5}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qh{display:flex!important;align-items:center;justify-content:space-between;margin:0!important;padding:0!important;color:var(--yiu-m3-ink)!important;font-size:15px;font-weight:700}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qr{display:flex!important;align-items:center;gap:10px;margin:0!important;padding:0!important;color:var(--yiu-m3-sub)!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]{display:block!important;flex:1;min-width:80px;width:100%;height:28px;accent-color:var(--yiu-m3-primary);touch-action:pan-y}
@@ -175,12 +183,19 @@ function mount(){
       // Its collapsed-state CSS can keep cloned content invisible in WKWebView.
       // Mirror only the actual settings body (.gp), inside our own visible panel.
       var contentOriginal=original.querySelector('.gp')||original;
-      // Build a fresh presentation wrapper. Never retain legacy .gp/.gb/.gi
-      // classes: their accordion CSS can collapse the entire cloned subtree in WKWebView.
+      // Recompose each setting block in a fresh card row. This avoids carrying
+      // legacy accordion wrappers/styles into the full-screen Material layout.
       var clone=d.createElement('div');
       clone.className='m3-settings-body';
       [].slice.call(contentOriginal.childNodes).forEach(function(node){
-        clone.appendChild(node.cloneNode(true));
+        if(node.nodeType===3&&!node.textContent.trim())return;
+        if(node.nodeType!==1){clone.appendChild(node.cloneNode(true));return;}
+        var item=d.createElement('div');
+        item.className='m3-setting-item';
+        var child=node.cloneNode(true);
+        item.appendChild(child);
+        clone.appendChild(item);
+        bindTree(child,node);
       });
       clone.removeAttribute('hidden');
       clone.style.setProperty('display','flex','important');
@@ -193,7 +208,6 @@ function mount(){
       clone.style.setProperty('overflow','visible','important');
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
-      bindTree(clone,contentOriginal);
       var card=d.createElement('button');
       card.type='button';card.className='m3-category';
       card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
