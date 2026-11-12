@@ -76,6 +76,15 @@ function mount(){
 #yiuSettingsPage .m3-setting-item:first-child{padding-top:14px!important}
 #yiuSettingsPage .m3-setting-item:last-child{padding-bottom:14px!important;border-bottom:0}
 #yiuSettingsPage .m3-setting-item>*{max-width:100%;min-width:0}
+#yiuSettingsPage .m3-setting-section{display:flex;flex-direction:column;gap:9px;min-width:0}
+#yiuSettingsPage .m3-hierarchy-title{display:flex;align-items:center;gap:9px;margin:2px 0 0;padding:0 2px;color:var(--cat-ink,#6750a4);font-size:13px;font-weight:750;letter-spacing:.2px}
+#yiuSettingsPage .m3-hierarchy-title:before{content:"";width:4px;height:15px;border-radius:4px;background:var(--cat-ink,#8b78c5)}
+#yiuSettingsPage .m3-setting-section-body{display:flex;flex-direction:column;gap:9px;min-width:0}
+#yiuSettingsPage .m3-setting-section-body>.m3-setting-item{margin:0}
+#yiuSettingsPage .m3-settings-body[data-category=system]{gap:19px!important}
+#yiuSettingsPage .m3-settings-body[data-category=developer]>.m3-setting-item{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+#yiuSettingsPage .m3-settings-body[data-category=developer] .m3-setting-section{padding:14px;border:1px solid var(--cat-border,#e8e2ef);border-radius:17px;background:var(--cat-soft,#faf9fc)}
+
 #yiuSettingsPage .m3-setting-item .qtip{background:rgba(255,255,255,.78)!important;color:#625d6b!important}
 #yiuSettingsPage .m3-setting-item .chk{background:rgba(255,255,255,.9)!important;border:1px solid var(--cat-border,#eee9f4)!important;border-radius:14px!important;padding:13px 14px!important}
 #yiuSettingsPage .m3-setting-item .chk span{color:#282431!important}
@@ -176,6 +185,73 @@ function mount(){
       mirrorNodes.push(el);
     });
   }
+  function addSectionHeading(parent,title){
+    var h=d.createElement('div');
+    h.className='m3-hierarchy-title';
+    h.textContent=title;
+    parent.appendChild(h);
+    return h;
+  }
+  function organizeSettingsHierarchy(clone,cfg){
+    if(cfg.id==='system'){
+      var items=[].slice.call(clone.querySelectorAll(':scope > .m3-setting-item'));
+      if(items.length<4)return;
+      var groups=[
+        {title:'界面与动画',items:items.slice(0,3)},
+        {title:'性能与效率',items:items.slice(3,4)},
+        {title:'恢复与维护',items:items.slice(4)}
+      ];
+      groups.forEach(function(g){
+        if(!g.items.length)return;
+        var section=d.createElement('section');
+        section.className='m3-setting-section';
+        addSectionHeading(section,g.title);
+        var body=d.createElement('div');
+        body.className='m3-setting-section-body';
+        g.items.forEach(function(item){body.appendChild(item)});
+        section.appendChild(body);
+        clone.appendChild(section);
+      });
+      return;
+    }
+    if(cfg.id==='developer'){
+      var root=clone.querySelector('.m3-setting-item > div');
+      if(!root)return;
+      var nodes=[].slice.call(root.children);
+      if(!nodes.length)return;
+      var order=['performance','monitor','logs','behavior','command','maintenance','other'];
+      var defs={
+        performance:{title:'画面与性能',test:/devResMul|performanceMode|渲染分辨率|性能优化/},
+        monitor:{title:'运行状态监测',test:/devJank|devFps|卡顿检测|实时帧率/},
+        logs:{title:'日志与诊断',test:/devFloatLogChk|devPauseLogChk|log-entry-btn|sys-log-entry-btn|悬浮窗日志|全屏日志|系统日志/},
+        behavior:{title:'界面行为',test:/dev_bgSwapDelay|dev_coverSwapDelay|背景换图等待|封面换图等待/},
+        command:{title:'命令窗口',test:/dev_cm_|命令窗口|键盘弹出|键盘收起|窗口高度/},
+        maintenance:{title:'维护工具',test:/force-reload-btn|强制刷新|节拍可视化/},
+        other:{title:'其他工具',test:/.*/}
+      };
+      var buckets={};
+      nodes.forEach(function(node){
+        var txt=(node.textContent||'')+' '+[].slice.call(node.querySelectorAll('[id]')).map(function(el){return el.id}).join(' ');
+        var key='other';
+        for(var i=0;i<order.length-1;i++){var k=order[i];if(defs[k].test.test(txt)){key=k;break;}}
+        (buckets[key]||(buckets[key]=[])).push(node);
+      });
+      root.textContent='';
+      order.forEach(function(key){
+        var group=buckets[key];if(!group||!group.length)return;
+        group.sort(function(a,b){return (parseFloat(a.style.order)||0)-(parseFloat(b.style.order)||0)});
+        var section=d.createElement('section');
+        section.className='m3-setting-section';
+        section.style.order=String(Math.min.apply(null,group.map(function(n){return parseFloat(n.style.order)||0})));
+        addSectionHeading(section,defs[key].title);
+        var body=d.createElement('div');
+        body.className='m3-setting-section-body';
+        group.forEach(function(node){node.style.order='0';body.appendChild(node)});
+        section.appendChild(body);
+        root.appendChild(section);
+      });
+    }
+  }
   function rebuildCategories(){
     sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
     mirrorNodes=[];
@@ -215,6 +291,7 @@ function mount(){
       clone.style.setProperty('overflow','visible','important');
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
+      organizeSettingsHierarchy(clone,cfg);
       var card=d.createElement('button');
       card.type='button';card.className='m3-category';
       card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
