@@ -417,7 +417,8 @@ function mount(){
   }
   function updateDedicatedSlider(slider,input,e){
     var rect=slider.getBoundingClientRect();
-    var usable=Math.max(1,rect.width-44);\n    var p=Math.max(0,Math.min(1,(e.clientX-(rect.left+22))/usable));
+    var usable=Math.max(1,rect.width-44);
+    var p=Math.max(0,Math.min(1,(e.clientX-(rect.left+22))/usable));
     var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1);
     var raw=min+(max-min)*p;
     var value=min+Math.round((raw-min)/step)*step;
