@@ -679,14 +679,8 @@ function mount(){
     src.dispatchEvent(new Event(e.type,{bubbles:true}));
     sync(clone);
   }
-  subpage.addEventListener('input',function(e){
-    if(e.target&&e.target.classList&&e.target.classList.contains('yiu-native-control'))return;
-    forwardValue(e);
-  });
-  subpage.addEventListener('change',function(e){
-    if(e.target&&e.target.classList&&e.target.classList.contains('yiu-native-control'))return;
-    forwardValue(e);
-  });
+  subpage.addEventListener('input',forwardValue);
+  subpage.addEventListener('change',forwardValue);
   subpage.addEventListener('pointercancel',function(e){
     if(activeRange&&e.target===activeRange){activeRange=null;sync();}
   },true);
