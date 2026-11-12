@@ -99,6 +99,9 @@ function mount(){
 #yiuSettingsPage .m3-hierarchy-title:before{background:var(--yiu-theme-accent)!important}
 #yiuSettingsPage .m3-setting-item{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;padding:15px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:17px!important;box-shadow:0 2px 8px rgba(40,32,70,.035)!important}
 #yiuSettingsPage .m3-setting-item>*{width:100%;min-width:0}
+#yiuSettingsPage .m3-setting-item .qr:has(input[type=range]){display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
+#yiuSettingsPage .m3-setting-item .qr>span{flex:none!important;white-space:nowrap!important;font-size:11px!important;color:#6a6574!important}
+#yiuSettingsPage .m3-setting-item .qr>input[type=range]{grid-column:2!important;min-width:0!important;width:100%!important;flex:none!important}
 #yiuSettingsPage .m3-setting-item .row:has(input[type=range]){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-width:0!important}
 #yiuSettingsPage .m3-setting-item .row:has(input[type=range])>span:first-child{width:auto!important;min-width:0!important;flex:none!important;line-height:1.35!important}
 #yiuSettingsPage .m3-setting-item .row:has(input[type=range])>input[type=range]{grid-column:2;min-width:0!important;width:100%!important;flex:none!important}
@@ -326,16 +329,30 @@ function mount(){
       var clone=d.createElement('div');
       clone.className='m3-settings-body';
       clone.setAttribute('data-category',cfg.id);
-      [].slice.call(contentOriginal.childNodes).forEach(function(node){
-        if(node.nodeType===3&&!node.textContent.trim())return;
-        if(node.nodeType!==1){clone.appendChild(node.cloneNode(true));return;}
-        var item=d.createElement('div');
-        item.className='m3-setting-item';
-        var child=node.cloneNode(true);
-        item.appendChild(child);
-        clone.appendChild(item);
-        bindTree(child,node);
-      });
+      var sourceChildren=[].slice.call(contentOriginal.childNodes).filter(function(node){return !(node.nodeType===3&&!node.textContent.trim())});
+      if(cfg.id==='system'){
+        // The system group is one logical settings card: title, range, hint,
+        // toggles and reset action must stay together instead of becoming five
+        // unrelated cards with large gaps between them.
+        var systemCard=d.createElement('div');
+        systemCard.className='m3-setting-item';
+        sourceChildren.forEach(function(node){
+          var child=node.cloneNode(true);
+          systemCard.appendChild(child);
+          if(node.nodeType===1)bindTree(child,node);
+        });
+        if(systemCard.childNodes.length)clone.appendChild(systemCard);
+      }else{
+        sourceChildren.forEach(function(node){
+          if(node.nodeType!==1){clone.appendChild(node.cloneNode(true));return;}
+          var item=d.createElement('div');
+          item.className='m3-setting-item';
+          var child=node.cloneNode(true);
+          item.appendChild(child);
+          clone.appendChild(item);
+          bindTree(child,node);
+        });
+      }
       clone.removeAttribute('hidden');
       clone.style.setProperty('display','flex','important');
       clone.style.setProperty('flex-direction','column','important');
