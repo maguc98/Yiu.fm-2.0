@@ -137,6 +137,8 @@ function mount(){
     var original=[].slice.call(source.children).find(cfg.match);
     if(!original)return;
     var clone=original.cloneNode(true);
+    clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
+    clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
     bindTree(clone,original);
     var card=d.createElement('button');
     card.type='button';card.className='m3-category';
