@@ -151,7 +151,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .m3-settings-body .yiu-slider{height:48px!important;min-height:48px!important}
 #yiuSettingsPage .m3-settings-body .yiu-slider-track{background:#dcdce2!important;box-shadow:none!important}
 #yiuSettingsPage .m3-settings-body .yiu-slider-fill{background:#121214!important}
-#yiuSettingsPage .m3-settings-body .yiu-slider-thumb{width:38px!important;height:26px!important;border:0!important;border-radius:999px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,20,40,.22)!important};
+#yiuSettingsPage .m3-settings-body .yiu-slider-thumb{width:38px!important;height:24px!important;border:0!important;border-radius:12px!important;background:#fff!important;box-shadow:0 2px 8px rgba(20,20,40,.20)!important};
 #yiuSettingsPage .m3-settings-body .m3-setting-item{border-radius:26px!important;padding:18px!important;gap:14px!important}
 #yiuSettingsPage #yiuMirror_yiuFrameRateSettings,#yiuSettingsPage #yiuFrameRateSettings{margin:0!important;padding:16px!important;border:0!important;border-radius:22px!important;background:#f3f6fb!important;gap:14px!important}
 #yiuSettingsPage #yiuMirror_yiuFrameRateSettings>div:first-child b,#yiuSettingsPage #yiuFrameRateSettings>div:first-child b{font-size:20px!important;font-weight:800!important;color:var(--yiu-theme-ink)!important}
@@ -219,14 +219,14 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · mirror-ui 20261112z';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · mirror-ui 20261112aa';
   page.appendChild(foot);
   d.body.appendChild(page);
 
   w.__yiuSettingsDiag=function(){
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
-      ui:'mirror-ui 20261112z',
+      ui:'mirror-ui 20261112aa',
       legacyPg5:!!d.getElementById('pg5'),
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
       launcher:!!d.getElementById('yiuSettingsLauncher'),
