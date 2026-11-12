@@ -170,14 +170,23 @@ jobs:
           manager_tags = [line.strip() for line in html.splitlines() if '<script' in line and 'APP/visualizer-manager.js' in line and '</script>' in line]
           if len(manager_tags) != 1:
               raise SystemExit(f"Expected one visualizer manager script tag, found {len(manager_tags)}; refusing to patch.")
+          fume_tag = '<script src="./APP/fume/fume.js?v=20261109b"></script>'
+          adapter_tag = '<script src="./APP/fume-adapter.js?v=20261109b"></script>'
           manager_tag = manager_tags[0]
-          manager_injection = chr(10).join([
-              '<script src="./APP/fume/fume.js?v=20261109c"></script>',
-              '<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>',
-              '<script src="./APP/fume-audio.js?v=20261109b"></script>',
-              '<script src="./APP/fume-adapter.js?v=20261111a"></script>',
-          ]) + chr(10)
-          html = html.replace(manager_tag, manager_injection + manager_tag + chr(10) + '<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
+          folia_tag = '<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>'
+          audio_tag = '<script src="./APP/fume-audio.js?v=20261109b"></script>'
+          coordinator_tag = '<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>'
+          if html.count(fume_tag) != 1 or html.count(adapter_tag) != 1:
+              raise SystemExit("Expected exactly one existing Fume runtime and adapter tag; refusing duplicate injection.")
+          if any(tag in html for tag in (folia_tag, audio_tag, coordinator_tag)):
+              raise SystemExit("A Fume support script is already present; refusing duplicate injection.")
+          html = html.replace(fume_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>', 1)
+          html = html.replace(adapter_tag, folia_tag + chr(10) + audio_tag + chr(10) + '<script src="./APP/fume-adapter.js?v=20261111a"></script>', 1)
+          html = html.replace(manager_tag, manager_tag + chr(10) + coordinator_tag, 1)
+          for tag in ("APP/fume/fume.js", "APP/fume-folia/fume-folia.js", "APP/fume-audio.js", "APP/fume-adapter.js", "APP/visualizer-manager.js", "APP/runtime/render-coordinator.js"):
+              count = sum(1 for line in html.splitlines() if '<script' in line and tag in line and '</script>' in line)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one {tag} script tag after normalization; found {count}.")
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
           new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
