@@ -192,7 +192,7 @@ jobs:
           html = html.replace(anchor, injected, 1)
           menus_anchor = '<script src="./APP/menus.js?v=20261025b"></script>'
           fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261111c"></script>'
-          full_settings_script = '<script src="./APP/settings-page.js?v=20261112m"></script>'
+          full_settings_script = '<script src="./APP/settings-page.js?v=20261112n"></script>'
           if html.count(menus_anchor) != 1 or fps_settings_script in html or full_settings_script in html:
               raise SystemExit("Expected one menus.js anchor and no prior settings scripts.")
           html = html.replace(menus_anchor, menus_anchor + chr(10) + fps_settings_script + chr(10) + full_settings_script, 1)
