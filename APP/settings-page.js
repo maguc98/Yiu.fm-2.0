@@ -33,7 +33,7 @@ function mount(){
 #yiuSettingsPage *{box-sizing:border-box}
 #yiuSettingsPage button,#yiuSettingsPage input{font:inherit}
 #yiuSettingsPage .m3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;min-height:54px;margin:0 -18px;padding:0 18px;background:rgba(246,243,251,.94);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-#yiuSettingsPage .m3-back{display:none;flex:none;width:42px;height:42px;border:0;border-radius:50%;background:transparent;color:var(--yiu-m3-ink);font-size:25px;line-height:1}
+#yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:50%;background:transparent;color:var(--yiu-m3-ink);font-size:25px;line-height:1}
 #yiuSettingsPage .m3-title{font-size:23px;line-height:1.2;font-weight:650;letter-spacing:-.4px}
 #yiuSettingsPage .m3-top.sub .m3-back{display:block}
 #yiuSettingsPage .m3-top.sub .m3-title{font-size:20px}
@@ -229,7 +229,7 @@ function mount(){
   }
   subpage.addEventListener('input',forwardValue);
   subpage.addEventListener('change',forwardValue);
-  top.querySelector('.m3-back').addEventListener('click',showHome);
+  top.querySelector('.m3-back').addEventListener('click',function(){if(!subpage.hidden)showHome();else close()});
 
   function open(){
     sync();
