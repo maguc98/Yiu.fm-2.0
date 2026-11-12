@@ -25,7 +25,7 @@ function mount(){
   style.textContent=`
 :root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
 #yiuSettingsPage{--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
-#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
 #yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
 #yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -71,6 +71,7 @@ function mount(){
 #yiuSettingsPage .m3-subpage .m3-setting-item .qtip{display:block!important;margin:0!important;padding:9px 10px;border:1px solid #e9e4ed;border-radius:11px;background:#f8f6fa!important;color:#5b5563!important;font-size:12px;line-height:1.5}
 #yiuSettingsPage .m3-subpage .m3-setting-item .chk{display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-height:52px!important;margin:0!important;padding:10px 12px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:13px!important;background:color-mix(in srgb,var(--yiu-theme-card) 92%,var(--yiu-theme-bg))!important;color:var(--yiu-theme-ink)!important;text-align:left!important;line-height:1.4!important}
 #yiuSettingsPage .m3-subpage .m3-setting-item .chk span{grid-column:1;min-width:0;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;grid-column:1!important;min-width:0!important}
 #yiuSettingsPage .m3-subpage .m3-setting-item .chip{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 13px!important;border:1px solid color-mix(in srgb,var(--yiu-theme-accent) 28%,var(--yiu-theme-line))!important;border-radius:12px!important;background:color-mix(in srgb,var(--yiu-theme-accent) 8%,var(--yiu-theme-card))!important;color:var(--yiu-theme-accent)!important;font-size:13px;font-weight:700}
 #yiuSettingsPage .m3-subpage .m3-setting-item .qd{margin:0!important;padding-top:9px;border-top:1px solid var(--yiu-theme-line)}
 #yiuSettingsPage .m3-subpage .m3-settings-body input:not([type=checkbox]):not([type=range]),#yiuSettingsPage .m3-subpage .m3-settings-body select,#yiuSettingsPage .m3-subpage .m3-settings-body textarea{max-width:100%;min-width:0;min-height:40px;padding:9px 11px;border:1px solid #dcd5e4;border-radius:10px;background:#fff;color:#292536;-webkit-text-fill-color:#292536}
@@ -434,6 +435,15 @@ function mount(){
           bindTree(child,node);
         });
       }
+      // Legacy wrapRange() creates .rw > input[type=range] + .gt. Remove that
+      // entire legacy skin from the cloned settings tree before adding our
+      // single Yiu slider; otherwise both thumbs/tracks render on top of each other.
+      clone.querySelectorAll('.rw').forEach(function(wrapper){
+        var range=wrapper.querySelector('input[type="range"]');
+        if(!range||!wrapper.parentNode)return;
+        wrapper.parentNode.insertBefore(range,wrapper);
+        wrapper.remove();
+      });
       clone.removeAttribute('hidden');
       clone.style.setProperty('display','flex','important');
       clone.style.setProperty('flex-direction','column','important');
