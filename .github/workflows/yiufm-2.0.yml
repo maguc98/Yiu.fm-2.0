@@ -251,6 +251,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/runtime/frame-scheduler.js
           node --check YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           node --check YiuFM/Resources/Web/APP/frame-rate-settings.js
+          node --check YiuFM/Resources/Web/APP/settings-page.js
           node --check YiuFM/Resources/Web/APP/runtime/render-coordinator.js
           node --check YiuFM/Resources/Web/APP/yiu-runtime.js
           node --check YiuFM/Resources/Web/APP/player.js
