@@ -52,6 +52,7 @@ function mount(){
   '#yiuSettingsPage .s-control-card input:not([type=checkbox]):not([type=range]),#yiuSettingsPage .s-control-card select,#yiuSettingsPage .s-control-card textarea{background:var(--s-card);color:var(--s-card-ink)}#yiuSettingsPage .s-control-card .chip{background:color-mix(in srgb,var(--s-accent) 10%,var(--s-card));color:var(--s-card-ink)}',
   '#yiuSettingsPage .s-footer{max-width:680px;margin:0 auto;padding:20px 0 5px;color:var(--s-sub);text-align:center;font-size:10px}#yiuSettingsPage .s-footer button{display:block;width:100%;margin:0 0 10px;padding:11px;border:1px solid var(--s-line);border-radius:12px;background:var(--s-card);color:var(--s-sub);font-size:12px}',
   '#yiuSettingsPage :focus-visible{outline:2px solid var(--s-accent);outline-offset:3px}#yiuSettingsPage button:disabled,#yiuSettingsPage input:disabled{opacity:.48;cursor:not-allowed}#yiuSettingsPage .s-empty{padding:22px 12px;color:var(--s-sub);text-align:center;font-size:12px}'
+  '#yiuSettingsPage .s-control-card .tnote,#yiuSettingsPage .s-control-card .qtip,#yiuSettingsPage .s-control-card .qr,#yiuSettingsPage .s-control-card .qr span{opacity:1!important;color:var(--s-card-sub)!important}#yiuSettingsPage .s-control-card .row span,#yiuSettingsPage .s-control-card .qh,#yiuSettingsPage .s-control-card .qh b{opacity:1!important;color:var(--s-card-ink)!important}#yiuSettingsPage .s-control-card :is(.tnote,.qtip,.qr,.row span,.qh,.qh b){text-shadow:none!important}',
   ].join('');
   d.head.appendChild(style);
 
