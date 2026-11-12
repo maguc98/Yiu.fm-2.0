@@ -72,6 +72,9 @@ function mount(){
 
   var mirror=source.cloneNode(true);
   mirror.id='yiuSettingsMirror';
+  var sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
+  var mirrorNodes=[mirror].concat([].slice.call(mirror.querySelectorAll('*')));
+  mirrorNodes.forEach(function(el,i){el.setAttribute('data-yiu-node-index',String(i));});
   mirror.querySelectorAll('[id]').forEach(function(el){
     var original=el.id;
     el.setAttribute('data-yiu-original-id',original);
@@ -90,12 +93,14 @@ function mount(){
   d.body.appendChild(page);
 
   function originalFor(el){
-    var node=el&&el.closest&&el.closest('[data-yiu-original-id]');
-    return node?d.getElementById(node.getAttribute('data-yiu-original-id')):null;
+    var node=el&&el.closest&&el.closest('[data-yiu-node-index]');
+    if(!node)return null;
+    var index=Number(node.getAttribute('data-yiu-node-index'));
+    return Number.isInteger(index)?sourceNodes[index]||null:null;
   }
   function syncFromOriginal(){
-    mirror.querySelectorAll('[data-yiu-original-id]').forEach(function(el){
-      var src=d.getElementById(el.getAttribute('data-yiu-original-id'));
+    mirrorNodes.forEach(function(el,index){
+      var src=sourceNodes[index];
       if(!src)return;
       if('checked' in src)el.checked=src.checked;
       if('value' in src&&src.type!=='button')el.value=src.value;
