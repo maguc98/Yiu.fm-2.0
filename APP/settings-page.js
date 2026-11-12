@@ -185,6 +185,26 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .m3-system-control-card .row+.row{margin-top:8px!important}
 #yiuSettingsPage .m3-system-control-card .tnote{color:#706a78!important;line-height:1.5!important}
 
+/* Typography contrast pass — consistent dark ink across the rebuilt settings UI. */
+#yiuSettingsPage{color:#454050!important}
+#yiuSettingsPage .m3-title,
+#yiuSettingsPage .m3-group-title,
+#yiuSettingsPage .m3-section-title,
+#yiuSettingsPage .m3-hero strong,
+#yiuSettingsPage .m3-cat-copy strong,
+#yiuSettingsPage .m3-hierarchy-title,
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qh,strong,b,label,.row,.chk span){color:#292536!important}
+#yiuSettingsPage .m3-subtitle,
+#yiuSettingsPage .m3-subdesc,
+#yiuSettingsPage .m3-hero small,
+#yiuSettingsPage .m3-cat-copy small,
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qr,.qtip,.hint,.desc,.subtext,small,p,.tnote){color:#625b6d!important}
+#yiuSettingsPage .m3-search{color:#454050!important}
+#yiuSettingsPage .m3-search input{color:#292536!important}
+#yiuSettingsPage .m3-search input::placeholder{color:#777080!important;opacity:1}
+#yiuSettingsPage .m3-chevron{color:#777080!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chip{color:#8572b5!important}
+
 `;
   d.head.appendChild(style);
 
