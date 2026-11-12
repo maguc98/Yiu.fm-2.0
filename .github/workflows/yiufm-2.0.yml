@@ -126,6 +126,11 @@ jobs:
           node --check APP/devtools.js
           node --check APP/settings-page.js
           grep -q "function buildDedicatedControls" APP/settings-page.js
+          grep -q "var configs=[" APP/settings-page.js
+          grep -q "legacy-ui-removed" APP/settings-page.js
+          ! grep -q "sourceFor" APP/settings-page.js
+          ! grep -q "data-yiu-source-index" APP/settings-page.js
+          ! grep -q "cloneNode(true)" APP/settings-page.js
           grep -q "data-yiu-control','switch'" APP/settings-page.js
           grep -q "yiu-slider-track" APP/settings-page.js
           grep -q "function updateDedicatedSlider" APP/settings-page.js
