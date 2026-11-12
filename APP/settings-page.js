@@ -583,16 +583,28 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     settingsLauncher.setAttribute('aria-controls','yiuSettingsPage');
     settingsLauncher.setAttribute('aria-label','系统设置');
     settingsLauncher.dataset.yiuSettingsEntrypoint='1';
-    // Own the visible settings entry and route it directly to this page.
-    settingsLauncher.addEventListener('click',function(e){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      recordEvent('settings-entry-click','dedicated settings page');
-      open();
-    },true);
   }else{
     recordEvent('entry-missing','cmore was not found when settings page mounted');
   }
+  // Route both the real toolbar button and its compact-toolbar proxy here.
+  // The proxy previously forwarded pointer events to #cmore; legacy pointer
+  // handlers could open the old panel before the click handler ran. Capture
+  // the full gesture at document level so replaced buttons/proxies stay safe.
+  function routeSettingsEntry(e){
+    var target=e.target;
+    var trigger=target&&target.closest&&target.closest('#cmore, #hbTools [data-for="cmore"]');
+    if(!trigger)return;
+    e.stopImmediatePropagation();
+    if(e.type==='pointerdown'||e.type==='touchstart'||e.type==='mousedown')return;
+    e.preventDefault();
+    if(!isOpen){
+      recordEvent('settings-entry-click','dedicated settings page via '+e.type);
+      open();
+    }
+  }
+  ['pointerdown','pointerup','touchstart','touchend','mousedown','mouseup','click'].forEach(function(type){
+    d.addEventListener(type,routeSettingsEntry,true);
+  });
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
   var stateObserver=new MutationObserver(function(mutations){
     mutations.forEach(function(m){
