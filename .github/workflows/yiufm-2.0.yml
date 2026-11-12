@@ -126,6 +126,8 @@ jobs:
           node --check APP/devtools.js
           node --check APP/settings-page.js
           grep -q "function buildDedicatedControls" APP/settings-page.js
+          grep -q "function routeSettingsEntry" APP/settings-page.js
+          grep -q "\\[\x27pointerdown\x27,\x27pointerup\x27,\x27touchstart\x27,\x27touchend\x27,\x27mousedown\x27,\x27mouseup\x27,\x27click\x27\\]" APP/settings-page.js
           grep -Fq "var configs=[" APP/settings-page.js
           grep -q "legacy-ui-removed" APP/settings-page.js
           ! grep -q "sourceFor" APP/settings-page.js
