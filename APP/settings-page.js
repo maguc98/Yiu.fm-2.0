@@ -369,6 +369,7 @@ function mount(){
     if(!page.classList.contains('is-hidden'))sync();
   });
   observer.observe(source,{subtree:true,childList:true,attributes:true,characterData:true});
+  w.addEventListener('yiu-dev-options-ready',function(){rebuildCategories();sync();});
   rebuildCategories();
   sync();
   return true;
