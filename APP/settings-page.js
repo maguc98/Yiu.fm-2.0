@@ -1,7 +1,7 @@
 /* Yiu.fm 2.0 — approved soft-lavender settings visual system.
- * Independent full-screen settings experience. Legacy #pg5 stays intact.
- * Mirrored controls forward events to the original controls to reuse their
- * existing handlers and persistence.
+ * The old #pg5 interface is retired and permanently hidden. Its controls remain
+ * mounted only as a private compatibility data source for settings handlers.
+ * The dedicated settings page is the sole user-facing settings interface.
  */
 (function(w,d){
 'use strict';
@@ -25,7 +25,7 @@ function mount(){
   style.textContent=`
 :root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
 #yiuSettingsPage{--sub:#625c6b;--yf-green:#8fb8a3;--yf-green-ink:#2f7a52;--yf-blue-ink:#5a79a8;--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
-body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:none!important}#pg5{display:none!important;visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
 #yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
 #yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -206,15 +206,16 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · mirror-ui 20261112z';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ab';
   page.appendChild(foot);
   d.body.appendChild(page);
 
   w.__yiuSettingsDiag=function(){
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
-      ui:'mirror-ui 20261112z',
-      legacyPg5:!!d.getElementById('pg5'),
+      ui:'dedicated-ui 20261112ab',
+      legacyPg5DataSource:!!d.getElementById('pg5'),
+      legacyUiRetired:!!d.getElementById('pg5')&&getComputedStyle(d.getElementById('pg5')).display==='none',
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
       launcher:!!d.getElementById('yiuSettingsLauncher'),
       legacyLauncher:!!d.getElementById('cmore'),
