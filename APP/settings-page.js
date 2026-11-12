@@ -42,11 +42,13 @@ function mount(){
   '#yiuSettingsPage .s-panel{width:100%;max-width:680px;margin:0 auto;padding:3px 0 20px}#yiuSettingsPage .s-panel-intro{margin:0 0 14px;padding:12px 13px;border:1px solid var(--s-line);border-radius:13px;background:#fff;color:var(--s-sub);font-size:12px;line-height:1.55}',
   '#yiuSettingsPage .s-section{margin:0 0 17px}#yiuSettingsPage .s-section-title{display:flex;align-items:center;gap:8px;margin:0 3px 9px;color:var(--s-sub);font-size:12px;font-weight:780}#yiuSettingsPage .s-section-title:before{content:"";width:4px;height:13px;border-radius:4px;background:var(--s-accent)}#yiuSettingsPage .s-section-body{display:flex;flex-direction:column;gap:9px}',
   '#yiuSettingsPage .s-control-card{display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-card);box-shadow:0 2px 7px rgba(37,45,70,.035)}#yiuSettingsPage .s-control-card>*{max-width:100%;min-width:0}#yiuSettingsPage .s-control-card .qh{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--s-ink);font-size:14px;font-weight:700}#yiuSettingsPage .s-control-card .qtip,#yiuSettingsPage .s-control-card .tnote{margin:0!important;padding:9px 10px;border-radius:10px;background:var(--s-bg);color:var(--s-sub)!important;font-size:11px;line-height:1.55}',
-  '#yiuSettingsPage .s-control-card .row{display:flex;align-items:center;gap:10px;min-height:38px;color:var(--s-ink)}#yiuSettingsPage .s-control-card .row>span:first-child{flex:1;min-width:0;font-size:13px}#yiuSettingsPage .s-control-card .qr{display:flex!important;align-items:center;gap:9px;color:var(--s-sub);font-size:11px}#yiuSettingsPage .s-control-card .qr>.rw,#yiuSettingsPage .s-control-card .qr>input[type=range]{flex:1;min-width:0}',
+  '#yiuSettingsPage .s-control-card [style*="color:#fff"],#yiuSettingsPage .s-control-card [style*="color: #fff"]{color:var(--s-ink)!important}',
+  '#yiuSettingsPage .s-control-card .yiu-frame-rate-toggle span{color:var(--s-ink)!important}#yiuSettingsPage .s-control-card .row{display:flex;align-items:center;gap:10px;min-height:38px;color:var(--s-ink)}#yiuSettingsPage .s-control-card .row>span:first-child{flex:1;min-width:0;font-size:13px}#yiuSettingsPage .s-control-card .qr{display:flex!important;align-items:center;gap:9px;color:var(--s-sub);font-size:11px}#yiuSettingsPage .s-control-card .qr>.rw,#yiuSettingsPage .s-control-card .qr>input[type=range]{flex:1;min-width:0}',
   '#yiuSettingsPage input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;display:inline-block;flex:none;width:48px;height:28px;margin:0;border:1.5px solid #c8ccda;border-radius:999px;background:#e8eaf0;vertical-align:middle;transition:background .16s,border-color .16s}#yiuSettingsPage input[type=checkbox]:after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #252b4030;transition:transform .16s}#yiuSettingsPage input[type=checkbox]:checked{border-color:var(--s-accent);background:var(--s-accent)}#yiuSettingsPage input[type=checkbox]:checked:after{transform:translateX(20px)}',
   '#yiuSettingsPage .rw{width:100%;min-width:0}#yiuSettingsPage .qr>.rw{grid-column:2;min-width:0}#yiuSettingsPage .rw>.gt{display:none!important}#yiuSettingsPage input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:34px;margin:0;padding:0;background:transparent;touch-action:pan-y}#yiuSettingsPage input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(to right,var(--s-accent) 0%,var(--s-accent) var(--s-progress,50%),#dfe2eb var(--s-progress,50%),#dfe2eb 100%)}#yiuSettingsPage input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:34px;height:24px;margin-top:-9px;border:0;border-radius:99px;background:#fff;box-shadow:0 2px 8px #252b4030}#yiuSettingsPage input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:#dfe2eb}#yiuSettingsPage input[type=range]::-moz-range-progress{height:6px;border-radius:99px;background:var(--s-accent)}#yiuSettingsPage input[type=range]::-moz-range-thumb{width:30px;height:22px;border:0;border-radius:99px;background:#fff;box-shadow:0 2px 8px #252b4030}',
   '#yiuSettingsPage input:not([type=checkbox]):not([type=range]),#yiuSettingsPage select,#yiuSettingsPage textarea{max-width:100%;min-width:0;min-height:40px;padding:9px 11px;border:1px solid #dce1eb;border-radius:11px;background:#fff;color:var(--s-ink)}#yiuSettingsPage .chip{min-height:39px;padding:9px 13px;border:1px solid #e0def1;border-radius:11px;background:#f4f2fc;color:#625ab2;font-size:12px;font-weight:700}#yiuSettingsPage .seg{display:flex;flex-wrap:wrap;gap:6px}',
   '#yiuSettingsPage .s-theme-card{margin:0 0 12px;padding:15px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-card)}#yiuSettingsPage .s-theme-card h3{margin:0 0 7px;font-size:14px}#yiuSettingsPage .s-theme-card p{margin:0 0 12px;color:var(--s-sub);font-size:11px;line-height:1.5}#yiuSettingsPage .s-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#yiuSettingsPage .s-preset{display:flex;align-items:center;gap:8px;min-height:40px;padding:8px 10px;border:1px solid var(--s-line);border-radius:11px;background:var(--s-card);color:var(--s-ink);font-size:12px}#yiuSettingsPage .s-preset i{width:17px;height:17px;border-radius:50%}#yiuSettingsPage .s-colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#yiuSettingsPage .s-color{display:flex;flex-direction:column;gap:6px;color:var(--s-sub);font-size:11px}#yiuSettingsPage .s-color input{width:100%;height:36px;padding:2px;border:1px solid var(--s-line);border-radius:9px;background:#fff}',
+  '#yiuSettingsPage .s-control-card input:not([type=checkbox]):not([type=range]),#yiuSettingsPage .s-control-card select,#yiuSettingsPage .s-control-card textarea{background:var(--s-card);color:var(--s-ink)}#yiuSettingsPage .s-control-card .chip{background:color-mix(in srgb,var(--s-accent) 10%,var(--s-card));color:var(--s-ink)}',
   '#yiuSettingsPage .s-footer{max-width:680px;margin:0 auto;padding:20px 0 5px;color:var(--s-sub);text-align:center;font-size:10px}#yiuSettingsPage .s-footer button{display:block;width:100%;margin:0 0 10px;padding:11px;border:1px solid var(--s-line);border-radius:12px;background:var(--s-card);color:var(--s-sub);font-size:12px}',
   '#yiuSettingsPage :focus-visible{outline:2px solid var(--s-accent);outline-offset:3px}#yiuSettingsPage button:disabled,#yiuSettingsPage input:disabled{opacity:.48;cursor:not-allowed}#yiuSettingsPage .s-empty{padding:22px 12px;color:var(--s-sub);text-align:center;font-size:12px}'
   ].join('');
@@ -64,7 +66,7 @@ function mount(){
     {id:'developer',title:'开发者选项',desc:'性能监测、调试与维护工具',icon:'<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg>',source:developer},
     {id:'theme',title:'主题与颜色',desc:'自定义设置页面的配色',icon:'<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.8 1.8 0 0 1 1.3-3.1H18a3 3 0 0 0 3-3c0-4.7-4-8.5-9-8.5Z"/><path d="M7.5 10h.01M10 7.5h.01M14 7.5h.01M16.5 10h.01"/></svg>'}
   ];
-  var active=null,previousFocus=null,previousOverflow='',opened=false;
+  var active=null,previousFocus=null,previousOverflow='',previousInert=[],opened=false;
   var themeDefaults={accent:'#7b75d5',bg:'#f4f6fb',card:'#ffffff',ink:'#222536'};
   var themePresets={
     lavender:{accent:'#7b75d5',bg:'#f4f6fb',card:'#ffffff',ink:'#222536'},
@@ -75,12 +77,20 @@ function mount(){
   };
   var theme=Object.assign({},themeDefaults);
   try{theme=Object.assign(theme,JSON.parse(w.localStorage.getItem('yiu.settings.theme.v1')||'{}'))}catch(_){}
+  function hexLuminance(hex){var v=hex.replace('#',''),r=parseInt(v.slice(0,2),16)/255,g=parseInt(v.slice(2,4),16)/255,b=parseInt(v.slice(4,6),16)/255;function f(x){return x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4)}return .2126*f(r)+.7152*f(g)+.0722*f(b)}
+  function contrastRatio(a,b){var x=hexLuminance(a),y=hexLuminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
   function applyTheme(save){
     Object.keys(themeDefaults).forEach(function(k){if(!/^#[0-9a-f]{6}$/i.test(theme[k]||''))theme[k]=themeDefaults[k]});
+    var effectiveInk=theme.ink;
+    if(Math.min(contrastRatio(effectiveInk,theme.bg),contrastRatio(effectiveInk,theme.card))<4.5){
+      var dark='#171923',light='#ffffff';
+      effectiveInk=Math.min(contrastRatio(dark,theme.bg),contrastRatio(dark,theme.card))>=Math.min(contrastRatio(light,theme.bg),contrastRatio(light,theme.card))?dark:light;
+    }
+    page.style.colorScheme=hexLuminance(theme.bg)>.45?'light':'dark';
     page.style.setProperty('--s-accent',theme.accent);
     page.style.setProperty('--s-bg',theme.bg);
     page.style.setProperty('--s-card',theme.card);
-    page.style.setProperty('--s-ink',theme.ink);
+    page.style.setProperty('--s-ink',effectiveInk);
     page.querySelectorAll('[data-theme-key]').forEach(function(el){el.value=theme[el.dataset.themeKey]});
     if(save)try{w.localStorage.setItem('yiu.settings.theme.v1',JSON.stringify(theme))}catch(_){}
   }
@@ -178,10 +188,19 @@ function mount(){
       el.style.setProperty('--s-progress',pct+'%');
     });
   }
+  function applyPanelFilter(cat,q){
+    var panel=cat.panel,matched=0,categoryMatch=!q||(cat.title+' '+cat.desc).toLocaleLowerCase().indexOf(q)>=0;
+    var cards=panel.querySelectorAll('.s-control-card');
+    Array.prototype.forEach.call(cards,function(card){var hit=categoryMatch||(card.textContent||'').toLocaleLowerCase().indexOf(q)>=0;card.hidden=!!q&&!hit;if(hit)matched++});
+    panel.querySelectorAll('.s-section').forEach(function(section){var visible=section.querySelector('.s-control-card:not([hidden])');section.hidden=!!q&&!visible});
+    if(!cards.length)matched=categoryMatch||(panel.textContent||'').toLocaleLowerCase().indexOf(q)>=0?1:0;
+    return matched>0;
+  }
   function openCategory(id){
     var cat=cats.find(function(c){return c.id===id});if(!cat)return;
     active=cat;home.hidden=true;panels.hidden=false;cat.panel.hidden=false;
     cats.forEach(function(c){if(c!==cat)c.panel.hidden=true});
+    applyPanelFilter(cat,search.value.trim().toLocaleLowerCase());
     title.textContent=cat.title;subtitle.textContent=cat.desc;subtitle.hidden=false;
     footer.hidden=true;page.scrollTop=0;updateRanges(cat.panel);
   }
@@ -192,14 +211,14 @@ function mount(){
   function filterCategories(q){
     var count=0;
     cats.forEach(function(cat){
-      var text=(cat.title+' '+cat.desc+' '+(cat.panel.textContent||'')).toLocaleLowerCase();
-      var match=!q||text.indexOf(q)>=0;
+      var match=applyPanelFilter(cat,q);
       cat.card.hidden=!match;if(match)count++;
     });
     empty.hidden=!q||count>0;
   }
   function open(){
-    if(opened)return;opened=true;previousFocus=d.activeElement;previousOverflow=d.body.style.overflow;
+    if(opened)return;opened=true;previousFocus=d.activeElement;previousOverflow=d.body.style.overflow;previousInert=[];
+    Array.prototype.forEach.call(d.body.children,function(el){if(el!==page&&'inert' in el){previousInert.push({el:el,value:el.inert});el.inert=true}});
     page.classList.remove('is-hidden');page.classList.add('is-open');page.setAttribute('aria-hidden','false');
     d.body.classList.add('yiu-full-settings-open');d.body.style.overflow='hidden';
     var trigger=d.getElementById('cmore');if(trigger)trigger.setAttribute('aria-expanded','true');
@@ -207,6 +226,7 @@ function mount(){
   }
   function close(){
     if(!opened)return;opened=false;page.classList.remove('is-open');page.classList.add('is-hidden');page.setAttribute('aria-hidden','true');
+    previousInert.forEach(function(item){item.el.inert=item.value});previousInert=[];
     d.body.classList.remove('yiu-full-settings-open');d.body.style.overflow=previousOverflow;
     var trigger=d.getElementById('cmore');if(trigger)trigger.setAttribute('aria-expanded','false');
     if(previousFocus&&previousFocus.focus)previousFocus.focus();
@@ -250,12 +270,21 @@ function mount(){
     e.preventDefault();if(!opened)open();
   }
   ['pointerdown','pointerup','touchstart','touchend','mousedown','mouseup','click'].forEach(function(type){d.addEventListener(type,routeEntry,true)});
-  d.addEventListener('keydown',function(e){if(e.key==='Escape'&&opened){if(active)showHome();else close()}});
+  d.addEventListener('keydown',function(e){
+    if(!opened)return;
+    if(e.key==='Escape'){if(active)showHome();else close();return}
+    if(e.key!=='Tab')return;
+    var focusable=Array.prototype.filter.call(page.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),function(el){return !el.hidden&&el.getClientRects().length>0});
+    if(!focusable.length){e.preventDefault();page.querySelector('.s-back').focus();return}
+    var first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey&&(d.activeElement===first||!page.contains(d.activeElement))){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&(d.activeElement===last||!page.contains(d.activeElement))){e.preventDefault();first.focus()}
+  });
   d.addEventListener('change',function(e){if(e.target&&e.target.matches&&e.target.matches('input[type=range]'))updateRanges(page)});
   applyTheme(false);updateRanges(page);
   if(source.querySelector('#appVersion'))page.querySelector('.s-footer div').textContent=source.querySelector('#appVersion').textContent+' · 设置保存在本机';
   root.remove();
-  w.__yiuSettingsDiag=function(){return {ui:'native-settings-20261112b',mounted:!!d.getElementById('yiuSettingsPage'),categories:cats.map(function(c){return c.id}),sourceRemoved:!d.getElementById('yiuSettingsDataRoot'),controls:page.querySelectorAll('input,select,textarea,button').length}};
+  w.__yiuSettingsDiag=function(){return {ui:'native-settings-20261112d',mounted:!!d.getElementById('yiuSettingsPage'),categories:cats.map(function(c){return c.id}),sourceRemoved:!d.getElementById('yiuSettingsDataRoot'),controls:page.querySelectorAll('input,select,textarea,button').length}};
   return true;
 }
 var timer=w.setInterval(function(){tries++;if(mount()||tries>=80)w.clearInterval(timer)},100);
