@@ -86,6 +86,49 @@ function mount(){
 #yiuSettingsPage .m3-footer{max-width:680px;margin:0 auto;padding:23px 0 5px;color:#77717e;text-align:center;font-size:11px}
 @media(min-width:600px){#yiuSettingsPage{padding-left:28px;padding-right:28px}#yiuSettingsPage .m3-top{margin-left:-28px;margin-right:-28px;padding-left:25px;padding-right:28px}#yiuSettingsPage .m3-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 @media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open,#yiuSettingsPage .m3-category,#yiuSettingsPage .m3-subpage .m3-settings-body input[type=checkbox],#yiuSettingsPage .m3-subpage .m3-settings-body input[type=checkbox]::before{animation:none!important;transition:none!important}}
+
+/* Yiu.fm settings controls v3: stable geometry, predictable spacing, and theme tokens. */
+#yiuSettingsPage{--yiu-theme-accent:#7565dc;--yiu-theme-bg:#f4f2ff;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e6e1f1;background:var(--yiu-theme-bg)!important;color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage .m3-top{background:color-mix(in srgb,var(--yiu-theme-bg) 94%,white)!important;border-bottom-color:var(--yiu-theme-line)!important}
+#yiuSettingsPage .m3-title,#yiuSettingsPage .m3-group-title{color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage .m3-category,#yiuSettingsPage .m3-setting-item{background:var(--yiu-theme-card)!important;border-color:var(--yiu-theme-line)!important}
+#yiuSettingsPage .m3-icon{color:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-category:active{border-color:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-subdesc{background:color-mix(in srgb,var(--yiu-theme-accent) 7%,var(--yiu-theme-card))!important;border-color:var(--yiu-theme-line)!important;color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage .m3-hierarchy-title{color:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-hierarchy-title:before{background:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-setting-item{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;padding:15px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:17px!important;box-shadow:0 2px 8px rgba(40,32,70,.035)!important}
+#yiuSettingsPage .m3-setting-item>*{width:100%;min-width:0}
+#yiuSettingsPage .m3-setting-item .row:has(input[type=range]){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-width:0!important}
+#yiuSettingsPage .m3-setting-item .row:has(input[type=range])>span:first-child{width:auto!important;min-width:0!important;flex:none!important;line-height:1.35!important}
+#yiuSettingsPage .m3-setting-item .row:has(input[type=range])>input[type=range]{grid-column:2;min-width:0!important;width:100%!important;flex:none!important}
+#yiuSettingsPage .m3-setting-item .chk{display:grid!important;grid-template-columns:minmax(0,1fr) 52px!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-height:54px!important;margin:0!important;padding:11px 13px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:14px!important;background:color-mix(in srgb,var(--yiu-theme-card) 90%,var(--yiu-theme-bg))!important;text-align:left!important;line-height:1.35!important}
+#yiuSettingsPage .m3-setting-item .chk>:not(input[type=checkbox]){grid-column:1!important;grid-row:1!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;text-align:left!important}
+#yiuSettingsPage .m3-setting-item .chk input[type=checkbox],#yiuSettingsPage .m3-setting-item input[type=checkbox][role=switch]{-webkit-appearance:none!important;appearance:none!important;position:relative!important;inset:auto!important;float:none!important;display:block!important;grid-column:2!important;grid-row:1!important;justify-self:end!important;flex:none!important;width:50px!important;min-width:50px!important;max-width:50px!important;height:30px!important;min-height:30px!important;margin:0!important;padding:0!important;border:0!important;border-radius:999px!important;background:#d7d4df!important;box-shadow:inset 0 0 0 1px rgba(50,42,70,.08)!important;transform:none!important;overflow:hidden!important;cursor:pointer!important}
+#yiuSettingsPage .m3-setting-item .chk input[type=checkbox]::before,#yiuSettingsPage .m3-setting-item input[type=checkbox][role=switch]::before{content:""!important;position:absolute!important;left:3px!important;top:3px!important;width:24px!important;height:24px!important;margin:0!important;border:0!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 3px rgba(30,24,40,.2)!important;transform:translateX(0)!important;transition:transform .18s ease!important}
+#yiuSettingsPage .m3-setting-item .chk input[type=checkbox]:checked,#yiuSettingsPage .m3-setting-item input[type=checkbox][role=switch]:checked{background:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-setting-item .chk input[type=checkbox]:checked::before,#yiuSettingsPage .m3-setting-item input[type=checkbox][role=switch]:checked::before{transform:translateX(20px)!important}
+#yiuSettingsPage .m3-setting-item input[type=range]{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0 12px!important;border:0!important;background:transparent!important;-webkit-appearance:none!important;appearance:none!important;touch-action:pan-y!important}
+#yiuSettingsPage .m3-setting-item input[type=range]::-webkit-slider-runnable-track{height:6px!important;border:0!important;border-radius:999px!important;background:linear-gradient(to right,var(--yiu-theme-accent) 0%,var(--yiu-theme-accent) var(--yiu-range-progress),#dedbe7 var(--yiu-range-progress),#dedbe7 100%)!important}
+#yiuSettingsPage .m3-setting-item input[type=range]::-webkit-slider-thumb{-webkit-appearance:none!important;appearance:none!important;width:22px!important;height:22px!important;margin-top:-8px!important;border:3px solid #fff!important;border-radius:50%!important;background:var(--yiu-theme-accent)!important;box-shadow:0 1px 4px rgba(30,24,40,.22)!important}
+#yiuSettingsPage .m3-setting-item input[type=range]::-moz-range-track{height:6px!important;border:0!important;border-radius:999px!important;background:#dedbe7!important}
+#yiuSettingsPage .m3-setting-item input[type=range]::-moz-range-progress{height:6px!important;border-radius:999px!important;background:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-setting-item input[type=range]::-moz-range-thumb{width:16px!important;height:16px!important;border:3px solid #fff!important;border-radius:50%!important;background:var(--yiu-theme-accent)!important;box-shadow:0 1px 4px rgba(30,24,40,.22)!important}
+#yiuSettingsPage .m3-setting-item input[type=range]:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 28%,transparent)!important;outline-offset:2px!important;border-radius:999px!important}
+#yiuSettingsPage .m3-theme-panel{display:flex;flex-direction:column;gap:14px}
+#yiuSettingsPage .m3-theme-card{padding:15px;border:1px solid var(--yiu-theme-line);border-radius:17px;background:var(--yiu-theme-card)}
+#yiuSettingsPage .m3-theme-card h3{margin:0 0 5px;color:var(--yiu-theme-ink);font-size:14px}
+#yiuSettingsPage .m3-theme-card p{margin:0 0 12px;color:#686273;font-size:12px;line-height:1.5}
+#yiuSettingsPage .m3-theme-presets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+#yiuSettingsPage .m3-theme-preset{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:8px 3px;border:1px solid var(--yiu-theme-line);border-radius:12px;background:var(--yiu-theme-card);color:var(--yiu-theme-ink);font-size:10px}
+#yiuSettingsPage .m3-theme-preset i{display:block;width:27px;height:27px;border:3px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 0 1px rgba(40,32,70,.12)}
+#yiuSettingsPage .m3-theme-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#yiuSettingsPage .m3-theme-field{display:flex;flex-direction:column;gap:7px;min-width:0;color:var(--yiu-theme-ink);font-size:12px;font-weight:650}
+#yiuSettingsPage .m3-theme-field input[type=color]{width:100%!important;min-width:0!important;height:42px!important;padding:3px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:11px!important;background:var(--yiu-theme-card)!important}
+#yiuSettingsPage .m3-theme-actions{display:flex;justify-content:flex-end;margin-top:12px}
+#yiuSettingsPage .m3-theme-reset{min-height:40px;padding:0 15px;border:0;border-radius:12px;background:color-mix(in srgb,var(--yiu-theme-accent) 12%,var(--yiu-theme-card));color:var(--yiu-theme-accent);font-size:13px;font-weight:700}
+@media(max-width:380px){#yiuSettingsPage .m3-theme-presets{gap:5px}#yiuSettingsPage .m3-theme-preset{font-size:9px}}
+
 `;
   d.head.appendChild(style);
 
@@ -227,6 +270,44 @@ function mount(){
       });
     }
   }
+  var themeDefaults={accent:'#7565dc',bg:'#f4f2ff',card:'#ffffff',ink:'#292536'};
+  var themePresets={
+    lavender:{accent:'#7565dc',bg:'#f4f2ff',card:'#ffffff',ink:'#292536'},
+    blue:{accent:'#5486d8',bg:'#eef5ff',card:'#ffffff',ink:'#253247'},
+    green:{accent:'#4d9b7a',bg:'#eff8f2',card:'#ffffff',ink:'#263b32'},
+    peach:{accent:'#d58a63',bg:'#fff4ec',card:'#ffffff',ink:'#443127'},
+    pink:{accent:'#cf729b',bg:'#fff1f6',card:'#ffffff',ink:'#432b38'}
+  };
+  var settingsTheme={};
+  try{settingsTheme=Object.assign({},themeDefaults,JSON.parse(w.localStorage.getItem('yiu.settings.theme.v1')||'{}'))}catch(_){settingsTheme=Object.assign({},themeDefaults)}
+  function applySettingsTheme(save){
+    Object.keys(themeDefaults).forEach(function(key){var value=settingsTheme[key];if(!/^#[0-9a-fA-F]{6}$/.test(value||''))settingsTheme[key]=themeDefaults[key]});
+    page.style.setProperty('--yiu-theme-accent',settingsTheme.accent);
+    page.style.setProperty('--yiu-theme-bg',settingsTheme.bg);
+    page.style.setProperty('--yiu-theme-card',settingsTheme.card);
+    page.style.setProperty('--yiu-theme-ink',settingsTheme.ink);
+    if(save)try{w.localStorage.setItem('yiu.settings.theme.v1',JSON.stringify(settingsTheme))}catch(_){}
+    var fields=page.querySelectorAll('[data-theme-key]');
+    fields.forEach(function(input){input.value=settingsTheme[input.getAttribute('data-theme-key')]||themeDefaults[input.getAttribute('data-theme-key')]});
+  }
+  function addThemeCategory(){
+    var cfg={id:'theme',title:'主题与颜色',desc:'自定义设置页面的配色方案',icon:''};
+    var card=d.createElement('button');card.type='button';card.className='m3-category';card.setAttribute('data-category','theme');
+    card.innerHTML='<span class="m3-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4a12 12 0 1 0 0 24h2.2a3 3 0 0 0 2.2-5c-.9-1-.3-2.5 1.1-2.5H23a5 5 0 0 0 5-5C28 9.1 22.6 4 16 4Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="13" r="1.7" fill="currentColor"/><circle cx="15" cy="9" r="1.7" fill="currentColor"/><circle cx="21" cy="12" r="1.7" fill="currentColor"/></svg></span><span class="m3-cat-copy"><strong>主题与颜色</strong><small>自定义设置页面的配色方案</small></span><span class="m3-chevron">›</span>';
+    list.appendChild(card);
+    var panel=d.createElement('section');panel.className='m3-category-panel';panel.setAttribute('data-panel','theme');panel.setAttribute('data-category','theme');
+    var desc=d.createElement('p');desc.className='m3-subdesc';desc.textContent=cfg.desc;panel.appendChild(desc);
+    var h=d.createElement('h2');h.className='m3-group-title';h.textContent=cfg.title;panel.appendChild(h);
+    var body=d.createElement('div');body.className='m3-theme-panel';
+    var presets=d.createElement('section');presets.className='m3-theme-card';
+    presets.innerHTML='<h3>预设主题</h3><p>选择一套清爽配色，也可以在下方逐项微调。</p><div class="m3-theme-presets"><button type="button" class="m3-theme-preset" data-theme-preset="lavender"><i style="background:#7565dc"></i>薰衣草</button><button type="button" class="m3-theme-preset" data-theme-preset="blue"><i style="background:#5486d8"></i>晴空蓝</button><button type="button" class="m3-theme-preset" data-theme-preset="green"><i style="background:#4d9b7a"></i>薄荷绿</button><button type="button" class="m3-theme-preset" data-theme-preset="peach"><i style="background:#d58a63"></i>蜜桃橙</button><button type="button" class="m3-theme-preset" data-theme-preset="pink"><i style="background:#cf729b"></i>樱花粉</button></div>';
+    body.appendChild(presets);
+    var custom=d.createElement('section');custom.className='m3-theme-card';
+    custom.innerHTML='<h3>自定义颜色</h3><p>这些颜色只影响 Yiu.fm 设置页面，不会改变播放器画面或歌词主题。</p><div class="m3-theme-fields"><label class="m3-theme-field">强调色<input type="color" data-theme-key="accent"></label><label class="m3-theme-field">页面底色<input type="color" data-theme-key="bg"></label><label class="m3-theme-field">卡片颜色<input type="color" data-theme-key="card"></label><label class="m3-theme-field">文字颜色<input type="color" data-theme-key="ink"></label></div><div class="m3-theme-actions"><button type="button" class="m3-theme-reset" data-theme-reset>恢复默认配色</button></div>';
+    body.appendChild(custom);panel.appendChild(body);subpage.appendChild(panel);
+    categories.push({cfg:cfg,card:card,panel:panel,clone:body});
+    applySettingsTheme(false);
+  }
   function rebuildCategories(){
     sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
     mirrorNodes=[];
@@ -298,6 +379,7 @@ function mount(){
       subpage.appendChild(panel);
       categories.push({cfg:cfg,card:card,panel:panel,clone:clone,original:original});
     });
+    addThemeCategory();
     if(typeof updateSearch==='function')updateSearch();
   }
   rebuildCategories();
@@ -413,6 +495,9 @@ function mount(){
   subpage.addEventListener('click',function(e){
     var control=e.target.closest('button,[role="button"]');
     if(!control)return;
+    var preset=control.getAttribute('data-theme-preset');
+    if(preset&&themePresets[preset]){settingsTheme=Object.assign({},themePresets[preset]);applySettingsTheme(true);return;}
+    if(control.hasAttribute('data-theme-reset')){settingsTheme=Object.assign({},themeDefaults);applySettingsTheme(true);return;}
     var src=sourceFor(control);if(!src)return;
     if(src.classList.contains('gh'))return;
     src.click();
@@ -420,8 +505,10 @@ function mount(){
   });
   var activeRange=null;
   function forwardValue(e){
-    var src=sourceFor(e.target);if(!src)return;
     var clone=e.target;
+    var themeKey=clone&&clone.getAttribute&&clone.getAttribute('data-theme-key');
+    if(themeKey&&Object.prototype.hasOwnProperty.call(themeDefaults,themeKey)){settingsTheme[themeKey]=clone.value;applySettingsTheme(true);return;}
+    var src=sourceFor(clone);if(!src)return;
     if('checked' in clone)src.checked=clone.checked;
     if('value' in clone)src.value=clone.value;
     // A range drag is a hot path: forward only the value and paint the active
