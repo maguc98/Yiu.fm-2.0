@@ -91,7 +91,13 @@ function mount(){
 #yiuSettingsPage .m3-setting-item input[type=range]{accent-color:var(--cat-ink,#8b78c5)}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qh{display:flex!important;align-items:center;justify-content:space-between;margin:0!important;padding:0!important;color:var(--yiu-m3-ink)!important;font-size:15px;font-weight:700}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qr{display:flex!important;align-items:center;gap:10px;margin:0!important;padding:0!important;color:var(--yiu-m3-sub)!important}
-#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]{display:block!important;flex:1;min-width:80px;width:100%;height:28px;accent-color:var(--yiu-m3-primary);touch-action:pan-y}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]{--yiu-range-progress:0%;display:block!important;flex:1;min-width:80px;width:100%;height:32px;margin:0;padding:0;border:0;border-radius:999px;background:transparent!important;accent-color:#6550a4;touch-action:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]::-webkit-slider-runnable-track{height:7px;border-radius:999px;background:linear-gradient(to right,#6550a4 0%,#6550a4 var(--yiu-range-progress),#c9c3d3 var(--yiu-range-progress),#c9c3d3 100%);border:1px solid rgba(66,53,88,.12);}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-8px;border:3px solid #fff;border-radius:50%;background:#6550a4;box-shadow:0 1px 4px rgba(35,25,55,.28),0 0 0 1px rgba(67,49,103,.22);}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]::-moz-range-track{height:7px;border-radius:999px;background:#c9c3d3;border:1px solid rgba(66,53,88,.12);}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]::-moz-range-progress{height:7px;border-radius:999px;background:#6550a4;}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]::-moz-range-thumb{width:16px;height:16px;border:3px solid #fff;border-radius:50%;background:#6550a4;box-shadow:0 1px 4px rgba(35,25,55,.28);}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]:focus-visible{outline:2px solid rgba(101,80,164,.45);outline-offset:4px;border-radius:999px;}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qtip{display:block!important;margin:0!important;padding:10px 12px;border-radius:13px;background:#f6f3fb;color:var(--yiu-m3-sub)!important;font-size:12px;line-height:1.55}
 #yiuSettingsPage .m3-subpage .m3-settings-body .chk{display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0!important;padding:13px 14px!important;border:1px solid #eeeaf3;border-radius:15px;background:#faf9fc!important;color:var(--yiu-m3-ink)!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body .chk span{color:var(--yiu-m3-ink)!important;font-size:14px}
@@ -389,8 +395,15 @@ function mount(){
     var i=Number(node.getAttribute('data-yiu-source-index'));
     return Number.isInteger(i)&&i>=0?sourceNodes[i]||null:null;
   }
-  function sync(){
+  function paintRange(el){
+    if(!el||el.type!=='range')return;
+    var min=Number(el.min||0),max=Number(el.max||100),value=Number(el.value||0);
+    var progress=max>min?(value-min)/(max-min):0;
+    el.style.setProperty('--yiu-range-progress',(Math.max(0,Math.min(1,progress))*100).toFixed(2)+'%');
+  }
+  function sync(skipNode){
     mirrorNodes.forEach(function(el){
+      if(el===skipNode)return;
       var src=sourceFor(el);if(!src)return;
       if('checked' in src)el.checked=src.checked;
       if('value' in src&&src.type!=='button')el.value=src.value;
@@ -400,6 +413,7 @@ function mount(){
       ['on','open','hide','show','active'].forEach(function(c){el.classList.toggle(c,src.classList.contains(c))});
       ['aria-pressed','aria-expanded','aria-checked','aria-disabled','aria-label','title'].forEach(function(a){if(src.hasAttribute(a))el.setAttribute(a,src.getAttribute(a));else el.removeAttribute(a)});
       if(src.textContent!==el.textContent&&src.children.length===0)el.textContent=src.textContent;
+      paintRange(el);
     });
   }
   function updateSearch(){
@@ -496,8 +510,15 @@ function mount(){
     var clone=e.target;
     if('checked' in clone)src.checked=clone.checked;
     if('value' in clone)src.value=clone.value;
+    // Forward the live value to the original control, but never rewrite the
+    // actively dragged mirror from a second sync pass. This avoids thumb lag
+    // and the release-only jump seen in iOS WKWebView range inputs.
     src.dispatchEvent(new Event(e.type,{bubbles:true}));
-    sync();
+    if(clone.type==='range'){
+      var min=Number(clone.min||0),max=Number(clone.max||100),value=Number(clone.value||0);
+      clone.style.setProperty('--yiu-range-progress',((max>min?(value-min)/(max-min):0)*100).toFixed(2)+'%');
+      sync(clone);
+    }else sync(clone);
   }
   subpage.addEventListener('input',forwardValue);
   subpage.addEventListener('change',forwardValue);
