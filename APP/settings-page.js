@@ -123,6 +123,48 @@ function mount(){
 #yiuSettingsPage .m3-subpage .m3-hierarchy-title{color:var(--cat-ink,#49366f)!important}
 #yiuSettingsPage .m3-subdesc{color:#45404c!important}
 
+
+/* Final readability pass: cover inherited/inline WebKit text-fill colors too. */
+#yiuSettingsPage .m3-subpage .m3-settings-body :is(div,span,p,label,strong,b,small,em,i,a,output,summary){
+  color:#24212b!important;
+  -webkit-text-fill-color:#24212b!important;
+  text-shadow:none!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body :is(.m3-hierarchy-title,.m3-group-title){
+  color:var(--cat-ink,#49366f)!important;
+  -webkit-text-fill-color:var(--cat-ink,#49366f)!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body :is(.qtip,.hint,.desc,.subtext,.qr,small,p){
+  color:#514b58!important;
+  -webkit-text-fill-color:#514b58!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body :is(button,.chip){
+  color:#49366f!important;
+  -webkit-text-fill-color:#49366f!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input:not([type=checkbox]):not([type=range]),
+#yiuSettingsPage .m3-subpage .m3-settings-body select,
+#yiuSettingsPage .m3-subpage .m3-settings-body textarea{
+  color:#24212b!important;
+  -webkit-text-fill-color:#24212b!important;
+  background-color:#fff!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input::placeholder,
+#yiuSettingsPage .m3-subpage .m3-settings-body textarea::placeholder{
+  color:#6a6471!important;
+  -webkit-text-fill-color:#6a6471!important;
+  opacity:1!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body :disabled,
+#yiuSettingsPage .m3-subpage .m3-settings-body [aria-disabled=true]{
+  opacity:.72!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body :disabled :is(span,small,label),
+#yiuSettingsPage .m3-subpage .m3-settings-body [aria-disabled=true] :is(span,small,label){
+  color:#625c69!important;
+  -webkit-text-fill-color:#625c69!important;
+}
+
 #yiuSettingsPage .m3-footer{padding:22px 0 5px;text-align:center;font-size:11px;color:#817b88}
 @media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open{animation:none}}
 `;
