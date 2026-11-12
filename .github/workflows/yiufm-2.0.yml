@@ -9,6 +9,7 @@ on:
       - fix/folia-bundle-boot-diagnostics
     paths:
       - "APP/**"
+      - "index.html"
       - "YiuFM/**"
       - ".github/workflows/yiufm-2.0.yml"
 
