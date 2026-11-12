@@ -91,8 +91,16 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .yiu-slider{position:relative!important;display:block!important;width:100%!important;min-width:0!important;height:44px!important;min-height:44px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;touch-action:pan-y!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;-webkit-tap-highlight-color:transparent!important}
 #yiuSettingsPage .yiu-slider-track{position:absolute!important;left:10px!important;right:10px!important;top:50%!important;height:6px!important;transform:translateY(-50%)!important;border:0!important;border-radius:999px!important;background:#b8b3c1!important;box-shadow:inset 0 1px 1px rgba(35,28,55,.12)!important;overflow:visible!important}
 #yiuSettingsPage .yiu-slider-fill{position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:var(--yiu-slider-progress,0%)!important;border-radius:999px!important;background:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:20px!important;height:20px!important;transform:translate(-50%,-50%)!important;border:2px solid var(--yiu-theme-accent)!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 9px rgba(35,28,55,.28),0 0 0 2px rgba(255,255,255,.96)!important}
-#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.12)!important}
+#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:24px!important;height:14px!important;transform:translate(-50%,-50%)!important;border:1.5px solid var(--yiu-theme-accent)!important;border-radius:5px!important;background:#fff!important;box-shadow:0 2px 6px rgba(35,28,55,.18),0 0 0 2px rgba(255,255,255,.92)!important;transition:transform .12s ease,box-shadow .12s ease!important}
+#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.08,1.12)!important}
+#yiuSettingsPage .m3-system-section{margin:0 0 16px!important}
+#yiuSettingsPage .m3-system-section .m3-hierarchy-title{margin:0 3px 9px!important;color:#625c70!important;font-size:12px!important;font-weight:750!important;letter-spacing:.2px!important}
+#yiuSettingsPage .m3-system-section-body{display:flex!important;flex-direction:column!important;gap:9px!important}
+#yiuSettingsPage .m3-system-control-card{padding:13px 14px!important;border:1px solid #e8e2ef!important;border-radius:15px!important;background:#fff!important;box-shadow:0 2px 8px rgba(48,38,75,.035)!important}
+#yiuSettingsPage .m3-system-control-card>.row{margin:0!important}
+#yiuSettingsPage .m3-system-control-card .row{min-height:38px!important}
+#yiuSettingsPage .m3-system-control-card .row+ .row{margin-top:8px!important}
+#yiuSettingsPage .m3-system-control-card .tnote{color:#706a78!important;line-height:1.5!important}
 #yiuSettingsPage .yiu-slider:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 30%,transparent)!important;outline-offset:2px!important;border-radius:999px!important}
 #yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-track{background:#dedbe3!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-fill{background:#bdb7c7!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-thumb{border-color:#bdb7c7!important;box-shadow:none!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;font-size:14px!important;font-weight:650!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled){grid-template-columns:minmax(0,1fr) 48px!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{font-size:14px!important;font-weight:650!important;line-height:1.4!important;color:var(--yiu-theme-ink)!important}#yiuSettingsPage .yiu-frame-rate-range{transition:opacity .16s ease,filter .16s ease}#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.48!important;filter:grayscale(.25)!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading,#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading *{color:#827c89!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .qr>span{color:#96909c!important}
 #yiuSettingsPage .yiu-switch{position:relative!important;display:inline-flex!important;flex:none!important;align-items:center!important;justify-content:flex-start!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:28px!important;min-height:28px!important;margin:0!important;padding:0!important;appearance:none!important;-webkit-appearance:none!important;border:2px solid #aaa3b4!important;border-radius:999px!important;background:#e8e4ec!important;box-shadow:inset 0 1px 2px rgba(40,32,55,.08)!important;overflow:visible!important;cursor:pointer!important;transition:background .16s ease,border-color .16s ease!important;-webkit-tap-highlight-color:transparent!important}
@@ -255,20 +263,33 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   function organizeSettingsHierarchy(clone,cfg){
     if(cfg.id==='system'){
       var items=[].slice.call(clone.querySelectorAll(':scope > .m3-setting-item'));
-      if(items.length<4)return;
       var groups=[
-        {title:'界面与动画',items:items.slice(0,3)},
-        {title:'性能与效率',items:items.slice(3,4)},
-        {title:'恢复与维护',items:items.slice(4)}
+        {id:'interface',title:'界面与交互',test:/界面|外观|主题|颜色|字体|显示|布局|触控|按钮|菜单/},
+        {id:'motion',title:'动画与播放',test:/动画|动效|播放|速度|过渡|歌词/},
+        {id:'performance',title:'性能与设备',test:/性能|帧率|渲染|省电|缓存|设备|GPU|CPU|刷新/},
+        {id:'maintenance',title:'恢复与维护',test:/恢复|重置|清理|维护|版本|更新|备份/},
+        {id:'other',title:'其他设置',test:/.*/}
       ];
-      groups.forEach(function(g){
-        if(!g.items.length)return;
+      var buckets={};groups.forEach(function(g){buckets[g.id]=[];});
+      items.forEach(function(item){
+        var label=(item.textContent||'').replace(/\\s+/g,' ').trim();
+        var ids=[].slice.call(item.querySelectorAll('[id]')).map(function(el){return el.id}).join(' ');
+        var hay=label+' '+ids,key='other';
+        for(var i=0;i<groups.length-1;i++){if(groups[i].test.test(hay)){key=groups[i].id;break;}}
+        buckets[key].push(item);
+      });
+      groups.forEach(function(group){
+        var entries=buckets[group.id];if(!entries.length)return;
         var section=d.createElement('section');
-        section.className='m3-setting-section';
-        addSectionHeading(section,g.title);
+        section.className='m3-setting-section m3-system-section';
+        section.setAttribute('data-system-group',group.id);
+        addSectionHeading(section,group.title);
         var body=d.createElement('div');
-        body.className='m3-setting-section-body';
-        g.items.forEach(function(item){body.appendChild(item)});
+        body.className='m3-setting-section-body m3-system-section-body';
+        entries.forEach(function(item){
+          item.classList.add('m3-system-control-card');
+          body.appendChild(item);
+        });
         section.appendChild(body);
         clone.appendChild(section);
       });
@@ -409,7 +430,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
       var contentOriginal=original.querySelector('.gp')||original;
       var clone=d.createElement('div');clone.className='m3-settings-body';clone.setAttribute('data-category',cfg.id);
       var nodes=[].slice.call(contentOriginal.childNodes).filter(function(node){return !(node.nodeType===3&&!node.textContent.trim())});
-      if(cfg.id==='system'){var systemCard=d.createElement('div');systemCard.className='m3-setting-item';nodes.forEach(function(node){systemCard.appendChild(node)});if(systemCard.childNodes.length)clone.appendChild(systemCard);}
+      if(cfg.id==='system'){nodes.forEach(function(node){if(node.nodeType!==1)return;var item=d.createElement('div');item.className='m3-setting-item';item.appendChild(node);clone.appendChild(item);});}
       else{nodes.forEach(function(node){if(node.nodeType!==1){clone.appendChild(node);return;}var item=d.createElement('div');item.className='m3-setting-item';item.appendChild(node);clone.appendChild(item);});}
       clone.querySelectorAll('.rw').forEach(function(wrapper){var range=wrapper.querySelector('input[type="range"]');if(!range||!wrapper.parentNode)return;wrapper.parentNode.insertBefore(range,wrapper);wrapper.remove();});
       clone.removeAttribute('hidden');['display','flex-direction','visibility','opacity','height','min-height','max-height','overflow'].forEach(function(prop,i){var values=['flex','column','visible','1','auto','0','none','visible'];clone.style.setProperty(prop,values[i],'important');});
