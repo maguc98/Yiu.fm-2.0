@@ -126,7 +126,7 @@ jobs:
           node --check APP/devtools.js
           node --check APP/settings-page.js
           grep -q "function buildDedicatedControls" APP/settings-page.js
-          grep -q "var configs=[" APP/settings-page.js
+          grep -Fq "var configs=[" APP/settings-page.js
           grep -q "legacy-ui-removed" APP/settings-page.js
           ! grep -q "sourceFor" APP/settings-page.js
           ! grep -q "data-yiu-source-index" APP/settings-page.js
