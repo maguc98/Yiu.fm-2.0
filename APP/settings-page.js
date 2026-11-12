@@ -94,7 +94,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:20px!important;height:20px!important;transform:translate(-50%,-50%)!important;border:2px solid var(--yiu-theme-accent)!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 9px rgba(35,28,55,.28),0 0 0 2px rgba(255,255,255,.96)!important}
 #yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.12)!important}
 #yiuSettingsPage .yiu-slider:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 30%,transparent)!important;outline-offset:2px!important;border-radius:999px!important}
-#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-track{background:#dedbe3!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-fill{background:#bdb7c7!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-thumb{border-color:#bdb7c7!important;box-shadow:none!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;font-size:14px!important;font-weight:650!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled){grid-template-columns:minmax(0,1fr) 48px!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled)>span{font-size:14px!important;font-weight:650!important;line-height:1.4!important;color:var(--yiu-theme-ink)!important}#yiuSettingsPage .yiu-frame-rate-range{transition:opacity .16s ease,filter .16s ease}#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.48!important;filter:grayscale(.25)!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading,#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading *{color:#827c89!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .qr>span{color:#96909c!important}
+#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-track{background:#dedbe3!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-fill{background:#bdb7c7!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-thumb{border-color:#bdb7c7!important;box-shadow:none!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;font-size:14px!important;font-weight:650!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled){grid-template-columns:minmax(0,1fr) 48px!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{font-size:14px!important;font-weight:650!important;line-height:1.4!important;color:var(--yiu-theme-ink)!important}#yiuSettingsPage .yiu-frame-rate-range{transition:opacity .16s ease,filter .16s ease}#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.48!important;filter:grayscale(.25)!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading,#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading *{color:#827c89!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .qr>span{color:#96909c!important}
 #yiuSettingsPage .yiu-switch{position:relative!important;display:inline-flex!important;flex:none!important;align-items:center!important;justify-content:flex-start!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:28px!important;min-height:28px!important;margin:0!important;padding:0!important;appearance:none!important;-webkit-appearance:none!important;border:2px solid #aaa3b4!important;border-radius:999px!important;background:#e8e4ec!important;box-shadow:inset 0 1px 2px rgba(40,32,55,.08)!important;overflow:visible!important;cursor:pointer!important;transition:background .16s ease,border-color .16s ease!important;-webkit-tap-highlight-color:transparent!important}
 #yiuSettingsPage .yiu-switch:before{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:20px!important;height:20px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 3px rgba(35,28,55,.22)!important;transform:translateX(0)!important;transition:transform .16s ease!important}
 #yiuSettingsPage .yiu-switch.is-on{border-color:var(--yiu-theme-accent)!important;background:var(--yiu-theme-accent)!important}
@@ -137,11 +137,11 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 @media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open,#yiuSettingsPage .m3-category,#yiuSettingsPage .yiu-switch,#yiuSettingsPage .yiu-switch:before{animation:none!important;transition:none!important}}
 /*yf-skin-v2*/
 #yiuSettingsPage .m3-settings-body .m3-setting-item{border-radius:26px!important;padding:18px!important;gap:14px!important}
-#yiuSettingsPage #yiuMirror_yiuFrameRateSettings{margin:0!important;padding:16px!important;border:0!important;border-radius:22px!important;background:#f3f6fb!important;gap:14px!important}
-#yiuSettingsPage #yiuMirror_yiuFrameRateSettings>div:first-child b{font-size:20px!important;font-weight:800!important;color:var(--yiu-theme-ink)!important}
-#yiuSettingsPage #yiuMirror_yiuFrameRateSettings .yiu-frame-rate-toggle{border:0!important;background:transparent!important;padding:6px 0!important}
-#yiuSettingsPage #yiuMirror_yiuFrameRateStatus{display:inline-block!important;padding:4px 12px!important;border-radius:999px!important;background:#dff1e6!important;color:var(--yf-green-ink)!important;font-size:13px!important;font-weight:650!important}
-#yiuSettingsPage #yiuMirror_yiuFrameRateValue{font-size:26px!important;font-weight:800!important;color:var(--yf-blue-ink)!important}
+#yiuSettingsPage #yiuFrameRateSettings{margin:0!important;padding:16px!important;border:0!important;border-radius:22px!important;background:#f3f6fb!important;gap:14px!important}
+#yiuSettingsPage #yiuFrameRateSettings>div:first-child b{font-size:20px!important;font-weight:800!important;color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage #yiuFrameRateSettings .yiu-frame-rate-toggle{border:0!important;background:transparent!important;padding:6px 0!important}
+#yiuSettingsPage #yiuFrameRateStatus{display:inline-block!important;padding:4px 12px!important;border-radius:999px!important;background:#dff1e6!important;color:var(--yf-green-ink)!important;font-size:13px!important;font-weight:650!important}
+#yiuSettingsPage #yiuFrameRateValue{font-size:26px!important;font-weight:800!important;color:var(--yf-blue-ink)!important}
 #yiuSettingsPage .yiu-frame-rate-range .qr>span{color:#7b8794!important;font-size:13px!important;font-weight:600!important}
 #yiuSettingsPage .yiu-global-res-slider{background:#f5f3fb!important;border:0!important;border-radius:22px!important;padding:16px!important}
 #yiuSettingsPage .m3-settings-body .yiu-switch,#yiuSettingsPage .m3-settings-body .yiu-frame-rate-toggle>.yiu-switch{width:51px!important;min-width:51px!important;max-width:51px!important;height:31px!important;min-height:31px!important;max-height:31px!important;border:0!important;background:#e5e5ea!important;box-shadow:none!important}
@@ -203,7 +203,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ac';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ad';
   page.appendChild(foot);
   d.body.appendChild(page);
 
@@ -213,7 +213,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
       ui:'dedicated-ui 20261112ad-direct-controls',
       settingsDataRoot:!!(sourceRoot&&sourceRoot.isConnected),
       settingsDataSource:!!(source&&source.isConnected),
-      mirrorPage:!!d.getElementById('yiuSettingsPage'),
+      settingsPage:!!d.getElementById('yiuSettingsPage'),
       settingsLauncher:!!d.getElementById('cmore'),
       isOpen:!!isOpen,
       events:(events||[]).slice(-12),
@@ -557,7 +557,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     d.body.style.overflow='hidden';
     if(settingsLauncher)settingsLauncher.setAttribute('aria-expanded','true');
     showHome();
-    recordEvent('open','source='+((previousFocus&&previousFocus.id)||'unknown')+'; page='+page.className+'; dataRoot='+!!sourceRoot);
+    recordEvent('open','source='+((previousFocus&&previousFocus.id)||'unknown')+'; page='+page.className+'; stagingRootConnected='+!!(sourceRoot&&sourceRoot.isConnected));
     top.querySelector('.m3-back').focus();
   }
   function close(){
