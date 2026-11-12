@@ -104,6 +104,17 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
 #yiuSettingsPage .yiu-switch.is-on:before{transform:translateX(20px)!important}
 #yiuSettingsPage .yiu-switch:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 32%,transparent)!important;outline-offset:3px!important}
 #yiuSettingsPage .yiu-switch:disabled{opacity:.45!important;cursor:not-allowed!important}
+#yiuSettingsPage .m3-setting-item .yiu-frame-rate-toggle{display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;align-items:center!important;gap:12px!important;min-height:54px!important;padding:11px 13px!important;border:1px solid #e4deeb!important;border-radius:13px!important;background:#f8f6fb!important}
+#yiuSettingsPage .yiu-frame-rate-toggle>span{display:block!important;grid-column:1!important;grid-row:1!important;visibility:visible!important;opacity:1!important;color:#302b3b!important;font-size:14px!important;font-weight:650!important;line-height:1.4!important}
+#yiuSettingsPage .yiu-frame-rate-toggle>.yiu-switch{display:inline-flex!important;grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;flex:0 0 48px!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding:0!important;border:2px solid #aaa3b4!important;border-radius:999px!important;background:#e8e4ec!important;box-shadow:inset 0 1px 2px rgba(40,32,55,.08)!important;appearance:none!important;-webkit-appearance:none!important}
+#yiuSettingsPage .yiu-frame-rate-toggle>.yiu-switch:before{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:20px!important;height:20px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 3px rgba(35,28,55,.22)!important}
+#yiuSettingsPage .yiu-frame-rate-toggle>.yiu-switch.is-on{background:var(--yiu-theme-accent)!important;border-color:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .yiu-frame-rate-toggle>.yiu-switch.is-on:before{transform:translateX(20px)!important}
+#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.4!important;filter:grayscale(.4)!important;pointer-events:none!important}
+#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-slider{pointer-events:none!important}
+#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading{color:#88828f!important}
+#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-slider-track{background:#d8d4dd!important}
+#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-slider-thumb{background:#f5f3f7!important;border-color:#c3bdca!important;box-shadow:none!important}
 #yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch){grid-template-columns:minmax(0,1fr) 48px!important;min-height:52px!important}
 #yiuSettingsPage .m3-setting-item .chk>.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important}
 #yiuSettingsPage .m3-theme-panel{display:flex;flex-direction:column;gap:12px}
@@ -454,6 +465,8 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
       clone.style.setProperty('max-height','none','important');
       clone.style.setProperty('overflow','visible','important');
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
+      var frameRateToggle=clone.querySelector('#yiuMirror_yiuFrameRateEnabled');
+      if(frameRateToggle&&frameRateToggle.closest('label'))frameRateToggle.closest('label').classList.add('yiu-frame-rate-toggle');
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
       var frameRateSlider=clone.querySelector('#yiuMirror_yiuFrameRateSlider');
       if(frameRateSlider){var frameRateTrack=frameRateSlider.closest('.qr');var frameRateGroup=frameRateTrack&&frameRateTrack.parentElement;if(frameRateGroup){frameRateGroup.classList.add('yiu-frame-rate-range');if(frameRateGroup.firstElementChild)frameRateGroup.firstElementChild.classList.add('yiu-frame-rate-heading');}}
@@ -511,7 +524,10 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
     var slider=page.querySelector('#yiuMirror_yiuFrameRateSlider');
     var group=slider&&slider.closest('.yiu-frame-rate-range');
     if(!slider||!group)return;
-    var disabled=slider.getAttribute('aria-disabled')==='true';
+    var toggle=page.querySelector('#yiuMirror_yiuFrameRateEnabled');
+    var disabled=!!(toggle&&!toggle.checked)||slider.getAttribute('aria-disabled')==='true';
+    slider.setAttribute('aria-disabled',disabled?'true':'false');
+    slider.tabIndex=disabled?-1:0;
     group.classList.toggle('is-disabled',disabled);
     group.setAttribute('aria-disabled',disabled?'true':'false');
   }
