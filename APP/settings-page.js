@@ -94,7 +94,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:20px!important;height:20px!important;transform:translate(-50%,-50%)!important;border:2px solid var(--yiu-theme-accent)!important;border-radius:50%!important;background:#fff!important;box-shadow:0 3px 9px rgba(35,28,55,.28),0 0 0 2px rgba(255,255,255,.96)!important}
 #yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.12)!important}
 #yiuSettingsPage .yiu-slider:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 30%,transparent)!important;outline-offset:2px!important;border-radius:999px!important}
-#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-track{background:#dedbe3!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-fill{background:#bdb7c7!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-thumb{border-color:#bdb7c7!important;box-shadow:none!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;font-size:14px!important;font-weight:650!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled){grid-template-columns:minmax(0,1fr) 48px!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled)>span{font-size:14px!important;font-weight:650!important;line-height:1.4!important;color:var(--yiu-theme-ink)!important}#yiuSettingsPage .yiu-frame-rate-range{transition:opacity .16s ease,filter .16s ease}#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.48!important;filter:grayscale(.25)!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading,#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading *{color:#827c89!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .qr>span{color:#96909c!important}
+#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-track{background:#dedbe3!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-fill{background:#bdb7c7!important}#yiuSettingsPage .yiu-slider[aria-disabled=true] .yiu-slider-thumb{border-color:#bdb7c7!important;box-shadow:none!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuFrameRateEnabled)>span{display:block!important;visibility:visible!important;opacity:1!important;color:var(--yiu-theme-ink)!important;font-size:14px!important;font-weight:650!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled){grid-template-columns:minmax(0,1fr) 48px!important}#yiuSettingsPage .m3-setting-item .chk:has(#yiuMirror_yiuFrameRateEnabled)>span{font-size:14px!important;font-weight:650!important;line-height:1.4!important;color:var(--yiu-theme-ink)!important}#yiuSettingsPage .yiu-frame-rate-range{transition:opacity .16s ease,filter .16s ease}#yiuSettingsPage .yiu-frame-rate-range.is-disabled{opacity:.48!important;filter:grayscale(.25)!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading,#yiuSettingsPage .yiu-frame-rate-range.is-disabled .yiu-frame-rate-heading *{color:#827c89!important}#yiuSettingsPage .yiu-frame-rate-range.is-disabled .qr>span{color:#96909c!important}
 #yiuSettingsPage .yiu-switch{position:relative!important;display:inline-flex!important;flex:none!important;align-items:center!important;justify-content:flex-start!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:28px!important;min-height:28px!important;margin:0!important;padding:0!important;appearance:none!important;-webkit-appearance:none!important;border:2px solid #aaa3b4!important;border-radius:999px!important;background:#e8e4ec!important;box-shadow:inset 0 1px 2px rgba(40,32,55,.08)!important;overflow:visible!important;cursor:pointer!important;transition:background .16s ease,border-color .16s ease!important;-webkit-tap-highlight-color:transparent!important}
 #yiuSettingsPage .yiu-switch:before{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:20px!important;height:20px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 3px rgba(35,28,55,.22)!important;transform:translateX(0)!important;transition:transform .16s ease!important}
 #yiuSettingsPage .yiu-switch.is-on{border-color:var(--yiu-theme-accent)!important;background:var(--yiu-theme-accent)!important}
@@ -210,9 +210,9 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   w.__yiuSettingsDiag=function(){
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
-      ui:'dedicated-ui 20261112ac',
-      settingsDataRoot:!!sourceRoot,
-      settingsDataSource:!!source,
+      ui:'dedicated-ui 20261112ad-direct-controls',
+      settingsDataRoot:!!(sourceRoot&&sourceRoot.isConnected),
+      settingsDataSource:!!(source&&source.isConnected),
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
       settingsLauncher:!!d.getElementById('cmore'),
       isOpen:!!isOpen,
@@ -226,23 +226,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   };
   try{console.log('[yiu-settings]',JSON.stringify(w.__yiuSettingsDiag()))}catch(_){}
 
-  var sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
-  var mirrorNodes=[];
   var categories=[];
-  var configs=[
-    {id:'system',title:'系统设置',desc:'界面动画速度、性能优化与基础偏好',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#8da0e2" d="M13.2 3.5h5.6l.8 3.1a10 10 0 0 1 2.2 1.3l3.1-.8 2.8 4.8-2.3 2.2a10 10 0 0 1 0 2.6l2.3 2.2-2.8 4.8-3.1-.8a10 10 0 0 1-2.2 1.3l-.8 3.1h-5.6l-.8-3.1a10 10 0 0 1-2.2-1.3l-3.1.8-2.8-4.8 2.3-2.2a10 10 0 0 1 0-2.6l-2.3-2.2 2.8-4.8 3.1.8a10 10 0 0 1 2.2-1.3z"/><circle cx="16" cy="15.4" r="5.1" fill="#fff"/><circle cx="16" cy="15.4" r="2.5" fill="#5369b4"/></svg>',match:function(el){return el.classList.contains('grp')&&!el.id}},
-    {id:'beta',title:'Beta 测试功能',desc:'体验正在测试中的新功能',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#e9a56e" d="M12 3h8v2h-2v7.2l7.1 11.2A3.7 3.7 0 0 1 22 29H10a3.7 3.7 0 0 1-3.1-5.6L14 12.2V5h-2z"/><path fill="#fff1df" d="M10.2 22.2 8.7 24.5A1.8 1.8 0 0 0 10.2 27h11.6a1.8 1.8 0 0 0 1.5-2.5l-1.5-2.3z"/><circle cx="13" cy="19" r="1.3" fill="#c97942"/><circle cx="19.5" cy="17.5" r="1" fill="#c97942"/></svg>',match:function(el){return el.id==='betaBox'}},
-    {id:'developer',title:'开发者选项',desc:'调试工具、运行状态与高级诊断',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="22" rx="6" fill="#79b99a"/><path d="M10 12h12M10 20h12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="14" cy="12" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/><circle cx="20" cy="20" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/></svg>',find:function(root){return root.querySelector('#devOptionsGroup')}}
-  ];
-  function bindTree(clone,original){
-    var originals=[original].concat([].slice.call(original.querySelectorAll('*')));
-    var clones=[clone].concat([].slice.call(clone.querySelectorAll('*')));
-    clones.forEach(function(el,i){
-      var index=sourceNodes.indexOf(originals[i]);
-      el.setAttribute('data-yiu-source-index',String(index));
-      mirrorNodes.push(el);
-    });
-  }
   function addSectionHeading(parent,title){
     var h=d.createElement('div');
     h.className='m3-hierarchy-title';
@@ -361,76 +345,22 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   }
 
   function buildDedicatedControls(root){
-    [].slice.call(root.querySelectorAll('input[type="checkbox"],input[type="range"]')).forEach(function(input){
+    [].forEach.call(root.querySelectorAll('input[type="checkbox"],input[type="range"]'),function(input){
       if(input.hasAttribute('data-yiu-control-built'))return;
-      var sourceIndex=input.getAttribute('data-yiu-source-index');
-      if(sourceIndex===null)return;
-      input.setAttribute('data-yiu-control-built','1');
-      input.classList.add('yiu-native-control');
-      input.setAttribute('aria-hidden','true');
-      input.tabIndex=-1;
+      input.setAttribute('data-yiu-control-built','1');input.classList.add('yiu-native-control');input.setAttribute('aria-hidden','true');input.tabIndex=-1;
       if(input.type==='checkbox'){
-        var toggle=d.createElement('button');
-        toggle.type='button';
-        toggle.className='yiu-switch'+(input.checked?' is-on':'');
-        toggle.setAttribute('role','switch');
-        toggle.setAttribute('data-yiu-control','switch');
-        toggle.setAttribute('data-yiu-source-index',sourceIndex);
-        toggle.setAttribute('aria-checked',input.checked?'true':'false');
-        toggle.setAttribute('aria-label',input.getAttribute('aria-label')||'切换设置');
-        toggle.disabled=!!input.disabled;
-        input.insertAdjacentElement('afterend',toggle);
-        mirrorNodes.push(toggle);
-        return;
+        var toggle=d.createElement('button');toggle.type='button';toggle.className='yiu-switch'+(input.checked?' is-on':'');toggle.setAttribute('role','switch');toggle.setAttribute('data-yiu-control','switch');toggle.setAttribute('aria-checked',input.checked?'true':'false');toggle.setAttribute('aria-label',input.getAttribute('aria-label')||'切换设置');toggle.disabled=!!input.disabled;input.insertAdjacentElement('afterend',toggle);
+        function paintSwitch(){toggle.classList.toggle('is-on',!!input.checked);toggle.setAttribute('aria-checked',input.checked?'true':'false');toggle.disabled=!!input.disabled;}
+        toggle.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(input.disabled)return;input.checked=!input.checked;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));paintSwitch();});
+        input.addEventListener('change',paintSwitch);input.addEventListener('input',paintSwitch);toggle.__yiuInput=input;return;
       }
-      var slider=d.createElement('div');
-      slider.className='yiu-slider';
-      slider.setAttribute('role','slider');
-      slider.setAttribute('tabindex',input.disabled?'-1':'0');
-      slider.setAttribute('data-yiu-control','range');
-      slider.setAttribute('data-yiu-source-index',sourceIndex);
-      slider.setAttribute('aria-label',input.getAttribute('aria-label')||'数值调节');
-      slider.setAttribute('aria-valuemin',input.min||'0');
-      slider.setAttribute('aria-valuemax',input.max||'100');
-      slider.setAttribute('aria-valuenow',input.value);
-      slider.setAttribute('aria-disabled',input.disabled?'true':'false');
-      var track=d.createElement('span');track.className='yiu-slider-track';
-      var fill=d.createElement('span');fill.className='yiu-slider-fill';
-      var thumb=d.createElement('span');thumb.className='yiu-slider-thumb';
-      track.appendChild(fill);track.appendChild(thumb);slider.appendChild(track);
-      input.insertAdjacentElement('afterend',slider);
-      mirrorNodes.push(slider);
-      paintDedicatedSlider(slider,input);
-      slider.addEventListener('pointerdown',function(e){
-        if(input.disabled)return;
-        e.preventDefault();
-        slider.setPointerCapture&&slider.setPointerCapture(e.pointerId);
-        updateDedicatedSlider(slider,input,e);
-      });
-      slider.addEventListener('pointermove',function(e){
-        if(input.disabled||!slider.hasPointerCapture||!slider.hasPointerCapture(e.pointerId))return;
-        updateDedicatedSlider(slider,input,e);
-      });
-      function finish(e){
-        if(input.disabled)return;
-        if(slider.hasPointerCapture&&slider.hasPointerCapture(e.pointerId))slider.releasePointerCapture(e.pointerId);
-        input.dispatchEvent(new Event('change',{bubbles:true}));
-      }
-      slider.addEventListener('pointerup',finish);
-      slider.addEventListener('pointercancel',finish);
-      slider.addEventListener('keydown',function(e){
-        if(input.disabled)return;
-        var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1),v=Number(input.value||0);
-        if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;
-        else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;
-        else if(e.key==='Home')v=min;
-        else if(e.key==='End')v=max;
-        else return;
-        e.preventDefault();input.value=String(Math.max(min,Math.min(max,v)));
-        input.dispatchEvent(new Event('input',{bubbles:true}));
-        paintDedicatedSlider(slider,input);
-        input.dispatchEvent(new Event('change',{bubbles:true}));
-      });
+      var slider=d.createElement('div');slider.className='yiu-slider';slider.setAttribute('role','slider');slider.setAttribute('tabindex',input.disabled?'-1':'0');slider.setAttribute('data-yiu-control','range');slider.setAttribute('aria-label',input.getAttribute('aria-label')||'数值调节');slider.setAttribute('aria-valuemin',input.min||'0');slider.setAttribute('aria-valuemax',input.max||'100');slider.setAttribute('aria-valuenow',input.value);slider.setAttribute('aria-disabled',input.disabled?'true':'false');
+      var track=d.createElement('span');track.className='yiu-slider-track';var fill=d.createElement('span');fill.className='yiu-slider-fill';var thumb=d.createElement('span');thumb.className='yiu-slider-thumb';track.appendChild(fill);track.appendChild(thumb);slider.appendChild(track);input.insertAdjacentElement('afterend',slider);slider.__yiuInput=input;paintDedicatedSlider(slider,input);
+      function paint(){slider.setAttribute('aria-disabled',input.disabled?'true':'false');slider.tabIndex=input.disabled?-1:0;paintDedicatedSlider(slider,input);}input.addEventListener('input',paint);input.addEventListener('change',paint);
+      slider.addEventListener('pointerdown',function(e){if(input.disabled)return;e.preventDefault();if(slider.setPointerCapture)slider.setPointerCapture(e.pointerId);updateDedicatedSlider(slider,input,e);});
+      slider.addEventListener('pointermove',function(e){if(input.disabled||!slider.hasPointerCapture||!slider.hasPointerCapture(e.pointerId))return;updateDedicatedSlider(slider,input,e);});
+      function finish(e){if(input.disabled)return;if(slider.hasPointerCapture&&slider.hasPointerCapture(e.pointerId))slider.releasePointerCapture(e.pointerId);input.dispatchEvent(new Event('change',{bubbles:true}));}slider.addEventListener('pointerup',finish);slider.addEventListener('pointercancel',finish);
+      slider.addEventListener('keydown',function(e){if(input.disabled)return;var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1),v=Number(input.value||0);if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;else if(e.key==='Home')v=min;else if(e.key==='End')v=max;else return;e.preventDefault();input.value=String(Math.max(min,Math.min(max,v)));input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));});
     });
   }
   function paintDedicatedSlider(slider,input){
@@ -455,115 +385,29 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   }
 
   function rebuildCategories(){
-    sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
-    mirrorNodes=[];
-    categories=[];
-    list.textContent='';
-    subpage.textContent='';
+    categories=[];list.textContent='';subpage.textContent='';
     configs.forEach(function(cfg){
-      var original=cfg.find?cfg.find(source):[].slice.call(source.children).find(cfg.match);
-      if(!original)return;
-      // Do not mirror the legacy accordion shell (.grp > .gb > .gi).
-      // Its collapsed-state CSS can keep cloned content invisible in WKWebView.
-      // Mirror only the actual settings body (.gp), inside our own visible panel.
+      var original=cfg.find?cfg.find(source):[].slice.call(source.children).find(cfg.match);if(!original)return;
       var contentOriginal=original.querySelector('.gp')||original;
-      // Recompose each setting block in a fresh card row. This avoids carrying
-      // legacy accordion wrappers/styles into the full-screen Material layout.
-      var clone=d.createElement('div');
-      clone.className='m3-settings-body';
-      clone.setAttribute('data-category',cfg.id);
-      var sourceChildren=[].slice.call(contentOriginal.childNodes).filter(function(node){return !(node.nodeType===3&&!node.textContent.trim())});
-      if(cfg.id==='system'){
-        // The system group is one logical settings card: title, range, hint,
-        // toggles and reset action must stay together instead of becoming five
-        // unrelated cards with large gaps between them.
-        var systemCard=d.createElement('div');
-        systemCard.className='m3-setting-item';
-        sourceChildren.forEach(function(node){
-          var child=node.cloneNode(true);
-          systemCard.appendChild(child);
-          if(node.nodeType===1)bindTree(child,node);
-        });
-        if(systemCard.childNodes.length)clone.appendChild(systemCard);
-      }else{
-        sourceChildren.forEach(function(node){
-          if(node.nodeType!==1){clone.appendChild(node.cloneNode(true));return;}
-          var item=d.createElement('div');
-          item.className='m3-setting-item';
-          var child=node.cloneNode(true);
-          item.appendChild(child);
-          clone.appendChild(item);
-          bindTree(child,node);
-        });
-      }
-      // Legacy wrapRange() creates .rw > input[type=range] + .gt. Remove that
-      // entire legacy skin from the cloned settings tree before adding our
-      // single Yiu slider; otherwise both thumbs/tracks render on top of each other.
-      clone.querySelectorAll('.rw').forEach(function(wrapper){
-        var range=wrapper.querySelector('input[type="range"]');
-        if(!range||!wrapper.parentNode)return;
-        wrapper.parentNode.insertBefore(range,wrapper);
-        wrapper.remove();
-      });
-      clone.removeAttribute('hidden');
-      clone.style.setProperty('display','flex','important');
-      clone.style.setProperty('flex-direction','column','important');
-      clone.style.setProperty('visibility','visible','important');
-      clone.style.setProperty('opacity','1','important');
-      clone.style.setProperty('height','auto','important');
-      clone.style.setProperty('min-height','0','important');
-      clone.style.setProperty('max-height','none','important');
-      clone.style.setProperty('overflow','visible','important');
-      clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
-      var frameRateToggle=clone.querySelector('#yiuMirror_yiuFrameRateEnabled');
-      if(frameRateToggle&&frameRateToggle.closest('label'))frameRateToggle.closest('label').classList.add('yiu-frame-rate-toggle');
-      clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
-      var frameRateSlider=clone.querySelector('#yiuMirror_yiuFrameRateSlider');
-      if(frameRateSlider){var frameRateTrack=frameRateSlider.closest('.qr');var frameRateGroup=frameRateTrack&&frameRateTrack.parentElement;if(frameRateGroup){frameRateGroup.classList.add('yiu-frame-rate-range');if(frameRateGroup.firstElementChild)frameRateGroup.firstElementChild.classList.add('yiu-frame-rate-heading');}}
-      scrubLegacyInline(clone);
-      organizeSettingsHierarchy(clone,cfg);
-      buildDedicatedControls(clone);
-      var card=d.createElement('button');
-      card.type='button';card.className='m3-category';
-      card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
-      card.setAttribute('data-category',cfg.id);
-      list.appendChild(card);
-      var panel=d.createElement('section');
-      panel.className='m3-category-panel';
-      panel.setAttribute('data-panel',cfg.id);
-      panel.setAttribute('data-category',cfg.id);
-      var desc=d.createElement('p');
-      desc.className='m3-subdesc';desc.textContent=cfg.desc;
-      panel.appendChild(desc);
-      var content=d.createElement('div');
-      var h=d.createElement('h2');
-      h.className='m3-group-title';
-      h.textContent=cfg.title;
-      panel.appendChild(h);
-      content.appendChild(clone);
-      if(cfg.id==='beta'){
-        var betaControls=clone.querySelectorAll('input,select,textarea,button:not(.gh),[role="switch"]');
-        if(!betaControls.length){
-          var notice=d.createElement('div');
-          notice.className='m3-empty';
-          notice.innerHTML='<strong>暂时没有单独开放的 Beta 开关</strong><span>当前版本的实验入口尚未注册独立控件。音乐模式、音频与歌词导入已保留在播放器底部「···」菜单中；后续有可用实验功能时会显示在这里。</span>';
-          content.appendChild(notice);
-        }
-      }
-      panel.appendChild(content);
-      subpage.appendChild(panel);
-      categories.push({cfg:cfg,card:card,panel:panel,clone:clone,original:original});
+      var clone=d.createElement('div');clone.className='m3-settings-body';clone.setAttribute('data-category',cfg.id);
+      var nodes=[].slice.call(contentOriginal.childNodes).filter(function(node){return !(node.nodeType===3&&!node.textContent.trim())});
+      if(cfg.id==='system'){var systemCard=d.createElement('div');systemCard.className='m3-setting-item';nodes.forEach(function(node){systemCard.appendChild(node)});if(systemCard.childNodes.length)clone.appendChild(systemCard);}
+      else{nodes.forEach(function(node){if(node.nodeType!==1){clone.appendChild(node);return;}var item=d.createElement('div');item.className='m3-setting-item';item.appendChild(node);clone.appendChild(item);});}
+      clone.querySelectorAll('.rw').forEach(function(wrapper){var range=wrapper.querySelector('input[type="range"]');if(!range||!wrapper.parentNode)return;wrapper.parentNode.insertBefore(range,wrapper);wrapper.remove();});
+      clone.removeAttribute('hidden');['display','flex-direction','visibility','opacity','height','min-height','max-height','overflow'].forEach(function(prop,i){var values=['flex','column','visible','1','auto','0','none','visible'];clone.style.setProperty(prop,values[i],'important');});
+      var frameRateToggle=clone.querySelector('#yiuFrameRateEnabled');if(frameRateToggle&&frameRateToggle.closest('label'))frameRateToggle.closest('label').classList.add('yiu-frame-rate-toggle');
+      var frameRateSlider=clone.querySelector('#yiuFrameRateSlider');if(frameRateSlider){var track=frameRateSlider.closest('.qr'),group=track&&track.parentElement;if(group){group.classList.add('yiu-frame-rate-range');if(group.firstElementChild)group.firstElementChild.classList.add('yiu-frame-rate-heading');}}
+      scrubLegacyInline(clone);organizeSettingsHierarchy(clone,cfg);buildDedicatedControls(clone);
+      var card=d.createElement('button');card.type='button';card.className='m3-category';card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';card.setAttribute('data-category',cfg.id);list.appendChild(card);
+      var panel=d.createElement('section');panel.className='m3-category-panel';panel.setAttribute('data-panel',cfg.id);panel.setAttribute('data-category',cfg.id);
+      var desc=d.createElement('p');desc.className='m3-subdesc';desc.textContent=cfg.desc;panel.appendChild(desc);
+      var content=d.createElement('div'),h=d.createElement('h2');h.className='m3-group-title';h.textContent=cfg.title;panel.appendChild(h);content.appendChild(clone);
+      if(cfg.id==='beta'&&!clone.querySelectorAll('input,select,textarea,button:not(.gh),[role="switch"]').length){var notice=d.createElement('div');notice.className='m3-empty';notice.innerHTML='<strong>暂时没有单独开放的 Beta 开关</strong><span>当前版本的实验入口尚未注册独立控件。音乐模式、音频与歌词导入已保留在播放器底部「···」菜单中；后续有可用实验功能时会显示在这里。</span>';content.appendChild(notice);}
+      panel.appendChild(content);subpage.appendChild(panel);categories.push({cfg:cfg,card:card,panel:panel,clone:clone,original:original});
     });
     addThemeCategory();
+    var version=source.querySelector('#appVersion');if(version){var logButton=version.previousElementSibling;if(logButton&&logButton.classList.contains('log-entry-btn'))foot.appendChild(logButton);foot.appendChild(version);}
     if(typeof updateSearch==='function')updateSearch();
-  }
-  rebuildCategories();
-
-  function sourceFor(el){
-    var node=el&&el.closest&&el.closest('[data-yiu-source-index]');
-    if(!node)return null;
-    var i=Number(node.getAttribute('data-yiu-source-index'));
-    return Number.isInteger(i)&&i>=0?sourceNodes[i]||null:null;
   }
   function paintRange(el){
     if(!el||el.type!=='range')return;
@@ -572,42 +416,13 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     el.style.setProperty('--yiu-range-progress',(Math.max(0,Math.min(1,progress))*100).toFixed(2)+'%');
   }
   function syncFrameRateDependency(){
-    var slider=page.querySelector('#yiuMirror_yiuFrameRateSlider');
-    var group=slider&&slider.closest('.yiu-frame-rate-range');
-    if(!slider||!group)return;
-    var toggle=page.querySelector('#yiuMirror_yiuFrameRateEnabled');
-    var disabled=!!(toggle&&!toggle.checked)||slider.getAttribute('aria-disabled')==='true';
-    slider.setAttribute('aria-disabled',disabled?'true':'false');
-    slider.tabIndex=disabled?-1:0;
-    group.classList.toggle('is-disabled',disabled);
-    group.setAttribute('aria-disabled',disabled?'true':'false');
+    var input=page.querySelector('#yiuFrameRateSlider'),slider=input&&input.nextElementSibling&&input.nextElementSibling.getAttribute('data-yiu-control')==='range'?input.nextElementSibling:null,toggle=page.querySelector('#yiuFrameRateEnabled');
+    if(!input||!slider)return;var disabled=!!(toggle&&!toggle.checked)||input.disabled;slider.setAttribute('aria-disabled',disabled?'true':'false');slider.tabIndex=disabled?-1:0;
+    var group=slider.closest('.yiu-frame-rate-range');if(group){group.classList.toggle('is-disabled',disabled);group.setAttribute('aria-disabled',disabled?'true':'false');}
   }
-  function sync(skipNode){
-    mirrorNodes.forEach(function(el){
-      if(el===skipNode)return;
-      var src=sourceFor(el);if(!src)return;
-      if(el.getAttribute&&el.getAttribute('data-yiu-control')==='switch'){
-        el.classList.toggle('is-on',!!src.checked);
-        el.setAttribute('aria-checked',src.checked?'true':'false');
-        el.disabled=!!src.disabled;
-        return;
-      }
-      if(el.getAttribute&&el.getAttribute('data-yiu-control')==='range'){
-        el.setAttribute('aria-disabled',src.disabled?'true':'false');
-        el.tabIndex=src.disabled?-1:0;
-        paintDedicatedSlider(el,src);
-        return;
-      }
-      if('checked' in src)el.checked=src.checked;
-      if('value' in src&&src.type!=='button')el.value=src.value;
-      if(src.tagName==='SELECT')el.selectedIndex=src.selectedIndex;
-      if('disabled' in src)el.disabled=src.disabled;
-      el.hidden=!!src.hidden;
-      ['on','open','hide','show','active'].forEach(function(c){el.classList.toggle(c,src.classList.contains(c))});
-      ['aria-pressed','aria-expanded','aria-checked','aria-disabled','aria-label','title'].forEach(function(a){if(src.hasAttribute(a))el.setAttribute(a,src.getAttribute(a));else el.removeAttribute(a)});
-      if(src.textContent!==el.textContent&&src.children.length===0)el.textContent=src.textContent;
-      paintRange(el);
-    });
+  function sync(){
+    page.querySelectorAll('[data-yiu-control="switch"]').forEach(function(el){var input=el.__yiuInput;if(!input)return;el.classList.toggle('is-on',!!input.checked);el.setAttribute('aria-checked',input.checked?'true':'false');el.disabled=!!input.disabled;});
+    page.querySelectorAll('[data-yiu-control="range"]').forEach(function(el){var input=el.__yiuInput;if(!input)return;el.setAttribute('aria-disabled',input.disabled?'true':'false');el.tabIndex=input.disabled?-1:0;paintDedicatedSlider(el,input);});
     syncFrameRateDependency();
   }
   function updateSearch(){
@@ -696,52 +511,19 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   });
   search.querySelector('input').addEventListener('input',updateSearch);
   subpage.addEventListener('click',function(e){
-    var control=e.target.closest('button,[role="button"]');
-    if(!control)return;
-    if(control.getAttribute('data-yiu-control')==='switch'){
-      e.preventDefault();e.stopPropagation();
-      var toggleSource=sourceFor(control);if(!toggleSource||toggleSource.disabled)return;
-      toggleSource.checked=!toggleSource.checked;
-      toggleSource.dispatchEvent(new Event('input',{bubbles:true}));
-      toggleSource.dispatchEvent(new Event('change',{bubbles:true}));
-      sync();return;
-    }
-    var preset=control.getAttribute('data-theme-preset');
-    if(preset&&themePresets[preset]){settingsTheme=Object.assign({},themePresets[preset]);applySettingsTheme(true);return;}
+    var control=e.target.closest('button,[role="button"]');if(!control)return;
+    if(control.getAttribute('data-yiu-control')==='switch')return;
+    var preset=control.getAttribute('data-theme-preset');if(preset&&themePresets[preset]){settingsTheme=Object.assign({},themePresets[preset]);applySettingsTheme(true);return;}
     if(control.hasAttribute('data-theme-reset')){settingsTheme=Object.assign({},themeDefaults);applySettingsTheme(true);return;}
-    var src=sourceFor(control);if(!src)return;
-    if(src.classList.contains('gh'))return;
-    src.click();
-    w.setTimeout(sync,0);
   });
   var activeRange=null;
   function forwardValue(e){
-    var clone=e.target;
-    var themeKey=clone&&clone.getAttribute&&clone.getAttribute('data-theme-key');
-    if(themeKey&&Object.prototype.hasOwnProperty.call(themeDefaults,themeKey)){settingsTheme[themeKey]=clone.value;applySettingsTheme(true);return;}
-    var src=sourceFor(clone);if(!src)return;
-    if('checked' in clone)src.checked=clone.checked;
-    if('value' in clone)src.value=clone.value;
-    // A range drag is a hot path: forward only the value and paint the active
-    // track. Never walk/synchronize the entire mirrored settings tree per frame.
-    if(clone.type==='range'){
-      activeRange=clone;
-      paintRange(clone);
-      src.dispatchEvent(new Event(e.type,{bubbles:true}));
-      if(e.type==='change'){
-        activeRange=null;
-        sync();
-      }
-      return;
-    }
-    src.dispatchEvent(new Event(e.type,{bubbles:true}));
-    sync(clone);
+    var input=e.target;if(!input||!input.matches||!input.matches('input[type="checkbox"],input[type="range"]'))return;
+    var control=input.nextElementSibling;if(control&&control.getAttribute('data-yiu-control')==='switch'){control.classList.toggle('is-on',!!input.checked);control.setAttribute('aria-checked',input.checked?'true':'false');control.disabled=!!input.disabled;}
+    else if(control&&control.getAttribute('data-yiu-control')==='range'){control.setAttribute('aria-disabled',input.disabled?'true':'false');control.tabIndex=input.disabled?-1:0;paintDedicatedSlider(control,input);}
+    syncFrameRateDependency();
   }
-  subpage.addEventListener('input',forwardValue);
-  subpage.addEventListener('change',forwardValue);
-  subpage.addEventListener('pointercancel',function(e){
-    if(activeRange&&e.target===activeRange){activeRange=null;sync();}
-  },true);
+  subpage.addEventListener('input',forwardValue);subpage.addEventListener('change',forwardValue);
   top.querySelector('.m3-back').addEventListener('click',function(){if(!subpage.hidden)showHome();else close()});
   page.addEventListener('keydown',function(e){
     if(e.key!=='Tab')return;
@@ -807,14 +589,6 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     recordEvent('entry-missing','cmore was not found when settings page mounted');
   }
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
-  var observer=new MutationObserver(function(mutations){
-    var structureChanged=mutations.some(function(m){return m.type==='childList'&&m.target===source});
-    if(structureChanged)rebuildCategories();
-    // Source readouts may mutate on every range input. Defer the expensive
-    // mirror reconciliation until the user's finger leaves the slider.
-    if(!page.classList.contains('is-hidden')&&!activeRange)sync();
-  });
-  observer.observe(source,{subtree:true,childList:true,attributes:true,characterData:true});
   var stateObserver=new MutationObserver(function(mutations){
     mutations.forEach(function(m){
       if(m.target===page&&m.attributeName==='class')recordEvent('page-class',page.className);
@@ -823,9 +597,10 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   });
   stateObserver.observe(page,{attributes:true,attributeFilter:['class']});
   stateObserver.observe(d.body,{attributes:true,attributeFilter:['class']});
-  w.addEventListener('yiu-dev-options-ready',function(){rebuildCategories();sync();});
-  rebuildCategories();
-  sync();
+  rebuildCategories();sync();
+  if(sourceRoot&&sourceRoot.parentNode)sourceRoot.parentNode.removeChild(sourceRoot);
+  recordEvent('legacy-ui-removed','live settings controls moved into the dedicated page; hidden staging root removed');
+  return true;
   return true;
 }
 var timer=w.setInterval(function(){attempts++;if(mount()||attempts>=80)w.clearInterval(timer)},100);
