@@ -24,7 +24,7 @@ function mount(){
   style.id='yiuSettingsPageCSS';
   style.textContent=`
 :root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
-#yiuSettingsPage{--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
+#yiuSettingsPage{--sub:#625c6b;--yf-green:#8fb8a3;--yf-green-ink:#2f7a52;--yf-blue-ink:#5a79a8;--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
 body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
 #yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
@@ -138,6 +138,23 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
 @media(min-width:600px){#yiuSettingsPage{padding-left:28px;padding-right:28px}#yiuSettingsPage .m3-top{margin-left:-28px;margin-right:-28px;padding-left:25px;padding-right:28px}#yiuSettingsPage .m3-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 @media(max-width:380px){#yiuSettingsPage .m3-theme-presets{gap:5px}#yiuSettingsPage .m3-theme-preset{font-size:9px}#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){grid-template-columns:minmax(0,1fr) minmax(92px,1.2fr)!important;column-gap:8px!important}}
 @media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open,#yiuSettingsPage .m3-category,#yiuSettingsPage .yiu-switch,#yiuSettingsPage .yiu-switch:before{animation:none!important;transition:none!important}}
+/*yf-skin-v2*/
+#yiuSettingsPage .m3-settings-body .m3-setting-item{border-radius:26px!important;padding:18px!important;gap:14px!important}
+#yiuSettingsPage #yiuMirror_yiuFrameRateSettings{margin:0!important;padding:16px!important;border:0!important;border-radius:22px!important;background:#f3f6fb!important;gap:14px!important}
+#yiuSettingsPage #yiuMirror_yiuFrameRateSettings>div:first-child b{font-size:20px!important;font-weight:800!important;color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage #yiuMirror_yiuFrameRateSettings .yiu-frame-rate-toggle{border:0!important;background:transparent!important;padding:6px 0!important}
+#yiuSettingsPage #yiuMirror_yiuFrameRateStatus{display:inline-block!important;padding:4px 12px!important;border-radius:999px!important;background:#dff1e6!important;color:var(--yf-green-ink)!important;font-size:13px!important;font-weight:650!important}
+#yiuSettingsPage #yiuMirror_yiuFrameRateValue{font-size:26px!important;font-weight:800!important;color:var(--yf-blue-ink)!important}
+#yiuSettingsPage .yiu-frame-rate-range .qr>span{color:#7b8794!important;font-size:13px!important;font-weight:600!important}
+#yiuSettingsPage .yiu-global-res-slider{background:#f5f3fb!important;border:0!important;border-radius:22px!important;padding:16px!important}
+#yiuSettingsPage .m3-settings-body .yiu-switch,#yiuSettingsPage .m3-settings-body .yiu-frame-rate-toggle>.yiu-switch{width:51px!important;min-width:51px!important;max-width:51px!important;height:31px!important;min-height:31px!important;max-height:31px!important;border:0!important;background:#e5e5ea!important;box-shadow:none!important}
+#yiuSettingsPage .m3-settings-body .yiu-switch:before,#yiuSettingsPage .m3-settings-body .yiu-frame-rate-toggle>.yiu-switch:before{top:2px!important;left:2px!important;width:27px!important;height:27px!important;box-shadow:0 2px 4px rgba(0,0,0,.25)!important}
+#yiuSettingsPage .m3-settings-body .yiu-switch.is-on,#yiuSettingsPage .m3-settings-body .yiu-frame-rate-toggle>.yiu-switch.is-on{background:var(--yf-green)!important}
+#yiuSettingsPage .m3-settings-body .yiu-switch.is-on:before,#yiuSettingsPage .m3-settings-body .yiu-frame-rate-toggle>.yiu-switch.is-on:before{transform:translateX(20px)!important}
+#yiuSettingsPage .m3-settings-body .yiu-slider{height:48px!important;min-height:48px!important}
+#yiuSettingsPage .m3-settings-body .yiu-slider-track{background:#dcdce2!important;box-shadow:none!important}
+#yiuSettingsPage .m3-settings-body .yiu-slider-fill{background:#121214!important}
+#yiuSettingsPage .m3-settings-body .yiu-slider-thumb{width:38px!important;height:26px!important;border:0!important;border-radius:999px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,20,40,.22)!important}
 `;
   d.head.appendChild(style);
 
@@ -189,9 +206,25 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · mirror-ui 20261112z';
   page.appendChild(foot);
   d.body.appendChild(page);
+
+  w.__yiuSettingsDiag=function(){
+    var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
+    return {
+      ui:'mirror-ui 20261112z',
+      legacyPg5:!!d.getElementById('pg5'),
+      mirrorPage:!!d.getElementById('yiuSettingsPage'),
+      launcher:!!d.getElementById('yiuSettingsLauncher'),
+      scripts:[].map.call(d.scripts,function(s){return tag(s.src)}).filter(function(s){return /settings|frame-rate|devtools/.test(s)}),
+      subVar:getComputedStyle(page).getPropertyValue('--sub'),
+      whiteInline:page.querySelectorAll('[style*="255,255,255"],[style*="#fff"],[style*="var(--sub)"]').length,
+      switches:page.querySelectorAll('[data-yiu-control=switch]').length,
+      sliders:page.querySelectorAll('[data-yiu-control=range]').length
+    };
+  };
+  try{console.log('[yiu-settings]',JSON.stringify(w.__yiuSettingsDiag()))}catch(_){}
 
   var sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
   var mirrorNodes=[];
@@ -314,6 +347,17 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
     body.appendChild(custom);panel.appendChild(body);subpage.appendChild(panel);
     categories.push({cfg:cfg,card:card,panel:panel,clone:body});
     applySettingsTheme(false);
+  }
+
+  function scrubLegacyInline(root){
+    var bad=/#fff\b|#ffffff|rgba?\(\s*255\s*,\s*255\s*,\s*255|var\(--(sub|fg|text|txt)\)/i;
+    [root].concat([].slice.call(root.querySelectorAll('[style]'))).forEach(function(el){
+      var s=el.style;if(!s)return;
+      ['color','background','background-color','border','border-top','border-bottom','box-shadow'].forEach(function(p){
+        var v=s.getPropertyValue(p);
+        if(v&&bad.test(v))s.removeProperty(p);
+      });
+    });
   }
 
   function buildDedicatedControls(root){
@@ -476,6 +520,7 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
       var frameRateSlider=clone.querySelector('#yiuMirror_yiuFrameRateSlider');
       if(frameRateSlider){var frameRateTrack=frameRateSlider.closest('.qr');var frameRateGroup=frameRateTrack&&frameRateTrack.parentElement;if(frameRateGroup){frameRateGroup.classList.add('yiu-frame-rate-range');if(frameRateGroup.firstElementChild)frameRateGroup.firstElementChild.classList.add('yiu-frame-rate-heading');}}
+      scrubLegacyInline(clone);
       organizeSettingsHierarchy(clone,cfg);
       buildDedicatedControls(clone);
       var card=d.createElement('button');
