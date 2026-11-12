@@ -118,6 +118,9 @@ jobs:
           grep -q "data-yiu-control','switch'" APP/settings-page.js
           grep -q "yiu-slider-track" APP/settings-page.js
           grep -q "function updateDedicatedSlider" APP/settings-page.js
+          grep -q "width:50px!important" APP/settings-page.js
+          grep -q "width:44px!important;height:28px!important" APP/settings-page.js
+          grep -q "rect.width-44" APP/settings-page.js
           grep -q "systemCard.className" APP/settings-page.js
           grep -q ".m3-setting-item .qr:has(input\[type=range\])" APP/settings-page.js
           grep -q "data-theme-key" APP/settings-page.js
@@ -201,7 +204,7 @@ jobs:
           html = html.replace(anchor, injected, 1)
           menus_anchor = '<script src="./APP/menus.js?v=20261025b"></script>'
           fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261111c"></script>'
-          full_settings_script = '<script src="./APP/settings-page.js?v=20261112x"></script>'
+          full_settings_script = '<script src="./APP/settings-page.js?v=20261112y"></script>'
           if html.count(menus_anchor) != 1 or fps_settings_script in html or full_settings_script in html:
               raise SystemExit("Expected one menus.js anchor and no prior settings scripts.")
           html = html.replace(menus_anchor, menus_anchor + chr(10) + fps_settings_script + chr(10) + full_settings_script, 1)
