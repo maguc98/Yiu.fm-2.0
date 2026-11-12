@@ -24,6 +24,12 @@ function mount(){
   style.id='yiuSettingsPageCSS';
   style.textContent=`
 :root{--yiu-m3-bg:#f6f3fb;--yiu-m3-surface:#fff;--yiu-m3-surface2:#eee9f6;--yiu-m3-primary:#6750a4;--yiu-m3-ink:#211f26;--yiu-m3-sub:#625d6b}
+#yiuSettingsPage .m3-category-panel[data-category=system]{--cat-bg:#eaf0fc;--cat-soft:#f5f7fe;--cat-border:#d9e3f7;--cat-ink:#536bb0}
+#yiuSettingsPage .m3-category-panel[data-category=beta]{--cat-bg:#fff0e3;--cat-soft:#fff8f1;--cat-border:#f5dfcb;--cat-ink:#ad6a38}
+#yiuSettingsPage .m3-category-panel[data-category=developer]{--cat-bg:#e8f4ec;--cat-soft:#f4faf6;--cat-border:#d4e9dc;--cat-ink:#3f8060}
+#yiuSettingsPage .m3-category-panel .m3-subdesc{padding:10px 13px;border-radius:14px;background:var(--cat-bg);color:var(--cat-ink)}
+#yiuSettingsPage .m3-category-panel .m3-group-title{color:var(--cat-ink)}
+
 #yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(35,32,45,.48);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 3px 12px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent}
 #yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #yiuSettingsPage{position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-m3-bg);color:var(--yiu-m3-ink);font-family:inherit;color-scheme:light}
@@ -66,14 +72,14 @@ function mount(){
 #yiuSettingsPage .m3-subpage .gp{padding:0!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body{display:flex!important;flex-direction:column!important;gap:15px!important;width:100%;min-width:0;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important;padding:18px!important;border-radius:22px!important;background:#fff!important;color:var(--yiu-m3-ink)!important;box-shadow:0 2px 8px rgba(45,35,65,.045)!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body>*{visibility:visible!important;opacity:1!important;max-height:none}
-#yiuSettingsPage .m3-setting-item{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;padding:14px 0;border-bottom:1px solid #eeeaf3}
-#yiuSettingsPage .m3-setting-item:first-child{padding-top:0}
-#yiuSettingsPage .m3-setting-item:last-child{padding-bottom:0;border-bottom:0}
+#yiuSettingsPage .m3-setting-item{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;padding:14px!important;border:1px solid var(--cat-border,#eeeaf3)!important;border-radius:17px!important;background:var(--cat-soft,#faf9fc)!important;box-shadow:0 1px 3px rgba(35,25,50,.035)}
+#yiuSettingsPage .m3-setting-item:first-child{padding-top:14px!important}
+#yiuSettingsPage .m3-setting-item:last-child{padding-bottom:14px!important;border-bottom:0}
 #yiuSettingsPage .m3-setting-item>*{max-width:100%;min-width:0}
-#yiuSettingsPage .m3-setting-item .qtip{background:#f5f2fa;color:#625d6b!important}
-#yiuSettingsPage .m3-setting-item .chk{background:#f8f6fb!important;border:1px solid #eee9f4;border-radius:16px!important;padding:13px 14px!important}
+#yiuSettingsPage .m3-setting-item .qtip{background:rgba(255,255,255,.78)!important;color:#625d6b!important}
+#yiuSettingsPage .m3-setting-item .chk{background:rgba(255,255,255,.9)!important;border:1px solid var(--cat-border,#eee9f4)!important;border-radius:14px!important;padding:13px 14px!important}
 #yiuSettingsPage .m3-setting-item .chk span{color:#282431!important}
-#yiuSettingsPage .m3-setting-item input[type=range]{accent-color:#8b78c5}
+#yiuSettingsPage .m3-setting-item input[type=range]{accent-color:var(--cat-ink,#8b78c5)}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qh{display:flex!important;align-items:center;justify-content:space-between;margin:0!important;padding:0!important;color:var(--yiu-m3-ink)!important;font-size:15px;font-weight:700}
 #yiuSettingsPage .m3-subpage .m3-settings-body .qr{display:flex!important;align-items:center;gap:10px;margin:0!important;padding:0!important;color:var(--yiu-m3-sub)!important}
 #yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]{display:block!important;flex:1;min-width:80px;width:100%;height:28px;accent-color:var(--yiu-m3-primary);touch-action:pan-y}
@@ -187,6 +193,7 @@ function mount(){
       // legacy accordion wrappers/styles into the full-screen Material layout.
       var clone=d.createElement('div');
       clone.className='m3-settings-body';
+      clone.setAttribute('data-category',cfg.id);
       [].slice.call(contentOriginal.childNodes).forEach(function(node){
         if(node.nodeType===3&&!node.textContent.trim())return;
         if(node.nodeType!==1){clone.appendChild(node.cloneNode(true));return;}
@@ -216,6 +223,7 @@ function mount(){
       var panel=d.createElement('section');
       panel.className='m3-category-panel';
       panel.setAttribute('data-panel',cfg.id);
+      panel.setAttribute('data-category',cfg.id);
       var desc=d.createElement('p');
       desc.className='m3-subdesc';desc.textContent=cfg.desc;
       panel.appendChild(desc);
