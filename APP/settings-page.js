@@ -569,7 +569,7 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     d.body.classList.remove('yiu-full-settings-open');
     d.body.style.overflow=previousBodyOverflow;
     if(settingsLauncher)settingsLauncher.setAttribute('aria-expanded','false');
-    recordEvent('close','page='+page.className+'; dataRoot='+!!sourceRoot);
+    recordEvent('close','page='+page.className+'; stagingRootConnected='+!!(sourceRoot&&sourceRoot.isConnected));
     if(previousFocus&&typeof previousFocus.focus==='function')previousFocus.focus();
   }
   var settingsLauncher=d.getElementById('cmore');
@@ -600,7 +600,6 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   rebuildCategories();sync();
   if(sourceRoot&&sourceRoot.parentNode)sourceRoot.parentNode.removeChild(sourceRoot);
   recordEvent('legacy-ui-removed','live settings controls moved into the dedicated page; hidden staging root removed');
-  return true;
   return true;
 }
 var timer=w.setInterval(function(){attempts++;if(mount()||attempts>=80)w.clearInterval(timer)},100);
