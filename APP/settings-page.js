@@ -606,11 +606,35 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     d.addEventListener(type,routeSettingsEntry,true);
   });
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
+  var repairingSettingsState=false;
   var stateObserver=new MutationObserver(function(mutations){
     mutations.forEach(function(m){
       if(m.target===page&&m.attributeName==='class')recordEvent('page-class',page.className);
       if(m.target===d.body&&m.attributeName==='class'&&d.body.classList.contains('yiu-full-settings-open')!==isOpen)recordEvent('body-state-mismatch','isOpen='+isOpen+'; body='+d.body.className);
     });
+    // The legacy settings handler can still mutate the shared body state after
+    // the dedicated page opens. Re-assert the dedicated page as the owner of
+    // that state before the next paint, rather than merely logging the clash.
+    if(repairingSettingsState)return;
+    var bodyOpen=d.body.classList.contains('yiu-full-settings-open');
+    var pageOpen=page.classList.contains('is-open')&&!page.classList.contains('is-hidden');
+    if(bodyOpen===isOpen&&pageOpen===isOpen)return;
+    repairingSettingsState=true;
+    try{
+      if(isOpen){
+        d.body.classList.add('yiu-full-settings-open');
+        d.body.style.overflow='hidden';
+        page.classList.remove('is-hidden');
+        page.classList.add('is-open');
+        page.setAttribute('aria-hidden','false');
+      }else{
+        d.body.classList.remove('yiu-full-settings-open');
+        page.classList.remove('is-open');
+        page.classList.add('is-hidden');
+        page.setAttribute('aria-hidden','true');
+      }
+      recordEvent('settings-state-repaired','isOpen='+isOpen);
+    }finally{repairingSettingsState=false;}
   });
   stateObserver.observe(page,{attributes:true,attributeFilter:['class']});
   stateObserver.observe(d.body,{attributes:true,attributeFilter:['class']});
