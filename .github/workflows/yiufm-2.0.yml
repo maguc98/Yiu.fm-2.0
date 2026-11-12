@@ -142,7 +142,7 @@ jobs:
           grep -q "width:48px!important" APP/settings-page.js
           grep -q "height:28px!important" APP/settings-page.js
           grep -q "rect.width-20" APP/settings-page.js
-          grep -q "systemCard.className" APP/settings-page.js
+          grep -q "m3-system-control-card" APP/settings-page.js
           grep -q ".m3-setting-item .qr:has(.yiu-slider)" APP/settings-page.js
           grep -q "data-theme-key" APP/settings-page.js
           grep -q "yiu.settings.theme.v1" APP/settings-page.js
