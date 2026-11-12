@@ -1365,6 +1365,7 @@
     });
     if (ver) ver.parentNode.insertBefore(grp, ver);
     else box.appendChild(grp);
+    try { window.dispatchEvent(new Event('yiu-dev-options-ready')); } catch (_) {}
   }
 
   if (document.getElementById('pg5')) injectDevOptions();
