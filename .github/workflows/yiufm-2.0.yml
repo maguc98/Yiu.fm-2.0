@@ -101,6 +101,8 @@ jobs:
           cp APP/runtime/frame-rate-limit.js YiuFM/Resources/Web/APP/runtime/frame-rate-limit.js
           cp APP/frame-rate-settings.js YiuFM/Resources/Web/APP/frame-rate-settings.js
           cp APP/settings-page.js YiuFM/Resources/Web/APP/settings-page.js
+          # Ship the current developer options injector; the pinned UI baseline is older.
+          cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           cp APP/runtime/render-coordinator.js YiuFM/Resources/Web/APP/runtime/render-coordinator.js
           cp APP/yiu-runtime.js YiuFM/Resources/Web/APP/yiu-runtime.js
           test -s YiuFM/Resources/Web/index.html
@@ -194,6 +196,11 @@ jobs:
           if html.count(menus_anchor) != 1 or fps_settings_script in html or full_settings_script in html:
               raise SystemExit("Expected one menus.js anchor and no prior settings scripts.")
           html = html.replace(menus_anchor, menus_anchor + chr(10) + fps_settings_script + chr(10) + full_settings_script, 1)
+          old_devtools = '<script src="./APP/devtools.js?v=20261101a"></script>'
+          new_devtools = '<script src="./APP/devtools.js?v=20261112a"></script>'
+          if html.count(old_devtools) != 1:
+              raise SystemExit("Expected one developer-tools script tag; refusing to patch.")
+          html = html.replace(old_devtools, new_devtools, 1)
           settings_script = '<script src="./APP/fume-settings.js?v=20261111d"></script>\n'
           fx_anchor = '<script id="fxScript">'
           if html.count(fx_anchor) != 1 or settings_script.strip() in html:
