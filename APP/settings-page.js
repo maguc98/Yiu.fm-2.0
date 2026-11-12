@@ -23,127 +23,103 @@ function mount(){
   var style=d.createElement('style');
   style.id='yiuSettingsPageCSS';
   style.textContent=`
-:root{--yiu-m3-bg:#f4f2ff;--yiu-m3-surface:#fff;--yiu-m3-ink:#211d2c;--yiu-m3-sub:#57516a;--yiu-m3-primary:#6655e8;--yiu-m3-line:#e8e4f5}
-#yiuSettingsPage{position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:radial-gradient(ellipse at 50% -12%,#e8e3ff 0%,#f4f2ff 48%,#f8f7ff 100%);color:var(--yiu-m3-ink);font-family:inherit;color-scheme:light}
-#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuM3In .2s ease-out both}@keyframes yiuM3In{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+:root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
+#yiuSettingsPage{--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
+#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
-#yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6655e8;background:rgba(255,255,255,.9);border-color:#e5defb;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 5px 18px rgba(86,69,160,.13);-webkit-tap-highlight-color:transparent}
+#yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
 #yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#yiuSettingsPage .m3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;min-height:58px;margin:0 -18px 8px;padding:0 18px;background:rgba(247,245,255,.94);border-bottom:1px solid rgba(105,87,180,.09);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-#yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:14px;background:transparent;color:#302b38;font-size:27px;line-height:1;-webkit-tap-highlight-color:transparent}
-#yiuSettingsPage .m3-title{font-size:22px;line-height:1.2;font-weight:750;letter-spacing:-.45px}#yiuSettingsPage .m3-top.sub .m3-title{font-size:20px}
-#yiuSettingsPage :focus-visible{outline:2px solid #8069bd;outline-offset:3px}#yiuSettingsPage button:disabled,#yiuSettingsPage input:disabled,#yiuSettingsPage select:disabled{opacity:.55;cursor:not-allowed}
+#yiuSettingsPage .m3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;min-height:58px;margin:0 -18px 8px;padding:0 18px;background:var(--yiu-theme-bg);border-bottom:1px solid var(--yiu-theme-line)}
+#yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:12px;background:transparent;color:var(--yiu-theme-ink);font-size:27px;line-height:1;-webkit-tap-highlight-color:transparent}
+#yiuSettingsPage .m3-title{font-size:21px;line-height:1.25;font-weight:750;letter-spacing:-.3px}#yiuSettingsPage .m3-top.sub .m3-title{font-size:19px}
+#yiuSettingsPage :focus-visible{outline:2px solid var(--yiu-theme-accent);outline-offset:3px}#yiuSettingsPage button:disabled,#yiuSettingsPage input:disabled,#yiuSettingsPage select:disabled{opacity:.55;cursor:not-allowed}
 #yiuSettingsPage .m3-home,#yiuSettingsPage .m3-subpage{width:100%;max-width:680px;margin:0 auto}
-#yiuSettingsPage .m3-search{display:flex;align-items:center;gap:11px;height:50px;margin:13px 0 17px;padding:0 15px;border:1px solid #e6e1f4;border-radius:17px;background:rgba(255,255,255,.96);color:#625b76;box-shadow:0 3px 12px rgba(75,60,140,.045)}
-#yiuSettingsPage .m3-search:focus-within{border-color:#b9a9d7;box-shadow:0 0 0 3px rgba(104,82,163,.10)}#yiuSettingsPage .m3-search svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8}
-#yiuSettingsPage .m3-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#25222d;font-size:15px}#yiuSettingsPage .m3-search input::placeholder{color:#77717e;opacity:1}
-#yiuSettingsPage .m3-hero{display:flex;align-items:center;gap:14px;min-height:96px;margin:0 0 25px;padding:17px 17px;border:1px solid #e3dcff;border-radius:22px;background:linear-gradient(112deg,#e8e2ff 0%,#f0ecff 58%,#fff0f5 100%);color:#29223f;box-shadow:0 7px 20px rgba(91,72,170,.07)}
-#yiuSettingsPage .m3-logo{display:flex;align-items:center;justify-content:center;flex:none;width:56px;height:56px;border-radius:18px;background:linear-gradient(145deg,#8b79ff,#6655e8);color:#fff;font-size:22px;font-weight:800;box-shadow:0 5px 12px rgba(102,85,232,.22)}
-#yiuSettingsPage .m3-hero strong{display:block;font-size:16px;font-weight:750}#yiuSettingsPage .m3-hero small{display:block;margin-top:4px;color:#554d61;font-size:12px;line-height:1.5}
-#yiuSettingsPage .m3-section-title{margin:0 3px 10px;color:#514b59;font-size:13px;font-weight:750;letter-spacing:.2px}
+#yiuSettingsPage .m3-search{display:flex;align-items:center;gap:11px;height:48px;margin:12px 0 16px;padding:0 14px;border:1px solid var(--yiu-theme-line);border-radius:14px;background:var(--yiu-theme-card);color:#5f596b}
+#yiuSettingsPage .m3-search:focus-within{border-color:var(--yiu-theme-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--yiu-theme-accent) 13%,transparent)}#yiuSettingsPage .m3-search svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8}
+#yiuSettingsPage .m3-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--yiu-theme-ink);font-size:15px}#yiuSettingsPage .m3-search input::placeholder{color:#716b7b;opacity:1}
+#yiuSettingsPage .m3-hero{display:flex;align-items:center;gap:13px;min-height:84px;margin:0 0 22px;padding:14px 15px;border:1px solid #e5def1;border-radius:18px;background:linear-gradient(110deg,#eee9fa,#f2eef9 62%,#fbedf2);color:#302a3d}
+#yiuSettingsPage .m3-logo{display:flex;align-items:center;justify-content:center;flex:none;width:50px;height:50px;border-radius:15px;background:#ddd5f2;color:#6755a8;font-size:21px;font-weight:800}
+#yiuSettingsPage .m3-hero strong{display:block;font-size:16px;font-weight:750}#yiuSettingsPage .m3-hero small{display:block;margin-top:4px;color:#5e5669;font-size:12px;line-height:1.5}
+#yiuSettingsPage .m3-section-title{margin:0 3px 10px;color:#554e60;font-size:13px;font-weight:750}
 #yiuSettingsPage .m3-list{display:flex;flex-direction:column;gap:9px;overflow:visible}
-#yiuSettingsPage .m3-category{display:flex;align-items:center;gap:13px;width:100%;min-height:82px;padding:14px 15px;border:1px solid #e9e5f6!important;border-radius:20px;background:rgba(255,255,255,.97)!important;color:#26222e;text-align:left;box-shadow:0 4px 13px rgba(68,54,130,.055);cursor:pointer;transition:transform .14s ease,border-color .14s ease;-webkit-tap-highlight-color:transparent}
-#yiuSettingsPage .m3-category:active{transform:scale(.99);border-color:#d9d0e7!important}
-#yiuSettingsPage .m3-icon{display:flex;align-items:center;justify-content:center;flex:none;width:48px;height:48px;border-radius:16px;background:#eeeaff;color:#6655e8}#yiuSettingsPage .m3-icon svg{display:block;width:25px;height:25px;overflow:visible}
-#yiuSettingsPage .m3-category[data-category=system] .m3-icon{background:#e9f0ff;color:#5574c8}#yiuSettingsPage .m3-category[data-category=beta] .m3-icon{background:#fff0e5;color:#c17a43}#yiuSettingsPage .m3-category[data-category=developer] .m3-icon{background:#e7f5ed;color:#478568}
-#yiuSettingsPage .m3-cat-copy{flex:1;min-width:0}#yiuSettingsPage .m3-cat-copy strong{display:block;color:#26222e;font-size:15px;line-height:1.35;font-weight:750}#yiuSettingsPage .m3-cat-copy small{display:block;margin-top:4px;color:#625c6a;font-size:11.5px;line-height:1.45}#yiuSettingsPage .m3-chevron{flex:none;color:#817a8a;font-size:25px;font-weight:300}
+#yiuSettingsPage .m3-category{display:flex;align-items:center;gap:13px;width:100%;min-height:76px;padding:12px 14px;border:1px solid var(--yiu-theme-line)!important;border-radius:16px;background:var(--yiu-theme-card)!important;color:var(--yiu-theme-ink);text-align:left;cursor:pointer;transition:background .12s ease,border-color .12s ease;-webkit-tap-highlight-color:transparent}
+#yiuSettingsPage .m3-category:active{background:color-mix(in srgb,var(--yiu-theme-accent) 7%,var(--yiu-theme-card))!important;border-color:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .m3-icon{display:flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;border-radius:13px;background:#eee9f8;color:#6d5bb4}#yiuSettingsPage .m3-icon svg{display:block;width:24px;height:24px;overflow:visible}
+#yiuSettingsPage .m3-category[data-category=system] .m3-icon{background:#e9f0fb;color:#5475b6}#yiuSettingsPage .m3-category[data-category=beta] .m3-icon{background:#fbefe4;color:#b97848}#yiuSettingsPage .m3-category[data-category=developer] .m3-icon{background:#e8f3ec;color:#4c8667}
+#yiuSettingsPage .m3-cat-copy{flex:1;min-width:0}#yiuSettingsPage .m3-cat-copy strong{display:block;color:var(--yiu-theme-ink);font-size:15px;line-height:1.35;font-weight:700}#yiuSettingsPage .m3-cat-copy small{display:block;margin-top:4px;color:#625c6b;font-size:12px;line-height:1.4}#yiuSettingsPage .m3-chevron{flex:none;color:#797283;font-size:24px;font-weight:400}
 #yiuSettingsPage .m3-subpage{padding:4px 0 18px}
-#yiuSettingsPage .m3-subdesc{margin:0 0 14px;padding:11px 13px;border:1px solid var(--cat-border,#e7e1ed);border-radius:14px;background:var(--cat-soft,#faf8fc);color:#494451;font-size:12px;line-height:1.55}
-#yiuSettingsPage .m3-group-title{margin:0 2px 13px;color:var(--cat-ink,#49366f);font-size:19px;line-height:1.3;font-weight:780}
-#yiuSettingsPage .m3-category-panel[data-category=system]{--cat-soft:#f4f7fd;--cat-border:#dfe7f5;--cat-ink:#526bb2}#yiuSettingsPage .m3-category-panel[data-category=beta]{--cat-soft:#fff8f1;--cat-border:#f1dfce;--cat-ink:#a96636}#yiuSettingsPage .m3-category-panel[data-category=developer]{--cat-soft:#f3f9f5;--cat-border:#dcebe1;--cat-ink:#3e795d}
-#yiuSettingsPage .m3-settings-body{display:flex!important;flex-direction:column!important;gap:13px!important;width:100%;min-width:0;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#25222d!important;box-shadow:none!important}
+#yiuSettingsPage .m3-subdesc{margin:0 0 13px;padding:10px 12px;border:1px solid var(--yiu-theme-line);border-radius:12px;background:color-mix(in srgb,var(--yiu-theme-accent) 6%,var(--yiu-theme-card));color:#50495a;font-size:12px;line-height:1.55}
+#yiuSettingsPage .m3-group-title{margin:0 2px 12px;color:var(--yiu-theme-ink);font-size:19px;line-height:1.3;font-weight:750}
+#yiuSettingsPage .m3-category-panel[data-category=system]{--cat-soft:#f3f6fc;--cat-border:#e0e7f2;--cat-ink:#526a9f}#yiuSettingsPage .m3-category-panel[data-category=beta]{--cat-soft:#fbf5ef;--cat-border:#efe2d5;--cat-ink:#a56c43}#yiuSettingsPage .m3-category-panel[data-category=developer]{--cat-soft:#f1f7f3;--cat-border:#dce9df;--cat-ink:#47765c}
+#yiuSettingsPage .m3-settings-body{display:flex!important;flex-direction:column!important;gap:12px!important;width:100%;min-width:0;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--yiu-theme-ink)!important;box-shadow:none!important}
 #yiuSettingsPage .m3-settings-body>*{visibility:visible!important;opacity:1!important;max-height:none}
-#yiuSettingsPage .m3-setting-item{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;padding:14px!important;border:1px solid #e9e5f5!important;border-radius:19px!important;background:#fff!important;box-shadow:0 4px 13px rgba(68,54,130,.045)!important}
-#yiuSettingsPage .m3-setting-item>*{max-width:100%;min-width:0}#yiuSettingsPage .m3-setting-section{display:flex;flex-direction:column;gap:8px;min-width:0;margin:0}
-#yiuSettingsPage .m3-hierarchy-title{display:flex;align-items:center;gap:8px;margin:5px 2px 2px;color:var(--cat-ink,#6550a0)!important;font-size:13px;font-weight:780}#yiuSettingsPage .m3-hierarchy-title:before{content:"";width:4px;height:14px;border-radius:4px;background:var(--cat-ink,#8b78c5)}
+#yiuSettingsPage .m3-setting-item{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:11px!important;width:100%;min-width:0;padding:14px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:16px!important;background:var(--yiu-theme-card)!important;color:var(--yiu-theme-ink)!important;box-shadow:0 2px 7px rgba(45,36,65,.035)!important}
+#yiuSettingsPage .m3-setting-item>*{width:100%;max-width:100%;min-width:0}
+#yiuSettingsPage .m3-setting-section{display:flex;flex-direction:column;gap:8px;min-width:0;margin:0}
+#yiuSettingsPage .m3-hierarchy-title{display:flex;align-items:center;gap:8px;margin:5px 2px 2px;color:var(--cat-ink,#6550a0)!important;font-size:13px;font-weight:750}
+#yiuSettingsPage .m3-hierarchy-title:before{content:"";width:4px;height:13px;border-radius:4px;background:var(--cat-ink,#8b78c5)}
 #yiuSettingsPage .m3-setting-section-body{display:flex;flex-direction:column;gap:8px;min-width:0}#yiuSettingsPage .m3-setting-section-body>.m3-setting-item{margin:0}
 #yiuSettingsPage .m3-settings-body[data-category=developer]>.m3-setting-item{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-#yiuSettingsPage .m3-settings-body[data-category=developer] .m3-setting-section{padding:12px;border:1px solid var(--cat-border,#e8e2ef);border-radius:16px;background:var(--cat-soft,#faf9fc)}
-#yiuSettingsPage .m3-subpage .m3-group-title{color:var(--cat-ink,#49366f)!important}
-#yiuSettingsPage .m3-subpage .m3-setting-item{color:#25222d!important}#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qh,strong,b,label,.row,.chk span){color:#25222d!important}#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qr,.qtip,.hint,.desc,.subtext,small,p){color:#57515f!important}
-#yiuSettingsPage .m3-subpage .m3-setting-item .qh{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0!important;padding:0!important;font-size:14px;line-height:1.4;font-weight:740}
-#yiuSettingsPage .m3-subpage .m3-setting-item .qr{display:flex!important;align-items:center;gap:10px;margin:0!important;padding:0!important;font-size:12px;line-height:1.45}
-#yiuSettingsPage .m3-subpage .m3-setting-item .qtip{display:block!important;margin:0!important;padding:9px 11px;border:1px solid #ebe7f0;border-radius:12px;background:#f8f6fa!important;color:#57515f!important;font-size:11.5px;line-height:1.55}
-#yiuSettingsPage .m3-subpage .m3-setting-item .chk{display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:46px;margin:0!important;padding:10px 12px!important;border:1px solid #e8e3ed!important;border-radius:13px!important;background:#faf9fc!important;color:#25222d!important}
-#yiuSettingsPage .m3-subpage .m3-setting-item .chk span{font-size:13px;line-height:1.4}
-#yiuSettingsPage .m3-subpage .m3-setting-item .chip{display:inline-flex;align-items:center;justify-content:center;min-height:39px;padding:9px 12px!important;border:1px solid #ddd3ec!important;border-radius:12px!important;background:#f4eff9!important;color:#503d79!important;font-size:13px;font-weight:700}
-#yiuSettingsPage .m3-subpage .m3-setting-item .qd{margin:0!important;padding-top:9px;border-top:1px solid #eeeaf2}
-#yiuSettingsPage .m3-subpage .m3-settings-body input:not([type=checkbox]):not([type=range]),#yiuSettingsPage .m3-subpage .m3-settings-body select,#yiuSettingsPage .m3-subpage .m3-settings-body textarea{max-width:100%;min-height:40px;padding:9px 11px;border:1px solid #ded8e6;border-radius:11px;background:#fff;color:#25222d;-webkit-text-fill-color:#25222d}
-#yiuSettingsPage .m3-subpage .m3-settings-body input::placeholder,#yiuSettingsPage .m3-subpage .m3-settings-body textarea::placeholder{color:#716b78;-webkit-text-fill-color:#716b78;opacity:1}
-/* Removed superseded native checkbox/range skin: the dedicated mirrored controls below are the only visible controls. */
-#yiuSettingsPage .m3-search-results{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}#yiuSettingsPage .m3-search-result{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:12px 14px;border:1px solid #e8e3ed;border-radius:14px;background:#fff;color:#25222d;text-align:left}#yiuSettingsPage .m3-search-result strong{font-size:14px}#yiuSettingsPage .m3-search-result small{color:#625c6a;font-size:12px}
-#yiuSettingsPage .m3-search-hit{outline:2px solid #9b8acb!important;outline-offset:3px!important;border-radius:10px!important;background:rgba(232,224,248,.35)!important}
-#yiuSettingsPage .m3-empty{margin-top:12px;padding:20px 18px;border:1px solid #e9e5ef;border-radius:18px;background:#fff;color:#625c6a;text-align:center;font-size:13px}#yiuSettingsPage .m3-empty strong{display:block;margin-bottom:5px;color:#25222d;font-size:15px}#yiuSettingsPage .m3-empty button{margin-top:12px;padding:9px 15px;border:0;border-radius:999px;background:#eee8f6;color:#503d79;font-size:13px;font-weight:700}
-#yiuSettingsPage .m3-footer{max-width:680px;margin:0 auto;padding:23px 0 5px;color:#77717e;text-align:center;font-size:11px}
-@media(min-width:600px){#yiuSettingsPage{padding-left:28px;padding-right:28px}#yiuSettingsPage .m3-top{margin-left:-28px;margin-right:-28px;padding-left:25px;padding-right:28px}#yiuSettingsPage .m3-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
-@media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open,#yiuSettingsPage .m3-category,#yiuSettingsPage .m3-subpage .m3-settings-body input[type=checkbox],#yiuSettingsPage .m3-subpage .m3-settings-body input[type=checkbox]::before{animation:none!important;transition:none!important}}
-
-/* Yiu.fm settings controls v3: stable geometry, predictable spacing, and theme tokens. */
-#yiuSettingsPage{--yiu-theme-accent:#7565dc;--yiu-theme-bg:#f4f2ff;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e6e1f1;background:var(--yiu-theme-bg)!important;color:var(--yiu-theme-ink)!important}
-#yiuSettingsPage .m3-top{background:color-mix(in srgb,var(--yiu-theme-bg) 94%,white)!important;border-bottom-color:var(--yiu-theme-line)!important}
-#yiuSettingsPage .m3-title,#yiuSettingsPage .m3-group-title{color:var(--yiu-theme-ink)!important}
-#yiuSettingsPage .m3-category,#yiuSettingsPage .m3-setting-item{background:var(--yiu-theme-card)!important;border-color:var(--yiu-theme-line)!important}
-#yiuSettingsPage .m3-icon{color:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .m3-category:active{border-color:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .m3-subdesc{background:color-mix(in srgb,var(--yiu-theme-accent) 7%,var(--yiu-theme-card))!important;border-color:var(--yiu-theme-line)!important;color:var(--yiu-theme-ink)!important}
-#yiuSettingsPage .m3-hierarchy-title{color:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .m3-hierarchy-title:before{background:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .m3-setting-item{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;padding:15px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:17px!important;box-shadow:0 2px 8px rgba(40,32,70,.035)!important}
-#yiuSettingsPage .m3-setting-item>*{width:100%;min-width:0}
-#yiuSettingsPage .m3-setting-item .qr:has(input[type=range]){display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
-#yiuSettingsPage .m3-setting-item .qr>span{flex:none!important;white-space:nowrap!important;font-size:11px!important;color:#6a6574!important}
-#yiuSettingsPage .m3-setting-item .qr>input[type=range]{grid-column:2!important;min-width:0!important;width:100%!important;flex:none!important}
-#yiuSettingsPage .m3-setting-item .row:has(input[type=range]){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-width:0!important}
-#yiuSettingsPage .m3-setting-item .row:has(input[type=range])>span:first-child{width:auto!important;min-width:0!important;flex:none!important;line-height:1.35!important}
-#yiuSettingsPage .m3-setting-item .row:has(input[type=range])>input[type=range]{grid-column:2;min-width:0!important;width:100%!important;flex:none!important}
-#yiuSettingsPage .m3-setting-item .chk{display:grid!important;grid-template-columns:minmax(0,1fr) 52px!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-height:54px!important;margin:0!important;padding:11px 13px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:14px!important;background:color-mix(in srgb,var(--yiu-theme-card) 90%,var(--yiu-theme-bg))!important;text-align:left!important;line-height:1.35!important}
-#yiuSettingsPage .m3-setting-item .chk>:not(input[type=checkbox]){grid-column:1!important;grid-row:1!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;text-align:left!important}
-/* Native checkbox/range visuals are intentionally not styled; hidden source inputs only carry state. */
-/* Final invariant: mirrored native inputs are state-only. This high-specificity guard must remain after all theme/control rules. */
-#yiuSettingsPage .m3-settings-body input.yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;margin:0!important;padding:0!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important}
-#yiuSettingsPage .m3-setting-item .chk>.yiu-switch{display:inline-flex!important;width:50px!important;min-width:50px!important;max-width:50px!important;height:30px!important;min-height:30px!important;justify-self:end!important;grid-column:2!important;grid-row:1!important}
-#yiuSettingsPage .m3-setting-item .qr>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
-#yiuSettingsPage .m3-setting-item .row>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
-#yiuSettingsPage .m3-theme-panel{display:flex;flex-direction:column;gap:14px}
-#yiuSettingsPage .m3-theme-card{padding:15px;border:1px solid var(--yiu-theme-line);border-radius:17px;background:var(--yiu-theme-card)}
+#yiuSettingsPage .m3-settings-body[data-category=developer] .m3-setting-section{padding:11px;border:1px solid var(--cat-border,#e8e2ef);border-radius:14px;background:var(--cat-soft,#faf9fc)}
+#yiuSettingsPage .m3-subpage .m3-setting-item{color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qh,strong,b,label,.row,.chk span){color:var(--yiu-theme-ink)!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item :is(.qr,.qtip,.hint,.desc,.subtext,small,p){color:#5f5968!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qh{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0!important;padding:0!important;font-size:14px;line-height:1.4;font-weight:700}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qr{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;width:100%;min-width:0;margin:0!important;padding:0!important;font-size:12px;line-height:1.4}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qr>span:first-child{grid-column:1;white-space:nowrap}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qr>span:last-child{grid-column:3;white-space:nowrap}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qtip{display:block!important;margin:0!important;padding:9px 10px;border:1px solid #e9e4ed;border-radius:11px;background:#f8f6fa!important;color:#5b5563!important;font-size:12px;line-height:1.5}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chk{display:grid!important;grid-template-columns:minmax(0,1fr) 48px!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-height:52px!important;margin:0!important;padding:10px 12px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:13px!important;background:color-mix(in srgb,var(--yiu-theme-card) 92%,var(--yiu-theme-bg))!important;color:var(--yiu-theme-ink)!important;text-align:left!important;line-height:1.4!important}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chk span{grid-column:1;min-width:0;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+#yiuSettingsPage .m3-subpage .m3-setting-item .chip{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 13px!important;border:1px solid color-mix(in srgb,var(--yiu-theme-accent) 28%,var(--yiu-theme-line))!important;border-radius:12px!important;background:color-mix(in srgb,var(--yiu-theme-accent) 8%,var(--yiu-theme-card))!important;color:var(--yiu-theme-accent)!important;font-size:13px;font-weight:700}
+#yiuSettingsPage .m3-subpage .m3-setting-item .qd{margin:0!important;padding-top:9px;border-top:1px solid var(--yiu-theme-line)}
+#yiuSettingsPage .m3-subpage .m3-settings-body input:not([type=checkbox]):not([type=range]),#yiuSettingsPage .m3-subpage .m3-settings-body select,#yiuSettingsPage .m3-subpage .m3-settings-body textarea{max-width:100%;min-width:0;min-height:40px;padding:9px 11px;border:1px solid #dcd5e4;border-radius:10px;background:#fff;color:#292536;-webkit-text-fill-color:#292536}
+#yiuSettingsPage .m3-subpage .m3-settings-body input::placeholder,#yiuSettingsPage .m3-subpage .m3-settings-body textarea::placeholder{color:#716b79;-webkit-text-fill-color:#716b79;opacity:1}
+#yiuSettingsPage .m3-search-results{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+#yiuSettingsPage .m3-search-result{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:12px 14px;border:1px solid var(--yiu-theme-line);border-radius:13px;background:var(--yiu-theme-card);color:var(--yiu-theme-ink);text-align:left}
+#yiuSettingsPage .m3-search-result strong{font-size:14px}#yiuSettingsPage .m3-search-result small{color:#625c6b;font-size:12px}
+#yiuSettingsPage .m3-search-hit{outline:2px solid var(--yiu-theme-accent)!important;outline-offset:3px!important;border-radius:10px!important}
+#yiuSettingsPage .m3-empty{margin-top:12px;padding:19px 16px;border:1px solid var(--yiu-theme-line);border-radius:15px;background:var(--yiu-theme-card);color:#625c6b;text-align:center;font-size:13px}
+#yiuSettingsPage .m3-empty strong{display:block;margin-bottom:5px;color:var(--yiu-theme-ink);font-size:15px}#yiuSettingsPage .m3-empty button{margin-top:12px;padding:9px 15px;border:0;border-radius:10px;background:#eee8f6;color:#503d79;font-size:13px;font-weight:700}
+#yiuSettingsPage .m3-footer{max-width:680px;margin:0 auto;padding:22px 0 5px;color:#716b79;text-align:center;font-size:11px}
+#yiuSettingsPage .yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;margin:0!important;padding:0!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important}
+#yiuSettingsPage .m3-setting-item .qr:has(.yiu-slider){display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:9px!important;width:100%!important;min-width:0!important}
+#yiuSettingsPage .m3-setting-item .qr:has(.yiu-slider)>span:first-child{grid-column:1!important}
+#yiuSettingsPage .m3-setting-item .qr:has(.yiu-slider)>span:last-child{grid-column:3!important}
+#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(110px,1.5fr)!important;align-items:center!important;column-gap:12px!important;width:100%!important;min-width:0!important}
+#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider)>span:first-child{grid-column:1!important;min-width:0!important;line-height:1.4!important}
+#yiuSettingsPage .m3-setting-item .qr>.yiu-slider{grid-column:2!important;grid-row:1!important}
+#yiuSettingsPage .m3-setting-item .row>.yiu-slider{grid-column:2!important;grid-row:1!important}
+#yiuSettingsPage .yiu-slider{position:relative!important;display:block!important;width:100%!important;min-width:0!important;height:44px!important;min-height:44px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;touch-action:pan-y!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;-webkit-tap-highlight-color:transparent!important}
+#yiuSettingsPage .yiu-slider-track{position:absolute!important;left:10px!important;right:10px!important;top:50%!important;height:6px!important;transform:translateY(-50%)!important;border:0!important;border-radius:999px!important;background:#ded9e7!important;overflow:visible!important}
+#yiuSettingsPage .yiu-slider-fill{position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:var(--yiu-slider-progress,0%)!important;border-radius:999px!important;background:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:20px!important;height:20px!important;transform:translate(-50%,-50%)!important;border:2px solid var(--yiu-theme-accent)!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 4px rgba(35,28,55,.2)!important}
+#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.12)!important}
+#yiuSettingsPage .yiu-slider:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 30%,transparent)!important;outline-offset:2px!important;border-radius:999px!important}
+#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.45!important;cursor:not-allowed!important}
+#yiuSettingsPage .yiu-switch{position:relative!important;display:inline-flex!important;flex:none!important;align-items:center!important;justify-content:flex-start!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:28px!important;min-height:28px!important;margin:0!important;padding:0!important;border:2px solid #aaa3b4!important;border-radius:999px!important;background:#e8e4ec!important;box-shadow:none!important;cursor:pointer!important;transition:background .16s ease,border-color .16s ease!important;-webkit-tap-highlight-color:transparent!important}
+#yiuSettingsPage .yiu-switch:before{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:20px!important;height:20px!important;border-radius:50%!important;background:#fff!important;box-shadow:0 1px 3px rgba(35,28,55,.22)!important;transform:translateX(0)!important;transition:transform .16s ease!important}
+#yiuSettingsPage .yiu-switch.is-on{border-color:var(--yiu-theme-accent)!important;background:var(--yiu-theme-accent)!important}
+#yiuSettingsPage .yiu-switch.is-on:before{transform:translateX(20px)!important}
+#yiuSettingsPage .yiu-switch:focus-visible{outline:2px solid color-mix(in srgb,var(--yiu-theme-accent) 32%,transparent)!important;outline-offset:3px!important}
+#yiuSettingsPage .yiu-switch:disabled{opacity:.45!important;cursor:not-allowed!important}
+#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch){grid-template-columns:minmax(0,1fr) 48px!important;min-height:52px!important}
+#yiuSettingsPage .m3-setting-item .chk>.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important}
+#yiuSettingsPage .m3-theme-panel{display:flex;flex-direction:column;gap:12px}
+#yiuSettingsPage .m3-theme-card{padding:14px;border:1px solid var(--yiu-theme-line);border-radius:15px;background:var(--yiu-theme-card)}
 #yiuSettingsPage .m3-theme-card h3{margin:0 0 5px;color:var(--yiu-theme-ink);font-size:14px}
-#yiuSettingsPage .m3-theme-card p{margin:0 0 12px;color:#686273;font-size:12px;line-height:1.5}
-#yiuSettingsPage .m3-theme-presets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
-#yiuSettingsPage .m3-theme-preset{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:8px 3px;border:1px solid var(--yiu-theme-line);border-radius:12px;background:var(--yiu-theme-card);color:var(--yiu-theme-ink);font-size:10px}
-#yiuSettingsPage .m3-theme-preset i{display:block;width:27px;height:27px;border:3px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 0 1px rgba(40,32,70,.12)}
+#yiuSettingsPage .m3-theme-card p{margin:0 0 12px;color:#625c6b;font-size:12px;line-height:1.5}
+#yiuSettingsPage .m3-theme-presets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#yiuSettingsPage .m3-theme-preset{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:8px 3px;border:1px solid var(--yiu-theme-line);border-radius:11px;background:var(--yiu-theme-card);color:var(--yiu-theme-ink);font-size:10px}
+#yiuSettingsPage .m3-theme-preset i{display:block;width:26px;height:26px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(40,32,70,.16)}
 #yiuSettingsPage .m3-theme-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #yiuSettingsPage .m3-theme-field{display:flex;flex-direction:column;gap:7px;min-width:0;color:var(--yiu-theme-ink);font-size:12px;font-weight:650}
-#yiuSettingsPage .m3-theme-field input[type=color]{width:100%!important;min-width:0!important;height:42px!important;padding:3px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:11px!important;background:var(--yiu-theme-card)!important}
+#yiuSettingsPage .m3-theme-field input[type=color]{width:100%!important;min-width:0!important;height:42px!important;padding:3px!important;border:1px solid var(--yiu-theme-line)!important;border-radius:10px!important;background:var(--yiu-theme-card)!important}
 #yiuSettingsPage .m3-theme-actions{display:flex;justify-content:flex-end;margin-top:12px}
-#yiuSettingsPage .m3-theme-reset{min-height:40px;padding:0 15px;border:0;border-radius:12px;background:color-mix(in srgb,var(--yiu-theme-accent) 12%,var(--yiu-theme-card));color:var(--yiu-theme-accent);font-size:13px;font-weight:700}
-@media(max-width:380px){#yiuSettingsPage .m3-theme-presets{gap:5px}#yiuSettingsPage .m3-theme-preset{font-size:9px}}
-
-/* Dedicated controls: native inputs are data-only; all visible interaction is rendered by our own components. */
-#yiuSettingsPage .m3-settings-body input.yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;opacity:0!important;pointer-events:none!important}
-/* Match the app-wide glass controls: 50×30 switch and 44×28 frosted slider thumb. */
-#yiuSettingsPage .yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;position:relative!important;display:inline-flex!important;align-items:center!important;width:50px!important;min-width:50px!important;height:30px!important;min-height:30px!important;margin:0!important;padding:0!important;border:1px solid rgba(110,125,155,.22)!important;border-radius:15px!important;background:rgba(125,140,165,.18)!important;box-shadow:inset 0 2px 5px rgba(35,45,65,.12)!important;cursor:pointer!important;transition:background calc(.3s/var(--ui-spd,1)) ease,border-color calc(.3s/var(--ui-spd,1)) ease!important;-webkit-tap-highlight-color:transparent!important}
-#yiuSettingsPage .yiu-switch:before{content:""!important;position:absolute!important;top:2px!important;left:2px!important;width:24px!important;height:24px!important;border-radius:50%!important;background:linear-gradient(180deg,#fff,#e8ecff)!important;box-shadow:0 2px 6px rgba(0,0,0,.18),inset 0 -1px 2px rgba(120,140,200,.25)!important;transform:translateX(0)!important;transition:transform calc(.3s/var(--ui-spd,1)) cubic-bezier(.3,.8,.3,1)!important}
-#yiuSettingsPage .yiu-switch.is-on{border-color:rgba(110,160,255,.7)!important;background:rgba(110,160,255,.9)!important;box-shadow:inset 0 2px 5px rgba(35,45,65,.08)!important}
-#yiuSettingsPage .yiu-switch.is-on:before{transform:translateX(20px)!important}
-#yiuSettingsPage .yiu-switch:focus-visible{outline:3px solid rgba(110,160,255,.25)!important;outline-offset:3px!important}
-#yiuSettingsPage .yiu-switch:disabled{opacity:.45!important;cursor:not-allowed!important}
-#yiuSettingsPage .yiu-slider{grid-column:2!important;position:relative!important;display:block!important;width:100%!important;min-width:0!important;height:46px!important;min-height:46px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;touch-action:pan-y!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;-webkit-tap-highlight-color:transparent!important}
-#yiuSettingsPage .yiu-slider-track{position:absolute!important;left:22px!important;right:22px!important;top:50%!important;height:10px!important;transform:translateY(-50%)!important;border:0!important;border-radius:5px!important;background:#dce2ed!important;box-shadow:inset 0 1px 3px rgba(35,45,65,.16)!important;overflow:visible!important}
-#yiuSettingsPage .yiu-slider-fill{position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:var(--yiu-slider-progress,0%)!important;border-radius:5px!important;background:rgba(150,185,255,.95)!important;box-shadow:0 0 5px rgba(120,165,255,.18)!important}
-#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:44px!important;height:28px!important;transform:translate(-50%,-50%)!important;border:1px solid rgba(255,255,255,.96)!important;border-radius:14px!important;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(232,238,255,.9))!important;-webkit-backdrop-filter:blur(14px) saturate(1.35)!important;backdrop-filter:blur(14px) saturate(1.35)!important;box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 -2px 4px rgba(120,140,200,.2)!important;transition:transform calc(.45s/var(--ui-spd,1)) var(--spring-pop,cubic-bezier(.32,.72,0,1)),box-shadow calc(.3s/var(--ui-spd,1)) ease!important}
-#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.1)!important;box-shadow:0 8px 20px rgba(0,0,0,.24)!important}
-#yiuSettingsPage .yiu-slider:focus-visible{outline:3px solid rgba(150,185,255,.24)!important;outline-offset:4px!important;border-radius:999px!important}
-#yiuSettingsPage .yiu-slider[aria-disabled=true]{opacity:.45!important;cursor:not-allowed!important}
-#yiuSettingsPage .m3-setting-item .qr:has(.yiu-slider){display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important}
-#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important}
-#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch){display:grid!important;grid-template-columns:minmax(0,1fr) 58px!important;align-items:center!important;column-gap:12px!important;min-height:58px!important}
-#yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch)>span{grid-column:1!important;grid-row:1!important}
-/* Explicitly place the generated switch in the trailing control column.
-   The generic :not(input) child rule also matches this button and otherwise
-   forces it into the label column. */
-#yiuSettingsPage .m3-setting-item .chk>.yiu-switch.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;z-index:2!important}
-
-
+#yiuSettingsPage .m3-theme-reset{min-height:40px;padding:0 14px;border:0;border-radius:10px;background:color-mix(in srgb,var(--yiu-theme-accent) 12%,var(--yiu-theme-card));color:var(--yiu-theme-accent);font-size:13px;font-weight:700}
+@media(min-width:600px){#yiuSettingsPage{padding-left:28px;padding-right:28px}#yiuSettingsPage .m3-top{margin-left:-28px;margin-right:-28px;padding-left:25px;padding-right:28px}#yiuSettingsPage .m3-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(max-width:380px){#yiuSettingsPage .m3-theme-presets{gap:5px}#yiuSettingsPage .m3-theme-preset{font-size:9px}#yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){grid-template-columns:minmax(0,1fr) minmax(92px,1.2fr)!important;column-gap:8px!important}}
+@media(prefers-reduced-motion:reduce){#yiuSettingsPage.is-open,#yiuSettingsPage .m3-category,#yiuSettingsPage .yiu-switch,#yiuSettingsPage .yiu-switch:before{animation:none!important;transition:none!important}}
 `;
   d.head.appendChild(style);
 
@@ -200,8 +176,6 @@ function mount(){
   d.body.appendChild(page);
 
   var sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
-  var mirrorRoot=d.createElement('div');
-  mirrorRoot.id='yiuSettingsMirror';
   var mirrorNodes=[];
   var categories=[];
   var configs=[
@@ -407,8 +381,8 @@ function mount(){
   }
   function updateDedicatedSlider(slider,input,e){
     var rect=slider.getBoundingClientRect();
-    var usable=Math.max(1,rect.width-44);
-    var p=Math.max(0,Math.min(1,(e.clientX-(rect.left+22))/usable));
+    var usable=Math.max(1,rect.width-20);
+    var p=Math.max(0,Math.min(1,(e.clientX-(rect.left+10))/usable));
     var min=Number(input.min||0),max=Number(input.max||100),step=Number(input.step||1);
     var raw=min+(max-min)*p;
     var value=min+Math.round((raw-min)/step)*step;
