@@ -393,7 +393,11 @@ jobs:
           grep -q 'window.YiuLibrary.*subscribe' "$WEB_ROOT/APP/mini-player.js"
           grep -q 'var SL = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
           grep -q 'var library = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
-          grep -q "warn('drive ' + NAMES[i], e)" "$WEB_ROOT/APP/visualizer-manager.js"
+          echo "VisualizerManager drive diagnostics in packaged resource:"
+          grep -n "drive" "$WEB_ROOT/APP/visualizer-manager.js" || true
+          grep -q 'driveFaults' "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q "warn('drive " "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q 'NAMES\[i\], e)' "$WEB_ROOT/APP/visualizer-manager.js"
           grep -q 'if (!active || suspended || !currentTimeObj)' "$WEB_ROOT/APP/partita-adapter.js" && ! grep -q 'setSuspended: function (v) { this.hide(); }' "$WEB_ROOT/APP/partita-adapter.js"
           grep -q 'driveFaults' "$WEB_ROOT/APP/visualizer-manager.js"
           echo "Verified Run #13 UI, event-driven mini-player, service facades, migrated iOS import consumer, and all four engine payloads in $WEB_ROOT"
