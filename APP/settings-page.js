@@ -505,23 +505,32 @@ function mount(){
     src.click();
     w.setTimeout(sync,0);
   });
+  var activeRange=null;
   function forwardValue(e){
     var src=sourceFor(e.target);if(!src)return;
     var clone=e.target;
     if('checked' in clone)src.checked=clone.checked;
     if('value' in clone)src.value=clone.value;
-    // Forward the live value to the original control, but never rewrite the
-    // actively dragged mirror from a second sync pass. This avoids thumb lag
-    // and the release-only jump seen in iOS WKWebView range inputs.
-    src.dispatchEvent(new Event(e.type,{bubbles:true}));
+    // A range drag is a hot path: forward only the value and paint the active
+    // track. Never walk/synchronize the entire mirrored settings tree per frame.
     if(clone.type==='range'){
-      var min=Number(clone.min||0),max=Number(clone.max||100),value=Number(clone.value||0);
-      clone.style.setProperty('--yiu-range-progress',((max>min?(value-min)/(max-min):0)*100).toFixed(2)+'%');
-      sync(clone);
-    }else sync(clone);
+      activeRange=clone;
+      paintRange(clone);
+      src.dispatchEvent(new Event(e.type,{bubbles:true}));
+      if(e.type==='change'){
+        activeRange=null;
+        sync();
+      }
+      return;
+    }
+    src.dispatchEvent(new Event(e.type,{bubbles:true}));
+    sync(clone);
   }
   subpage.addEventListener('input',forwardValue);
   subpage.addEventListener('change',forwardValue);
+  subpage.addEventListener('pointercancel',function(e){
+    if(activeRange&&e.target===activeRange){activeRange=null;sync();}
+  },true);
   top.querySelector('.m3-back').addEventListener('click',function(){if(!subpage.hidden)showHome();else close()});
   page.addEventListener('keydown',function(e){
     if(e.key!=='Tab')return;
@@ -569,7 +578,9 @@ function mount(){
   var observer=new MutationObserver(function(mutations){
     var structureChanged=mutations.some(function(m){return m.type==='childList'&&m.target===source});
     if(structureChanged)rebuildCategories();
-    if(!page.classList.contains('is-hidden'))sync();
+    // Source readouts may mutate on every range input. Defer the expensive
+    // mirror reconciliation until the user's finger leaves the slider.
+    if(!page.classList.contains('is-hidden')&&!activeRange)sync();
   });
   observer.observe(source,{subtree:true,childList:true,attributes:true,characterData:true});
   w.addEventListener('yiu-dev-options-ready',function(){rebuildCategories();sync();});
