@@ -207,6 +207,8 @@ function mount(){
     applyPanelFilter(cat,search.value.trim().toLocaleLowerCase());
     title.textContent=cat.title;subtitle.textContent=cat.desc;subtitle.hidden=false;
     footer.hidden=true;page.scrollTop=0;updateRanges(cat.panel);
+    var firstControl=cat.panel.querySelector('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+    (firstControl||page.querySelector('.s-back')).focus();
   }
   function showHome(){
     active=null;home.hidden=false;panels.hidden=true;title.textContent='系统设置';subtitle.hidden=true;
@@ -276,7 +278,7 @@ function mount(){
   ['pointerdown','pointerup','touchstart','touchend','mousedown','mouseup','click'].forEach(function(type){d.addEventListener(type,routeEntry,true)});
   d.addEventListener('keydown',function(e){
     if(!opened)return;
-    if(e.key==='Escape'){if(active)showHome();else close();return}
+    if(e.key==='Escape'){if(active){showHome();page.querySelector('.s-back').focus()}else close();return}
     if(e.key!=='Tab')return;
     var focusable=Array.prototype.filter.call(page.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),function(el){return !el.hidden&&el.getClientRects().length>0});
     if(!focusable.length){e.preventDefault();page.querySelector('.s-back').focus();return}
