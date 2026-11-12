@@ -9,7 +9,7 @@ function mount(){
   var root=d.getElementById('yiuSettingsDataRoot');
   var source=root&&root.querySelector('.yiu-settings-source');
   if(!root||!source||d.getElementById('yiuSettingsPage'))return false;
-  if((!d.getElementById('yiuFrameRateSettings')||!d.getElementById('devOptionsGroup'))&&tries<80)return false;
+  if(!d.getElementById('yiuFrameRateSettings')||!d.getElementById('devOptionsGroup'))return false;
 
   var oldSystem=source.querySelector(':scope > .grp:not(#betaBox)');
   var beta=source.querySelector('#betaBox');
