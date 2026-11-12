@@ -96,15 +96,27 @@ function mount(){
   }
   function moveSystem(src,panel){
     var gp=src.querySelector('.gp');if(!gp)return;
+    // 将标题、滑块和说明合并为一个逻辑设置项，避免被分到不同分类。
+    var sourceNodes=Array.prototype.slice.call(gp.children), units=[];
+    for(var ni=0;ni<sourceNodes.length;ni++){
+      var current=sourceNodes[ni];
+      if(current.classList&&current.classList.contains('qh')){
+        var unit=d.createElement('div');unit.className='s-setting-unit';
+        unit.appendChild(current);
+        if(sourceNodes[ni+1]&&sourceNodes[ni+1].classList&&sourceNodes[ni+1].classList.contains('qr'))unit.appendChild(sourceNodes[++ni]);
+        if(sourceNodes[ni+1]&&sourceNodes[ni+1].classList&&sourceNodes[ni+1].classList.contains('qtip'))unit.appendChild(sourceNodes[++ni]);
+        units.push(unit);
+      }else units.push(current);
+    }
     var groups=[
-      {name:'界面与交互',test:/界面|外观|主题|颜色|字体|显示|布局|触控|按钮|菜单/},
       {name:'动画与播放',test:/动画|动效|播放|速度|过渡|歌词/},
+      {name:'界面与交互',test:/界面|外观|主题|颜色|字体|显示|布局|触控|按钮|菜单/},
       {name:'性能与设备',test:/性能|帧率|渲染|省电|缓存|设备|GPU|CPU|刷新/},
       {name:'恢复与维护',test:/恢复|重置|清理|维护|版本|更新|备份/},
       {name:'其他设置',test:/.*/}
     ];
     var buckets=groups.map(function(){return []});
-    Array.prototype.slice.call(gp.children).forEach(function(node){
+    units.forEach(function(node){
       var text=(node.textContent||'')+' '+Array.prototype.slice.call(node.querySelectorAll('[id]')).map(function(x){return x.id}).join(' ');
       var idx=groups.findIndex(function(g){return g.test.test(text)});
       if(idx<0)idx=groups.length-1;buckets[idx].push(node);
@@ -202,7 +214,25 @@ function mount(){
   page.querySelector('.s-back').addEventListener('click',function(){if(active)showHome();else close()});
   list.addEventListener('click',function(e){var card=e.target.closest('[data-cat]');if(card)openCategory(card.dataset.cat)});
   search.addEventListener('input',function(){filterCategories(search.value.trim().toLocaleLowerCase())});
-  page.addEventListener('input',function(e){if(e.target.matches('input[type=range]'))updateRanges(e.target.parentNode)});
+  page.addEventListener('input',function(e){
+    if(e.target.matches('input[type=range]'))updateRanges(e.target.parentNode);
+    if(e.target.matches('[data-theme-key]')){
+      var key=e.target.dataset.themeKey;
+      if(Object.prototype.hasOwnProperty.call(themeDefaults,key)){
+        theme[key]=e.target.value;
+        applyTheme(true);
+      }
+    }
+  });
+  page.addEventListener('change',function(e){
+    if(e.target.matches('[data-theme-key]')){
+      var key=e.target.dataset.themeKey;
+      if(Object.prototype.hasOwnProperty.call(themeDefaults,key)){
+        theme[key]=e.target.value;
+        applyTheme(true);
+      }
+    }
+  });
   page.addEventListener('change',function(e){if(e.target.matches('input[type=range]'))updateRanges(e.target.parentNode)});
   page.addEventListener('click',function(e){
     var preset=e.target.closest('[data-preset]');
