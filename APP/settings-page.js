@@ -100,10 +100,10 @@ function mount(){
 #yiuSettingsPage .m3-setting-item .chk>:not(input[type=checkbox]){grid-column:1!important;grid-row:1!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;text-align:left!important}
 /* Native checkbox/range visuals are intentionally not styled; hidden source inputs only carry state. */
 /* Final invariant: mirrored native inputs are state-only. This high-specificity guard must remain after all theme/control rules. */
-#yiuSettingsPage #yiuSettingsMirror .m3-settings-body input.yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;margin:0!important;padding:0!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important}
-#yiuSettingsPage #yiuSettingsMirror .m3-setting-item .chk>.yiu-switch{display:inline-flex!important;width:50px!important;min-width:50px!important;max-width:50px!important;height:30px!important;min-height:30px!important;justify-self:end!important;grid-column:2!important;grid-row:1!important}
-#yiuSettingsPage #yiuSettingsMirror .m3-setting-item .qr>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
-#yiuSettingsPage #yiuSettingsMirror .m3-setting-item .row>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
+#yiuSettingsPage .m3-settings-body input.yiu-native-control{display:none!important;position:absolute!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;margin:0!important;padding:0!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important}
+#yiuSettingsPage .m3-setting-item .chk>.yiu-switch{display:inline-flex!important;width:50px!important;min-width:50px!important;max-width:50px!important;height:30px!important;min-height:30px!important;justify-self:end!important;grid-column:2!important;grid-row:1!important}
+#yiuSettingsPage .m3-setting-item .qr>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
+#yiuSettingsPage .m3-setting-item .row>.yiu-slider{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important}
 #yiuSettingsPage .m3-theme-panel{display:flex;flex-direction:column;gap:14px}
 #yiuSettingsPage .m3-theme-card{padding:15px;border:1px solid var(--yiu-theme-line);border-radius:17px;background:var(--yiu-theme-card)}
 #yiuSettingsPage .m3-theme-card h3{margin:0 0 5px;color:var(--yiu-theme-ink);font-size:14px}
@@ -141,7 +141,7 @@ function mount(){
 /* Explicitly place the generated switch in the trailing control column.
    The generic :not(input) child rule also matches this button and otherwise
    forces it into the label column. */
-#yiuSettingsPage #yiuSettingsMirror .m3-setting-item .chk>.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;z-index:2!important}
+#yiuSettingsPage .m3-setting-item .chk>.yiu-switch.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;z-index:2!important}
 
 
 `;
