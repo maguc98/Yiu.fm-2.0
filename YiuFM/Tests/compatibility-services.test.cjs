@@ -570,7 +570,7 @@ function createVisualizerHarness(options = {}) {
   const managerPath = path.join(__dirname, '..', 'Resources', 'Web', 'APP', 'visualizer-manager.js');
   const source = fs.readFileSync(managerPath, 'utf8');
   vm.runInNewContext(source, {
-    window, document, Promise, Date, Array, Object, setTimeout, clearTimeout,
+    window, document, console: window.console, Promise, Date, Array, Object, setTimeout, clearTimeout,
     requestAnimationFrame(callback) { callback(); return 1; }
   });
   return {
