@@ -25,7 +25,7 @@ function mount(){
   style.textContent=`
 :root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
 #yiuSettingsPage{--sub:#625c6b;--yf-green:#8fb8a3;--yf-green-ink:#2f7a52;--yf-blue-ink:#5a79a8;--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
-body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
 #yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
 #yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -217,6 +217,9 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
       legacyPg5:!!d.getElementById('pg5'),
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
       launcher:!!d.getElementById('yiuSettingsLauncher'),
+      legacyLauncher:!!d.getElementById('cmore'),
+      isOpen:!!isOpen,
+      events:(events||[]).slice(-12),
       scripts:[].map.call(d.scripts,function(s){return tag(s.src)}).filter(function(s){return /settings|frame-rate|devtools/.test(s)}),
       subVar:getComputedStyle(page).getPropertyValue('--sub'),
       whiteInline:page.querySelectorAll('[style*="255,255,255"],[style*="#fff"],[style*="var(--sub)"]').length,
@@ -755,8 +758,15 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
   var previousFocus=null;
   var previousBodyOverflow='';
   var isOpen=false;
+  var events=[];
+  function recordEvent(type,detail){
+    var entry={at:Math.round(w.performance&&w.performance.now?w.performance.now():Date.now()),type:type,detail:detail||''};
+    events.push(entry);
+    if(events.length>60)events.shift();
+    try{console.info('[yiu-settings]',entry)}catch(_){}
+  }
   function open(){
-    if(isOpen)return;
+    if(isOpen){recordEvent('open-ignored','already-open');return;}
     isOpen=true;
     previousFocus=d.activeElement;
     previousBodyOverflow=d.body.style.overflow;
@@ -766,7 +776,9 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
     page.setAttribute('aria-hidden','false');
     d.body.classList.add('yiu-full-settings-open');
     d.body.style.overflow='hidden';
+    if(legacyLauncher)legacyLauncher.setAttribute('aria-expanded','true');
     showHome();
+    recordEvent('open','source='+((previousFocus&&previousFocus.id)||'unknown')+'; page='+page.className+'; pg5='+(legacyMenu&&legacyMenu.className));
     top.querySelector('.m3-back').focus();
   }
   function close(){
@@ -777,14 +789,30 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
     page.setAttribute('aria-hidden','true');
     d.body.classList.remove('yiu-full-settings-open');
     d.body.style.overflow=previousBodyOverflow;
+    if(legacyLauncher)legacyLauncher.setAttribute('aria-expanded','false');
+    recordEvent('close','page='+page.className+'; pg5='+(legacyMenu&&legacyMenu.className));
     if(previousFocus&&typeof previousFocus.focus==='function')previousFocus.focus();
   }
-  var launcher=d.createElement('button');
-  launcher.type='button';launcher.id='yiuSettingsLauncher';
-  launcher.setAttribute('aria-label','打开设置');launcher.setAttribute('aria-haspopup','dialog');
-  launcher.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.1a3.9 3.9 0 1 0 0 7.8 3.9 3.9 0 0 0 0-7.8Z"/><path d="m19.4 13.5 1.1.8-1.1 2-1.3-.5a7.8 7.8 0 0 1-1.4.8l-.2 1.4h-2.3l-.3-1.4a7.8 7.8 0 0 1-1.5-.1l-.9 1.1-2-1.1.4-1.4a7.7 7.7 0 0 1-1-1.2l-1.4.1-.8-2.2 1.2-.8a7.7 7.7 0 0 1 .1-1.6L6.9 8.5 8 6.6l1.4.4a7.8 7.8 0 0 1 1.3-.9l.1-1.4H13l.4 1.4a7.8 7.8 0 0 1 1.5.2l.9-1.1 2 1.2-.4 1.3a7.7 7.7 0 0 1 1 1.3l1.4-.1.8 2.2-1.2.8a7.7 7.7 0 0 1 0 1.6Z"/></svg>';
-  d.body.appendChild(launcher);
-  launcher.addEventListener('click',open);
+  var legacyLauncher=d.getElementById('cmore');
+  var legacyMenu=d.getElementById('pg5');
+  if(legacyLauncher){
+    legacyLauncher.setAttribute('aria-haspopup','dialog');
+    legacyLauncher.setAttribute('aria-controls','yiuSettingsPage');
+    legacyLauncher.setAttribute('aria-label','系统设置');
+    legacyLauncher.dataset.yiuSettingsEntrypoint='1';
+    // Capture runs before menus.js's target/bubble listener. Stop the legacy
+    // setMenu() path and route the existing, visible settings button here.
+    legacyLauncher.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      recordEvent('legacy-entry-click','captured; old setMenu suppressed');
+      open();
+    },true);
+  }else{
+    recordEvent('entry-missing','cmore was not found when settings page mounted');
+  }
+  var staleLauncher=d.getElementById('yiuSettingsLauncher');
+  if(staleLauncher)staleLauncher.remove();
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
   var observer=new MutationObserver(function(mutations){
     var structureChanged=mutations.some(function(m){return m.type==='childList'&&m.target===source});
@@ -794,6 +822,16 @@ body.yiu-full-settings-open #aiui-root{visibility:hidden!important;pointer-event
     if(!page.classList.contains('is-hidden')&&!activeRange)sync();
   });
   observer.observe(source,{subtree:true,childList:true,attributes:true,characterData:true});
+  var stateObserver=new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      if(m.target===page&&m.attributeName==='class')recordEvent('page-class',page.className);
+      if(m.target===legacyMenu&&m.attributeName==='class')recordEvent('legacy-menu-class',legacyMenu.className);
+      if(m.target===d.body&&m.attributeName==='class'&&d.body.classList.contains('yiu-full-settings-open')!==isOpen)recordEvent('body-state-mismatch','isOpen='+isOpen+'; body='+d.body.className);
+    });
+  });
+  stateObserver.observe(page,{attributes:true,attributeFilter:['class']});
+  if(legacyMenu)stateObserver.observe(legacyMenu,{attributes:true,attributeFilter:['class']});
+  stateObserver.observe(d.body,{attributes:true,attributeFilter:['class']});
   w.addEventListener('yiu-dev-options-ready',function(){rebuildCategories();sync();});
   rebuildCategories();
   sync();
