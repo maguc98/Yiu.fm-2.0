@@ -175,17 +175,22 @@ function mount(){
       // Its collapsed-state CSS can keep cloned content invisible in WKWebView.
       // Mirror only the actual settings body (.gp), inside our own visible panel.
       var contentOriginal=original.querySelector('.gp')||original;
-      var clone=contentOriginal.cloneNode(true);
-      clone.classList.add('m3-settings-body');
+      // Build a fresh presentation wrapper. Never retain legacy .gp/.gb/.gi
+      // classes: their accordion CSS can collapse the entire cloned subtree in WKWebView.
+      var clone=d.createElement('div');
+      clone.className='m3-settings-body';
+      [].slice.call(contentOriginal.childNodes).forEach(function(node){
+        clone.appendChild(node.cloneNode(true));
+      });
       clone.removeAttribute('hidden');
       clone.style.setProperty('display','flex','important');
       clone.style.setProperty('flex-direction','column','important');
       clone.style.setProperty('visibility','visible','important');
       clone.style.setProperty('opacity','1','important');
       clone.style.setProperty('height','auto','important');
+      clone.style.setProperty('min-height','0','important');
       clone.style.setProperty('max-height','none','important');
       clone.style.setProperty('overflow','visible','important');
-      if(clone.id)clone.id='yiuMirror_'+clone.id;
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
       bindTree(clone,contentOriginal);
