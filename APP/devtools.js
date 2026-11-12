@@ -450,11 +450,11 @@
     toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1600);
   }
 
-  /* ---------- 注入入口按钮到 #pg5 ---------- */
+  /* ---------- 注入入口按钮到设置数据源 ---------- */
   function injectEntry(){
-    var pg5 = document.getElementById('pg5');
-    if (!pg5 || pg5.querySelector('.log-entry-btn')) return;
-    var box = pg5.querySelector('.pm-box') || pg5;
+    var root = document.getElementById('yiuSettingsDataRoot');
+    if (!root || root.querySelector('.log-entry-btn')) return;
+    var box = root.querySelector('.yiu-settings-source') || root;
     var ver = null;
     box.querySelectorAll('.qtip').forEach(function(el){
       if (el.textContent.indexOf('版本') >= 0) ver = el;
@@ -469,10 +469,10 @@
     else box.appendChild(btn);
   }
 
-  if (document.getElementById('pg5')) injectEntry();
+  if (document.getElementById('yiuSettingsDataRoot')) injectEntry();
   else {
     var mo = new MutationObserver(function(){
-      if (document.getElementById('pg5')){ injectEntry(); mo.disconnect(); }
+      if (document.getElementById('yiuSettingsDataRoot')){ injectEntry(); mo.disconnect(); }
     });
     mo.observe(document.body, { childList: true, subtree: true });
   }
@@ -1034,11 +1034,11 @@
     setTimeout(go, 1500);   // 清缓存卡住也不能拦住刷新
   }
 
-  // 5. 注入开发者选项到系统设置 #pg5
+  // 5. 注入开发者选项到设置数据源
   function injectDevOptions() {
-    var pg5 = document.getElementById('pg5');
-    if (!pg5 || document.getElementById('devOptionsGroup')) return;
-    var box = pg5.querySelector('.pm-box') || pg5;
+    var root = document.getElementById('yiuSettingsDataRoot');
+    if (!root || document.getElementById('devOptionsGroup')) return;
+    var box = root.querySelector('.yiu-settings-source') || root;
 
     // 清理残留按钮
     var oldLog = box.querySelector('.log-entry-btn'); if (oldLog) oldLog.remove();
@@ -1370,10 +1370,10 @@
     try { window.dispatchEvent(new Event('yiu-dev-options-ready')); } catch (_) {}
   }
 
-  if (document.getElementById('pg5')) injectDevOptions();
+  if (document.getElementById('yiuSettingsDataRoot')) injectDevOptions();
   else {
     var mo = new MutationObserver(function(){
-      if (document.getElementById('pg5')){ injectDevOptions(); mo.disconnect(); }
+      if (document.getElementById('yiuSettingsDataRoot')){ injectDevOptions(); mo.disconnect(); }
     });
     mo.observe(document.body, { childList: true, subtree: true });
   }

@@ -1,15 +1,14 @@
-/* Yiu.fm 2.0 — approved soft-lavender settings visual system.
- * The old #pg5 interface is retired and permanently hidden. Its controls remain
- * mounted only as a private compatibility data source for settings handlers.
- * The dedicated settings page is the sole user-facing settings interface.
+/* Yiu.fm 2.0 — dedicated settings UI.
+ * The old screen/menu is removed. A non-rendering data root temporarily hosts
+ * compatibility controls while their handlers are migrated into services.
  */
 (function(w,d){
 'use strict';
 var attempts=0;
 function mount(){
-  var legacy=d.getElementById('pg5');
-  var source=legacy&&legacy.querySelector('.pm-box');
-  if(!legacy||!source||d.getElementById('yiuSettingsPage'))return false;
+  var sourceRoot=d.getElementById('yiuSettingsDataRoot');
+  var source=sourceRoot&&sourceRoot.querySelector('.yiu-settings-source');
+  if(!sourceRoot||!source||d.getElementById('yiuSettingsPage'))return false;
   if(!d.getElementById('yiuFrameRateSettings')&&attempts<18)return false;
 
   var page=d.createElement('section');
@@ -25,10 +24,8 @@ function mount(){
   style.textContent=`
 :root{--yiu-m3-bg:#f5f1fb;--yiu-m3-surface:#fff;--yiu-m3-ink:#292536;--yiu-m3-sub:#5f596b;--yiu-m3-primary:#7565c9;--yiu-m3-line:#e8e2ef}
 #yiuSettingsPage{--sub:#625c6b;--yf-green:#8fb8a3;--yf-green-ink:#2f7a52;--yf-blue-ink:#5a79a8;--yiu-theme-accent:#7565c9;--yiu-theme-bg:#f5f1fb;--yiu-theme-card:#fff;--yiu-theme-ink:#292536;--yiu-theme-line:#e8e2ef;position:fixed;inset:0;z-index:2147482000;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 30px);background:var(--yiu-theme-bg);color:var(--yiu-theme-ink);font-family:inherit;color-scheme:light}
-body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:none!important}#pg5{display:none!important;visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:none!important}#yiuSettingsPage.is-hidden{display:none!important}#yiuSettingsPage.is-open{display:block;animation:yiuSettingsIn .18s ease-out both}@keyframes yiuSettingsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #yiuSettingsPage *{box-sizing:border-box}#yiuSettingsPage button,#yiuSettingsPage input,#yiuSettingsPage select,#yiuSettingsPage textarea{font:inherit}#yiuSettingsPage [hidden]{display:none!important}
-#yiuSettingsLauncher{position:fixed;left:15px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:2147481500;width:44px;height:44px;padding:0;border:1px solid #e5def0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--yiu-m3-primary);background:#fff;box-shadow:0 3px 12px rgba(65,52,95,.10);-webkit-tap-highlight-color:transparent}
-#yiuSettingsLauncher svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #yiuSettingsPage .m3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;min-height:58px;margin:0 -18px 8px;padding:0 18px;background:var(--yiu-theme-bg);border-bottom:1px solid var(--yiu-theme-line)}
 #yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:12px;background:transparent;color:var(--yiu-theme-ink);font-size:27px;line-height:1;-webkit-tap-highlight-color:transparent}
 #yiuSettingsPage .m3-title-wrap{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}#yiuSettingsPage .m3-title{font-size:21px;line-height:1.25;font-weight:750;letter-spacing:-.3px}#yiuSettingsPage .m3-top.sub .m3-title{font-size:19px}#yiuSettingsPage .m3-subtitle{color:#625c6b;font-size:11px;line-height:1.3;font-weight:500}#yiuSettingsPage .m3-subtitle[hidden]{display:none!important}
@@ -214,11 +211,10 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
       ui:'dedicated-ui 20261112ab',
-      legacyPg5DataSource:!!d.getElementById('pg5'),
-      legacyUiRetired:!!d.getElementById('pg5')&&getComputedStyle(d.getElementById('pg5')).display==='none',
+      settingsDataRoot:!!sourceRoot,
+      settingsDataSource:!!source,
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
-      launcher:!!d.getElementById('yiuSettingsLauncher'),
-      legacyLauncher:!!d.getElementById('cmore'),
+      settingsLauncher:!!d.getElementById('cmore'),
       isOpen:!!isOpen,
       events:(events||[]).slice(-12),
       scripts:[].map.call(d.scripts,function(s){return tag(s.src)}).filter(function(s){return /settings|frame-rate|devtools/.test(s)}),
@@ -777,9 +773,9 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     page.setAttribute('aria-hidden','false');
     d.body.classList.add('yiu-full-settings-open');
     d.body.style.overflow='hidden';
-    if(legacyLauncher)legacyLauncher.setAttribute('aria-expanded','true');
+    if(settingsLauncher)settingsLauncher.setAttribute('aria-expanded','true');
     showHome();
-    recordEvent('open','source='+((previousFocus&&previousFocus.id)||'unknown')+'; page='+page.className+'; pg5='+(legacyMenu&&legacyMenu.className));
+    recordEvent('open','source='+((previousFocus&&previousFocus.id)||'unknown')+'; page='+page.className+'; dataRoot='+!!sourceRoot);
     top.querySelector('.m3-back').focus();
   }
   function close(){
@@ -790,30 +786,26 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
     page.setAttribute('aria-hidden','true');
     d.body.classList.remove('yiu-full-settings-open');
     d.body.style.overflow=previousBodyOverflow;
-    if(legacyLauncher)legacyLauncher.setAttribute('aria-expanded','false');
-    recordEvent('close','page='+page.className+'; pg5='+(legacyMenu&&legacyMenu.className));
+    if(settingsLauncher)settingsLauncher.setAttribute('aria-expanded','false');
+    recordEvent('close','page='+page.className+'; dataRoot='+!!sourceRoot);
     if(previousFocus&&typeof previousFocus.focus==='function')previousFocus.focus();
   }
-  var legacyLauncher=d.getElementById('cmore');
-  var legacyMenu=d.getElementById('pg5');
-  if(legacyLauncher){
-    legacyLauncher.setAttribute('aria-haspopup','dialog');
-    legacyLauncher.setAttribute('aria-controls','yiuSettingsPage');
-    legacyLauncher.setAttribute('aria-label','系统设置');
-    legacyLauncher.dataset.yiuSettingsEntrypoint='1';
-    // Capture runs before menus.js's target/bubble listener. Stop the legacy
-    // setMenu() path and route the existing, visible settings button here.
-    legacyLauncher.addEventListener('click',function(e){
+  var settingsLauncher=d.getElementById('cmore');
+  if(settingsLauncher){
+    settingsLauncher.setAttribute('aria-haspopup','dialog');
+    settingsLauncher.setAttribute('aria-controls','yiuSettingsPage');
+    settingsLauncher.setAttribute('aria-label','系统设置');
+    settingsLauncher.dataset.yiuSettingsEntrypoint='1';
+    // Own the visible settings entry and route it directly to this page.
+    settingsLauncher.addEventListener('click',function(e){
       e.preventDefault();
       e.stopImmediatePropagation();
-      recordEvent('legacy-entry-click','captured; old setMenu suppressed');
+      recordEvent('settings-entry-click','dedicated settings page');
       open();
     },true);
   }else{
     recordEvent('entry-missing','cmore was not found when settings page mounted');
   }
-  var staleLauncher=d.getElementById('yiuSettingsLauncher');
-  if(staleLauncher)staleLauncher.remove();
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
   var observer=new MutationObserver(function(mutations){
     var structureChanged=mutations.some(function(m){return m.type==='childList'&&m.target===source});
@@ -826,12 +818,10 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
   var stateObserver=new MutationObserver(function(mutations){
     mutations.forEach(function(m){
       if(m.target===page&&m.attributeName==='class')recordEvent('page-class',page.className);
-      if(m.target===legacyMenu&&m.attributeName==='class')recordEvent('legacy-menu-class',legacyMenu.className);
       if(m.target===d.body&&m.attributeName==='class'&&d.body.classList.contains('yiu-full-settings-open')!==isOpen)recordEvent('body-state-mismatch','isOpen='+isOpen+'; body='+d.body.className);
     });
   });
   stateObserver.observe(page,{attributes:true,attributeFilter:['class']});
-  if(legacyMenu)stateObserver.observe(legacyMenu,{attributes:true,attributeFilter:['class']});
   stateObserver.observe(d.body,{attributes:true,attributeFilter:['class']});
   w.addEventListener('yiu-dev-options-ready',function(){rebuildCategories();sync();});
   rebuildCategories();

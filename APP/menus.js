@@ -109,8 +109,8 @@ document.addEventListener("pointerdown",function(e){
     t.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>`;
     fold.parentNode.insertBefore(t,fold.nextSibling);
 
-    var menu=document.createElement("div");menu.id="pg5";menu.className="pg hide";
-    menu.innerHTML=`<div class="ph">系统设置</div><div class="pm-box">
+    var settingsData=document.createElement("div");settingsData.id="yiuSettingsDataRoot";settingsData.className="yiu-settings-data-root";settingsData.setAttribute("aria-hidden","true");settingsData.style.cssText="display:none!important;position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important;";
+    settingsData.innerHTML=`<div class="yiu-settings-source">
 
       <!-- 1. 系统设置 -->
       <div class="grp">
@@ -160,47 +160,22 @@ document.addEventListener("pointerdown",function(e){
 
       <div class="qtip" id="appVersion" style="text-align:center;margin-top:24px">版本 v0.1.1 Beta 3</div>
     </div>`;
-    var pg4=document.getElementById("pg4");pg4.parentNode.insertBefore(menu,pg4);
-    /* 绑定折叠面板事件 */
-    [].forEach.call(menu.querySelectorAll(".gh"), function(btn) {
-      btn.addEventListener("click", function() {
-        var grp = btn.parentNode;
-        var on = grp.classList.toggle("open");
-        btn.setAttribute("aria-expanded", on ? "true" : "false");
-        if (on) setTimeout(function(){ grp.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, 460);
-      });
-    });
-
-    var $$=function(i){return document.getElementById(i)},timer=0;
-    [].forEach.call(menu.querySelectorAll("input[type=range]"),wrapRange);
+    document.body.appendChild(settingsData);
+    var $=function(i){return document.getElementById(i)};
+    [].forEach.call(settingsData.querySelectorAll("input[type=range]"),wrapRange);
     bindUiSpd();
     var qrm=$$("qrstMoved");if(qrm)qrm.onclick=function(){setUiSpdPct(100);var d=$$("qdemo");if(d)d.checked=!d.checked};
     function refresh(){
-      [].forEach.call(menu.querySelectorAll("[data-t]"),function(b){var c=$$(b.dataset.t);b.classList.toggle("on",!!(c&&c.checked))});
+      [].forEach.call(settingsData.querySelectorAll("[data-t]"),function(b){var c=$$(b.dataset.t);b.classList.toggle("on",!!(c&&c.checked))});
     }
-    menu.addEventListener("click",function(e){
+    settingsData.addEventListener("click",function(e){
       var b=e.target.closest&&e.target.closest("button");if(!b)return;e.stopPropagation();
       var tg=b.dataset.t;
       if(tg){var c=$$(tg);if(c)c.click()}
       refresh();
     });
-    var menuOn=false,_sp=showPg;
-    function setMenu(on){
-      on=!!on;if(on===menuOn)return;menuOn=on;
-      t.classList.toggle("on",on);t.setAttribute("aria-expanded",on?"true":"false");clearInterval(timer);
-      if(on){
-        for(var k=0;k<5;k++){var e=$$("pg"+k);e.classList.remove("leave","go");e.classList.add("hide")}
-        menu.classList.remove("leave","hide","go");menu.style.setProperty("--dx","18px");void menu.offsetWidth;menu.classList.add("go");
-        clearTimeout(menu._g);menu._g=setTimeout(function(){menu.classList.remove("go")},uiT(400));
-        $$("panel").scrollTop=0;refresh();timer=setInterval(refresh,300);
-      }else{menu.classList.remove("go");menu.classList.add("hide");_sp(curTab,0)}
-    }
-    /* 其它地方切换页面时（点上方标签等），自动退出播放菜单 */
-    showPg=function(i,d){if(menuOn){menuOn=false;t.classList.remove("on");t.setAttribute("aria-expanded","false");clearInterval(timer);menu.classList.remove("go");menu.classList.add("hide")}_sp(i,d)};
-    var nav=document.querySelector(".nav");
-    if(nav)nav.addEventListener("pointerdown",function(){if(menuOn)setMenu(false)},true);
-    t.addEventListener("click",function(e){e.stopPropagation();close();setMenu(!menuOn)});
-    new MutationObserver(function(){if(!document.body.classList.contains("open"))setMenu(false)}).observe(document.body,{attributes:true,attributeFilter:["class"]});
+    // The visible settings entry is handled by the dedicated settings page.
+
   })();
 
   /* ---- Q弹气泡里的两个新功能：循环播放 / 屏幕常亮 ---- */

@@ -2,7 +2,7 @@
 (function(w,d){
 'use strict';
 function mount(){
- var api=w.YiuFrameRateLimit,group=d.querySelector('#pg5 .grp .gp');
+ var api=w.YiuFrameRateLimit,group=d.querySelector('#yiuSettingsDataRoot .grp .gp');
  if(!api||!group||d.getElementById('yiuFrameRateSettings'))return false;
  var panel=d.createElement('div');panel.id='yiuFrameRateSettings';
  panel.style.cssText='margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:10px;';
