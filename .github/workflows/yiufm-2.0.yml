@@ -325,6 +325,7 @@ jobs:
 
       - name: Bundle and verify legacy visual engines
         run: |
+          trap 'code=$?; echo "::error::Bundle verification failed at: $BASH_COMMAND (exit $code)"; exit $code' ERR
           APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
           test -n "$APP_PATH"
           mkdir -p "$APP_PATH/Web"
