@@ -158,11 +158,15 @@ function mount(){
     configs.forEach(function(cfg){
       var original=cfg.find?cfg.find(source):[].slice.call(source.children).find(cfg.match);
       if(!original)return;
-      var clone=original.cloneNode(true);
+      // Do not mirror the legacy accordion shell (.grp > .gb > .gi).
+      // Its collapsed-state CSS can keep cloned content invisible in WKWebView.
+      // Mirror only the actual settings body (.gp), inside our own visible panel.
+      var contentOriginal=original.querySelector('.gp')||original;
+      var clone=contentOriginal.cloneNode(true);
       if(clone.id)clone.id='yiuMirror_'+clone.id;
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
-      bindTree(clone,original);
+      bindTree(clone,contentOriginal);
       var card=d.createElement('button');
       card.type='button';card.className='m3-category';
       card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
@@ -175,15 +179,11 @@ function mount(){
       desc.className='m3-subdesc';desc.textContent=cfg.desc;
       panel.appendChild(desc);
       var content=d.createElement('div');
-      if(clone.classList.contains('grp')){
-        var gh=clone.querySelector('.gh');
-        var title=gh&&gh.querySelector('span');
-        var h=d.createElement('h2');h.className='m3-group-title';h.textContent=title?title.textContent.trim():cfg.title;
-        panel.appendChild(h);
-        content.appendChild(clone);
-      }else{
-        content.appendChild(clone);
-      }
+      var h=d.createElement('h2');
+      h.className='m3-group-title';
+      h.textContent=cfg.title;
+      panel.appendChild(h);
+      content.appendChild(clone);
       if(cfg.id==='beta'){
         var betaControls=clone.querySelectorAll('input,select,textarea,button:not(.gh),[role="switch"]');
         if(!betaControls.length){
