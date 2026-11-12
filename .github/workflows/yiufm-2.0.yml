@@ -229,7 +229,6 @@ jobs:
           python3 YiuFM/Scripts/patch-player-library-consumer.py
           python3 YiuFM/Scripts/patch-playback-preferences.py
           python3 YiuFM/Scripts/patch-visualizer-lifecycle.py
-          python3 YiuFM/Scripts/patch-visualizer-drive-isolation.py
           python3 YiuFM/Scripts/patch-partita-word-clock.py
           python3 YiuFM/Scripts/patch-sonnet-native-resolution.py
           grep -q 'APP/playback-service.js?v=1' YiuFM/Resources/Web/index.html
@@ -289,6 +288,26 @@ jobs:
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --test YiuFM/Tests/frame-rate-limit.test.cjs YiuFM/Tests/player-frame-rate.test.cjs YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
           du -sh YiuFM/Resources/Web
+
+      - name: Write build provenance manifest
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = {
+              "app": "Yiu.fm 2.0",
+              "sourceBranch": os.environ.get("GITHUB_REF_NAME", ""),
+              "sourceCommit": os.environ.get("GITHUB_SHA", ""),
+              "workflowRun": os.environ.get("GITHUB_RUN_ID", ""),
+              "workflowAttempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
+              "uiBaselineCommit": "b070ae110b9cc143e71c8607466f6c1e85467367",
+              "uiBaselinePolicy": "Run #13 legacy UI baseline with explicitly overlaid branch modules",
+              "note": "This artifact is a compatibility build, not a full snapshot of every file on the source branch."
+          }
+          out = Path("YiuFM/Resources/Web/BUILD-INFO.json")
+          out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+          print(out.read_text(encoding="utf-8"))
+          PY
 
       - name: Generate project
         run: xcodegen generate --spec YiuFM/project.yml
