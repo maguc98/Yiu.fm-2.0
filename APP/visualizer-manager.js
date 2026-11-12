@@ -26,6 +26,7 @@
   var want = null;         // 排队中的最新一次请求 { name, opts }；中间被覆盖的请求直接丢弃
   var waiters = [];        // 等待本轮切换收敛的 { ok, fail }
   var lastError = null;
+  var driveFaults = Object.create(null);
 
   function warn(msg, e) { if (window.console) console.warn('[VisualizerManager] ' + msg, e || ''); }
 
@@ -208,7 +209,13 @@
         // isActive is optional for legacy adapters; when provided, use it to
         // keep hidden engines completely out of the per-frame hot path.
         if (typeof ad.isActive === 'function' && !ad.isActive()) continue;
-        try { ad.drive(ct); } catch (e) { warn('drive ' + NAMES[i], e); }
+        try {
+          ad.drive(ct);
+          if (driveFaults[NAMES[i]]) { delete driveFaults[NAMES[i]]; warn('drive recovered ' + NAMES[i]); }
+        } catch (e) {
+          if (!driveFaults[NAMES[i]]) warn('drive ' + NAMES[i], e);
+          driveFaults[NAMES[i]] = true;
+        }
       }
     },
 
