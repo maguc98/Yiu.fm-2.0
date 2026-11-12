@@ -91,8 +91,8 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .yiu-slider{position:relative!important;display:block!important;width:100%!important;min-width:0!important;height:44px!important;min-height:44px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;touch-action:pan-y!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;-webkit-tap-highlight-color:transparent!important}
 #yiuSettingsPage .yiu-slider-track{position:absolute!important;left:10px!important;right:10px!important;top:50%!important;height:6px!important;transform:translateY(-50%)!important;border:0!important;border-radius:999px!important;background:#b8b3c1!important;box-shadow:inset 0 1px 1px rgba(35,28,55,.12)!important;overflow:visible!important}
 #yiuSettingsPage .yiu-slider-fill{position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:var(--yiu-slider-progress,0%)!important;border-radius:999px!important;background:var(--yiu-theme-accent)!important}
-#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:24px!important;height:14px!important;transform:translate(-50%,-50%)!important;border:1.5px solid var(--yiu-theme-accent)!important;border-radius:5px!important;background:#fff!important;box-shadow:0 2px 6px rgba(35,28,55,.18),0 0 0 2px rgba(255,255,255,.92)!important;transition:transform .12s ease,box-shadow .12s ease!important}
-#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.08,1.12)!important}
+#yiuSettingsPage .yiu-slider-thumb{position:absolute!important;left:var(--yiu-slider-progress,0%)!important;top:50%!important;width:38px!important;height:26px!important;transform:translate(-50%,-50%)!important;border:0!important;border-radius:999px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,20,40,.22)!important;transition:transform .12s ease,box-shadow .12s ease!important}
+#yiuSettingsPage .yiu-slider:active .yiu-slider-thumb{transform:translate(-50%,-50%) scale(1.06)!important}
 #yiuSettingsPage .m3-system-section{margin:0 0 16px!important}
 #yiuSettingsPage .m3-system-section .m3-hierarchy-title{margin:0 3px 9px!important;color:#625c70!important;font-size:12px!important;font-weight:750!important;letter-spacing:.2px!important}
 #yiuSettingsPage .m3-system-section-body{display:flex!important;flex-direction:column!important;gap:9px!important}
@@ -175,7 +175,16 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 #yiuSettingsPage .m3-settings-body .yiu-slider{height:48px!important;min-height:48px!important}
 #yiuSettingsPage .m3-settings-body .yiu-slider-track{background:#dcdce2!important;box-shadow:none!important}
 #yiuSettingsPage .m3-settings-body .yiu-slider-fill{background:#121214!important}
-#yiuSettingsPage .m3-settings-body .yiu-slider-thumb{width:38px!important;height:26px!important;border:0!important;border-radius:999px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,20,40,.22)!important}
+
+#yiuSettingsPage .m3-system-section{margin:0 0 18px!important}
+#yiuSettingsPage .m3-system-section .m3-hierarchy-title{margin:0 3px 10px!important;color:#625c70!important;font-size:12px!important;font-weight:750!important;letter-spacing:.2px!important}
+#yiuSettingsPage .m3-system-section-body{display:flex!important;flex-direction:column!important;gap:10px!important}
+#yiuSettingsPage .m3-system-control-card{padding:14px 15px!important;border:1px solid #e8e2ef!important;border-radius:18px!important;background:#fff!important;box-shadow:0 2px 8px rgba(48,38,75,.035)!important;gap:10px!important}
+#yiuSettingsPage .m3-system-control-card>.row{margin:0!important}
+#yiuSettingsPage .m3-system-control-card .row{min-height:40px!important}
+#yiuSettingsPage .m3-system-control-card .row+.row{margin-top:8px!important}
+#yiuSettingsPage .m3-system-control-card .tnote{color:#706a78!important;line-height:1.5!important}
+
 `;
   d.head.appendChild(style);
 
