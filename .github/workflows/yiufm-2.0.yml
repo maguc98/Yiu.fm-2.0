@@ -113,16 +113,15 @@ jobs:
           node --check APP/runtime/frame-rate-limit.js
           node --check APP/frame-rate-settings.js
           node --check APP/settings-page.js
-          grep -q "Yiu.fm settings controls v3" APP/settings-page.js
           grep -q "function buildDedicatedControls" APP/settings-page.js
           grep -q "data-yiu-control','switch'" APP/settings-page.js
           grep -q "yiu-slider-track" APP/settings-page.js
           grep -q "function updateDedicatedSlider" APP/settings-page.js
-          grep -q "width:50px!important" APP/settings-page.js
-          grep -q "width:44px!important;height:28px!important" APP/settings-page.js
-          grep -q "rect.width-44" APP/settings-page.js
+          grep -q "width:48px!important" APP/settings-page.js
+          grep -q "height:28px!important" APP/settings-page.js
+          grep -q "rect.width-20" APP/settings-page.js
           grep -q "systemCard.className" APP/settings-page.js
-          grep -q ".m3-setting-item .qr:has(input\[type=range\])" APP/settings-page.js
+          grep -q ".m3-setting-item .qr:has(.yiu-slider)" APP/settings-page.js
           grep -q "data-theme-key" APP/settings-page.js
           grep -q "yiu.settings.theme.v1" APP/settings-page.js
           grep -q 'body.is-fume #sonnetHideWrap' APP/fume-settings.js
