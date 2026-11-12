@@ -430,11 +430,11 @@ jobs:
           mkdir -p YiuFM/output/Payload
           cp -R YiuFM/build/Build/Products/Release-iphoneos/*.app YiuFM/output/Payload/Yiu.fm.app
           cd YiuFM/output
-          /usr/bin/zip -qry "YiuFM-2.0-r${GITHUB_RUN_NUMBER}-unsigned.ipa" Payload
+          /usr/bin/zip -qry "Yf-${GITHUB_RUN_NUMBER}-unsigned.ipa" Payload
           rm -rf Payload
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: YiuFM-2.0-r${{ github.run_number }}-unsigned-ipa
-          path: YiuFM/output/YiuFM-2.0-r${{ github.run_number }}-unsigned.ipa
+          name: Yf-${{ github.run_number }}-unsigned-ipa
+          path: YiuFM/output/Yf-${{ github.run_number }}-unsigned.ipa
