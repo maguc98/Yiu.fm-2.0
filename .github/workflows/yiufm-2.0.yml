@@ -234,7 +234,7 @@ jobs:
           menus_anchor = '<script src="./APP/menus.js?v=20261112d"></script>'
           menus_script = '<script src="./APP/menus.js?v=20261112e"></script>'
           fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261112d"></script>'
-          full_settings_script = '<script src="./APP/settings-page.js?v=20261112e"></script>'
+          full_settings_script = '<script src="./APP/settings-page.js?v=20261112f"></script>'
           if html.count(menus_anchor) != 1 or menus_script in html or fps_settings_script in html:
               raise SystemExit("Expected one menus.js anchor and no prior menu/frame-rate scripts.")
           if html.count(full_settings_script) != 1:
@@ -402,7 +402,7 @@ jobs:
           test -s "$WEB_ROOT/APP/fume-audio.js"
           grep -q "fume-audio.js?v=20261109b" "$WEB_ROOT/index.html"
           grep -q "fume.js?v=20261109c" "$WEB_ROOT/index.html"
-          grep -q 'APP/settings-page.js?v=20261112e' "$WEB_ROOT/index.html"
+          grep -q 'APP/settings-page.js?v=20261112f' "$WEB_ROOT/index.html"
           grep -q 'APP/frame-rate-settings.js?v=20261112d' "$WEB_ROOT/index.html"
           grep -q 'APP/menus.js?v=20261112e' "$WEB_ROOT/index.html"
           grep -q 'APP/devtools.js?v=20261112b' "$WEB_ROOT/index.html"
