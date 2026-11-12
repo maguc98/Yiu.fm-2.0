@@ -84,7 +84,7 @@ function mount(){
   function readableSub(fg,bg){var lo=0,hi=1;for(var i=0;i<18;i++){var mid=(lo+hi)/2;if(contrastRatio(mixHex(fg,bg,mid),bg)>=4.5)hi=mid;else lo=mid}return mixHex(fg,bg,hi)}
   function applyTheme(save){
     Object.keys(themeDefaults).forEach(function(k){if(!/^#[0-9a-f]{6}$/i.test(theme[k]||''))theme[k]=themeDefaults[k]});
-    var dark='#171923',light='#ffffff',effectiveInk=theme.ink,effectiveCardInk=theme.ink;
+    var dark='#000000',light='#ffffff',effectiveInk=theme.ink,effectiveCardInk=theme.ink;
     if(contrastRatio(effectiveInk,theme.bg)<4.5)effectiveInk=contrastRatio(dark,theme.bg)>=contrastRatio(light,theme.bg)?dark:light;
     if(contrastRatio(effectiveCardInk,theme.card)<4.5)effectiveCardInk=contrastRatio(dark,theme.card)>=contrastRatio(light,theme.card)?dark:light;
     page.style.colorScheme=hexLuminance(theme.bg)>.45?'light':'dark';
