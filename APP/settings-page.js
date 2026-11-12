@@ -221,7 +221,7 @@ function mount(){
         if(!label)label=aria||id||'设置项';
         var key=c.cfg.id+'|'+label;
         if(exact.some(function(x){return x.key===key}))return;
-        exact.push({key:key,category:c.cfg.id,title:label.replace(/\\s+/g,' ').slice(0,90),target:holder});
+        exact.push({key:key,category:c.cfg.id,title:label.replace(/\s+/g,' ').slice(0,90),target:holder});
       });
     });
     searchMatches=exact;
