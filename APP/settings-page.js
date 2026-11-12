@@ -80,6 +80,8 @@ function mount(){
   try{theme=Object.assign(theme,JSON.parse(w.localStorage.getItem('yiu.settings.theme.v1')||'{}'))}catch(_){}
   function hexLuminance(hex){var v=hex.replace('#',''),r=parseInt(v.slice(0,2),16)/255,g=parseInt(v.slice(2,4),16)/255,b=parseInt(v.slice(4,6),16)/255;function f(x){return x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4)}return .2126*f(r)+.7152*f(g)+.0722*f(b)}
   function contrastRatio(a,b){var x=hexLuminance(a),y=hexLuminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+  function mixHex(fg,bg,alpha){var f=fg.replace('#',''),b=bg.replace('#',''),out='';for(var i=0;i<3;i++){var v=Math.round(parseInt(f.slice(i*2,i*2+2),16)*alpha+parseInt(b.slice(i*2,i*2+2),16)*(1-alpha));out+=('0'+v.toString(16)).slice(-2)}return '#'+out}
+  function readableSub(fg,bg){var lo=0,hi=1;for(var i=0;i<18;i++){var mid=(lo+hi)/2;if(contrastRatio(mixHex(fg,bg,mid),bg)>=4.5)hi=mid;else lo=mid}return mixHex(fg,bg,hi)}
   function applyTheme(save){
     Object.keys(themeDefaults).forEach(function(k){if(!/^#[0-9a-f]{6}$/i.test(theme[k]||''))theme[k]=themeDefaults[k]});
     var dark='#171923',light='#ffffff',effectiveInk=theme.ink,effectiveCardInk=theme.ink;
@@ -90,8 +92,9 @@ function mount(){
     page.style.setProperty('--s-bg',theme.bg);
     page.style.setProperty('--s-card',theme.card);
     page.style.setProperty('--s-ink',effectiveInk);
+    page.style.setProperty('--s-sub',readableSub(effectiveInk,theme.bg));
     page.style.setProperty('--s-card-ink',effectiveCardInk);
-    page.style.setProperty('--s-card-sub','color-mix(in srgb,'+effectiveCardInk+' 62%,transparent)');
+    page.style.setProperty('--s-card-sub',readableSub(effectiveCardInk,theme.card));
     page.querySelectorAll('[data-theme-key]').forEach(function(el){el.value=theme[el.dataset.themeKey]});
     if(save)try{w.localStorage.setItem('yiu.settings.theme.v1',JSON.stringify(theme))}catch(_){}
   }
