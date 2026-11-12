@@ -152,6 +152,10 @@ function mount(){
 #yiuSettingsPage .m3-setting-item .row:has(.yiu-slider){display:grid!important;grid-template-columns:minmax(78px,.78fr) minmax(0,1.55fr)!important;align-items:center!important;column-gap:12px!important}
 #yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch){display:grid!important;grid-template-columns:minmax(0,1fr) 58px!important;align-items:center!important;column-gap:12px!important;min-height:58px!important}
 #yiuSettingsPage .m3-setting-item .chk:has(.yiu-switch)>span{grid-column:1!important;grid-row:1!important}
+/* Explicitly place the generated switch in the trailing control column.
+   The generic :not(input) child rule also matches this button and otherwise
+   forces it into the label column. */
+#yiuSettingsPage .m3-setting-item .chk>.yiu-switch{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;z-index:1!important}
 
 
 `;
