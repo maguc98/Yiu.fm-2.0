@@ -138,7 +138,7 @@ function mount(){
   var configs=[
     {id:'system',title:'系统设置',desc:'界面动画速度、性能优化与基础偏好',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#8da0e2" d="M13.2 3.5h5.6l.8 3.1a10 10 0 0 1 2.2 1.3l3.1-.8 2.8 4.8-2.3 2.2a10 10 0 0 1 0 2.6l2.3 2.2-2.8 4.8-3.1-.8a10 10 0 0 1-2.2 1.3l-.8 3.1h-5.6l-.8-3.1a10 10 0 0 1-2.2-1.3l-3.1.8-2.8-4.8 2.3-2.2a10 10 0 0 1 0-2.6l-2.3-2.2 2.8-4.8 3.1.8a10 10 0 0 1 2.2-1.3z"/><circle cx="16" cy="15.4" r="5.1" fill="#fff"/><circle cx="16" cy="15.4" r="2.5" fill="#5369b4"/></svg>',match:function(el){return el.classList.contains('grp')&&!el.id}},
     {id:'beta',title:'Beta 测试功能',desc:'体验正在测试中的新功能',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#e9a56e" d="M12 3h8v2h-2v7.2l7.1 11.2A3.7 3.7 0 0 1 22 29H10a3.7 3.7 0 0 1-3.1-5.6L14 12.2V5h-2z"/><path fill="#fff1df" d="M10.2 22.2 8.7 24.5A1.8 1.8 0 0 0 10.2 27h11.6a1.8 1.8 0 0 0 1.5-2.5l-1.5-2.3z"/><circle cx="13" cy="19" r="1.3" fill="#c97942"/><circle cx="19.5" cy="17.5" r="1" fill="#c97942"/></svg>',match:function(el){return el.id==='betaBox'}},
-    {id:'developer',title:'开发者选项',desc:'调试工具、运行状态与高级诊断',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="22" rx="6" fill="#79b99a"/><path d="M10 12h12M10 20h12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="14" cy="12" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/><circle cx="20" cy="20" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/></svg>',find:function(root){return root.querySelector('#devOptionsGroup')||root.querySelector('#devOptionsHolder')}}
+    {id:'developer',title:'开发者选项',desc:'调试工具、运行状态与高级诊断',icon:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="22" rx="6" fill="#79b99a"/><path d="M10 12h12M10 20h12" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="14" cy="12" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/><circle cx="20" cy="20" r="3" fill="#3e8060" stroke="#fff" stroke-width="1.5"/></svg>',find:function(root){return root.querySelector('#devOptionsGroup')}}
   ];
   function bindTree(clone,original){
     var originals=[original].concat([].slice.call(original.querySelectorAll('*')));
@@ -149,39 +149,57 @@ function mount(){
       mirrorNodes.push(el);
     });
   }
-  configs.forEach(function(cfg){
-    var original=cfg.find?cfg.find(source):[].slice.call(source.children).find(cfg.match);
-    if(!original)return;
-    var clone=original.cloneNode(true);
-    if(clone.id)clone.id='yiuMirror_'+clone.id;
-    clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
-    clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
-    bindTree(clone,original);
-    var card=d.createElement('button');
-    card.type='button';card.className='m3-category';
-    card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
-    card.setAttribute('data-category',cfg.id);
-    list.appendChild(card);
-    var panel=d.createElement('section');
-    panel.className='m3-category-panel';
-    panel.setAttribute('data-panel',cfg.id);
-    var desc=d.createElement('p');
-    desc.className='m3-subdesc';desc.textContent=cfg.desc;
-    panel.appendChild(desc);
-    var content=d.createElement('div');
-    if(clone.classList.contains('grp')){
-      var gh=clone.querySelector('.gh');
-      var title=gh&&gh.querySelector('span');
-      var h=d.createElement('h2');h.className='m3-group-title';h.textContent=title?title.textContent.trim():cfg.title;
-      panel.appendChild(h);
-      content.appendChild(clone);
-    }else{
-      content.appendChild(clone);
-    }
-    panel.appendChild(content);
-    subpage.appendChild(panel);
-    categories.push({cfg:cfg,card:card,panel:panel,clone:clone,original:original});
-  });
+  function rebuildCategories(){
+    sourceNodes=[source].concat([].slice.call(source.querySelectorAll('*')));
+    mirrorNodes=[];
+    categories=[];
+    list.textContent='';
+    subpage.textContent='';
+    configs.forEach(function(cfg){
+      var original=cfg.find?cfg.find(source):[].slice.call(source.children).find(cfg.match);
+      if(!original)return;
+      var clone=original.cloneNode(true);
+      if(clone.id)clone.id='yiuMirror_'+clone.id;
+      clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
+      clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
+      bindTree(clone,original);
+      var card=d.createElement('button');
+      card.type='button';card.className='m3-category';
+      card.innerHTML='<span class="m3-icon">'+cfg.icon+'</span><span class="m3-cat-copy"><strong>'+cfg.title+'</strong><small>'+cfg.desc+'</small></span><span class="m3-chevron">›</span>';
+      card.setAttribute('data-category',cfg.id);
+      list.appendChild(card);
+      var panel=d.createElement('section');
+      panel.className='m3-category-panel';
+      panel.setAttribute('data-panel',cfg.id);
+      var desc=d.createElement('p');
+      desc.className='m3-subdesc';desc.textContent=cfg.desc;
+      panel.appendChild(desc);
+      var content=d.createElement('div');
+      if(clone.classList.contains('grp')){
+        var gh=clone.querySelector('.gh');
+        var title=gh&&gh.querySelector('span');
+        var h=d.createElement('h2');h.className='m3-group-title';h.textContent=title?title.textContent.trim():cfg.title;
+        panel.appendChild(h);
+        content.appendChild(clone);
+      }else{
+        content.appendChild(clone);
+      }
+      if(cfg.id==='beta'){
+        var betaControls=clone.querySelectorAll('input,select,textarea,button:not(.gh),[role="switch"]');
+        if(!betaControls.length){
+          var notice=d.createElement('div');
+          notice.className='m3-empty';
+          notice.innerHTML='<strong>暂时没有单独开放的 Beta 开关</strong><span>当前版本的实验入口尚未注册独立控件。音乐模式、音频与歌词导入已保留在播放器底部「···」菜单中；后续有可用实验功能时会显示在这里。</span>';
+          content.appendChild(notice);
+        }
+      }
+      panel.appendChild(content);
+      subpage.appendChild(panel);
+      categories.push({cfg:cfg,card:card,panel:panel,clone:clone,original:original});
+    });
+    if(typeof updateSearch==='function')updateSearch();
+  }
+  rebuildCategories();
 
   function sourceFor(el){
     var node=el&&el.closest&&el.closest('[data-yiu-source-index]');
@@ -345,8 +363,13 @@ function mount(){
   d.body.appendChild(launcher);
   launcher.addEventListener('click',open);
   d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!page.classList.contains('is-hidden')){if(!subpage.hidden)showHome();else close()}});
-  var observer=new MutationObserver(function(){if(!page.classList.contains('is-hidden'))sync()});
+  var observer=new MutationObserver(function(mutations){
+    var structureChanged=mutations.some(function(m){return m.type==='childList'&&m.target===source});
+    if(structureChanged)rebuildCategories();
+    if(!page.classList.contains('is-hidden'))sync();
+  });
   observer.observe(source,{subtree:true,childList:true,attributes:true,characterData:true});
+  rebuildCategories();
   sync();
   return true;
 }
