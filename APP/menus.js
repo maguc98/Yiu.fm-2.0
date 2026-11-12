@@ -161,7 +161,7 @@ document.addEventListener("pointerdown",function(e){
       <div class="qtip" id="appVersion" style="text-align:center;margin-top:24px">版本 v0.1.1 Beta 3</div>
     </div>`;
     document.body.appendChild(settingsData);
-    var $=function(i){return document.getElementById(i)};
+    var $$=function(i){return document.getElementById(i)};
     [].forEach.call(settingsData.querySelectorAll("input[type=range]"),wrapRange);
     bindUiSpd();
     var qrm=$$("qrstMoved");if(qrm)qrm.onclick=function(){setUiSpdPct(100);var d=$$("qdemo");if(d)d.checked=!d.checked};

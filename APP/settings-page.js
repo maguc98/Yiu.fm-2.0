@@ -203,14 +203,14 @@ body.yiu-full-settings-open #panel{visibility:hidden!important;pointer-events:no
 
   var foot=d.createElement('div');
   foot.className='m3-footer';
-  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ab';
+  foot.textContent='Yiu.fm 2.0 · 设置保存在本机 · dedicated-ui 20261112ac';
   page.appendChild(foot);
   d.body.appendChild(page);
 
   w.__yiuSettingsDiag=function(){
     var tag=function(u){return (u||'inline').split('/').slice(-2).join('/')};
     return {
-      ui:'dedicated-ui 20261112ab',
+      ui:'dedicated-ui 20261112ac',
       settingsDataRoot:!!sourceRoot,
       settingsDataSource:!!source,
       mirrorPage:!!d.getElementById('yiuSettingsPage'),
