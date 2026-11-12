@@ -177,6 +177,9 @@ jobs:
           fume_tag = '<script src="./APP/fume/fume.js?v=20261109b"></script>'
           adapter_tag = '<script src="./APP/fume-adapter.js?v=20261109b"></script>'
           manager_tag = manager_tags[0]
+          manager_script_tag = '<script src="./APP/visualizer-manager.js?v=20261109b"></script>'
+          if html.count(manager_script_tag) != 1:
+              raise SystemExit("Expected exactly one visualizer manager script tag; refusing to patch.")
           folia_tag = '<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>'
           audio_tag = '<script src="./APP/fume-audio.js?v=20261109b"></script>'
           coordinator_tag = '<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>'
@@ -186,7 +189,7 @@ jobs:
               raise SystemExit("A Fume support script is already present; refusing duplicate injection.")
           html = html.replace(fume_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>', 1)
           html = html.replace(adapter_tag, folia_tag + chr(10) + audio_tag + chr(10) + '<script src="./APP/fume-adapter.js?v=20261111a"></script>', 1)
-          html = html.replace(manager_tag, manager_tag + chr(10) + coordinator_tag, 1)
+          html = html.replace(manager_script_tag, manager_script_tag + chr(10) + coordinator_tag, 1)
           for tag in ("APP/fume/fume.js", "APP/fume-folia/fume-folia.js", "APP/fume-audio.js", "APP/fume-adapter.js", "APP/visualizer-manager.js", "APP/runtime/render-coordinator.js"):
               count = sum(1 for line in html.splitlines() if '<script' in line and tag in line and '</script>' in line)
               if count != 1:
