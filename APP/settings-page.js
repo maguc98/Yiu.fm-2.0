@@ -33,7 +33,7 @@ function mount(){
 #yiuSettingsPage *{box-sizing:border-box}
 #yiuSettingsPage button,#yiuSettingsPage input{font:inherit}
 #yiuSettingsPage .m3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;min-height:54px;margin:0 -18px;padding:0 18px;background:rgba(246,243,251,.94);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-#yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:50%;background:transparent;color:var(--yiu-m3-ink);font-size:25px;line-height:1}
+#yiuSettingsPage .m3-back{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:0;border-radius:50%;background:transparent;color:var(--yiu-m3-ink);font-size:25px;line-height:1;-webkit-tap-highlight-color:transparent}#yiuSettingsPage .m3-back:active{background:#e9e3f1}#yiuSettingsPage .m3-back:focus-visible,#yiuSettingsPage .m3-category:focus-visible{outline:2px solid var(--yiu-m3-primary);outline-offset:2px}
 #yiuSettingsPage .m3-title{font-size:23px;line-height:1.2;font-weight:650;letter-spacing:-.4px}
 #yiuSettingsPage .m3-top.sub .m3-back{display:block}
 #yiuSettingsPage .m3-top.sub .m3-title{font-size:20px}
@@ -46,7 +46,7 @@ function mount(){
 #yiuSettingsPage .m3-hero strong{display:block;font-size:18px;font-weight:700}
 #yiuSettingsPage .m3-hero small{display:block;margin-top:4px;font-size:12px;line-height:1.5;color:#594f6b}
 #yiuSettingsPage .m3-section-title{margin:20px 4px 9px;font-size:14px;font-weight:700;color:#514b59}
-#yiuSettingsPage .m3-list{overflow:hidden;border-radius:22px;background:var(--yiu-m3-surface);box-shadow:0 1px 2px rgba(35,25,50,.04)}
+#yiuSettingsPage .m3-list{overflow:hidden;border-radius:22px;background:var(--yiu-m3-surface);box-shadow:0 1px 2px rgba(35,25,50,.04)}#yiuSettingsPage .m3-empty{margin-top:12px;padding:22px 18px;border-radius:20px;background:#fff;text-align:center;color:var(--yiu-m3-sub);box-shadow:0 1px 2px rgba(35,25,50,.04)}#yiuSettingsPage .m3-empty strong{display:block;margin-bottom:5px;color:var(--yiu-m3-ink);font-size:15px}#yiuSettingsPage .m3-empty button{margin-top:12px;padding:9px 15px;border:0;border-radius:999px;background:#eee7f8;color:#59458b;font-size:13px;font-weight:650}
 #yiuSettingsPage .m3-category{display:flex;align-items:center;gap:15px;width:100%;min-height:76px;padding:12px 16px;border:0;border-bottom:1px solid #eeeaf1;background:transparent;text-align:left;color:var(--yiu-m3-ink);-webkit-tap-highlight-color:transparent}
 #yiuSettingsPage .m3-category:last-child{border-bottom:0}
 #yiuSettingsPage .m3-category:active{background:#f1edf6}
@@ -101,6 +101,11 @@ function mount(){
   var list=d.createElement('div');
   list.className='m3-list';
   home.appendChild(list);
+  var empty=d.createElement('div');
+  empty.className='m3-empty';
+  empty.hidden=true;
+  empty.innerHTML='<strong>没有找到相关设置</strong><span>试试其他关键词，或查看全部设置分类。</span><br><button type="button">清除搜索</button>';
+  home.appendChild(empty);
   page.appendChild(home);
 
   var subpage=d.createElement('div');
@@ -183,12 +188,29 @@ function mount(){
       if(src.textContent!==el.textContent&&src.children.length===0)el.textContent=src.textContent;
     });
   }
+  function updateSearch(){
+    var input=search.querySelector('input');
+    var q=input.value.trim().toLocaleLowerCase();
+    var visible=0;
+    categories.forEach(function(c){
+      var hay=(c.cfg.title+' '+c.cfg.desc+' '+c.clone.textContent).toLocaleLowerCase();
+      c.card.hidden=!!q&&!hay.includes(q);
+      if(!c.card.hidden)visible++;
+    });
+    sectionTitle.textContent=q?'搜索结果（'+visible+'）':'所有设置（'+categories.length+'）';
+    empty.hidden=!q||visible>0;
+  }
+  empty.querySelector('button').addEventListener('click',function(){
+    search.querySelector('input').value='';
+    updateSearch();
+    search.querySelector('input').focus();
+  });
   function showHome(){
     home.hidden=false;subpage.hidden=true;top.classList.remove('sub');
     top.querySelector('.m3-title').textContent='设置';
     foot.style.display='';
     search.querySelector('input').value='';
-    categories.forEach(function(c){c.card.hidden=false});
+    updateSearch();
     page.scrollTop=0;
   }
   function openCategory(id){
@@ -203,14 +225,7 @@ function mount(){
   list.addEventListener('click',function(e){
     var card=e.target.closest('[data-category]');if(card)openCategory(card.getAttribute('data-category'));
   });
-  search.querySelector('input').addEventListener('input',function(){
-    var q=this.value.trim().toLocaleLowerCase();
-    categories.forEach(function(c){
-      var hay=(c.cfg.title+' '+c.cfg.desc+' '+c.clone.textContent).toLocaleLowerCase();
-      c.card.hidden=!!q&&!hay.includes(q);
-    });
-    sectionTitle.textContent=q?'搜索结果':'所有设置';
-  });
+  search.querySelector('input').addEventListener('input',updateSearch);
   subpage.addEventListener('click',function(e){
     var control=e.target.closest('button,[role="button"]');
     if(!control)return;
@@ -231,19 +246,27 @@ function mount(){
   subpage.addEventListener('change',forwardValue);
   top.querySelector('.m3-back').addEventListener('click',function(){if(!subpage.hidden)showHome();else close()});
 
+  var previousFocus=null;
+  var previousBodyOverflow='';
   function open(){
+    previousFocus=d.activeElement;
+    previousBodyOverflow=d.body.style.overflow;
     sync();
     page.classList.remove('is-hidden');
     page.classList.add('is-open');
     page.setAttribute('aria-hidden','false');
     d.body.classList.add('yiu-full-settings-open');
+    d.body.style.overflow='hidden';
     showHome();
+    top.querySelector('.m3-back').focus();
   }
   function close(){
     page.classList.remove('is-open');
     page.classList.add('is-hidden');
     page.setAttribute('aria-hidden','true');
     d.body.classList.remove('yiu-full-settings-open');
+    d.body.style.overflow=previousBodyOverflow;
+    if(previousFocus&&typeof previousFocus.focus==='function')previousFocus.focus();
   }
   var launcher=d.createElement('button');
   launcher.type='button';launcher.id='yiuSettingsLauncher';
