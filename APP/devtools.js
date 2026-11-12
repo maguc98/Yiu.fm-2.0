@@ -1120,15 +1120,16 @@
       function pct(v) { return Math.round(v * 100) + '%'; }
       window.__renderResMul = cur();
       var wrap = document.createElement('div');
+      wrap.className = 'yiu-global-res-slider';
       wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:4px;';
       var start = idxOf(cur());
       wrap.innerHTML =
-        '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">' +
+        '<div class="yiu-global-res-heading" style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;">' +
           '<span style="font-size:14px;">渲染分辨率（全局）</span>' +
           '<em id="devResMulV" style="font-style:normal;font-size:12px;color:var(--sub);">' + pct(vals[start]) + '</em>' +
         '</div>' +
         '<input type="range" id="devResMul" min="0" max="4" step="1" value="' + start + '" style="width:100%;">' +
-        '<div style="display:flex;justify-content:space-between;padding:0 2px;font-size:11px;opacity:.55;">' +
+        '<div class="yiu-global-res-stops" style="display:flex;justify-content:space-between;padding:0 2px;font-size:11px;opacity:.55;">' +
           vals.map(function (v) { return '<span>' + pct(v) + '</span>'; }).join('') +
         '</div>';
       ord(wrap, 10);
@@ -1151,6 +1152,7 @@
       });
       slider.addEventListener('change', function () { apply(vals[+this.value]); });
       var note = document.createElement('div');
+      note.className = 'yiu-global-res-note';
       note.style.cssText = 'font-size:11px;opacity:.55;padding:0 2px;';
       note.textContent = '在各动效自己的分辨率设置上再乘这个比例，越低越省电；松手后当前画面会重建一次。云阶是网页元素，低档位时会变得更模糊。';
       ord(note, 10);
