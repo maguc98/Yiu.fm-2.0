@@ -216,6 +216,70 @@ function mount(){
 #yiuSettingsPage .m3-search-results{gap:8px}
 #yiuSettingsPage .m3-search-result{padding:13px 14px;border-radius:15px;border-color:#e8e3ed;box-shadow:0 1px 4px rgba(42,32,58,.025)}
 #yiuSettingsPage .m3-empty{border:1px solid #eae5ef;box-shadow:0 2px 8px rgba(42,32,58,.03)}
+
+/* Control polish: consistent toggle switches and visible, touch-friendly range tracks. */
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"],
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]{
+  -webkit-appearance:none!important;appearance:none!important;
+  position:relative!important;display:inline-block!important;flex:0 0 48px!important;
+  width:48px!important;min-width:48px!important;height:28px!important;min-height:28px!important;
+  margin:0!important;padding:0!important;border:1px solid #aaa4b2!important;border-radius:999px!important;
+  background:#d8d4de!important;box-shadow:inset 0 1px 2px rgba(35,25,50,.10)!important;
+  vertical-align:middle;cursor:pointer;transition:background .18s ease,border-color .18s ease!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]::before,
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]::before{
+  content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(30,24,40,.24);transform:translateX(0);
+  transition:transform .18s cubic-bezier(.2,.8,.2,1);
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]:checked,
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]:checked{
+  border-color:#6550a4!important;background:#6550a4!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]:checked::before,
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]:checked::before{transform:translateX(20px)}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]:focus-visible,
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]:focus-visible{
+  outline:3px solid rgba(101,80,164,.22)!important;outline-offset:3px!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]:disabled,
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="checkbox"][role="switch"]:disabled{opacity:.52!important;cursor:not-allowed!important}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]{
+  height:42px!important;min-height:42px!important;min-width:96px!important;
+  padding:0 2px!important;overflow:visible!important;background:transparent!important;
+  -webkit-appearance:none!important;appearance:none!important;touch-action:pan-y!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]::-webkit-slider-runnable-track{
+  height:11px!important;min-height:11px!important;border:1px solid #b9b2c4!important;
+  border-radius:999px!important;
+  background:linear-gradient(to right,#6550a4 0%,#6550a4 var(--yiu-range-progress,0%),#d6d1dd var(--yiu-range-progress,0%),#d6d1dd 100%)!important;
+  box-shadow:inset 0 1px 2px rgba(35,25,50,.10)!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]::-webkit-slider-thumb{
+  width:25px!important;height:25px!important;margin-top:-8px!important;
+  border:3px solid #fff!important;border-radius:50%!important;background:#6550a4!important;
+  box-shadow:0 1px 5px rgba(35,25,55,.30),0 0 0 1px rgba(67,49,103,.24)!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]::-moz-range-track{
+  height:11px!important;border:1px solid #b9b2c4!important;border-radius:999px!important;
+  background:#d6d1dd!important;box-shadow:inset 0 1px 2px rgba(35,25,50,.10)!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]::-moz-range-progress{
+  height:11px!important;border-radius:999px!important;background:#6550a4!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]::-moz-range-thumb{
+  width:19px!important;height:19px!important;border:3px solid #fff!important;border-radius:50%!important;
+  background:#6550a4!important;box-shadow:0 1px 5px rgba(35,25,55,.30)!important;
+}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type="range"]:focus-visible{
+  outline:3px solid rgba(101,80,164,.20)!important;outline-offset:5px!important;
+}
+@media(prefers-reduced-motion:reduce){
+  #yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"],
+  #yiuSettingsPage .m3-subpage .m3-settings-body .chk input[type="checkbox"]::before{transition:none!important}
+}
+
 #yiuSettingsPage .m3-footer{padding:24px 0 8px;color:#77717f}
 @media(min-width:600px){
   #yiuSettingsPage{padding-left:28px;padding-right:28px}
