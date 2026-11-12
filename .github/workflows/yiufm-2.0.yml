@@ -8,6 +8,7 @@ on:
       - refactor/yiu-2.0-layered-architecture
       - fix/folia-bundle-boot-diagnostics
       - refactor/system-settings-native
+      - fix/system-settings-readability-search
     paths:
       - "APP/**"
       - "index.html"
