@@ -171,8 +171,13 @@ jobs:
           if len(manager_tags) != 1:
               raise SystemExit(f"Expected one visualizer manager script tag, found {len(manager_tags)}; refusing to patch.")
           manager_tag = manager_tags[0]
-          manager_injection = '<script src="./APP/fume/fume.js?v=20261109c"></script>\\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\\n<script src="./APP/fume-audio.js?v=20261109b"></script>\\n<script src="./APP/fume-adapter.js?v=20261111a"></script>\\n'
-          html = html.replace(manager_tag, manager_injection + manager_tag + '\\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
+          manager_injection = chr(10).join([
+              '<script src="./APP/fume/fume.js?v=20261109c"></script>',
+              '<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>',
+              '<script src="./APP/fume-audio.js?v=20261109b"></script>',
+              '<script src="./APP/fume-adapter.js?v=20261111a"></script>',
+          ]) + chr(10)
+          html = html.replace(manager_tag, manager_injection + manager_tag + chr(10) + '<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
           html = html.replace('<script src="./APP/renderer.js?v=20261105d"></script>', '<script src="./APP/renderer.js?v=20261102a"></script>', 1)
           old_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261028b\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
           new_sonnet_engine = "sonnet:[\'./APP/sonnet/sonnet.js?v=20261102c\',\'./APP/sonnet-perf-governor.js?v=20261028a\'],"
@@ -342,9 +347,9 @@ jobs:
               "sourceCommit": os.environ.get("GITHUB_SHA", ""),
               "workflowRun": os.environ.get("GITHUB_RUN_ID", ""),
               "workflowAttempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
-              "uiBaselineCommit": "b070ae110b9cc143e71c8607466f6c1e85467367",
-              "uiBaselinePolicy": "Run #13 legacy UI baseline with explicitly overlaid branch modules",
-              "note": "This artifact is a compatibility build, not a full snapshot of every file on the source branch."
+              "uiBaselineCommit": None,
+              "uiBaselinePolicy": "Current checked-out branch is the sole UI source; no historical UI baseline is restored.",
+              "note": "The packaged UI and app modules are staged directly from the source branch."
           }
           out = Path("YiuFM/Resources/Web/BUILD-INFO.json")
           out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -394,8 +399,10 @@ jobs:
           grep -q 'APP/menus.js?v=20261112c' "$WEB_ROOT/index.html"
           grep -q 'APP/devtools.js?v=20261112b' "$WEB_ROOT/index.html"
           grep -q 'function scrubLegacyInline' "$WEB_ROOT/APP/settings-page.js"
-          grep -q 'yiuSettingsDataRoot' "$WEB_ROOT/APP/settings-page.js"
-          grep -q 'yiu-settings-source' "$WEB_ROOT/APP/settings-page.js"
+          grep -q "recordEvent('legacy-ui-removed'" "$WEB_ROOT/APP/settings-page.js"
+          grep -q 'sourceRoot.parentNode.removeChild(sourceRoot)' "$WEB_ROOT/APP/settings-page.js"
+          grep -q 'function buildDedicatedControls' "$WEB_ROOT/APP/settings-page.js"
+          ! grep -q 'cloneNode(true)' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'yf-skin-v2' "$WEB_ROOT/APP/settings-page.js"
           test -s "$WEB_ROOT/APP/tempera-adapter.js"
           test -s "$WEB_ROOT/APP/tempera/tempera.js"
