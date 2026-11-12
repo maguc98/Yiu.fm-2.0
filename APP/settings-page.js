@@ -64,6 +64,19 @@ function mount(){
 #yiuSettingsPage .m3-subpage .gb{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:0!important}
 #yiuSettingsPage .m3-subpage .gi{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
 #yiuSettingsPage .m3-subpage .gp{padding:0!important}
+#yiuSettingsPage .m3-subpage .m3-settings-body{display:flex!important;flex-direction:column!important;gap:15px!important;width:100%;min-width:0;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important;padding:18px!important;border-radius:22px!important;background:#fff!important;color:var(--yiu-m3-ink)!important;box-shadow:0 2px 8px rgba(45,35,65,.045)!important}
+#yiuSettingsPage .m3-subpage .m3-settings-body>*{visibility:visible!important;opacity:1!important;max-height:none}
+#yiuSettingsPage .m3-subpage .m3-settings-body .qh{display:flex!important;align-items:center;justify-content:space-between;margin:0!important;padding:0!important;color:var(--yiu-m3-ink)!important;font-size:15px;font-weight:700}
+#yiuSettingsPage .m3-subpage .m3-settings-body .qr{display:flex!important;align-items:center;gap:10px;margin:0!important;padding:0!important;color:var(--yiu-m3-sub)!important}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=range]{display:block!important;flex:1;min-width:80px;width:100%;height:28px;accent-color:var(--yiu-m3-primary);touch-action:pan-y}
+#yiuSettingsPage .m3-subpage .m3-settings-body .qtip{display:block!important;margin:0!important;padding:10px 12px;border-radius:13px;background:#f6f3fb;color:var(--yiu-m3-sub)!important;font-size:12px;line-height:1.55}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk{display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0!important;padding:13px 14px!important;border:1px solid #eeeaf3;border-radius:15px;background:#faf9fc!important;color:var(--yiu-m3-ink)!important}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chk span{color:var(--yiu-m3-ink)!important;font-size:14px}
+#yiuSettingsPage .m3-subpage .m3-settings-body input[type=checkbox]{width:20px;height:20px;accent-color:var(--yiu-m3-primary)}
+#yiuSettingsPage .m3-subpage .m3-settings-body .chip{min-height:42px;padding:10px 14px!important;border:1px solid #e3d9f0!important;border-radius:14px!important;background:#f2edf9!important;color:#5d478b!important;font-size:13px;font-weight:650}
+#yiuSettingsPage .m3-subpage .m3-settings-body .qd{margin:0!important;padding-top:8px;border-top:1px solid #eeeaf3}
+#yiuSettingsPage .m3-subpage .m3-settings-body [style*="display:flex"][style*="flex-direction:column"]{gap:12px!important}
+
 #yiuSettingsPage .m3-subpage .qh{color:var(--yiu-m3-ink)}
 #yiuSettingsPage .m3-subpage .qtip{color:var(--yiu-m3-sub)!important}
 #yiuSettingsPage .m3-subpage .chk{color:var(--yiu-m3-ink)!important}
@@ -163,6 +176,15 @@ function mount(){
       // Mirror only the actual settings body (.gp), inside our own visible panel.
       var contentOriginal=original.querySelector('.gp')||original;
       var clone=contentOriginal.cloneNode(true);
+      clone.classList.add('m3-settings-body');
+      clone.removeAttribute('hidden');
+      clone.style.setProperty('display','flex','important');
+      clone.style.setProperty('flex-direction','column','important');
+      clone.style.setProperty('visibility','visible','important');
+      clone.style.setProperty('opacity','1','important');
+      clone.style.setProperty('height','auto','important');
+      clone.style.setProperty('max-height','none','important');
+      clone.style.setProperty('overflow','visible','important');
       if(clone.id)clone.id='yiuMirror_'+clone.id;
       clone.querySelectorAll('[id]').forEach(function(el){el.id='yiuMirror_'+el.id});
       clone.querySelectorAll('label[for]').forEach(function(el){el.setAttribute('for','yiuMirror_'+el.getAttribute('for'))});
