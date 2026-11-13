@@ -55,6 +55,8 @@ jobs:
           cp index.html YiuFM/Resources/Web/index.html
           cp style.css YiuFM/Resources/Web/style.css
           cp APP/control-center.js YiuFM/Resources/Web/APP/control-center.js
+          # Keep the current theme picker API in sync with the control-center entry point.
+          cp APP/theme-picker.js YiuFM/Resources/Web/APP/theme-picker.js
           # Ship the branch devtools build so the adjustable global FPS limiter is included in the IPA.
           cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           # Ship the branch menu implementation so the new Other sections are included in the IPA.
@@ -143,13 +145,21 @@ jobs:
               raise SystemExit("Expected exactly one Sonnet adapter script tag; refusing to patch the UI.")
           html = html.replace(old_sonnet, new_sonnet, 1)
           host_anchor = '<div id="partitaHost"></div>'
+          fume_host = '<div id="fumeHost"></div>'
           if html.count(host_anchor) != 1:
               raise SystemExit("Expected exactly one Partita host; refusing to patch.")
-          html = html.replace(host_anchor, host_anchor + '<div id="fumeHost"></div>', 1)
+          if html.count(fume_host) == 0:
+              html = html.replace(host_anchor, host_anchor + fume_host, 1)
+          elif html.count(fume_host) != 1:
+              raise SystemExit("Expected at most one Fume host; refusing duplicate IDs.")
           css_anchor = '<style id="partitaHostCSS">#partitaHost{position:absolute;inset:0;display:none}#stage.mode-partita #partitaHost{display:block}#stage.mode-partita #one,#stage.mode-partita #sky{display:none}</style>'
+          fume_css = '<style id="fumeHostCSS">#fumeHost{position:absolute;inset:0;display:none}#stage.mode-fume #fumeHost{display:block}#stage.mode-fume #one,#stage.mode-fume #sky{display:none}</style>'
           if html.count(css_anchor) != 1:
               raise SystemExit("Expected exactly one Partita host CSS block; refusing to patch.")
-          html = html.replace(css_anchor, css_anchor + '\n<style id="fumeHostCSS">#fumeHost{position:absolute;inset:0;display:none}#stage.mode-fume #fumeHost{display:block}#stage.mode-fume #one,#stage.mode-fume #sky{display:none}</style>', 1)
+          if html.count(fume_css) == 0:
+              html = html.replace(css_anchor, css_anchor + '\\n' + fume_css, 1)
+          elif html.count(fume_css) != 1:
+              raise SystemExit("Expected at most one Fume host CSS block; refusing duplicate IDs.")
           old_p1 = '<script src="./APP/P1.js?v=1"></script>'
           new_p1 = '<script src="./APP/P1.js?v=20261107c"></script>'
           if html.count(old_p1) != 1:
@@ -319,6 +329,10 @@ jobs:
           test -s "$WEB_ROOT/index.html"
           test -s "$WEB_ROOT/style.css"
           test -s "$WEB_ROOT/APP/sonnet/sonnet.js"
+          test -s "$WEB_ROOT/APP/theme-picker.js"
+          grep -q "window.YiuThemePicker" "$WEB_ROOT/APP/theme-picker.js"
+          test "$(grep -o 'id="fumeHost"' "$WEB_ROOT/index.html" | wc -l | tr -d ' ')" = "1"
+          test "$(grep -o 'id="fumeHostCSS"' "$WEB_ROOT/index.html" | wc -l | tr -d ' ')" = "1"
           test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
           test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
           test -s "$WEB_ROOT/APP/partita-vendor.js"
