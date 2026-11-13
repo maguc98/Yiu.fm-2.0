@@ -2509,3 +2509,14 @@ html body #hub.hub-busy,html body #hub.hub-busy *{transition:none!important}
 #pg3 .settings-colors input[type=color]{width:42px;height:32px;flex:none;border-radius:9px}
 #pg3 .settings-native-group input[type=range]{accent-color:var(--yiu-settings-accent)}
 @media(min-width:520px){#pg3 .settings-presets{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+/* Theme tokens are applied to the real in-page settings groups, not a detached overlay. */
+#pg3 .settings-native-group{padding:8px;border:1px solid color-mix(in srgb,var(--yiu-settings-ink) 13%,transparent);border-radius:16px;background:var(--yiu-settings-bg);color:var(--yiu-settings-ink)}
+#pg3 .settings-native-group>.gh{background:var(--yiu-settings-card)!important;border:1px solid color-mix(in srgb,var(--yiu-settings-ink) 14%,transparent)!important;color:var(--yiu-settings-ink)!important;box-shadow:0 2px 8px rgba(30,40,65,.07)!important}
+#pg3 .settings-native-group>.gh span,#pg3 .settings-native-group>.gh em,#pg3 .settings-native-group>.gh svg{color:var(--yiu-settings-ink)!important;stroke:currentColor}
+#pg3 .settings-native-group .gp{color:var(--yiu-settings-ink)}
+#pg3 .settings-native-group .gp .qtip,#pg3 .settings-native-group .gp .qr>span{color:var(--yiu-settings-sub)!important}
+#pg3 .settings-native-group .settings-switch,#pg3 .settings-native-group .settings-theme-card{background:var(--yiu-settings-card);border-color:color-mix(in srgb,var(--yiu-settings-card-ink) 15%,transparent);color:var(--yiu-settings-card-ink)}
+#pg3 .settings-native-group .settings-switch>span,#pg3 .settings-native-group .settings-theme-card>b,#pg3 .settings-native-group .settings-colors label{color:var(--yiu-settings-card-ink)!important}
+#pg3 .settings-native-group .settings-theme-card .settings-presets button{background:color-mix(in srgb,var(--yiu-settings-accent) 9%,var(--yiu-settings-card));border-color:color-mix(in srgb,var(--yiu-settings-card-ink) 18%,transparent);color:var(--yiu-settings-card-ink)}
+#pg3 .settings-native-group .settings-presets button:active{background:color-mix(in srgb,var(--yiu-settings-accent) 20%,var(--yiu-settings-card))}
