@@ -9,6 +9,7 @@ on:
     paths:
       - "APP/**"
       - "YiuFM/**"
+      - "index.html"
       - "style.css"
       - ".github/workflows/yiufm-2.0.yml"
 
