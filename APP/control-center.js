@@ -115,19 +115,52 @@
     sheet.hidden=true;closeEngineSheet();
     paintEngine();paintResolution();refreshSwitchState();
   }
-  function openLegacyTab(index){
-    /* 新控制中心作为首页；功能详情复用原有业务页面，返回时仍回到新版首页。 */
-    lastLegacy='tab';
-    hub.classList.remove('cc-home');
-    hub.classList.add('cc-legacy');
-    document.body.classList.remove('cc-home');
-    sheet.hidden=true;
-    var tab=document.querySelector('#lg .nb[data-i="'+index+'"]');
-    if(tab)tab.click();
+  var actionSheet=null;
+  function closeActionSheet(){if(actionSheet)actionSheet.hidden=true}
+  function openActionSheet(title,items){
+    if(!actionSheet){
+      actionSheet=document.createElement('section');
+      actionSheet.className='cc-action-sheet';
+      actionSheet.id='ccActionSheet';
+      actionSheet.hidden=true;
+      home.appendChild(actionSheet);
+    }
+    actionSheet.innerHTML='<div class="cc-action-head"><strong></strong><button type="button" aria-label="关闭">×</button></div><div class="cc-action-list"></div>';
+    actionSheet.querySelector('.cc-action-head strong').textContent=title;
+    actionSheet.querySelector('.cc-action-head button').addEventListener('click',closeActionSheet);
+    var list=actionSheet.querySelector('.cc-action-list');
+    items.forEach(function(item){
+      var b=document.createElement('button');b.type='button';b.className='cc-action-item';
+      b.textContent=item.label;b.addEventListener('click',function(){
+        closeActionSheet();
+        try{item.run()}catch(e){console.error('[Yiu Control Center] 操作失败',e)}
+      });
+      list.appendChild(b);
+    });
+    sheet.hidden=true;closeEngineSheet();actionSheet.hidden=false;
   }
-  function openCurrentEngineDetails(){
-    /* 引擎参数位于「调节」页，直接进入对应的现有参数面板。 */
-    openLegacyTab(3);
+  function openVisualSheet(){
+    openActionSheet('视觉效果',[
+      {label:'默认动效',run:function(){var b=$('styleSel');if(b)b.click()}},
+      {label:'逐句动效',run:function(){var b=$('styleSel2');if(b)b.click()}}
+    ]);
+  }
+  function openOtherSheet(){
+    openActionSheet('其他',[
+      {label:'选择音频',run:function(){var b=$('audioFile');if(b)b.click()}},
+      {label:'导入 LRC 歌词',run:function(){var b=$('lrcFile');if(b)b.click()}},
+      {label:'音乐模式',run:function(){var b=$('btnModeMusic');if(b)b.click()}},
+      {label:'文字模式',run:function(){var b=$('btnModeText');if(b)b.click()}}
+    ]);
+  }
+  /* 新版控制中心只在自身面板内完成操作，不再跳转旧版设置页。 */
+  function setHome(on){
+    lastLegacy='home';
+    hub.classList.add('cc-home');
+    hub.classList.remove('cc-legacy');
+    document.body.classList.add('cc-home');
+    sheet.hidden=true;closeEngineSheet();closeActionSheet();
+    paintEngine();paintResolution();refreshSwitchState();
   }
   $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
   /* 从旧设置页再次点迷你条设置键时，回到控制中心首页；若在「其他」页则复用统一返回逻辑。 */
@@ -136,24 +169,14 @@
     if(document.body.classList.contains('open')&&!hub.classList.contains('cc-home'))back.click();
   });
   $('ccEngine').addEventListener('click',openEngineSheet);
-  $('ccVisual').addEventListener('click',openEngineSheet);
+  $('ccVisual').addEventListener('click',openVisualSheet);
   $('ccDisplay').addEventListener('click',function(){sheet.hidden=!sheet.hidden});
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
-  $('ccOther').addEventListener('click',function(){
-    /* #cmore 与 #pg5 由 menus.js 动态创建；复用原生「其他」菜单开关。 */
-    var more=$('cmore');
-    if(!more)return;
-    lastLegacy='other';
-    hub.classList.remove('cc-home');
-    hub.classList.add('cc-legacy');
-    document.body.classList.remove('cc-home');
-    sheet.hidden=true;
-    if(!more.classList.contains('on'))more.click();
-  });
+  $('ccOther').addEventListener('click',openOtherSheet);
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
-  home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true;if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine,#ccVisual')&&!engineSheet.contains(e.target))closeEngineSheet()});
+  home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true;if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine')&&!engineSheet.contains(e.target))closeEngineSheet();if(actionSheet&&!actionSheet.hidden&&!actionSheet.contains(e.target)&&!e.target.closest('#ccVisual,#ccOther'))closeActionSheet()});
   back.addEventListener('click',function(){
     /* 分开关闭「其他」菜单与 Q 弹菜单，避免只隐藏页面却遗留菜单开关状态。 */
     var more=$('cmore'),quick=$('qpop'),quickToggle=$('cq');
