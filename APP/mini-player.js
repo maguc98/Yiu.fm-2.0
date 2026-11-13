@@ -178,7 +178,14 @@
     if((e.key==="Enter"||e.key===" ")&&e.target===mini){e.preventDefault();setOpen(!isOpen())}
   });
   var miSet=g("miSet");
-  if(miSet)miSet.addEventListener("click",function(e){e.stopPropagation();setOpen(true)});
+  if(miSet)miSet.addEventListener("click",function(e){
+    e.stopPropagation();
+    setOpen(true);
+    /* 等面板打开时的默认页恢复完成，再明确进入设置页，避免被恢复逻辑覆盖 */
+    requestAnimationFrame(function(){
+      if(typeof window.__openSettingsPage==="function")window.__openSettingsPage();
+    });
+  });
 
   /* ---- 播放卡片：上滑迷你条弹出，下滑 / 点外面收起 ---- */
   var npCard=document.createElement("div");npCard.id="npCard";npCard.setAttribute("role","dialog");npCard.setAttribute("aria-hidden","true");
