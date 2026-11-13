@@ -2582,7 +2582,7 @@ html body #hub .pm-box .qr span{color:var(--p-sub)!important}
 
 /* ===== Yiu.fm compact control center · approved light Apple-minimal layout ===== */
 #hub.cc-home{width:min(82vw,340px);height:auto;max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 44px);aspect-ratio:3/4;min-height:0;padding:0;border-radius:25px;overflow:hidden;background:transparent}
-body.cc-home #hubGlass{background:rgba(241,242,245,.94)!important;-webkit-backdrop-filter:blur(28px) saturate(1.35)!important;backdrop-filter:blur(28px) saturate(1.35)!important;border:1px solid rgba(255,255,255,.78);box-shadow:0 16px 44px rgba(25,32,45,.16)}
+html body #hub#hub.cc-home{background:rgba(241,242,245,.96)!important;border:1px solid rgba(255,255,255,.82)!important;box-shadow:0 16px 44px rgba(25,32,45,.16)!important}
 body.cc-home #hub::before{background:transparent!important;box-shadow:none!important}
 #hub.cc-home> :not(#ccHome){display:none!important}
 #ccHome{position:relative;display:flex;flex-direction:column;gap:12px;width:100%;height:100%;min-height:0;box-sizing:border-box;padding:17px 16px 15px;color:#20242c;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;overflow:auto;overscroll-behavior:contain}
