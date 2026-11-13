@@ -2790,7 +2790,7 @@ body.open #lg{ }
   from{opacity:0;transform:translateY(7px)}
   to{opacity:1;transform:translateY(0)}
 }
-#hub.cc-home #ccHome{animation:ccHomeEnter .38s cubic-bezier(.2,.75,.25,1) both}
+#hub.cc-home #ccHome.cc-home-enter{animation:ccHomeEnter .38s cubic-bezier(.2,.75,.25,1) both}
 #hub.cc-home .cc-engine-sheet:not([hidden]),
 #hub.cc-home .cc-action-sheet:not([hidden]){
   animation:ccSheetEnter .32s cubic-bezier(.2,.75,.25,1) both;
@@ -2815,7 +2815,7 @@ body.open #lg{ }
 #hub.cc-home .cc-engine,
 #hub.cc-home .cc-shortcut,
 #hub.cc-home .cc-other,
-#hub.cc-home .cc-resolution,
+#hub.cc-home .cc-close,
 #hub.cc-home .cc-engine-options>button,
 #hub.cc-home .cc-action-item{
   transition:transform .18s cubic-bezier(.2,.75,.25,1),background-color .18s ease,border-color .18s ease,box-shadow .18s ease;
