@@ -129,7 +129,13 @@
       }
       if(typeof item.render==='function'){item.render(list);return}
       var b=document.createElement('button');b.type='button';b.className='cc-action-item';
-      b.textContent=item.label;b.disabled=!!item.disabled;
+      if(item.icon){
+        var icon=document.createElement('span');icon.className='cc-action-icon';icon.setAttribute('aria-hidden','true');
+        icon.innerHTML=item.icon;
+        var label=document.createElement('span');label.className='cc-action-label';label.textContent=item.label;
+        b.appendChild(icon);b.appendChild(label);
+      }else b.textContent=item.label;
+      b.disabled=!!item.disabled;
       if(item.selected)b.classList.add('is-selected');
       b.addEventListener('click',function(){
         if(b.disabled)return;
@@ -296,10 +302,18 @@
       action('开发者工具','命令窗口','__devCmd'),
       action('开发者工具','开发者强制刷新','__devReload')
     ];
+    var categoryIcons={
+      '媒体与播放':'<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+      '文字与排版':'<svg viewBox="0 0 24 24"><path d="M4 6V4h16v2M12 4v16M8 20h8"/></svg>',
+      '背景与封面':'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>',
+      '系统与性能':'<svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12m-8.48 8.48-2.12 2.12"/><circle cx="12" cy="12" r="4"/></svg>',
+      '项目与备份':'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg>',
+      '开发者工具':'<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-3-10-2 12"/></svg>'
+    };
     var names=['媒体与播放','文字与排版','背景与封面','系统与性能','项目与备份','开发者工具'];
     var categories=names.map(function(name){
       var entries=items.filter(function(item){return item.group===name});
-      return {label:name+'  ·  '+entries.length+' 项',close:false,run:function(){openOtherCategory(name,entries)}};
+      return {icon:categoryIcons[name],label:name+'  ·  '+entries.length+' 项',close:false,run:function(){openOtherCategory(name,entries)}};
     });
     openActionSheet('其他 · 功能分类',categories);
   }
