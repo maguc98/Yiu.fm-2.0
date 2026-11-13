@@ -5,6 +5,14 @@
   var hub=document.getElementById('hub');
   if(!hub||!document.getElementById('ccHome'))return;
   var $=function(id){return document.getElementById(id)};
+  /* Developer controls are normally injected only after the legacy settings page exists.
+     The new control center needs their real source inputs without opening that page. */
+  if(!$('pg5')){
+    var devHost=document.createElement('div');
+    devHost.id='pg5';devHost.className='cc-devtools-host hide';devHost.hidden=true;
+    devHost.setAttribute('aria-hidden','true');
+    document.body.appendChild(devHost);
+  }
   var home=$('ccHome'),back=$('ccBack'),res=$('ccResolution'),resV=$('ccResolutionValue');
   var engineMap={sonnet:['SONNET','商籁'],tempera:['TEMPERA','凝彩'],lumiere:['LUMIÈRE','绘光'],partita:['PARTITA','云阶'],fume:['FUME','浮墨']};
   var active=null,lastLegacy='home',engineSheet=null;
@@ -116,12 +124,14 @@
       actionSheet.hidden=true;
       home.appendChild(actionSheet);
     }
-    actionSheet.innerHTML='<div class="cc-action-head"><strong></strong><button type="button" aria-label="关闭">×</button></div><div class="cc-action-list"></div>';
+    actionSheet.innerHTML='<div class="cc-action-head"><strong></strong><button type="button" aria-label="关闭">×</button></div><div class="cc-action-feedback" role="status" aria-live="polite" hidden></div><div class="cc-action-list"></div>';
     actionSheet.dataset.view=title.indexOf('功能分类')>=0?'categories':'category';
     actionSheet.setAttribute('role','dialog');actionSheet.setAttribute('aria-modal','true');
     actionSheet.style.pointerEvents='auto';actionSheet.style.zIndex='9999';
     actionSheet.querySelector('.cc-action-head strong').textContent=title;
     actionSheet.querySelector('.cc-action-head button').addEventListener('click',closeActionSheet);
+    var feedback=actionSheet.querySelector('.cc-action-feedback');
+    if(feedback){feedback.hidden=true;feedback.textContent='';}
     var list=actionSheet.querySelector('.cc-action-list');
     var groupName='';
     items.forEach(function(item){
@@ -147,7 +157,12 @@
           item.run();
           if(item.close!==false)closeActionSheet();
           requestAnimationFrame(function(){if(b.isConnected)b.disabled=false});
-        }catch(e){console.error('[Yiu Control Center] 操作失败',e);b.disabled=false;}
+        }catch(e){
+          console.error('[Yiu Control Center] 操作失败',e);
+          var feedback=actionSheet&&actionSheet.querySelector('.cc-action-feedback');
+          if(feedback){feedback.textContent=(e&&e.message)?e.message:'操作失败，请重试';feedback.hidden=false;}
+          b.disabled=false;
+        }
       });
       b.style.touchAction='manipulation';
       b.setAttribute('aria-label',item.label);
@@ -179,10 +194,16 @@
     var n=0;api.groups.forEach(function(g){g.items.forEach(function(e){var b=buttons[n++];if(!b)return;b.classList.toggle('is-selected',e.id===current);b.setAttribute('aria-pressed',e.id===current?'true':'false')})});
   }
   function clickExisting(id){
-    if(id==='__devLogFull')return clickSelector('.log-entry-btn');
-    if(id==='__devSysLog')return clickSelector('.sys-log-entry-btn');
-    if(id==='__devCmd')return clickSelector('.cmd-console-entry-btn');
-    if(id==='__devReload')return clickSelector('.force-reload-btn');
+    var apiMap={
+      '__devLogFull':window.__openLogPanel,
+      '__devSysLog':window.__openSysLog,
+      '__devCmd':window.__openCmdConsole,
+      '__devReload':window.__showDevReloadConfirm
+    };
+    if(Object.prototype.hasOwnProperty.call(apiMap,id)){
+      if(typeof apiMap[id]!=='function')throw new Error('功能接口尚未就绪：'+id);
+      return apiMap[id]();
+    }
     var target=$(id);
     if(!target)throw new Error('功能入口不存在：'+id);
     target.click();
@@ -376,7 +397,7 @@
     if(!menu||!dock){console.error('[Yiu Control Center] 旧版主题选择器结构不完整');return}
     hub.classList.add('cc-theme-picker-open');
     if(picker&&typeof picker.open==='function')picker.open();
-    else{var pickerButton=$('cfs');if(pickerButton)pickerButton.click();}
+    else{var pickerButton=$('cfs');if(pickerButton)pickerButton.click();else{hub.classList.remove('cc-theme-picker-open');console.error('[Yiu Control Center] 主题选择器接口未就绪');return;}}
     requestAnimationFrame(function(){
       menu.classList.add('show');menu.setAttribute('aria-hidden','false');
       menu.style.pointerEvents='auto';menu.style.zIndex='1001';

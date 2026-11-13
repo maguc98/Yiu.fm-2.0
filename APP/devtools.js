@@ -1059,6 +1059,7 @@
     Promise.all(tasks).then(go, go);
     setTimeout(go, 1500);   // 清缓存卡住也不能拦住刷新
   }
+  window.__showDevReloadConfirm = showReloadConfirm;
 
   // 5. 注入开发者选项到系统设置 #pg5
   function injectDevOptions() {

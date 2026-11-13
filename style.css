@@ -2979,3 +2979,82 @@ body.open #lg{ }
   border:1px dashed #d9e0e8;border-radius:12px;background:#f8fafc;
   color:#8a95a3;font-size:12px;opacity:.85;pointer-events:none;
 }
+
+/* ===== 2026-11-14 control center cleanup ===== */
+#pg5.cc-devtools-host{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#hub.cc-home .cc-action-sheet{
+  display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;
+  overscroll-behavior:contain;
+}
+#hub.cc-home .cc-action-head{
+  position:relative;z-index:4;flex:none;min-height:48px;padding:13px 15px 11px;
+  border-bottom:1px solid #edf1f5;background:#fff;
+}
+#hub.cc-home .cc-action-head strong{font-size:15px;letter-spacing:.01em;color:#344052}
+#hub.cc-home .cc-action-head button{width:30px;height:30px;border-radius:10px;background:#f1f4f7}
+#hub.cc-home .cc-action-feedback{
+  flex:none;margin:9px 12px 0;padding:9px 11px;border-radius:10px;
+  background:#fff1e8;color:#98613e;font-size:12px;line-height:1.45;
+}
+#hub.cc-home .cc-action-feedback[hidden]{display:none!important}
+#hub.cc-home .cc-action-list{
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:11px 12px 16px;gap:8px;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:minmax(82px,auto);align-content:start;gap:9px;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{
+  min-width:0;min-height:82px;padding:12px 10px;
+  display:grid;grid-template-columns:30px minmax(0,1fr) 10px;
+  align-items:center;column-gap:8px;border:1px solid #e8edf3;
+  border-radius:14px;background:#fff;color:#344052;
+  box-shadow:0 1px 4px rgba(40,55,75,.035);font-size:12px;line-height:1.4;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-icon{
+  width:30px;height:30px;display:grid;place-items:center;
+  border-radius:9px;background:#eef3f8;color:#6c829b;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-icon svg{
+  width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-label{
+  min-width:0;font-size:12px;font-weight:700;overflow-wrap:anywhere;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item::after{
+  content:"›";grid-column:3;grid-row:1;margin:0;color:#a0aab7;font-size:18px;font-weight:500;
+}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-list{display:flex;flex-direction:column;gap:7px}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-group{
+  flex:none;margin-top:8px;padding:10px 4px 4px;border-bottom:1px solid #edf1f5;
+  color:#8290a1;font-size:10px;font-weight:750;letter-spacing:.06em;
+}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-item{
+  min-height:46px;padding:10px 12px;border:1px solid #edf1f4;
+  border-radius:11px;background:#f8fafb;color:#364252;font-size:12px;
+}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-item:first-child{
+  min-height:38px;margin:0 0 4px;padding:7px 10px;
+  border:1px solid #e7edf3;border-radius:10px;background:#eef3f8;
+  color:#5c718a;font-size:12px;font-weight:700;
+}
+#hub.cc-home .cc-action-control{
+  flex:none;min-height:50px;padding:9px 11px;gap:10px;
+  border:1px solid #edf1f4;border-radius:11px;background:#fff;
+}
+#hub.cc-home .cc-action-control-label{font-size:12px;line-height:1.35;color:#3c4858}
+#hub.cc-home .cc-action-control input[type="range"]{min-width:88px;max-width:44%;height:26px}
+#hub.cc-home .cc-action-control input[type="checkbox"]{flex:none;width:20px;height:20px}
+#hub.cc-home .cc-action-control input[type="color"]{flex:none;width:34px;height:28px}
+#hub.cc-home .cc-action-segment-options{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+#hub.cc-home .cc-action-segment-option{min-height:34px;padding:7px 9px;border-radius:9px;font-size:11px}
+#hub.cc-home .cc-action-control.cc-action-unavailable{pointer-events:none;opacity:.7}
+@media(max-width:360px){
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-list{grid-auto-rows:minmax(76px,auto);gap:7px;padding:9px}
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{min-height:76px;padding:9px;grid-template-columns:27px minmax(0,1fr) 9px;column-gap:6px}
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-icon{width:27px;height:27px}
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-label{font-size:11px}
+}
