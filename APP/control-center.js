@@ -117,6 +117,7 @@
       home.appendChild(actionSheet);
     }
     actionSheet.innerHTML='<div class="cc-action-head"><strong></strong><button type="button" aria-label="关闭">×</button></div><div class="cc-action-list"></div>';
+    actionSheet.dataset.view=title.indexOf('功能分类')>=0?'categories':'category';
     actionSheet.querySelector('.cc-action-head strong').textContent=title;
     actionSheet.querySelector('.cc-action-head button').addEventListener('click',closeActionSheet);
     var list=actionSheet.querySelector('.cc-action-list');
