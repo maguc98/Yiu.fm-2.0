@@ -102,7 +102,7 @@
         });
       });
     }
-    sheet.hidden=true;
+    sheet.hidden=true;closeActionSheet();
     engineSheet.hidden=false;
     paintEngine();
   }
@@ -161,7 +161,7 @@
   });
   $('ccEngine').addEventListener('click',openEngineSheet);
   $('ccVisual').addEventListener('click',openVisualSheet);
-  $('ccDisplay').addEventListener('click',function(){sheet.hidden=!sheet.hidden});
+  $('ccDisplay').addEventListener('click',function(){closeEngineSheet();closeActionSheet();sheet.hidden=!sheet.hidden});
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
   $('ccOther').addEventListener('click',openOtherSheet);
