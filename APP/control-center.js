@@ -143,8 +143,11 @@
         e.preventDefault();e.stopPropagation();
         if(b.disabled)return;
         b.disabled=true;
-        try{item.run();if(item.close!==false)closeActionSheet();}
-        catch(e){console.error('[Yiu Control Center] 操作失败',e);b.disabled=false;}
+        try{
+          item.run();
+          if(item.close!==false)closeActionSheet();
+          requestAnimationFrame(function(){if(b.isConnected)b.disabled=false});
+        }catch(e){console.error('[Yiu Control Center] 操作失败',e);b.disabled=false;}
       });
       b.style.touchAction='manipulation';
       b.setAttribute('aria-label',item.label);
