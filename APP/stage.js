@@ -158,7 +158,14 @@ window.__openSettingsPage=function(){
   var k=-1;
   for(var j=0;j<NB.length;j++)if(+NB[j].dataset.i===3){k=j;break}
   if(k<0)return false;
-  choose(k);release(k);return true;
+  var previous=curTab;
+  document.body.classList.remove("pc");
+  curTab=3;
+  mark(k);
+  showPg(3,previous===3?1:(POS[3]>POS[previous]?1:-1));
+  release(k);
+  var panel=$("panel");if(panel)panel.scrollTop=0;
+  return true;
 };
 window.addEventListener("resize",function(){putThumb(curK(),true)});
 (function(){var k=curK();mark(k);putThumb(k,true)})();
