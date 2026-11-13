@@ -2863,3 +2863,28 @@ body.open #lg{ }
 #hub.cc-home .cc-action-segment-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 #hub.cc-home .cc-action-segment-option{flex:1;min-width:0;padding:8px 9px;border:1px solid rgba(45,55,70,.08);border-radius:9px;background:#fff;color:#586270;font-size:11px}
 #hub.cc-home .cc-action-segment-option.is-selected{background:#eaf5ed;border-color:rgba(104,165,130,.35);color:#315e43}
+
+/* 其他设置：先分类，再进入对应设置，避免一屏堆满所有选项 */
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{
+  min-height:72px;padding:13px 12px;justify-content:center;align-items:flex-start;
+  background:linear-gradient(145deg,#fff,#f5f7fa);border:1px solid rgba(90,110,135,.12);
+  border-radius:15px;font-size:13px;line-height:1.35;white-space:normal;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item::after{
+  content:"›";margin-left:auto;color:#9aa5b3;font-size:19px;font-weight:500;
+}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-list{display:flex;flex-direction:column;gap:7px}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-item:first-child{
+  min-height:36px;padding:7px 10px;border:0;background:transparent;color:#7b8a9c;
+  font-size:11px;justify-content:flex-start;
+}
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-group{
+  padding:12px 4px 3px;font-size:10px;letter-spacing:.06em;color:#91a0af;
+}
+@media(max-width:360px){
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-list{gap:7px}
+  #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{min-height:66px;padding:10px;font-size:12px}
+}
