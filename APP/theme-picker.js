@@ -222,6 +222,14 @@
     cfs.classList.remove('on'); cfs.setAttribute('aria-expanded', 'false');
   }
 
+  /* 新版控制中心通过明确 API 打开旧主题选择器，避免依赖隐藏按钮的合成 click。 */
+  window.YiuThemePicker = {
+    open: openMenu,
+    close: closeMenu,
+    toggle: function(){ isOpen() ? closeMenu() : openMenu(); },
+    isOpen: isOpen
+  };
+
   menu.setAttribute('aria-hidden', 'true');
   cfs.setAttribute('aria-expanded', 'false');
 
