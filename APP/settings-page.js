@@ -113,6 +113,7 @@ function mount(){
   '#yiuSettingsPage .s-arrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}#yiuSettingsPage .s-copy{flex:1;min-width:0}#yiuSettingsPage .s-copy b{display:block;font-size:14px;font-weight:750}#yiuSettingsPage .s-copy small{display:block;margin-top:4px;color:var(--s-sub);font-size:11px;line-height:1.45}#yiuSettingsPage .s-arrow{color:#969bad;font-size:23px}',
   '#yiuSettingsPage .s-panel{position:relative;isolation:isolate;width:100%;max-width:680px;min-height:100%;margin:0 auto;padding:3px 0 20px;background:var(--s-bg);pointer-events:auto}#yiuSettingsPage .s-panel-intro{position:relative;z-index:2;margin:0 0 14px;padding:12px 13px;border:1px solid var(--s-line);border-radius:13px;background:var(--s-card);color:var(--s-sub);font-size:12px;line-height:1.55}',
   '#yiuSettingsPage .s-section{margin:0 0 17px}#yiuSettingsPage .s-section-title{display:flex;align-items:center;gap:8px;margin:0 3px 9px;color:var(--s-sub);font-size:12px;font-weight:780}#yiuSettingsPage .s-section-title:before{content:"";width:4px;height:13px;border-radius:4px;background:var(--s-accent)}#yiuSettingsPage .s-section-body{display:flex;flex-direction:column;gap:9px}',
+  '#yiuSettingsPage .s-panel>.grp{margin:0 0 14px;padding:10px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-card);color:var(--s-card-ink)}#yiuSettingsPage .s-panel>.grp>.gh{background:var(--s-bg)!important;border:1px solid var(--s-line)!important;box-shadow:none!important;color:var(--s-card-ink)!important}#yiuSettingsPage .s-panel>.grp>.gh span,#yiuSettingsPage .s-panel>.grp>.gh em,#yiuSettingsPage .s-panel>.grp>.gh svg{color:var(--s-card-ink)!important;stroke:currentColor!important}#yiuSettingsPage .s-panel>.grp .gp{color:var(--s-card-ink)!important}#yiuSettingsPage .s-panel>.grp .qtip{color:var(--s-card-sub)!important}#yiuSettingsPage .s-panel>.grp .chk{color:var(--s-card-ink)!important;background:var(--s-bg)!important;border:1px solid var(--s-line)!important}#yiuSettingsPage .s-panel>.grp .chk span{color:var(--s-card-ink)!important}#yiuSettingsPage .s-panel>.grp#devOptionsGroup{margin-top:0;padding-top:10px;border-top:1px solid var(--s-line)}
   /* Keep the blank gutter above each section heading opaque and non-interactive; stop overflowing previous controls showing through or receiving taps. */,
   '#yiuSettingsPage .s-section{position:relative;isolation:isolate;z-index:4}#yiuSettingsPage .s-section::before{content:"";position:absolute;top:-17px;left:-18px;right:-18px;height:17px;background:var(--s-bg);z-index:6;pointer-events:auto}#yiuSettingsPage .s-section-title{position:relative;z-index:7;background:var(--s-bg)}',
   '#yiuSettingsPage .s-control-card{display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-card);box-shadow:0 2px 7px rgba(37,45,70,.035)}#yiuSettingsPage .s-control-card>*{max-width:100%;min-width:0}#yiuSettingsPage .s-control-card .qh{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--s-ink);font-size:14px;font-weight:700}#yiuSettingsPage .s-control-card .qtip,#yiuSettingsPage .s-control-card .tnote{margin:0!important;padding:9px 10px;border-radius:10px;background:var(--s-bg);color:var(--s-sub)!important;font-size:11px;line-height:1.55}',
@@ -187,60 +188,22 @@ function mount(){
     if(!node||node.nodeType!==1)return;
     var card=d.createElement('div');card.className='s-control-card';card.appendChild(node);parent.appendChild(card);
   }
-  function moveSystem(src,panel){
-    var gp=src.querySelector('.gp');if(!gp)return;
-    // 将标题、滑块和说明合并为一个逻辑设置项，避免被分到不同分类。
-    var sourceNodes=Array.prototype.slice.call(gp.children), units=[];
-    for(var ni=0;ni<sourceNodes.length;ni++){
-      var current=sourceNodes[ni];
-      if(current.classList&&current.classList.contains('qh')){
-        var unit=d.createElement('div');unit.className='s-setting-unit';
-        unit.appendChild(current);
-        if(sourceNodes[ni+1]&&sourceNodes[ni+1].classList&&sourceNodes[ni+1].classList.contains('qr'))unit.appendChild(sourceNodes[++ni]);
-        if(sourceNodes[ni+1]&&sourceNodes[ni+1].classList&&sourceNodes[ni+1].classList.contains('qtip'))unit.appendChild(sourceNodes[++ni]);
-        units.push(unit);
-      }else units.push(current);
+  function openOriginalGroup(src,panel){
+    if(!src)return;
+    var head=src.querySelector('.gh');
+    if(head&&!head.__yiuSettingsBound){
+      head.__yiuSettingsBound=true;
+      head.addEventListener('click',function(){
+        var open=src.classList.toggle('open');
+        head.setAttribute('aria-expanded',open?'true':'false');
+      });
     }
-    var groups=[
-      {name:'动画与播放',test:/动画|动效|播放|速度|过渡|歌词/},
-      {name:'界面与交互',test:/界面|外观|主题|颜色|字体|显示|布局|触控|按钮|菜单/},
-      {name:'性能与设备',test:/性能|帧率|渲染|省电|缓存|设备|GPU|CPU|刷新/},
-      {name:'恢复与维护',test:/恢复|重置|清理|维护|版本|更新|备份/},
-      {name:'其他设置',test:/.*/}
-    ];
-    var buckets=groups.map(function(){return []});
-    units.forEach(function(node){
-      var text=(node.textContent||'')+' '+Array.prototype.slice.call(node.querySelectorAll('[id]')).map(function(x){return x.id}).join(' ');
-      var idx=groups.findIndex(function(g){return g.test.test(text)});
-      if(idx<0)idx=groups.length-1;buckets[idx].push(node);
-    });
-    groups.forEach(function(g,i){
-      if(!buckets[i].length)return;
-      var body=addSection(panel,g.name);
-      buckets[i].forEach(function(node){wrapCard(node,body)});
-    });
+    src.classList.add('open');
+    if(head)head.setAttribute('aria-expanded','true');
+    panel.appendChild(src);
   }
-  function moveDeveloper(src,panel){
-    var gp=src.querySelector('.gp'),wrap=gp&&gp.firstElementChild;
-    if(!wrap){if(src)wrap=src;else return;}
-    var nodes=Array.prototype.slice.call(wrap.children);
-    var defs=[
-      {name:'画面与性能',test:/devResMul|performanceMode|渲染分辨率|性能优化/},
-      {name:'运行状态监测',test:/devJank|devFps|卡顿检测|实时帧率/},
-      {name:'日志与诊断',test:/devFloatLogChk|devPauseLogChk|log-entry-btn|sys-log-entry-btn|悬浮窗日志|全屏日志|系统日志/},
-      {name:'界面行为',test:/dev_bgSwapDelay|dev_coverSwapDelay|背景换图等待|封面换图等待/},
-      {name:'命令窗口',test:/dev_cm_|命令窗口|键盘弹出|键盘收起|窗口高度/},
-      {name:'维护工具',test:/force-reload-btn|强制刷新|节拍可视化/},
-      {name:'其他工具',test:/.*/}
-    ];
-    var buckets=defs.map(function(){return []});
-    nodes.forEach(function(node){
-      var text=(node.textContent||'')+' '+Array.prototype.slice.call(node.querySelectorAll('[id]')).map(function(x){return x.id}).join(' ');
-      var idx=defs.findIndex(function(g){return g.test.test(text)});
-      if(idx<0)idx=defs.length-1;buckets[idx].push(node);
-    });
-    defs.forEach(function(g,i){if(!buckets[i].length)return;var body=addSection(panel,g.name);buckets[i].forEach(function(node){wrapCard(node,body)})});
-  }
+  function moveSystem(src,panel){openOriginalGroup(src,panel)}
+  function moveDeveloper(src,panel){if(src)panel.appendChild(src)}
   function addTheme(panel){
     var presets=d.createElement('section');presets.className='s-theme-card';
     presets.innerHTML='<h3>预设主题</h3><p>选一套配色，也可以在下面逐项调整。</p><div class="s-presets"><button class="s-preset" data-preset="lavender"><i style="background:#7b75d5"></i>薰衣草</button><button class="s-preset" data-preset="blue"><i style="background:#5486d8"></i>晴空蓝</button><button class="s-preset" data-preset="green"><i style="background:#4d9b7a"></i>薄荷绿</button><button class="s-preset" data-preset="peach"><i style="background:#d58a63"></i>蜜桃橙</button><button class="s-preset" data-preset="pink"><i style="background:#cf729b"></i>樱花粉</button></div>';
@@ -257,10 +220,8 @@ function mount(){
     var intro=d.createElement('p');intro.className='s-panel-intro';intro.textContent=cat.desc;panel.appendChild(intro);
     if(cat.id==='system')moveSystem(cat.source,panel);
     else if(cat.id==='developer')moveDeveloper(cat.source,panel);
-    else if(cat.id==='beta'){
-      var gp=cat.source&&cat.source.querySelector('.gp');
-      if(gp){var body=addSection(panel,'实验功能');Array.prototype.slice.call(gp.children).forEach(function(node){wrapCard(node,body)})}
-    }else addTheme(panel);
+    else if(cat.id==='beta')openOriginalGroup(cat.source,panel);
+    else addTheme(panel);
     panels.appendChild(panel);cat.card=card;cat.panel=panel;
   }
   cats.forEach(makeCategory);
