@@ -204,7 +204,7 @@
   $('ccOther').addEventListener('click',openOtherSheet);
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
-  home.addEventListener('click',function(e){if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine')&&!engineSheet.contains(e.target))closeEngineSheet();if(actionSheet&&!actionSheet.hidden&&!actionSheet.contains(e.target)&&!e.target.closest('#ccVisual,#ccOther'))closeActionSheet()});
+  home.addEventListener('click',function(e){if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine')&&!engineSheet.contains(e.target))closeEngineSheet();if(actionSheet&&!actionSheet.hidden&&!actionSheet.contains(e.target)&&!e.target.closest('#ccVisual,#ccDisplay,#ccOther'))closeActionSheet()});
   back.addEventListener('click',function(){
     /* 分开关闭「其他」菜单与 Q 弹菜单，避免只隐藏页面却遗留菜单开关状态。 */
     var more=$('cmore'),quick=$('qpop'),quickToggle=$('cq');
