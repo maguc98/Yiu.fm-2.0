@@ -128,13 +128,12 @@
     if(lastLegacy==='other'&&pg5.classList.contains('hide')&&document.body.classList.contains('open'))setHome(true);
   }).observe(pg5,{attributes:true,attributeFilter:['class']});
   var stage=$('stage');
-  if(stage)new MutationObserver(function(){if(hub.classList.contains('cc-home')){paintEngine();paintResolution()}}).observe(stage,{attributes:true,attributeFilter:['class']});
+  if(stage)new MutationObserver(function(){if(hub.classList.contains('cc-home')){paintEngine();paintResolution();refreshSwitchState()}}).observe(stage,{attributes:true,attributeFilter:['class']});
   var manager=window.VisualizerManager;
   function refreshSwitchState(){
     if(!hub.classList.contains('cc-home'))return;
     paintEngine();
     if(manager&&manager.isSwitching)window.setTimeout(refreshSwitchState,500);
   }
-  if(stage)stage.addEventListener('transitionend',refreshSwitchState);
   if(manager&&manager.isSwitching)refreshSwitchState();
 })();
