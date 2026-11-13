@@ -120,29 +120,60 @@
     actionSheet.querySelector('.cc-action-head strong').textContent=title;
     actionSheet.querySelector('.cc-action-head button').addEventListener('click',closeActionSheet);
     var list=actionSheet.querySelector('.cc-action-list');
+    var groupName='';
     items.forEach(function(item){
+      if(item.group&&item.group!==groupName){
+        groupName=item.group;
+        var heading=document.createElement('div');heading.className='cc-action-group';heading.textContent=groupName;list.appendChild(heading);
+      }
       var b=document.createElement('button');b.type='button';b.className='cc-action-item';
-      b.textContent=item.label;b.addEventListener('click',function(){
-        closeActionSheet();
-        try{item.run()}catch(e){console.error('[Yiu Control Center] 操作失败',e)}
+      b.textContent=item.label;b.disabled=!!item.disabled;
+      if(item.selected)b.classList.add('is-selected');
+      b.addEventListener('click',function(){
+        if(b.disabled)return;
+        try{item.run()}catch(e){console.error('[Yiu Control Center] 操作失败',e);return}
+        if(item.close!==false)closeActionSheet();
       });
       list.appendChild(b);
     });
     sheet.hidden=true;closeEngineSheet();actionSheet.hidden=false;
   }
   function openVisualSheet(){
-    openActionSheet('视觉效果',[
-      {label:'默认动效',run:function(){var b=$('styleSel');if(b)b.click()}},
-      {label:'逐句动效',run:function(){var b=$('styleSel2');if(b)b.click()}}
-    ]);
+    var api=window.YiuVisualEffects;
+    if(!api||!Array.isArray(api.groups)){openActionSheet('视觉效果',[{label:'动效列表暂不可用',disabled:true,run:function(){}}]);return}
+    var current=api.current(),items=[];
+    api.groups.forEach(function(group){
+      group.items.forEach(function(effect){
+        items.push({group:group.name,label:effect.label+(effect.available?'':'（暂不可用）'),disabled:!effect.available,selected:effect.id===current,close:false,run:function(){
+          if(!api.select(effect.id)){console.warn('[Yiu Control Center] 动效不可用:',effect.id);return}
+          current=effect.id;
+          paintEffectSelection();
+          openVisualSheet();
+        }});
+      });
+    });
+    openActionSheet('视觉效果',items);
+    paintEffectSelection();
+  }
+  function paintEffectSelection(){
+    if(!actionSheet)return;
+    var api=window.YiuVisualEffects;if(!api)return;
+    var current=api.current(),buttons=actionSheet.querySelectorAll('.cc-action-item');
+    var n=0;api.groups.forEach(function(g){g.items.forEach(function(e){var b=buttons[n++];if(!b)return;b.classList.toggle('is-selected',e.id===current);b.setAttribute('aria-pressed',e.id===current?'true':'false')})});
   }
   function openOtherSheet(){
     openActionSheet('其他',[
-      {label:'选择音频',run:function(){var b=$('audioFile');if(b)b.click()}},
-      {label:'导入 LRC 歌词',run:function(){var b=$('lrcFile');if(b)b.click()}},
-      {label:'音乐模式',run:function(){var b=$('btnModeMusic');if(b)b.click()}},
-      {label:'文字模式',run:function(){var b=$('btnModeText');if(b)b.click()}}
+      {group:'媒体导入',label:'导入音乐',run:function(){var input=$('audioFile');if(input)input.click();else throw new Error('音频选择器不存在')}},
+      {group:'媒体导入',label:'导入 LRC 歌词',run:function(){var input=$('lrcFile');if(input)input.click();else throw new Error('歌词选择器不存在')}},
+      {group:'播放模式',label:'音乐模式',run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('music');paintModeSelection();}},
+      {group:'播放模式',label:'文字模式',run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('text');paintModeSelection();}}
     ]);
+    paintModeSelection();
+  }
+  function paintModeSelection(){
+    if(!actionSheet)return;
+    var music=document.body.classList.contains('music-mode'),buttons=actionSheet.querySelectorAll('.cc-action-item');
+    buttons.forEach(function(b){if(b.textContent==='音乐模式')b.classList.toggle('is-selected',music);if(b.textContent==='文字模式')b.classList.toggle('is-selected',!music)});
   }
   /* 新版控制中心只在自身面板内完成操作，不再跳转旧版设置页。 */
   function setHome(on){
@@ -162,8 +193,8 @@
   $('ccEngine').addEventListener('click',openEngineSheet);
   $('ccVisual').addEventListener('click',openVisualSheet);
   $('ccDisplay').addEventListener('click',function(){closeEngineSheet();closeActionSheet();sheet.hidden=!sheet.hidden});
-  $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
-  $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
+  $('ccMusicMode').addEventListener('click',function(){if(typeof window.YiuSetMode==='function')window.YiuSetMode('music');sheet.hidden=true});
+  $('ccTextMode').addEventListener('click',function(){if(typeof window.YiuSetMode==='function')window.YiuSetMode('text');sheet.hidden=true});
   $('ccOther').addEventListener('click',openOtherSheet);
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
