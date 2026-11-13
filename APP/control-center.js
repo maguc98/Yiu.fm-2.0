@@ -176,11 +176,18 @@
     buttons.forEach(function(b){if(b.textContent==='音乐模式')b.classList.toggle('is-selected',music);if(b.textContent==='文字模式')b.classList.toggle('is-selected',!music)});
   }
   /* 新版控制中心只在自身面板内完成操作，不再跳转旧版设置页。 */
+  function replayHomeEnter(){
+    home.classList.remove('cc-home-enter');
+    /* 强制提交一次移除状态，确保关闭后再次打开也能重新播放入场动画。 */
+    void home.offsetWidth;
+    home.classList.add('cc-home-enter');
+  }
   function setHome(on){
     lastLegacy='home';
     hub.classList.add('cc-home');
     hub.classList.remove('cc-legacy');
     document.body.classList.add('cc-home');
+    replayHomeEnter();
     closeEngineSheet();closeActionSheet();
     paintEngine();paintResolution();refreshSwitchState();
   }
