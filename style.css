@@ -2724,3 +2724,31 @@ body.open #lg{ }
   #hub.cc-legacy .panel{padding-top:10px!important}
   #hub.cc-legacy .ph{margin-bottom:9px!important}
 }
+
+
+/* ===== New control center · in-place visual engine picker ===== */
+.cc-engine-sheet{
+  position:absolute;z-index:8;left:12px;right:12px;top:12px;bottom:12px;
+  display:flex;flex-direction:column;gap:10px;padding:14px;
+  border:1px solid rgba(40,50,65,.08);border-radius:18px;
+  background:rgba(255,255,255,.98);
+  box-shadow:0 12px 35px rgba(30,40,55,.18);
+  color:#303743;overflow:auto;overscroll-behavior:contain;
+}
+.cc-engine-sheet[hidden]{display:none!important}
+.cc-engine-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
+.cc-engine-sheet-head strong{font-size:13px;font-weight:750}
+.cc-engine-sheet-close{width:28px;height:28px;border:0;border-radius:9px;background:#f0f2f5;color:#687487;font-size:20px;line-height:1}
+.cc-engine-options{display:flex;flex-direction:column;gap:7px}
+.cc-engine-options>button{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;min-height:51px;padding:9px 12px;text-align:left;
+  border:1px solid rgba(45,55,70,.07);border-radius:12px;
+  background:#f7f8fa;color:#343c48;
+}
+.cc-engine-options>button span{display:flex;flex-direction:column;gap:3px}
+.cc-engine-options>button b{font-size:12px;letter-spacing:.45px;font-weight:750}
+.cc-engine-options>button small{font-size:11px;color:#87909d;font-weight:550}
+.cc-engine-options>button i{display:flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#e8ebf0;color:transparent;font-size:12px;font-style:normal;font-weight:800}
+.cc-engine-options>button.is-selected{border-color:rgba(104,151,120,.28);background:#edf5ef}
+.cc-engine-options>button.is-selected i{background:#d8eadc;color:#4e8a60}
