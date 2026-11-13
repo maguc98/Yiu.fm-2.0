@@ -78,7 +78,7 @@
     hub.classList.toggle('cc-home',!!on);
     hub.classList.toggle('cc-legacy',!on);
     document.body.classList.toggle('cc-home',!!on);
-    if(on){sheet.hidden=true;paintEngine();paintResolution();}
+    if(on){sheet.hidden=true;paintEngine();paintResolution();refreshSwitchState();}
   }
   function openLegacyTab(index){
     setHome(false);lastLegacy='tab';
