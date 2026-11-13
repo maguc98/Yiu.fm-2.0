@@ -135,10 +135,11 @@
     var list=actionSheet.querySelector('.cc-action-list');
     var groupName='';
     items.forEach(function(item){
-      if(item.group&&item.group!==groupName){
-        groupName=item.group;
-        var heading=document.createElement('div');heading.className='cc-action-group';heading.textContent=groupName;list.appendChild(heading);
-      }
+      var headingName=item.section||item.group||'';
+      if(headingName&&headingName!==groupName){
+        groupName=headingName;
+        var heading=document.createElement('div');heading.className='cc-action-group';heading.textContent=headingName;list.appendChild(heading);
+      }else if(!headingName){groupName='';}
       if(typeof item.render==='function'){item.render(list);return}
       var b=document.createElement('button');b.type='button';b.className='cc-action-item';
       if(item.icon){
@@ -201,8 +202,10 @@
       '__devReload':window.__showDevReloadConfirm
     };
     if(Object.prototype.hasOwnProperty.call(apiMap,id)){
-      if(typeof apiMap[id]!=='function')throw new Error('功能接口尚未就绪：'+id);
-      return apiMap[id]();
+      if(typeof apiMap[id]==='function')return apiMap[id]();
+      if(id==='__devSysLog'&&window.SysLog&&typeof window.SysLog.open==='function')return window.SysLog.open();
+      if(id==='__devCmd'&&window.CmdConsole&&typeof window.CmdConsole.open==='function')return window.CmdConsole.open();
+      throw new Error('功能接口尚未就绪：'+id);
     }
     var target=$(id);
     if(!target)throw new Error('功能入口不存在：'+id);
@@ -222,6 +225,7 @@
       var row=document.createElement('div');row.className='cc-action-control'+(kind==='checkbox'?' is-check':'');
       var name=document.createElement('span');name.className='cc-action-control-label';name.textContent=label;row.appendChild(name);
       var control=document.createElement('input');control.type=kind==='checkbox'?'checkbox':kind==='color'?'color':'range';
+      control.setAttribute('aria-label',label);
       if(kind==='checkbox'){
         control.checked=!!source.checked;
         control.addEventListener('change',function(){source.checked=control.checked;source.dispatchEvent(new Event('change',{bubbles:true}))});
@@ -268,16 +272,60 @@
       var originals=source.querySelectorAll('.chip');
       originals.forEach(function(original){
         var b=document.createElement('button');b.type='button';b.className='cc-action-segment-option';b.textContent=original.textContent.trim();
-        function paint(){b.classList.toggle('is-selected',original.classList.contains('on'))}
-        paint();b.addEventListener('click',function(){original.click();originals.forEach(function(x){x.classList.remove('on')});original.classList.add('on');wrap.querySelectorAll('button').forEach(function(x){x.classList.remove('is-selected')});paint()});
+        b.setAttribute('aria-label',label+'：'+b.textContent);
+        function paint(){var selected=original.classList.contains('on');b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',selected?'true':'false')}
+        paint();b.addEventListener('click',function(){original.click();requestAnimationFrame(function(){originals.forEach(function(x){x.classList.remove('on')});original.classList.add('on');wrap.querySelectorAll('button').forEach(function(x){x.classList.remove('is-selected');x.setAttribute('aria-pressed','false')});paint()})});
         wrap.appendChild(b);
       });
       row.appendChild(wrap);list.appendChild(row);
     }};
   }
+  function otherSection(name,label){
+    var rules={
+      '媒体与播放':[
+        [/^(导入音乐|导入 LRC 歌词)$/, '媒体导入'],
+        [/^(音乐模式|文字模式|默认页面|灵动岛样式)$/, '显示与默认'],
+        [/.*/, '播放控制']
+      ],
+      '文字与排版':[
+        [/^(添加一句)$/, '文字工具'],
+        [/^(字号|边距|字重|行距)$/, '字体与排版'],
+        [/^(文字阴影|RGB 分离|描边)$/, '文字效果'],
+        [/^(水平对齐|垂直位置|断行方式)$/, '布局方式'],
+        [/.*/, '颜色']
+      ],
+      '背景与封面':[
+        [/^(开屏封面设置|选择背景图片)$/, '封面与图片'],
+        [/^(背景角度|背景模糊|背景压暗)$/, '背景调整'],
+        [/.*/, '色彩方案']
+      ],
+      '系统与性能':[
+        [/^(性能优化|实时 FPS|卡顿检测|节拍可视化|底部文案)$/, '运行状态'],
+        [/.*/, '维护操作']
+      ],
+      '项目与备份':[
+        [/^(导出项目|导入项目)$/, '项目文件'],
+        [/.*/, '本地媒体']
+      ],
+      '开发者工具':[
+        [/^(卡顿检测|实时帧率显示|全局渲染分辨率)$/, '性能监控'],
+        [/^(悬浮窗日志|暂停抓取日志|全屏日志|系统日志|命令窗口)$/, '日志与诊断'],
+        [/^(背景换图等待|封面换图等待|键盘弹出收起速度|键盘收起展开速度|键盘收起后等待)$/, '调试参数'],
+        [/.*/, '维护工具']
+      ]
+    };
+    var list=rules[name]||[[/.*/,name]];
+    for(var i=0;i<list.length;i++)if(list[i][0].test(label))return list[i][1];
+    return name;
+  }
   function openOtherCategory(name,items){
     var backItem={label:'‹ 返回分类',close:false,run:openOtherSheet};
-    openActionSheet(name,[backItem].concat(items));
+    var categorized=items.map(function(item){
+      var copy=Object.assign({},item);
+      copy.section=otherSection(name,item.label||'');
+      return copy;
+    });
+    openActionSheet(name,[backItem].concat(categorized));
   }
   function openOtherSheet(){
     var music=document.body.classList.contains('music-mode');
