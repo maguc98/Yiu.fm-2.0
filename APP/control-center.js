@@ -76,6 +76,7 @@
   }
   /* 旧设置页仅保留隐藏的兼容 DOM 与业务逻辑；控制中心始终停留在新版首页。 */
   function setHome(on){
+    lastLegacy='home';
     hub.classList.add('cc-home');
     hub.classList.remove('cc-legacy');
     document.body.classList.add('cc-home');
