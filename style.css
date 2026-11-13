@@ -2888,3 +2888,24 @@ body.open #lg{ }
   #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-list{gap:7px}
   #hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{min-height:66px;padding:10px;font-size:12px}
 }
+
+/* 扁平化分类图标：统一单色描边，不使用拟物材质、立体高光或投影 */
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item{
+  position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) 12px;
+  align-items:center;justify-content:stretch;column-gap:10px;text-align:left;
+}
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item::after{
+  grid-column:3;grid-row:1;align-self:center;margin:0;
+}
+#hub.cc-home .cc-action-icon{
+  grid-column:1;grid-row:1;display:grid;place-items:center;width:30px;height:30px;
+  border-radius:9px;background:#edf2f7;color:#66788d;
+}
+#hub.cc-home .cc-action-icon svg{
+  display:block;width:19px;height:19px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+#hub.cc-home .cc-action-label{
+  grid-column:2;grid-row:1;min-width:0;line-height:1.4;
+}
+
