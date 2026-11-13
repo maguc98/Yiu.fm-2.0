@@ -2487,3 +2487,25 @@ html body:is(.is-sonnet,.is-tempera,.is-lumiere,.is-partita) #hub label.chk#gtex
 
 /* 拖动 / 回弹窗口大小期间：关掉窗口内部所有过渡与动画，内容直接跟手；顺便让浏览器提前准备合成层 */
 html body #hub.hub-busy,html body #hub.hub-busy *{transition:none!important}
+
+/* ===== Native settings in #pg3 (single real DOM) ===== */
+#pg3{--yiu-settings-accent:#7b75d5;--yiu-settings-bg:#f4f6fb;--yiu-settings-card:#fff;--yiu-settings-ink:#222536;--yiu-settings-sub:#626779}
+#pg3 .settings-native-group{margin-top:12px}
+#pg3 .settings-native-group>.gh{border:1px solid rgba(255,255,255,.16)}
+#pg3 .settings-native-group>.gb>.gi>.gp{padding:10px 8px 14px}
+#pg3 .settings-control-list{display:flex;flex-direction:column;gap:9px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(127,139,165,.2)}
+#pg3 .settings-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0;padding:10px 12px;border:1px solid rgba(127,139,165,.2);border-radius:12px;background:rgba(127,139,165,.08);box-sizing:border-box}
+#pg3 .settings-switch>span{min-width:0;flex:1;color:var(--tx)}
+#pg3 .settings-switch>input{flex:none}
+#pg3 #systemSettingsGroup .gp>.qh,#pg3 #systemSettingsGroup .gp>.qr{color:var(--tx)}
+#pg3 #systemSettingsGroup .gp>.qr>span{color:var(--sub)}
+#pg3 .settings-theme-card{margin-top:12px;padding:12px;border:1px solid rgba(127,139,165,.2);border-radius:14px;background:rgba(127,139,165,.07);color:var(--tx)}
+#pg3 .settings-theme-card>b{display:block;margin-bottom:10px;font-size:13px}
+#pg3 .settings-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#pg3 .settings-presets button{min-height:38px;border:1px solid rgba(127,139,165,.25);border-radius:10px;background:rgba(127,139,165,.1);color:var(--tx);font:inherit;font-size:12px}
+#pg3 .settings-presets button:active{border-color:var(--yiu-settings-accent);background:color-mix(in srgb,var(--yiu-settings-accent) 14%,transparent)}
+#pg3 .settings-colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#pg3 .settings-colors label{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;color:var(--tx);font-size:12px}
+#pg3 .settings-colors input[type=color]{width:42px;height:32px;flex:none;border-radius:9px}
+#pg3 .settings-native-group input[type=range]{accent-color:var(--yiu-settings-accent)}
+@media(min-width:520px){#pg3 .settings-presets{grid-template-columns:repeat(5,minmax(0,1fr))}}
