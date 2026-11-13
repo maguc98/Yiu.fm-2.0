@@ -189,7 +189,15 @@
   }
   function proxyControl(group,label,id,kind){
     return {group:group,render:function(list){
-      var source=$(id);if(!source)return;
+      var source=$(id);
+      if(!source){
+        var unavailable=document.createElement('div');
+        unavailable.className='cc-action-control cc-action-unavailable';
+        unavailable.textContent=label+' · 控件尚未就绪';
+        unavailable.setAttribute('aria-disabled','true');
+        list.appendChild(unavailable);
+        return;
+      }
       var row=document.createElement('div');row.className='cc-action-control'+(kind==='checkbox'?' is-check':'');
       var name=document.createElement('span');name.className='cc-action-control-label';name.textContent=label;row.appendChild(name);
       var control=document.createElement('input');control.type=kind==='checkbox'?'checkbox':kind==='color'?'color':'range';
@@ -224,7 +232,15 @@
   }
   function proxySegment(group,label,id){
     return {group:group,render:function(list){
-      var source=$(id);if(!source)return;
+      var source=$(id);
+      if(!source){
+        var unavailable=document.createElement('div');
+        unavailable.className='cc-action-control cc-action-unavailable';
+        unavailable.textContent=label+' · 控件尚未就绪';
+        unavailable.setAttribute('aria-disabled','true');
+        list.appendChild(unavailable);
+        return;
+      }
       var row=document.createElement('div');row.className='cc-action-control cc-action-segment';
       var name=document.createElement('span');name.className='cc-action-control-label';name.textContent=label;row.appendChild(name);
       var wrap=document.createElement('div');wrap.className='cc-action-segment-options';
@@ -284,9 +300,7 @@
       proxyControl('背景与封面','混色 4','c4','color'),
       proxyControl('背景与封面','纯色背景','solidc','color'),
       action('背景与封面','选择背景图片','pick'),
-      proxyControl('系统与性能','界面动画速度','uiSpd','range'),
-      proxyControl('系统与性能','性能优化','performanceMode','checkbox'),
-      action('系统与性能','性能优化开关','qtPerf',false),
+      action('系统与性能','性能优化','qtPerf',false),
       action('系统与性能','实时 FPS','qtFps',false),
       action('系统与性能','卡顿检测','qtLag',false),
       action('系统与性能','节拍可视化','qtBeat',false),
