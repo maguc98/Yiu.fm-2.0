@@ -620,6 +620,21 @@
   window.__openSysLog = function () { Panel.open(); };
   window.__closeSysLog = function () { Panel.close(); };
 
+  /* 把日志模块初始化前捕获的异常补录进系统日志，避免启动早期报错丢失。 */
+  (function flushEarlyErrors() {
+    var pending = window.__YiuEarlyErrors;
+    if (!Array.isArray(pending) || !pending.length) return;
+    var batch = pending.splice(0, pending.length);
+    batch.forEach(function (item) {
+      var d = item.detail || {};
+      api.error('启动早期异常：' + item.kind, {
+        time: item.time, message: d.message || '',
+        file: d.file || '', line: d.line || 0, column: d.column || 0,
+        url: d.url || '', tag: d.tag || '', stack: d.stack || ''
+      });
+    });
+  })();
+
   // 快捷键：Ctrl / Cmd + Shift + L
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
