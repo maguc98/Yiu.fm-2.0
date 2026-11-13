@@ -2566,3 +2566,15 @@ html body:is(.is-sonnet,.is-tempera,.is-lumiere,.is-partita) #hub label.chk#gtex
 
 /* 拖动 / 回弹窗口大小期间：关掉窗口内部所有过渡与动画，内容直接跟手；顺便让浏览器提前准备合成层 */
 html body #hub.hub-busy,html body #hub.hub-busy *{transition:none!important}
+
+/* 「其他」菜单在浅色控制中心内统一使用深色文字与浅色控件 */
+html body #hub .pm-box button{
+  color:var(--p-text)!important;
+  background:var(--p-fill)!important;
+  border:1px solid var(--p-line)!important;
+  box-shadow:none!important;
+}
+html body #hub .pm-box .qtip{color:var(--p-sub)!important}
+html body #hub .pm-box .qh,
+html body #hub .pm-box .qh b{color:var(--p-text)!important}
+html body #hub .pm-box .qr span{color:var(--p-sub)!important}
