@@ -99,7 +99,7 @@ jobs:
               raise SystemExit("Expected exactly one devtools.js script tag; refusing to patch.")
           html = html.replace(old_devtools, new_devtools, 1)
           old_menus = '<script src="./APP/menus.js?v=20261025b"></script>'
-          new_menus = '<script src="./APP/menus.js?v=20261113a"></script>'
+          new_menus = '<script src="./APP/menus.js?v=20261113b"></script>'
           if html.count(old_menus) != 1:
               raise SystemExit("Expected exactly one menus.js script tag; refusing to patch.")
           html = html.replace(old_menus, new_menus, 1)
