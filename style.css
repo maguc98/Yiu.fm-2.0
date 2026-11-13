@@ -2568,17 +2568,12 @@ body.cc-home #hub::before{background:transparent!important;box-shadow:none!impor
 .cc-resolution-note{display:none;color:#8b929d;font-size:10px;line-height:1.2}
 .cc-other{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;min-height:46px;text-align:left;flex:none}
 .cc-other>span{font-size:12px;font-weight:650;flex:1}
-.cc-mode-sheet{position:absolute;left:12px;right:12px;bottom:12px;padding:13px;border-radius:16px;background:#fff;box-shadow:0 12px 35px rgba(30,40,55,.18);border:1px solid rgba(40,50,65,.08);z-index:4}
-.cc-mode-title{font-size:13px;font-weight:750;color:#333b47;margin-bottom:10px}
-.cc-mode-actions{display:flex;gap:8px}
-.cc-mode-actions button{flex:1;padding:10px;border:0;border-radius:10px;background:#eef1f5;color:#333c49;font-size:12px;font-weight:650}
 #ccBack{display:none;position:absolute;z-index:30;top:10px;left:12px;padding:6px 10px;border:1px solid rgba(120,130,145,.18);border-radius:14px;background:rgba(245,246,248,.94);color:#38404b;font-size:11px;font-weight:650;box-shadow:0 2px 8px rgba(30,40,55,.08)}
 #hub.cc-legacy #ccBack{display:block}
 #hub.cc-legacy{padding-top:40px}
 @media(max-height:650px){#hub.cc-home{aspect-ratio:auto;height:min(78vh,520px)}#ccHome{gap:9px;padding-top:13px}.cc-engine{gap:8px;padding:10px 12px}.cc-shortcut{min-height:52px;padding:7px 9px}.cc-resolution{padding:9px 12px}}
 
 #hub:not(.cc-home) #ccHome{display:none!important}
-.cc-mode-sheet[hidden]{display:none!important}
 
 
 /* ===== Yiu.fm · Aether secondary panels · Apple-minimal light skin =====
@@ -2736,9 +2731,9 @@ body.open #lg{ }
   color:#303743;overflow:auto;overscroll-behavior:contain;
 }
 .cc-engine-sheet[hidden]{display:none!important}
-.cc-engine-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
-.cc-engine-sheet-head strong{font-size:13px;font-weight:750}
-.cc-engine-sheet-close{width:28px;height:28px;border:0;border-radius:9px;background:#f0f2f5;color:#687487;font-size:20px;line-height:1}
+.cc-engine-sheet-head,.cc-action-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
+.cc-engine-sheet-head strong,.cc-action-head strong{font-size:13px;font-weight:750}
+.cc-engine-sheet-close,.cc-action-head button{width:28px;height:28px;display:grid;place-items:center;padding:0;border:0;border-radius:9px;background:#f0f2f5;color:#687487;font-size:20px;line-height:1}
 .cc-engine-options{display:flex;flex-direction:column;gap:7px}
 .cc-engine-options>button{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -2763,9 +2758,6 @@ body.open #lg{ }
   color:#303743;overflow:auto;overscroll-behavior:contain;
 }
 .cc-action-sheet[hidden]{display:none!important}
-.cc-action-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
-.cc-action-head strong{font-size:13px;font-weight:750}
-.cc-action-head button{width:28px;height:28px;padding:0;border:0;border-radius:9px;background:#f0f2f5;color:#687487;font-size:20px;line-height:1}
 .cc-action-list{display:flex;flex-direction:column;gap:8px}
 .cc-action-item{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;padding:11px 13px;border:1px solid rgba(45,55,70,.07);border-radius:12px;background:#f7f8fa;color:#343c48;text-align:left;font-size:13px;font-weight:650}
 .cc-action-item:active{background:#edf1f6}
