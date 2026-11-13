@@ -734,16 +734,17 @@ body.light-bg .deco{color:rgba(0,0,0,.45)}
 #hubCover.img{color:transparent;text-shadow:none}
 /* 顶部状态卡：封面缩略图 + 歌曲标题 + 当前状态 */
 #hub .np-info{
-  order:0;display:flex;align-items:center;gap:10px;min-height:54px;
-  margin:0 0 4px;padding:7px 10px;border-radius:15px;
-  background:var(--p-fill);border:1px solid var(--p-line);text-align:left;
+  order:0;display:grid;grid-template-columns:38px minmax(0,1fr);grid-template-rows:auto auto;
+  align-items:center;column-gap:10px;min-height:54px;margin:0 0 4px;padding:7px 10px;
+  border-radius:15px;background:var(--p-fill);border:1px solid var(--p-line);text-align:left;
 }
 #hub .np-info::before{
-  content:"";display:block;flex:none;width:38px;height:38px;border-radius:11px;
+  content:"";display:block;grid-column:1;grid-row:1/3;width:38px;height:38px;border-radius:11px;
   background:var(--cover2,var(--cover,linear-gradient(135deg,#dfe7f5,#f6f8fc))) center/cover no-repeat;
   box-shadow:0 2px 7px rgba(25,35,55,.10);
 }
-#hub .np-info>div{min-width:0;flex:1}
+#hub .np-info>.np-t{grid-column:2;grid-row:1;min-width:0}
+#hub .np-info>.np-s{grid-column:2;grid-row:2;min-width:0}
 #hub .np-t{font-size:13px;font-weight:700;line-height:1.3;color:var(--p-text);text-align:left}
 #hub .np-s{margin-top:3px;font-size:10px;color:var(--p-sub);text-align:left}
 /* 进度条紧跟状态卡 */
