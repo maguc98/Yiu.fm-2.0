@@ -141,6 +141,11 @@ glide($("styles"));glide($("styles2"));glide($("styles3"));glide($("bgm"));
     g.fade=fade;grid.addEventListener("scroll",fade,{passive:true});
   });
   document.body.appendChild(pop);
+  window.YiuVisualEffects={
+    groups:GROUPS.map(function(g){return{name:g.name,items:g.list.map(function(e){return{id:e[0],label:e[1],available:avail(e[0])}})}}),
+    current:function(){return style},
+    select:function(id){if(!ALL.some(function(e){return e[0]===id})||!avail(id))return false;setStyle(id);return style===id}
+  };
   function label(){
     GROUPS.forEach(function(g,gi){
       var hit=-1;for(var i=0;i<g.list.length;i++)if(g.list[i][0]===style){hit=i;break}
