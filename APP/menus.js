@@ -211,6 +211,7 @@ document.addEventListener("pointerdown",function(e){
       var b=e.target.closest&&e.target.closest("button");if(!b)return;e.stopPropagation();
       var navIndex=b.dataset.nav;
       if(navIndex!==undefined){
+        if(window.__YiuControlCenterLeavingOther)window.__YiuControlCenterLeavingOther();
         setMenu(false);
         var navButton=document.querySelector('#lg .nb[data-i="'+navIndex+'"]');
         if(navButton)navButton.click();
