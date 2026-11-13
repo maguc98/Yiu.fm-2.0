@@ -1036,9 +1036,8 @@
 
   // 5. 注入开发者选项到设置数据源
   function injectDevOptions() {
-    var root = document.getElementById('yiuSettingsDataRoot');
-    if (!root || document.getElementById('devOptionsGroup')) return;
-    var box = root.querySelector('.yiu-settings-source') || root;
+    var box = document.getElementById('pg3');
+    if (!box || document.getElementById('devOptionsGroup')) return;
 
     // 清理残留按钮
     var oldLog = box.querySelector('.log-entry-btn'); if (oldLog) oldLog.remove();
@@ -1370,10 +1369,10 @@
     try { window.dispatchEvent(new Event('yiu-dev-options-ready')); } catch (_) {}
   }
 
-  if (document.getElementById('yiuSettingsDataRoot')) injectDevOptions();
+  if (document.getElementById('pg3')) injectDevOptions();
   else {
     var mo = new MutationObserver(function(){
-      if (document.getElementById('yiuSettingsDataRoot')){ injectDevOptions(); mo.disconnect(); }
+      if (document.getElementById('pg3')){ injectDevOptions(); mo.disconnect(); }
     });
     mo.observe(document.body, { childList: true, subtree: true });
   }
