@@ -102,6 +102,11 @@
     },90);
   }
   $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
+  /* 从旧设置页再次点迷你条设置键时，回到控制中心首页；若在「其他」页则复用统一返回逻辑。 */
+  var miniSettings=$('miSet');
+  if(miniSettings)miniSettings.addEventListener('click',function(){
+    if(document.body.classList.contains('open')&&!hub.classList.contains('cc-home'))back.click();
+  });
   $('ccEngine').addEventListener('click',openCurrentEngineDetails);
   $('ccVisual').addEventListener('click',function(){openLegacyTab(1)});
   $('ccDisplay').addEventListener('click',function(){sheet.hidden=!sheet.hidden});
