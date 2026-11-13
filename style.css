@@ -2626,3 +2626,6 @@ body.cc-home #hub::before{background:transparent!important;box-shadow:none!impor
 #hub.cc-legacy #ccBack{display:block}
 #hub.cc-legacy{padding-top:40px}
 @media(max-height:650px){#hub.cc-home{aspect-ratio:auto;height:min(78vh,520px)}#ccHome{gap:9px;padding-top:13px}.cc-engine{gap:8px;padding:10px 12px}.cc-shortcut{min-height:58px;padding:8px 10px}.cc-resolution{padding:9px 12px}}
+
+#hub:not(.cc-home) #ccHome{display:none!important}
+.cc-mode-sheet[hidden]{display:none!important}
