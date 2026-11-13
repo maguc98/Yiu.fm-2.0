@@ -39,6 +39,32 @@
 ================================================================================
 -->
 <script src="./APP/cmd-early.js?v=20261030a"></script>
+<script id="yiuEarlyErrorCapture">
+/* 启动早期错误缓存：在日志模块加载前也保留异常原文与堆栈。 */
+(function(){
+  if(window.__YiuEarlyErrorCaptureInstalled)return;
+  window.__YiuEarlyErrorCaptureInstalled=true;
+  var queue=window.__YiuEarlyErrors=window.__YiuEarlyErrors||[];
+  function save(kind,detail){
+    try{
+      if(window.SysLog&&typeof window.SysLog.error==='function')return;
+      queue.push({kind:kind,time:new Date().toISOString(),detail:detail});
+      if(queue.length>80)queue.shift();
+    }catch(_){}
+  }
+  window.addEventListener('error',function(e){
+    if(e.target&&e.target!==window&&e.target.nodeType===1){
+      save('resource-load',{message:'资源加载失败',tag:e.target.nodeName||'',url:e.target.src||e.target.href||''});
+      return;
+    }
+    save('runtime',{message:e.message||'Unknown error',file:e.filename||'',line:e.lineno||0,column:e.colno||0,stack:e.error&&e.error.stack||''});
+  },true);
+  window.addEventListener('unhandledrejection',function(e){
+    var r=e.reason;
+    save('unhandled-rejection',{message:r&&r.message||String(r),stack:r&&r.stack||''});
+  });
+})();
+</script>
 <script id="errTraceJS">
 /* 诊断用：file:// 下外部脚本抛的错会被 WebKit 抹成「Script error. @:0」，看不到文件和行号。
    这里包住 rAF / setTimeout / setInterval / 事件回调 / Promise 拒绝，在错误被抹掉之前把真正的 message 和 stack 写进日志（前缀 [trace]），
@@ -1403,7 +1429,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <script src="./APP/hub-panel.js?v=20261021m"></script>                     <!-- 底部主控制面板 -->
     <script src="./APP/menus.js?v=20261113b"></script>
     <script src="./APP/theme-picker.js?v=20261113n"></script>                  <!-- 主题选择器 -->
-    <script src="./APP/control-center.js?v=20261114b"></script>                         <!-- 新版控制中心 -->
+    <script src="./APP/control-center.js?v=20261114c"></script>                         <!-- 新版控制中心 -->
     <script src="./APP/theme-editor.js?v=20261101a"></script>                  <!-- 主题编辑器 -->
     <script src="./APP/textbar.js?v=20261021m"></script>                       <!-- 顶部文字输入栏 -->
 
@@ -1411,8 +1437,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <!-- ========================================== -->
     <!-- 3. 开发者工具、启动与扩展                  -->
     <!-- ========================================== -->
-    <script src="./APP/devtools.js?v=20261114a"></script>                      <!-- 开发者选项与性能 -->
-    <script src="./APP/sys-log.js?v=20261023a"></script>                       <!-- 系统日志记录 -->
+    <script src="./APP/devtools.js?v=20261114b"></script>                      <!-- 开发者选项与性能 -->
+    <script src="./APP/sys-log.js?v=20261114b"></script>                       <!-- 系统日志记录 -->
     <script src="./APP/cmd-console.js?v=20261031a"></script>                   <!-- 命令窗口核心 -->
     <script src="./APP/cmd-keyboard.js?v=20261031a"></script>                  <!-- 命令窗口自带键盘（须在 cmd-console 之后） -->
     <script src="./APP/cmd-extra.js?v=20261030a"></script>                     <!-- 命令窗口扩展 -->
