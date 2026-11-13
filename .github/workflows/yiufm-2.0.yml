@@ -126,7 +126,7 @@ jobs:
           if html.count(old_anchor) != 1:
               raise SystemExit("Expected exactly one legacy player.js script tag; refusing to patch the UI.")
           html = html.replace(old_anchor, anchor, 1)
-          manager_tag = '<script src="./APP/visualizer-manager.js?v=20261105a"></script>'
+          manager_tag = '<script src="./APP/visualizer-manager.js?v=20261109b"></script>'
           if html.count(manager_tag) != 1:
               raise SystemExit("Expected exactly one visualizer manager script tag; refusing to patch.")
           html = html.replace(manager_tag, '<script src="./APP/fume/fume.js?v=20261109c"></script>\n<script src="./APP/fume-folia/fume-folia.js?v=20261109c"></script>\n<script src="./APP/fume-audio.js?v=20261109b"></script>\n<script src="./APP/fume-adapter.js?v=20261109h"></script>\n' + manager_tag + '\n<script src="./APP/runtime/render-coordinator.js?v=20261109c"></script>', 1)
