@@ -5,11 +5,82 @@
 (function(w,d){
 'use strict';
 var tries=0;
+  // Build the one-time settings control source before devtools.js runs.
+  // The controls are moved into the live settings page during mount; this source is removed afterward.
+  (function(){
+    if(d.getElementById('yiuSettingsDataRoot'))return;
+    var settingsData=d.createElement('div');
+    settingsData.id='yiuSettingsDataRoot';
+    settingsData.className='yiu-settings-data-root';
+    settingsData.setAttribute('aria-hidden','true');
+    settingsData.style.cssText='display:none!important;position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important;';
+    settingsData.innerHTML=`<div class="yiu-settings-source">
+
+      <!-- 1. 系统设置 -->
+      <div class="grp">
+        <button class="gh" type="button" aria-expanded="false"><span>系统设置</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp">
+          <div class="qh" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
+            <b>界面动画速度</b><em id="uiSpdV" class="av" style="font-style:normal; color:var(--sub);">1.00×</em>
+          </div>
+          <div class="qr" style="margin-top:8px; display:flex; align-items:center; gap:8px; padding:0 4px;">
+            <span style="font-size:12px; color:var(--sub);">0.25×</span>
+            <input type="range" id="uiSpd" min="25" max="300" step="5" value="100" aria-label="界面动画速度" style="flex:1;">
+            <span style="font-size:12px; color:var(--sub);">3×</span>
+          </div>
+          <div class="qtip" style="margin:6px 4px 0">调节面板、按钮、菜单等界面动画的快慢，不影响文字特效。</div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px;">
+            <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">高光描边</span>
+              <input type="checkbox" id="uiH" checked>
+            </label>
+            <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">柔和阴影</span>
+              <input type="checkbox" id="uiS" checked>
+            </label>
+            <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">性能优化</span>
+              <input type="checkbox" id="performanceMode" checked>
+            </label>
+          </div>
+
+          <div class="qd" style="margin-top:20px; display:flex; justify-content:center;">
+            <button class="chip" id="qrstMoved" type="button" style="flex:1; padding:10px 0;">恢复默认设置</button>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- 2. Beta 测试功能 -->
+      <div class="grp" id="betaBox">
+        <button class="gh" type="button" aria-expanded="false" style="background:rgba(80,125,240,.25); border:1px solid rgba(80,125,240,.4);"><span style="color:#a3c2ff">Beta 测试功能</span><em class="beta-tag" style="margin-left:auto; margin-right:8px;">BETA</em><svg viewBox="0 0 24 24" style="stroke:#a3c2ff"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp" id="betaBody" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="qtip" style="margin-top:0; margin-bottom:8px;">测试中的功能，可能不稳定。音乐模式和音频 / 歌词导入已移到底部「···」菜单。</div>
+        </div></div></div>
+      </div>
+
+      <!-- 3. 开发者选项（由 devtools.js 注入） -->
+      <div id="devOptionsHolder"></div>
+
+      <div class="qtip" id="appVersion" style="text-align:center;margin-top:24px">版本 v0.1.1 Beta 3</div>
+    </div>`;
+    d.body.appendChild(settingsData);
+    var ranges=settingsData.querySelectorAll('input[type=range]');
+    Array.prototype.forEach.call(ranges,function(el){if(typeof w.wrapRange==='function')w.wrapRange(el)});
+    if(typeof w.bindUiSpd==='function')w.bindUiSpd();
+    var reset=settingsData.querySelector('#qrstMoved');
+    if(reset)reset.onclick=function(){if(typeof w.setUiSpdPct==='function')w.setUiSpdPct(100);var demo=d.getElementById('qdemo');if(demo)demo.checked=!demo.checked};
+    settingsData.addEventListener('click',function(e){
+      var button=e.target.closest&&e.target.closest('button');if(!button)return;e.stopPropagation();
+      var target=button.dataset.t;if(target){var control=d.getElementById(target);if(control)control.click()}
+      Array.prototype.forEach.call(settingsData.querySelectorAll('[data-t]'),function(item){var control=d.getElementById(item.dataset.t);item.classList.toggle('on',!!(control&&control.checked))});
+    });
+  })();
 function mount(){
   var root=d.getElementById('yiuSettingsDataRoot');
   var source=root&&root.querySelector('.yiu-settings-source');
   if(!root||!source||d.getElementById('yiuSettingsPage'))return false;
-  if(!d.getElementById('yiuFrameRateSettings')||!d.getElementById('devOptionsGroup'))return false;
+  if(!d.getElementById('devOptionsGroup'))return false;
 
   var oldSystem=source.querySelector(':scope > .grp:not(#betaBox)');
   var beta=source.querySelector('#betaBox');
