@@ -203,7 +203,7 @@ function mount(){
     panel.appendChild(src);
   }
   function moveSystem(src,panel){openOriginalGroup(src,panel)}
-  function moveDeveloper(src,panel){if(src)panel.appendChild(src)}
+  function moveDeveloper(src,panel){if(src){src.classList.add('open');var head=src.querySelector('.gh');if(head)head.setAttribute('aria-expanded','true');panel.appendChild(src)}}
   function addTheme(panel){
     var presets=d.createElement('section');presets.className='s-theme-card';
     presets.innerHTML='<h3>预设主题</h3><p>选一套配色，也可以在下面逐项调整。</p><div class="s-presets"><button class="s-preset" data-preset="lavender"><i style="background:#7b75d5"></i>薰衣草</button><button class="s-preset" data-preset="blue"><i style="background:#5486d8"></i>晴空蓝</button><button class="s-preset" data-preset="green"><i style="background:#4d9b7a"></i>薄荷绿</button><button class="s-preset" data-preset="peach"><i style="background:#d58a63"></i>蜜桃橙</button><button class="s-preset" data-preset="pink"><i style="background:#cf729b"></i>樱花粉</button></div>';
