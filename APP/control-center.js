@@ -5,7 +5,7 @@
   var hub=document.getElementById('hub');
   if(!hub||!document.getElementById('ccHome'))return;
   var $=function(id){return document.getElementById(id)};
-  var home=$('ccHome'),sheet=$('ccModeSheet'),back=$('ccBack'),res=$('ccResolution'),resV=$('ccResolutionValue');
+  var home=$('ccHome'),back=$('ccBack'),res=$('ccResolution'),resV=$('ccResolutionValue');
   var engineMap={sonnet:['SONNET','商籁'],tempera:['TEMPERA','凝彩'],lumiere:['LUMIÈRE','绘光'],partita:['PARTITA','云阶'],fume:['FUME','浮墨']};
   var active=null,lastLegacy='home',engineSheet=null;
   window.__YiuControlCenterLeavingOther=function(){lastLegacy='tab'};
@@ -102,7 +102,7 @@
         });
       });
     }
-    sheet.hidden=true;closeActionSheet();
+    closeActionSheet();
     engineSheet.hidden=false;
     paintEngine();
   }
@@ -136,7 +136,7 @@
       });
       list.appendChild(b);
     });
-    sheet.hidden=true;closeEngineSheet();actionSheet.hidden=false;
+    closeEngineSheet();actionSheet.hidden=false;
   }
   function openVisualSheet(){
     var api=window.YiuVisualEffects;
@@ -181,7 +181,7 @@
     hub.classList.add('cc-home');
     hub.classList.remove('cc-legacy');
     document.body.classList.add('cc-home');
-    sheet.hidden=true;closeEngineSheet();closeActionSheet();
+    closeEngineSheet();closeActionSheet();
     paintEngine();paintResolution();refreshSwitchState();
   }
   $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
@@ -192,13 +192,19 @@
   });
   $('ccEngine').addEventListener('click',openEngineSheet);
   $('ccVisual').addEventListener('click',openVisualSheet);
-  $('ccDisplay').addEventListener('click',function(){closeEngineSheet();closeActionSheet();sheet.hidden=!sheet.hidden});
-  $('ccMusicMode').addEventListener('click',function(){if(typeof window.YiuSetMode==='function')window.YiuSetMode('music');sheet.hidden=true});
-  $('ccTextMode').addEventListener('click',function(){if(typeof window.YiuSetMode==='function')window.YiuSetMode('text');sheet.hidden=true});
+  function openDisplaySheet(){
+    var music=document.body.classList.contains('music-mode');
+    openActionSheet('显示模式',[
+      {label:'音乐模式',selected:music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('music');paintModeSelection();}},
+      {label:'文字模式',selected:!music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('text');paintModeSelection();}}
+    ]);
+    paintModeSelection();
+  }
+  $('ccDisplay').addEventListener('click',openDisplaySheet);
   $('ccOther').addEventListener('click',openOtherSheet);
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
-  home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true;if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine')&&!engineSheet.contains(e.target))closeEngineSheet();if(actionSheet&&!actionSheet.hidden&&!actionSheet.contains(e.target)&&!e.target.closest('#ccVisual,#ccOther'))closeActionSheet()});
+  home.addEventListener('click',function(e){if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine')&&!engineSheet.contains(e.target))closeEngineSheet();if(actionSheet&&!actionSheet.hidden&&!actionSheet.contains(e.target)&&!e.target.closest('#ccVisual,#ccOther'))closeActionSheet()});
   back.addEventListener('click',function(){
     /* 分开关闭「其他」菜单与 Q 弹菜单，避免只隐藏页面却遗留菜单开关状态。 */
     var more=$('cmore'),quick=$('qpop'),quickToggle=$('cq');
