@@ -1294,7 +1294,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
   </div>
   <div class="deco v"></div><div class="deco p"></div>
-  <button id="hback" type="button" aria-label="展开部分工具栏" aria-expanded="false" aria-controls="hbTools"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="5"/><circle cx="7.6" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="12.8" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="16.6" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+  <button id="hback" type="button" aria-label="打开系统设置" title="系统设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg></button>
   <div id="hbTools" role="toolbar" aria-label="部分工具栏" aria-hidden="true">
     <button class="hbt hbt-sw on" id="hbTl" type="button" role="switch" aria-checked="true" title="全局时间轴：开" aria-label="全局时间轴开关"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M7 8h3.2M7 12h4.8M7 16h3.2"/></svg></button>
     <button class="hbt hbt-lp" id="hbLp" type="button" role="switch" aria-checked="false" title="低功耗模式：关" aria-label="低功耗模式开关"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="17" height="10" rx="3"/><path d="M22 10.5v3"/><rect class="lp-fill" x="5" y="9.6" width="12" height="4.8" rx="1.2" fill="currentColor" stroke="none"/></svg></button>
@@ -2522,130 +2522,19 @@ html body #hback.hbt-on svg{transform:rotate(180deg)}
 </style>
 <script id="hbToolsJS">
 (function(){
-  var back=document.getElementById('hback'), tools=document.getElementById('hbTools');
-  if(!back||!tools) return;
-  var btns=[].slice.call(tools.querySelectorAll('.hbt[data-for]')), allBtns=[].slice.call(tools.querySelectorAll('.hbt'));
-  function real(b){return document.getElementById(b.getAttribute('data-for'))}
-
-  /* ---- 动画：全部用 Web Animations API + 行内样式，不依赖外部 CSS（避免被别处的 transition/animation 规则盖掉） ---- */
-  var arrow=back.querySelector('svg'), EASE_SPRING='cubic-bezier(.34,1.56,.64,1)';
-  function spd(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-spd'))||1}
-  function anim(open){
-    var k=spd();
-    if(arrow){                                               // 箭头：弹簧翻转 180°（行内 transform 保证最终状态一定生效）
-      arrow.style.transition='transform '+(.55/k)+'s '+EASE_SPRING;
-      arrow.style.transform=open?'rotate(180deg)':'none';
+  var back=document.getElementById('hback');
+  if(!back) return;
+  // The upper-left control is the direct settings entry; the original right-side
+  // more button keeps its own menu behavior and is not routed through this control.
+  back.addEventListener('click',function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof window.__openSettingsPage==='function'){
+      window.__openSettingsPage();
+      return;
     }
-    if(back.animate){                                        // 按钮：果冻回弹
-      back.animate([{transform:'scale(.84)'},{transform:'scale(1.14)',offset:.38},{transform:'scale(.97)',offset:.68},{transform:'scale(1)'}],
-                   {duration:550/k,easing:'cubic-bezier(.3,1.3,.5,1)'});
-    }
-    if(open&&tools.animate){                                 // 工具按钮：依次弹入
-      allBtns.forEach(function(b,i){
-        b.animate([{opacity:0,transform:'translateX(-12px) scale(.4)'},{opacity:1,transform:'none'}],
-                  {duration:500/k,delay:(40+i*50)/k,easing:EASE_SPRING,fill:'backwards'});
-      });
-    }
-  }
-
-  /* ---- 展开 / 收起：点返回键 ---- */
-  function setOpen(v){
-    tools.classList.toggle('is-on',v); back.classList.toggle('hbt-on',v);
-    back.setAttribute('aria-expanded',v?'true':'false');
-    back.setAttribute('aria-label',v?'收起部分工具栏':'展开部分工具栏');
-    tools.setAttribute('aria-hidden',v?'false':'true');
-    anim(v);
-  }
-  // 捕获阶段拦截返回键：不再触发原来的「收起面板」，只切换工具栏
-  ['pointerup','mouseup','touchend','click'].forEach(function(t){
-    document.addEventListener(t,function(e){
-      var n=e.target; if(!n||!n.closest||!n.closest('#hback')) return;
-      e.stopImmediatePropagation();
-      if(t==='click'){ e.preventDefault(); setOpen(!tools.classList.contains('is-on')); }
-    },true);
-  });
-  // 面板收起（body 失去 .open）时工具栏一起收起
-  new MutationObserver(function(){ if(!document.body.classList.contains('open')&&tools.classList.contains('is-on')) setOpen(false); })
-    .observe(document.body,{attributes:true,attributeFilter:['class']});
-
-  /* ---- 状态镜像：真按钮的 .on/.off/.has-redo、是否显示 → 对应的小按钮 ---- */
-  function sync(){
-    btns.forEach(function(b){
-      var r=real(b), vis=!!r&&getComputedStyle(r).display!=='none';
-      b.classList.toggle('dis',!vis);
-      ['on','off','has-redo'].forEach(function(c){ b.classList.toggle(c,!!r&&r.classList.contains(c)); });
-    });
-  }
-  var bar=document.getElementById('cbar');
-  var syncRaf=0;
-  function syncSoon(){ if(syncRaf) return; syncRaf=requestAnimationFrame(function(){ syncRaf=0; sync(); }); }   // 同一帧内的多次变化只同步一次
-  if(bar) new MutationObserver(syncSoon).observe(bar,{attributes:true,subtree:true,childList:true,attributeFilter:['class','style']});
-  sync(); setTimeout(sync,600); setTimeout(sync,2000);
-
-  /* ---- 全局时间轴开关：开 = 时间轴可左右滑动隐藏 / 显示；关 = 时间轴隐藏且不能滑出来，小白条也消失 ----
-     状态：body.tl-off（关）/ window.__tlOn；变化时触发 'tlswitch' 事件（detail.on / detail.animate），并记在 localStorage('yiu.tlOn') */
-  var sw=document.getElementById('hbTl');
-  function tlGet(){ try{ return localStorage.getItem('yiu.tlOn')!=='0'; }catch(_){ return true; } }
-  function tlApply(on,animate){
-    window.__tlOn=on;
-    document.body.classList.toggle('tl-off',!on);
-    sw.classList.toggle('on',on);
-    sw.setAttribute('aria-checked',on?'true':'false');
-    sw.title=on?'全局时间轴：开':'全局时间轴：关';
-    if(animate&&sw.animate){
-      var k=spd();
-      sw.animate([{transform:'scale(.78)'},{transform:'scale(1.16)',offset:.4},{transform:'scale(.97)',offset:.72},{transform:'scale(1)'}],{duration:480/k,easing:'cubic-bezier(.3,1.3,.5,1)'});
-      var sv=sw.querySelector('svg');
-      if(sv&&sv.animate) sv.animate([{transform:'rotate(0)'},{transform:'rotate('+(on?'':'-')+'12deg)',offset:.35},{transform:'rotate(0)'}],{duration:480/k,easing:'ease-in-out'});
-    }
-    try{ window.dispatchEvent(new CustomEvent('tlswitch',{detail:{on:on,animate:!!animate}})); }catch(_){}
-  }
-  sw.addEventListener('click',function(e){
-    e.preventDefault(); e.stopPropagation();
-    var on=!document.body.classList.contains('tl-off')?false:true;
-    try{ localStorage.setItem('yiu.tlOn',on?'1':'0'); }catch(_){}
-    tlApply(on,true);
-  });
-  tlApply(tlGet(),false);
-
-  /* ---- 转发：按下 / 抬起 / 点击按原生顺序发给真按钮（撤回长按 = 重做 也走这条） ---- */
-  function fire(el,type,e,extra){
-    var o={bubbles:true,cancelable:true,composed:true,view:window,button:0,clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY};
-    for(var k in extra) o[k]=extra[k];
-    try{ el.dispatchEvent(new PointerEvent(type,o)); }catch(_){}
-  }
-  function fireTouch(el,type,e,id){
-    try{
-      var t=new Touch({identifier:id,target:el,clientX:e.clientX,clientY:e.clientY,screenX:e.screenX,screenY:e.screenY,pageX:e.pageX,pageY:e.pageY});
-      var end=(type==='touchend'||type==='touchcancel');
-      el.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,composed:true,view:window,
-        touches:end?[]:[t],targetTouches:end?[]:[t],changedTouches:[t]}));
-    }catch(_){}
-  }
-  btns.forEach(function(b){
-    var st=null;
-    b.addEventListener('pointerdown',function(e){
-      if(b.classList.contains('dis')) return;
-      var r=real(b); if(!r) return;
-      st={x:e.clientX,y:e.clientY,id:e.pointerId,moved:false,r:r};
-      try{ b.setPointerCapture(e.pointerId); }catch(_){}
-      fire(r,'pointerdown',e,{pointerId:e.pointerId,pointerType:e.pointerType,isPrimary:true,buttons:1});
-      fireTouch(r,'touchstart',e,e.pointerId+1);
-    });
-    b.addEventListener('pointermove',function(e){
-      if(st&&Math.hypot(e.clientX-st.x,e.clientY-st.y)>10) st.moved=true;
-    });
-    function up(e,cancel){
-      if(!st||e.pointerId!==st.id) return;
-      var r=st.r, moved=st.moved||cancel; st=null;
-      fire(r,cancel?'pointercancel':'pointerup',e,{pointerId:e.pointerId,pointerType:e.pointerType,isPrimary:true,buttons:0});
-      fireTouch(r,cancel?'touchcancel':'touchend',e,e.pointerId+1);
-      if(!moved) r.click();
-    }
-    b.addEventListener('pointerup',function(e){ up(e,false); });
-    b.addEventListener('pointercancel',function(e){ up(e,true); });
-    b.addEventListener('contextmenu',function(e){ e.preventDefault(); });
-    b.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); });   // 点击由上面的 pointerup 统一转发，防止重复
+    var settingsTab=document.querySelector('#lg .lg-btns .nb[data-i="3"]');
+    if(settingsTab) settingsTab.click();
   });
 })();
 </script>
