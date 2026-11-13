@@ -2579,3 +2579,148 @@ body.cc-home #hub::before{background:transparent!important;box-shadow:none!impor
 
 #hub:not(.cc-home) #ccHome{display:none!important}
 .cc-mode-sheet[hidden]{display:none!important}
+
+
+/* ===== Yiu.fm · Aether secondary panels · Apple-minimal light skin =====
+   Only changes the presentation of existing second-level settings pages.
+   All original IDs, data attributes, inputs, and event handlers remain intact. */
+#hub.cc-legacy{
+  box-sizing:border-box;
+  width:min(82vw,340px);
+  max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 44px);
+  min-height:0;
+  padding:42px 10px 10px!important;
+  border-radius:25px;
+  overflow:hidden;
+  background:rgba(241,242,245,.97)!important;
+  border:1px solid rgba(255,255,255,.86)!important;
+  box-shadow:0 16px 44px rgba(25,32,45,.16)!important;
+  color:#252b34;
+}
+#hub.cc-legacy::before{background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#hub.cc-legacy #ccBack{
+  display:flex;align-items:center;gap:4px;
+  top:9px;left:12px;
+  min-height:25px;padding:3px 2px;
+  border:0;border-radius:0;
+  background:transparent;
+  color:#667080;
+  font-size:12px;font-weight:650;
+  box-shadow:none;
+}
+#hub.cc-legacy .dock{
+  flex:1 1 auto;min-height:0;min-width:0;
+  margin:0;
+  border:1px solid rgba(35,45,60,.055);
+  border-radius:17px;
+  background:rgba(255,255,255,.97);
+  box-shadow:0 2px 9px rgba(35,45,60,.045);
+  overflow:hidden;
+}
+#hub.cc-legacy .panel{
+  min-height:0;
+  padding:14px 13px!important;
+  background:transparent;
+  color:#252b34;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+}
+#hub.cc-legacy .panel::-webkit-scrollbar{display:none}
+#hub.cc-legacy .pg{color:#252b34}
+#hub.cc-legacy .ph{
+  margin:0 1px 13px!important;
+  color:#252b34!important;
+  font-size:16px;font-weight:750;line-height:1.25;
+  letter-spacing:-.2px;
+}
+#hub.cc-legacy .grp{
+  margin:0 0 9px!important;
+  padding:0;
+  border:0;
+}
+#hub.cc-legacy .gh{
+  min-height:43px;
+  padding:11px 13px!important;
+  border:1px solid rgba(35,45,60,.055)!important;
+  border-radius:12px!important;
+  background:#f4f5f7!important;
+  color:#303743!important;
+  box-shadow:none!important;
+  font-size:13px;font-weight:680;
+  scale:1;
+}
+#hub.cc-legacy .gh:active{scale:.985}
+#hub.cc-legacy .gh svg{width:16px;height:16px;color:#8993a1;stroke-width:2}
+#hub.cc-legacy .gb{transition:grid-template-rows .28s cubic-bezier(.3,1,.4,1)}
+#hub.cc-legacy .gi{overflow:hidden}
+#hub.cc-legacy .gp{padding:11px 4px 13px!important}
+#hub.cc-legacy .mt{
+  margin:13px 1px 7px!important;
+  color:#535d6b!important;
+  font-size:12px;font-weight:700;
+}
+#hub.cc-legacy .row{gap:9px;margin-top:10px!important}
+#hub.cc-legacy .row>span,
+#hub.cc-legacy .chk,
+#hub.cc-legacy .qh,
+#hub.cc-legacy .pm-box .qh,
+#hub.cc-legacy .qr span{
+  color:#515b69!important;
+}
+#hub.cc-legacy .row>span{font-size:12px}
+#hub.cc-legacy .chk{
+  min-height:40px;
+  color:#333c48!important;
+  font-size:13px;
+}
+#hub.cc-legacy .qtip,
+#hub.cc-legacy .tnote{
+  color:#89919d!important;
+  font-size:11px;line-height:1.55;
+}
+#hub.cc-legacy .chip,
+#hub.cc-legacy .ssel,
+#hub.cc-legacy .pm-box button{
+  border:1px solid #e4e8ee!important;
+  border-radius:11px!important;
+  background:#f3f5f8!important;
+  color:#394351!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+#hub.cc-legacy .chip{padding:8px 11px;font-size:12px}
+#hub.cc-legacy .chip.on,
+#hub.cc-legacy .ssel.is-on{
+  border-color:#d8e2f0!important;
+  background:#e8eff8!important;
+  color:#526b8b!important;
+}
+#hub.cc-legacy .ssel{min-height:40px;padding:8px 12px}
+#hub.cc-legacy .cs.cs-sel,
+#hub.cc-legacy .cs.cs-sw,
+#hub.cc-legacy .cs.cs-col{
+  border-top:1px solid #edf0f3!important;
+}
+#hub.cc-legacy input[type=range]{accent-color:#91a8c7}
+#hub.cc-legacy input[type=checkbox]{accent-color:#91a8c7}
+#hub.cc-legacy input[type=color]{
+  border:1px solid #e0e5ec!important;
+  border-radius:9px!important;
+  background:#fff!important;
+}
+#hub.cc-legacy .pm-box{color:#303743}
+#hub.cc-legacy .pm-box button{
+  min-height:38px;
+  padding:8px 10px;
+  font-size:12px;
+}
+#hub.cc-legacy .pm-box .qtip{color:#89919d!important}
+#hub.cc-legacy #styleSels{gap:8px}
+#hub.cc-legacy #styleSels .ssel{background:#f3f5f8!important}
+#hub.cc.cc-legacy #lg,
+body.open #lg{ }
+@media(max-height:650px){
+  #hub.cc-legacy{padding-top:38px!important;max-height:calc(100% - 24px)}
+  #hub.cc-legacy .panel{padding-top:10px!important}
+  #hub.cc-legacy .ph{margin-bottom:9px!important}
+}
