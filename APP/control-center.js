@@ -130,7 +130,11 @@
   var stage=$('stage');
   if(stage)new MutationObserver(function(){if(hub.classList.contains('cc-home')){paintEngine();paintResolution()}}).observe(stage,{attributes:true,attributeFilter:['class']});
   var manager=window.VisualizerManager;
-  if(manager&&typeof manager.debug==='function'){
-    window.setInterval(function(){if(hub.classList.contains('cc-home'))paintEngine()},700);
+  function refreshSwitchState(){
+    if(!hub.classList.contains('cc-home'))return;
+    paintEngine();
+    if(manager&&manager.isSwitching)window.setTimeout(refreshSwitchState,500);
   }
+  if(stage)stage.addEventListener('transitionend',refreshSwitchState);
+  if(manager&&manager.isSwitching)refreshSwitchState();
 })();
