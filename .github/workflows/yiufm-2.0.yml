@@ -242,8 +242,8 @@ jobs:
           if html.count(full_settings_script) != 1:
               raise SystemExit("Expected exactly one native settings-page script in the current index.html.")
           html = html.replace(menus_anchor, menus_script + chr(10) + fps_settings_script, 1)
-          old_devtools = '<script src="./APP/devtools.js?v=20261113a"></script>'
-          new_devtools = '<script src="./APP/devtools.js?v=20261113a"></script>'
+          old_devtools = '<script src="./APP/devtools.js?v=20261113b"></script>'
+          new_devtools = '<script src="./APP/devtools.js?v=20261113b"></script>'
           if html.count(old_devtools) != 1:
               raise SystemExit("Expected one developer-tools script tag; refusing to patch.")
           html = html.replace(old_devtools, new_devtools, 1)
