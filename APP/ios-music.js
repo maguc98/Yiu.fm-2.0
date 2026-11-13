@@ -16,7 +16,7 @@
   function call(msg){ return H.postMessage(msg); }       // 带回复的消息：返回 Promise
 
   var CHUNK = window.__iosMusicChunk || 3 * 1024 * 1024;   // 每次向原生要多少字节
-  var AUDIO_RE = /\.(mp3|m4a|aac|flac|wav|ogg|opus)$/i;  // 和 song-library.js 里的 MIME 表一致
+  var AUDIO_RE = /\.(mp3|m4a|aac|flac|wav|ogg|opus|aif|aiff|caf|alac)$/i;  // 和 song-library.js 里的 MIME 表一致
   var running = false, lastDone = 0, btn = null, btnTxt = '', btnTimer = 0;
 
   function nfc(t){ try{ return String(t).normalize('NFC'); }catch(_){ return String(t); } }
