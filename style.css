@@ -700,58 +700,127 @@ body.light-bg .deco{color:rgba(0,0,0,.45)}
 /* Hero 字：色散边缘 + 主题发光（由 --tsh 提供） */
 #one .m-poster .c.hero{text-shadow:var(--tsh,none)}
 
-/* ===== v0.0.3 深色磨砂面板（参照设计稿：封面 → 标签栏 → 控制键 → 内容）===== */
-:root{--p-bg:var(--ui-glass-fill);--p-fill:rgba(255,255,255,.07);--p-fill2:rgba(255,255,255,.15);--p-line:rgba(255,255,255,.09);--p-sub:rgba(255,255,255,.58)}
-#hub{width:min(70vw,300px);padding:14px;border-radius:28px;min-height:0;max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 106px)}
-#hub::before,body.light-bg #hub::before{background:var(--p-bg);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
-  box-shadow:0 10px 30px rgba(0,0,0,.36)}
-/* 面板背景虚化：当前图片放大后做高斯模糊，淡淡透出来 */
-#hubGlow{position:absolute;inset:0;border-radius:inherit;overflow:hidden;z-index:-1;pointer-events:none}
-#hubGlow::before{content:"";position:absolute;inset:-60px;background:var(--cover,linear-gradient(135deg,#3a3f55,#1c1c24)) center/cover no-repeat;
-  filter:blur(44px) saturate(1.6);opacity:.4;transform:translateZ(0)}
-/* 封面图 */
-#hubCover{order:0;flex:0 3 auto;min-height:0;position:relative;width:100%;height:clamp(96px,22vh,220px);margin:0 0 12px;border-radius:18px;overflow:hidden;
-  background:var(--cover,linear-gradient(135deg,#3a3f55,#1c1c24)) center/cover no-repeat;display:flex;align-items:center;justify-content:center;
-  font-size:64px;font-weight:800;color:rgba(255,255,255,.92);text-shadow:0 2px 18px rgba(0,0,0,.35);
-  box-shadow:0 10px 28px rgba(0,0,0,.4)}
+/* ===== Yiu.fm · Apple 极简悬浮控制中心 ===== */
+#hub{
+  --p-bg:rgba(250,251,255,.97);
+  --p-fill:rgba(243,246,251,.96);
+  --p-fill2:rgba(226,235,250,.98);
+  --p-line:rgba(35,48,70,.10);
+  --p-sub:rgba(76,88,108,.68);
+  --p-text:#1c1c1e;
+  color:var(--p-text);
+  width:min(66vw,252px);
+  height:min(88vw,336px,calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 130px));
+  aspect-ratio:3/4;
+  padding:10px;
+  border-radius:24px;
+  min-height:0;
+  max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 130px);
+}
+#hub::before,body.light-bg #hub::before{
+  background:var(--p-bg);
+  -webkit-backdrop-filter:blur(22px);
+  backdrop-filter:blur(22px);
+  box-shadow:0 14px 38px rgba(25,35,55,.16),inset 0 0 0 1px rgba(255,255,255,.8);
+}
+/* 背景封面页仍保留原图预览；主面板顶部使用独立播放状态卡 */
+#hubCover{
+  order:0;flex:0 3 auto;min-height:0;position:relative;width:100%;
+  height:clamp(72px,13vh,112px);margin:0 0 8px;border-radius:16px;overflow:hidden;
+  background:var(--cover,linear-gradient(135deg,#dfe7f5,#f6f8fc)) center/cover no-repeat;
+  display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:#fff;
+  box-shadow:none;
+}
 #hubCover.img{color:transparent;text-shadow:none}
-/* 标签栏：单行扁平 */
-#hub .nav{order:1;height:48px;margin:0 0 10px}
-#hub .lg-bg{inset:0;border-radius:18px;background:var(--p-fill);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+/* 顶部状态卡：封面缩略图 + 歌曲标题 + 当前状态 */
+#hub .np-info{
+  order:0;display:flex;align-items:center;gap:10px;min-height:54px;
+  margin:0 0 4px;padding:7px 10px;border-radius:15px;
+  background:var(--p-fill);border:1px solid var(--p-line);text-align:left;
+}
+#hub .np-info::before{
+  content:"";display:block;flex:none;width:38px;height:38px;border-radius:11px;
+  background:var(--cover2,var(--cover,linear-gradient(135deg,#dfe7f5,#f6f8fc))) center/cover no-repeat;
+  box-shadow:0 2px 7px rgba(25,35,55,.10);
+}
+#hub .np-info>div{min-width:0;flex:1}
+#hub .np-t{font-size:13px;font-weight:700;line-height:1.3;color:var(--p-text);text-align:left}
+#hub .np-s{margin-top:3px;font-size:10px;color:var(--p-sub);text-align:left}
+/* 进度条紧跟状态卡 */
+#hub .statbar{order:1;flex:none;height:24px;margin:2px 0 5px;padding:0 4px}
+/* 中部页面切换：保留原四个页面和原有滑块交互 */
+#hub .nav{order:2;flex:none;width:100%;height:46px;margin:0 0 7px;border-radius:14px}
+#hub .lg-bg{inset:0;border-radius:14px;background:#edf1f7;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #hub .lg-bg2{display:none!important}
-#hub .lg-btns{padding:4px}
-#hub .lg-btns .nb[data-i="0"]{flex:1;width:auto;margin-left:0}
-#hub .lg-thumb,#hub .lg-thumb.drag{top:4px;height:calc(100% - 8px);border-radius:14px;background:var(--p-fill2);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-#hub .lg-thumb.press{scale:1.05 1.03;background:rgba(255,255,255,.22)}
-#hub .lg-btns .nb svg{width:22px;height:22px;stroke:rgba(255,255,255,.55);filter:none}
-#hub .lg-btns .nb.on svg{stroke:#fff;transform:none}
-/* 控制键：一排等宽圆角按钮 */
-#hub #cdock{order:2;width:100%;margin:0 0 10px}
-#hub #cbar{height:46px;padding:0;gap:8px;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#hub .lg-btns{padding:3px}
+#hub .lg-btns .nb{
+  display:flex;flex:1;min-width:0;width:auto;height:100%;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;border-radius:11px;
+  color:var(--p-sub);background:none;border:0;box-shadow:none;
+}
+#hub .lg-btns .nb::after{
+  content:attr(title);display:block;font-size:9px;line-height:1.1;font-weight:600;
+  color:inherit;white-space:nowrap;
+}
+#hub .lg-btns .nb svg{width:16px;height:16px;stroke:currentColor;filter:none}
+#hub .lg-btns .nb.on{color:#2768d8}
+#hub .lg-btns .nb.on svg{stroke:currentColor;transform:none}
+#hub .lg-thumb,#hub .lg-thumb.drag{
+  top:3px;height:calc(100% - 6px);border-radius:11px;
+  background:#fff;box-shadow:0 1px 5px rgba(35,55,85,.10);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+#hub .lg-thumb.press{scale:1.02;background:#fff}
+/* 内容区占据剩余空间，页面本身继续滚动 */
+#hub .dock{
+  order:3;flex:1 1 0;min-height:0;max-height:none;margin:0;
+  border-radius:14px;border:1px solid var(--p-line);
+  background:rgba(255,255,255,.55);box-shadow:none;
+}
+#hub .panel{min-height:0;overflow-y:auto;background:transparent;box-shadow:none;border-radius:0;padding:8px 7px 4px!important;scrollbar-gutter:auto}
+#hub .ph{display:flex;align-items:center;justify-content:space-between;margin:0 2px 7px;font-size:11px;font-weight:650;color:var(--p-sub)}
+#hub #cdock{order:4;flex:none;width:100%;margin:6px 0 0}
+/* 底部四项合并为一个「其他」功能组，按钮本身仍分别执行原功能 */
+#hub #cbar{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;
+  gap:3px;height:auto;min-height:58px;padding:6px 7px;
+  border-radius:15px;background:var(--p-fill);border:1px solid var(--p-line);
+  box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+}
+#hub #cbar::before{
+  content:"其他";display:block;grid-column:1/-1;padding:0 3px 2px;
+  color:var(--p-sub);font-size:10px;font-weight:650;line-height:1.2;
+}
 #hub .csep{display:none!important}
-#hub .cb{flex:1;width:auto;height:46px;border-radius:16px;background:var(--p-fill);box-shadow:none}
-#hub .cb.on{background:var(--p-fill2);box-shadow:none}
-#hub #qpop{border-radius:20px;background:var(--ui-glass-fill);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);box-shadow:0 14px 40px rgba(0,0,0,.3)}
-/* 内容区 */
-#hub .dock{order:3;flex:1 1 230px;min-height:96px;border-radius:0;border-top:1px solid var(--p-line)}
-#hub .panel{background:transparent;box-shadow:none;border-radius:0;padding:10px 0 4px!important;scrollbar-gutter:auto}
-#hub .ph{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;font-size:12px;font-weight:500;color:var(--p-sub)}
-#hub .statbar{order:4;margin:6px 0 14px 0;height:24px}
-#hub .np-info{display:none}
-#hub .chip,#hub .ctl button{background:var(--p-fill);box-shadow:none;border:none;border-radius:14px;color:#fff}
-#hub .chip.on{background:var(--p-fill2);box-shadow:none;color:#fff}
+#hub .cb{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  flex:initial;width:100%;height:34px;border-radius:10px;
+  color:var(--p-text);background:transparent;border:0;box-shadow:none;
+}
+#hub .cb svg{width:17px;height:17px;stroke:currentColor}
+#hub .cb::after{content:attr(title);display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;line-height:1.1;color:var(--p-sub)}
+#hub .cb.on{background:#e5edfb;color:#2768d8;box-shadow:none}
+#hub #qpop{border-radius:17px;background:rgba(250,251,255,.98);color:var(--p-text);box-shadow:0 12px 30px rgba(25,35,55,.16)}
+/* 面板内部统一浅色卡片和文字 */
+#hub .chip,#hub .ctl button{background:var(--p-fill);border:1px solid var(--p-line);box-shadow:none;border-radius:11px;color:var(--p-text)}
+#hub .chip.on{background:#e4edff;border-color:#d2e1ff;box-shadow:none;color:#245fca}
+#hub .seg{background:#edf1f7;box-shadow:none;padding:3px;border-radius:12px}
+#hub .seg .chip{background:transparent;border:0;color:var(--p-sub)}
+#hub .seg .chip.on{background:#fff;box-shadow:0 1px 4px rgba(35,55,85,.10);color:#245fca}
 #hub .glide .chip,#hub .glide .chip.on{background:none;box-shadow:none}
-#hub .seg{background:rgba(0,0,0,.22);box-shadow:none;padding:4px;border-radius:18px}
-#hub .seg::after{display:none}
-#hub .glide::before{background:var(--p-fill2);box-shadow:none;border-radius:14px;-webkit-backdrop-filter:none;backdrop-filter:none}
-#hub .glide.pressing::before{background:rgba(255,255,255,.22);box-shadow:none}
-#hub .card,#hub .gh{background:var(--p-fill);box-shadow:none;border-radius:16px}
-#hub .card.dragging{background:var(--p-fill2);box-shadow:0 12px 28px rgba(0,0,0,.4)}
-#hub input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;box-shadow:none;background:linear-gradient(90deg,rgba(255,255,255,.62) var(--p),rgba(255,255,255,.14) var(--p))}
-#hub input[type=range]::-webkit-slider-thumb{width:34px;height:22px;margin-top:-8px;border-radius:11px;background:#fff;border:none;box-shadow:0 2px 6px rgba(0,0,0,.35)}
-body.light-bg #hub label,body.light-bg #hub .row span,body.light-bg #hub .mt,body.light-bg #hub .ph,body.light-bg #hub .lcnt,body.light-bg #hub .crow>span{color:var(--p-sub)!important}
-body.light-bg #hub .chip,body.light-bg #hub .cb,body.light-bg #hub .nb{color:#fff}
-body.light-bg #hub .nb svg,body.light-bg #hub .chip svg,body.light-bg #hub .cb svg{stroke:currentColor}
+#hub .glide::before{background:#fff;box-shadow:0 1px 4px rgba(35,55,85,.10);border-radius:10px;-webkit-backdrop-filter:none;backdrop-filter:none}
+#hub .glide.pressing::before{background:#e7eef9;box-shadow:none}
+#hub .card,#hub .gh{background:var(--p-fill);border:1px solid var(--p-line);box-shadow:none;border-radius:13px;color:var(--p-text)}
+#hub .card.dragging{background:var(--p-fill2);box-shadow:0 5px 16px rgba(35,55,85,.12)}
+#hub label,#hub .row span,#hub .mt,#hub .qtip,#hub .tnote,#hub .ph,#hub .lcnt,#hub .crow>span{color:var(--p-sub)}
+#hub .chk,#hub .chk-t{color:var(--p-text)}
+#hub .cb,#hub .chip,#hub .nb{color:var(--p-text)}
+#hub .nb svg,#hub .chip svg,#hub .cb svg{stroke:currentColor}
+#hub input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;box-shadow:none;background:linear-gradient(90deg,#7da7ee var(--p),#dfe5ef var(--p))}
+#hub input[type=range]::-webkit-slider-thumb{width:24px;height:18px;margin-top:-6.5px;border-radius:9px;background:#fff;border:1px solid #d5deeb;box-shadow:0 1px 4px rgba(35,55,85,.18)}
+#hub input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dfe5ef}
+#hub input[type=range]::-moz-range-progress{height:5px;border-radius:3px;background:#7da7ee}
+#hub input[type=range]::-moz-range-thumb{width:24px;height:18px;border-radius:9px;background:#fff;border:1px solid #d5deeb;box-shadow:0 1px 4px rgba(35,55,85,.18)}
 /* 迷你条：封面缩略图 + 正在播放 */
 #mini{color:#f5f5f7;border-radius:22px;transition:width calc(.4s/var(--ui-spd,1)) cubic-bezier(.3,1,.4,1),scale calc(.7s/var(--ui-spd,1)) var(--spring),opacity calc(.4s/var(--ui-spd,1)) ease}
 #mini::before{background:var(--ui-glass-fill);-webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
@@ -799,13 +868,13 @@ body.light-bg .mi-b{background:rgba(255,255,255,.12)}
 #cbar>#cmore svg{display:block;width:22px;height:22px;fill:currentColor;stroke:none}
 
 /* 整体缩短：封面更矮、标签/按钮更扁、内容区限高（内部滚动） */
-#hub{padding:10px!important;border-radius:26px!important}
+#hub{padding:10px!important;border-radius:24px!important}
 #hub #hubCover{height:clamp(72px,13vh,112px)!important;margin-bottom:8px!important;border-radius:16px!important}
-#hub .nav{height:42px!important;margin:0 0 8px!important}
+#hub .nav{height:46px!important;margin:0 0 7px!important}
 #hub #cdock{margin:0 0 8px!important}
-#hub #cbar,#hub .cb{height:40px!important}
-#hub .dock{flex:0 1 170px!important;min-height:90px!important;max-height:190px!important}
-#hub .statbar{height:22px!important;margin-top:6px!important}
+#hub #cbar{height:auto!important}#hub .cb{height:34px!important}
+#hub .dock{flex:1 1 0!important;min-height:0!important;max-height:none!important}
+#hub .statbar{height:24px!important;margin-top:2px!important}
 
 /* Q弹气泡：高度按可用空间限制，内部滚动；紧凑一点 */
 #hub #qpop{padding:10px 12px 12px;overscroll-behavior:contain;scrollbar-width:none}
@@ -1097,7 +1166,8 @@ body.light-bg #mediaMenu button.mode-btn.on { color: #fff; }
 
 /* ===== 全局间距统一优化 ===== */
 /* 1. 面板和菜单整体留白 */
-#hub, #qpop, #mediaMenu { padding: 14px !important; }
+#hub { padding: 10px !important; }
+#qpop, #mediaMenu { padding: 14px !important; }
 #hub .panel { padding: 0 !important; }
 
 /* 2. 列表行、滑块行、开关组之间的间距 */
@@ -2294,20 +2364,20 @@ html body #hubGlow{display:none!important}
    旧的 body.light-bg 规则假设"背景亮 → 玻璃也亮 → 字要深"，把玻璃里的字改成了 #151515；
    现在亮背景上玻璃会按 --ui-k 自动变深，深底配深字反而更糟（迷你条里"正在播放"变暗灰、按钮文字发黑）。
    所以只对玻璃表面把文字 / 变量还原成深色模式的值；玻璃外面的页面文字（页脚、快捷开关等）仍跟着 light-bg 走。 */
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav){--tx:#f5f5f7;--sub:rgba(255,255,255,.62);color:#f5f5f7}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.stat,.ph,.lcnt,label,.row span,.mt,.crow>span){color:var(--sub)!important}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.chip,.ctl button,.nb,.cb,.gh,.qh b,.qr span,.qtip,.qd .chk,.mm-h,.qt,.bt,.pkg-tab,.card .gear,.card .del){color:#f5f5f7}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar){--tx:#f5f5f7;--sub:rgba(255,255,255,.62);color:#f5f5f7}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(.stat,.ph,.lcnt,label,.row span,.mt,.crow>span){color:var(--sub)!important}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(.chip,.ctl button,.nb,.cb,.gh,.qh b,.qr span,.qtip,.qd .chk,.mm-h,.qt,.bt,.pkg-tab,.card .gear,.card .del){color:#f5f5f7}
 /* 旧规则里 .mini 的深色是 !important，所以单独加 !important；.qt 是「调节」页顶部的六个快捷开关 */
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .mini:not(.dirty){color:#f5f5f7!important}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.nb,.chip,.ctl,.cb,.gh,.card .gear,.card .del) svg{stroke:currentColor}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.chip.on,.cb.on,.mini.dirty,.pkg-tab.active){color:#fff}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .deco{color:rgba(255,255,255,.45)}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) .mini:not(.dirty){color:#f5f5f7!important}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(.nb,.chip,.ctl,.cb,.gh,.card .gear,.card .del) svg{stroke:currentColor}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(.chip.on,.cb.on,.mini.dirty,.pkg-tab.active){color:#fff}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) .deco{color:rgba(255,255,255,.45)}
 /* 这些元素在 light-bg 下被改成了"深色半透明底"，还原成深色模式的浅色半透明底 */
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(.bt,.pkg-tab,.card .gear,.card .del,#qpop .qp-row,#qpop .qp-back){background:rgba(255,255,255,.12)}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) .mini:not(.dirty){background:var(--g-fill2);box-shadow:none}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(textarea,.card textarea){color:#fff;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18)}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) textarea::placeholder{color:rgba(255,255,255,.4)}
-html body.light-bg :is(#hub,#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar,.dock,.nav) :is(#qpop .qp-row,#qpop .qp-back){color:#f5f5f7}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(.bt,.pkg-tab,.card .gear,.card .del,#qpop .qp-row,#qpop .qp-back){background:rgba(255,255,255,.12)}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) .mini:not(.dirty){background:var(--g-fill2);box-shadow:none}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(textarea,.card textarea){color:#fff;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18)}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) textarea::placeholder{color:rgba(255,255,255,.4)}
+html body.light-bg :is(#mini,#npCard,#mediaMenu,#qpop,.pkg-dlg,#cbar,#hbTools,#cmdFab,.gpop,#hback,#miSet,#saWin,#textBar) :is(#qpop .qp-row,#qpop .qp-back){color:#f5f5f7}
 
 
 /* ===== 进度条统一单色（灰白）=====
@@ -2324,8 +2394,8 @@ html body #tlLens .lseg::before{background:rgba(255,255,255,.85)!important}
    只改进度条这一行的外观，不动玻璃底色 / 模糊 / --ui-k。
    盖掉了上面「状态栏恢复彩虹分段」那几条（每段 2px 缝、5px 圆角），改回连成一条的轨道；
    轨道本身只有 5px 高，但 .tl 仍是 22px 高的透明触摸区，手指好按。 */
-html body #hub #statbar{display:flex!important;align-items:center!important;gap:14px!important;height:50px!important;margin:8px 0 0!important;padding:0 18px!important;border-radius:25px!important;background:rgba(255,255,255,.12)!important}
-html body #hub #statbar .tl-time{display:block!important;flex:none!important;font-size:15px!important;letter-spacing:.06em!important;font-variant-numeric:tabular-nums!important;color:rgba(255,255,255,.6)!important}
+html body #hub #statbar{display:flex!important;align-items:center!important;gap:7px!important;height:24px!important;margin:2px 0 5px!important;padding:0 5px!important;border-radius:10px!important;background:var(--p-fill)!important}
+html body #hub #statbar .tl-time{display:block!important;flex:none!important;font-size:9px!important;letter-spacing:0!important;font-variant-numeric:tabular-nums!important;color:var(--p-sub)!important}
 html body #statbar .tl{flex:1 1 0!important;width:auto!important;height:22px!important;gap:0!important;border-radius:0!important;overflow:visible!important;align-items:center!important;background:none!important}
 html body #statbar .tl .tg{height:5px!important;align-self:center!important;border-radius:0!important}
 html body #statbar .tl .tg:first-of-type{border-radius:3px 0 0 3px!important}
@@ -2342,7 +2412,7 @@ html body #hub #statbar #tlTimeCur,html body #hub #statbar #tlTimeTot{display:bl
 html body:not(.open) #mediaMenu.theme-picker::before,html body:not(.open) #tpEdit::before{background-color:rgba(24,24,28,.5)!important}
 
 /* 面板内小元素（.card、.gh）原来是 .12 的白底，玻璃变深后层次偏平，略微提亮一档 */
-html body #hub :is(.card,.gh){background:rgba(255,255,255,.16)}
+html body #hub :is(.card,.gh){background:var(--p-fill);border:1px solid var(--p-line);color:var(--p-text)}
 
 /* 设置页里的「玻璃深色深度」滑块：文字 + 数值在上，滑块独占下一行（glass-adapt.js 挂在「界面动画速度」后面） */
 .gd-set{display:block;padding:12px 4px 10px;color:#f5f5f7;font-size:14px}
@@ -2360,6 +2430,15 @@ html body #hub :is(.card,.gh){background:rgba(255,255,255,.16)}
    ========================================================================== */
 :root{--ctl-r:12px;--ctl-h:34px;--lbl-w:92px}
 
+/* Apple 极简面板：最终控件尺寸与文字颜色 */
+html body #hub label.chk{color:var(--p-text)!important}
+html body #hub label.chk > .chk-t,html body #hub label.chk > span{color:var(--p-text)!important}
+html body #hub .cs .row > span:first-child{color:var(--p-sub)!important}
+html body #hub input[type=range]::-webkit-slider-runnable-track{height:5px!important;border-radius:3px!important;background:linear-gradient(90deg,#7da7ee var(--p,0%),#dfe5ef var(--p,0%))!important;box-shadow:none!important}
+html body #hub input[type=range]::-webkit-slider-thumb{-webkit-appearance:none!important;appearance:none!important;width:24px!important;height:18px!important;margin-top:-6.5px!important;border-radius:9px!important;background:#fff!important;border:1px solid #d5deeb!important;box-shadow:0 1px 4px rgba(35,55,85,.18)!important}
+html body #hub input[type=range]::-moz-range-track{height:5px!important;border-radius:3px!important;background:#dfe5ef!important}
+html body #hub input[type=range]::-moz-range-progress{height:5px!important;border-radius:3px!important;background:#7da7ee!important}
+html body #hub input[type=range]::-moz-range-thumb{width:24px!important;height:18px!important;border-radius:9px!important;background:#fff!important;border:1px solid #d5deeb!important;box-shadow:0 1px 4px rgba(35,55,85,.18)!important}
 /* ---- 分组块：块与块之间一条淡分隔线 ---- */
 html body .cs{display:block;margin:0;padding:0;min-width:0}
 html body .cs.cs-sel,html body .cs.cs-sw,html body .cs.cs-col{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.10)}
