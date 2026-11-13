@@ -32,7 +32,7 @@ function applyTheme(save){
 }
 function updateRanges(root){(root||page).querySelectorAll('input[type=range]').forEach(function(el){var min=Number(el.min||0),max=Number(el.max||100),v=Number(el.value||0),pct=max>min?Math.max(0,Math.min(100,(v-min)/(max-min)*100)):0;el.style.setProperty('--p',pct+'%');if(typeof w.sync==='function')try{w.sync(el)}catch(_){}})}
 bindSettingsGroups();
-page.querySelectorAll('#systemSettingsGroup input[type=range]').forEach(function(el){if(typeof w.wrapRange==='function')try{w.wrapRange(el)}catch(_){}});
+page.querySelectorAll('#systemSettingsGroup input[type=range]').forEach(function(el){if(typeof w.wrapRange==='function'&&!(el.parentNode&&el.parentNode.classList.contains('rw')))try{w.wrapRange(el)}catch(_){}});
 if(typeof w.bindUiSpd==='function')try{w.bindUiSpd()}catch(_){}
 page.addEventListener('input',function(e){var el=e.target;if(el&&el.matches&&el.matches('[data-theme-key]')){var k=el.dataset.themeKey;if(Object.prototype.hasOwnProperty.call(defaults,k)){theme[k]=el.value;applyTheme(true)}}if(el&&el.matches&&el.matches('input[type=range]'))updateRanges(el.parentNode)});
 page.addEventListener('change',function(e){var el=e.target;if(el&&el.matches&&el.matches('[data-theme-key]')){var k=el.dataset.themeKey;if(Object.prototype.hasOwnProperty.call(defaults,k)){theme[k]=el.value;applyTheme(true)}}if(el&&el.matches&&el.matches('input[type=range]'))updateRanges(el.parentNode)});
@@ -40,5 +40,5 @@ page.addEventListener('click',function(e){var p=e.target.closest&&e.target.close
 var reset=d.getElementById('qrstMoved');
 if(reset)reset.addEventListener('click',function(){if(typeof w.setUiSpdPct==='function')w.setUiSpdPct(100);var speed=d.getElementById('uiSpd');if(speed){speed.value='100';updateRanges(speed.parentNode)}['uiH','uiS','performanceMode'].forEach(function(id){var el=d.getElementById(id);if(el){el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}))}});if(w.YiuFrameRateLimit&&typeof w.YiuFrameRateLimit.reset==='function')w.YiuFrameRateLimit.reset();theme=Object.assign({},defaults);applyTheme(true)});
 applyTheme(false);updateRanges(page);
-w.__yiuSettingsDiag=function(){return {ui:'native-pg3-settings-20261113a',page:!!d.getElementById('pg3'),groups:['systemSettingsGroup','betaBox','themeSettingsGroup','devOptionsGroup'].map(function(id){return !!d.getElementById(id)})}};
+w.__yiuSettingsDiag=function(){return {ui:'native-pg3-settings-20261113b',page:!!d.getElementById('pg3'),groups:['systemSettingsGroup','betaBox','themeSettingsGroup','devOptionsGroup'].map(function(id){return !!d.getElementById(id)})}};
 })(window,document);
