@@ -2752,3 +2752,20 @@ body.open #lg{ }
 .cc-engine-options>button i{display:flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#e8ebf0;color:transparent;font-size:12px;font-style:normal;font-weight:800}
 .cc-engine-options>button.is-selected{border-color:rgba(104,151,120,.28);background:#edf5ef}
 .cc-engine-options>button.is-selected i{background:#d8eadc;color:#4e8a60}
+
+
+/* ===== New control center · in-place action sheets ===== */
+.cc-action-sheet{
+  position:absolute;z-index:9;left:12px;right:12px;top:12px;bottom:12px;
+  display:flex;flex-direction:column;gap:12px;padding:14px;
+  box-sizing:border-box;border:1px solid rgba(40,50,65,.08);border-radius:18px;
+  background:rgba(255,255,255,.98);box-shadow:0 12px 35px rgba(30,40,55,.18);
+  color:#303743;overflow:auto;overscroll-behavior:contain;
+}
+.cc-action-sheet[hidden]{display:none!important}
+.cc-action-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
+.cc-action-head strong{font-size:13px;font-weight:750}
+.cc-action-head button{width:28px;height:28px;padding:0;border:0;border-radius:9px;background:#f0f2f5;color:#687487;font-size:20px;line-height:1}
+.cc-action-list{display:flex;flex-direction:column;gap:8px}
+.cc-action-item{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;padding:11px 13px;border:1px solid rgba(45,55,70,.07);border-radius:12px;background:#f7f8fa;color:#343c48;text-align:left;font-size:13px;font-weight:650}
+.cc-action-item:active{background:#edf1f6}
