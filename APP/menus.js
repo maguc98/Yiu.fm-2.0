@@ -542,6 +542,7 @@ document.addEventListener("pointerdown",function(e){
     }
   }
 
+  window.YiuSetMode = function(mode){ setMode(mode === "text"); return isTextMode() ? "text" : "music"; };
   // 判断当前是否为文字模式
   function isTextMode() { return slider.classList.contains("is-text"); }
 
