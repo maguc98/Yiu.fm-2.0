@@ -20,7 +20,7 @@
     var pair=engineMap[active]||engineMap.sonnet;
     $('ccEngineName').textContent=pair[0];$('ccEngineCn').textContent=pair[1];
     var ready=!!($('stage')&&$('stage').classList.contains('mode-'+active));
-    $('ccEngineState').textContent=ready?'运行中':'就绪';
+    $('ccEngineState').textContent='运行中';
   }
   function nativeResolution(){
     if(active==='sonnet'){
@@ -70,7 +70,7 @@
     if(b)b.click();
     else if(typeof window.showPg==='function')window.showPg(index,1);
   }
-  $('ccClose').addEventListener('click',function(){var b=$('miSet');if(b)b.click();else document.body.classList.remove('open')});
+  $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
   $('ccEngine').addEventListener('click',function(){openLegacyTab(1)});
   $('ccVisual').addEventListener('click',function(){openLegacyTab(1)});
   $('ccDisplay').addEventListener('click',function(){sheet.hidden=!sheet.hidden});
