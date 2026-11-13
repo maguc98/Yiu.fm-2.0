@@ -157,7 +157,7 @@ jobs:
           if html.count(css_anchor) != 1:
               raise SystemExit("Expected exactly one Partita host CSS block; refusing to patch.")
           if html.count(fume_css) == 0:
-              html = html.replace(css_anchor, css_anchor + '\\n' + fume_css, 1)
+              html = html.replace(css_anchor, css_anchor + '\n' + fume_css, 1)
           elif html.count(fume_css) != 1:
               raise SystemExit("Expected at most one Fume host CSS block; refusing duplicate IDs.")
           old_p1 = '<script src="./APP/P1.js?v=1"></script>'
