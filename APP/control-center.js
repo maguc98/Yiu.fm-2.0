@@ -88,6 +88,8 @@
   }
   function openCurrentEngineDetails(){
     openLegacyTab(1);
+    /* Fume 当前没有独立参数面板；进入视觉效果页即可，不再查找不存在的 #fumebox。 */
+    if(active==='fume')return;
     window.setTimeout(function(){
       var box=active&&$(active+'box');
       if(!box)return;
