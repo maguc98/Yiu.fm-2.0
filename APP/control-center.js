@@ -6,6 +6,7 @@
   if(!hub||!document.getElementById('ccHome'))return;
   var $=function(id){return document.getElementById(id)};
   var home=$('ccHome'),sheet=$('ccModeSheet'),back=$('ccBack'),res=$('ccResolution'),resV=$('ccResolutionValue');
+  window.__YiuControlCenterLeavingOther=function(){lastLegacy='tab'};
   var engineMap={sonnet:['SONNET','商籁'],tempera:['TEMPERA','凝彩'],lumiere:['LUMIÈRE','绘光'],partita:['PARTITA','云阶'],fume:['FUME','浮墨']};
   var active='sonnet',lastLegacy='home';
   function getEngine(){
