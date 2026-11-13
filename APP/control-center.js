@@ -83,13 +83,18 @@
     paintEngine();paintResolution();refreshSwitchState();
   }
   function openLegacyTab(index){
-    /* 对应设置尚未迁入新版控制中心：不再切换到旧页面。 */
-    lastLegacy='home';
-    setHome(true);
+    /* 新控制中心作为首页；功能详情复用原有业务页面，返回时仍回到新版首页。 */
+    lastLegacy='tab';
+    hub.classList.remove('cc-home');
+    hub.classList.add('cc-legacy');
+    document.body.classList.remove('cc-home');
+    sheet.hidden=true;
+    var tab=document.querySelector('#lg .nb[data-i="'+index+'"]');
+    if(tab)tab.click();
   }
   function openCurrentEngineDetails(){
-    /* 不打开旧版引擎参数页，避免旧 UI 重新出现。 */
-    setHome(true);
+    /* 引擎参数位于「调节」页，直接进入对应的现有参数面板。 */
+    openLegacyTab(3);
   }
   $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
   /* 从旧设置页再次点迷你条设置键时，回到控制中心首页；若在「其他」页则复用统一返回逻辑。 */
@@ -103,14 +108,23 @@
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
   $('ccOther').addEventListener('click',function(){
-    /* 「其他」尚未迁入新版页面，保持新版控制中心，不打开旧菜单。 */
-    lastLegacy='home';
-    setHome(true);
+    /* 打开原有「更多」功能菜单；不复制或改写其中的业务逻辑。 */
+    lastLegacy='other';
+    hub.classList.remove('cc-home');
+    hub.classList.add('cc-legacy');
+    document.body.classList.remove('cc-home');
+    sheet.hidden=true;
+    var more=$('cmore');
+    if(more)more.click();
   });
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
   home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true});
   back.addEventListener('click',function(){
+    var more=$('qpop');
+    if(more&&more.classList.contains('show')){
+      var close=$('cmore');if(close)close.click();
+    }
     setHome(true);
   });
   var was=document.body.classList.contains('open');
