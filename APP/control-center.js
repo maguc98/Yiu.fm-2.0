@@ -126,6 +126,7 @@
         groupName=item.group;
         var heading=document.createElement('div');heading.className='cc-action-group';heading.textContent=groupName;list.appendChild(heading);
       }
+      if(typeof item.render==='function'){item.render(list);return}
       var b=document.createElement('button');b.type='button';b.className='cc-action-item';
       b.textContent=item.label;b.disabled=!!item.disabled;
       if(item.selected)b.classList.add('is-selected');
@@ -166,6 +167,52 @@
     if(!target)throw new Error('功能入口不存在：'+id);
     target.click();
   }
+  function proxyControl(group,label,id,kind){
+    return {group:group,render:function(list){
+      var source=$(id);if(!source)return;
+      var row=document.createElement('div');row.className='cc-action-control'+(kind==='checkbox'?' is-check':'');
+      var name=document.createElement('span');name.className='cc-action-control-label';name.textContent=label;row.appendChild(name);
+      var control=document.createElement('input');control.type=kind==='checkbox'?'checkbox':kind==='color'?'color':'range';
+      if(kind==='checkbox'){
+        control.checked=!!source.checked;
+        control.addEventListener('change',function(){source.checked=control.checked;source.dispatchEvent(new Event('change',{bubbles:true}))});
+        row.appendChild(control);
+      }else{
+        if(kind==='range'){['min','max','step'].forEach(function(k){if(source.getAttribute(k)!==null)control.setAttribute(k,source.getAttribute(k))});control.value=source.value}
+        else control.value=source.value||'#ffffff';
+        var value=document.createElement('em');value.className='cc-action-control-value';
+        function paint(){value.textContent=kind==='range'?control.value+(source.dataset.scale==='100'?'%':''):control.value.toUpperCase()}
+        paint();control.addEventListener('input',function(){
+          source.value=control.value;
+          source.dispatchEvent(new Event('input',{bubbles:true}));
+          paint();
+        });
+        control.addEventListener('change',function(){
+          source.value=control.value;
+          source.dispatchEvent(new Event('change',{bubbles:true}));
+          paint();
+        });
+        row.appendChild(control);row.appendChild(value);
+      }
+      list.appendChild(row);
+    }};
+  }
+  function proxySegment(group,label,id){
+    return {group:group,render:function(list){
+      var source=$(id);if(!source)return;
+      var row=document.createElement('div');row.className='cc-action-control cc-action-segment';
+      var name=document.createElement('span');name.className='cc-action-control-label';name.textContent=label;row.appendChild(name);
+      var wrap=document.createElement('div');wrap.className='cc-action-segment-options';
+      var originals=source.querySelectorAll('.chip');
+      originals.forEach(function(original){
+        var b=document.createElement('button');b.type='button';b.className='cc-action-segment-option';b.textContent=original.textContent.trim();
+        function paint(){b.classList.toggle('is-selected',original.classList.contains('on'))}
+        paint();b.addEventListener('click',function(){original.click();originals.forEach(function(x){x.classList.remove('on')});original.classList.add('on');wrap.querySelectorAll('button').forEach(function(x){x.classList.remove('is-selected')});paint()});
+        wrap.appendChild(b);
+      });
+      row.appendChild(wrap);list.appendChild(row);
+    }};
+  }
   function openOtherSheet(){
     var music=document.body.classList.contains('music-mode');
     function action(group,label,id,close){
@@ -176,7 +223,40 @@
       {group:'媒体导入',label:'导入 LRC 歌词',run:function(){clickExisting('lrcFile')}},
       {group:'播放模式',label:'音乐模式',selected:music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('music');paintModeSelection();}},
       {group:'播放模式',label:'文字模式',selected:!music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('text');paintModeSelection();}},
-      action('性能与监测','性能优化','qtPerf',false),
+      proxyControl('播放设置','播放速度','speed','range'),
+      proxyControl('播放设置','动效速度','aspd','range'),
+      proxyControl('播放设置','循环播放','qLoop','checkbox'),
+      proxyControl('播放设置','屏幕常亮','qWake','checkbox'),
+      proxyControl('播放设置','切换渐变速度','qFadeSpeed','range'),
+      proxyControl('播放设置','自动隐藏 UI','qImmerse','range'),
+      proxySegment('播放设置','默认页面','qDefTab'),
+      proxySegment('播放设置','灵动岛样式','qAiStyle'),
+      action('显示与排版','开屏封面设置','splashOpen'),
+      proxyControl('显示与排版','字号','size','range'),
+      proxyControl('显示与排版','文字阴影','shd','range'),
+      proxyControl('显示与排版','RGB 分离','rgb','range'),
+      proxyControl('显示与排版','描边','sw','range'),
+      proxyControl('显示与排版','边距','lyPad','range'),
+      proxyControl('显示与排版','字重','lyFw','range'),
+      proxyControl('显示与排版','行距','lyLh','range'),
+      proxySegment('显示与排版','水平对齐','lyAlign'),
+      proxySegment('显示与排版','垂直位置','lyPos'),
+      proxySegment('显示与排版','断行方式','lyWrap'),
+      proxyControl('显示与排版','文字颜色','tc','color'),
+      proxyControl('显示与排版','描边颜色','sc','color'),
+      proxyControl('显示与排版','发光颜色','fg','color'),
+      proxyControl('背景设置','背景角度','ang','range'),
+      proxyControl('背景设置','背景模糊','imgBlur','range'),
+      proxyControl('背景设置','背景压暗','imgDim','range'),
+      proxyControl('背景设置','混色 1','c1','color'),
+      proxyControl('背景设置','混色 2','c2','color'),
+      proxyControl('背景设置','混色 3','c3','color'),
+      proxyControl('背景设置','混色 4','c4','color'),
+      proxyControl('背景设置','纯色背景','solidc','color'),
+      action('背景设置','选择背景图片','pick'),
+      proxyControl('系统设置','界面动画速度','uiSpd','range'),
+      proxyControl('系统设置','性能优化','performanceMode','checkbox'),
+      action('性能与监测','性能优化开关','qtPerf',false),
       action('性能与监测','实时 FPS','qtFps',false),
       action('性能与监测','卡顿检测','qtLag',false),
       action('性能与监测','节拍可视化','qtBeat',false),
