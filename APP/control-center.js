@@ -161,12 +161,31 @@
     var current=api.current(),buttons=actionSheet.querySelectorAll('.cc-action-item');
     var n=0;api.groups.forEach(function(g){g.items.forEach(function(e){var b=buttons[n++];if(!b)return;b.classList.toggle('is-selected',e.id===current);b.setAttribute('aria-pressed',e.id===current?'true':'false')})});
   }
+  function clickExisting(id){
+    var target=$(id);
+    if(!target)throw new Error('功能入口不存在：'+id);
+    target.click();
+  }
   function openOtherSheet(){
+    var music=document.body.classList.contains('music-mode');
+    function action(group,label,id,close){
+      return {group:group,label:label,close:close!==false,run:function(){clickExisting(id)}};
+    }
     openActionSheet('其他',[
-      {group:'媒体导入',label:'导入音乐',run:function(){var input=$('audioFile');if(input)input.click();else throw new Error('音频选择器不存在')}},
-      {group:'媒体导入',label:'导入 LRC 歌词',run:function(){var input=$('lrcFile');if(input)input.click();else throw new Error('歌词选择器不存在')}},
-      {group:'播放模式',label:'音乐模式',run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('music');paintModeSelection();}},
-      {group:'播放模式',label:'文字模式',run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('text');paintModeSelection();}}
+      {group:'媒体导入',label:'导入音乐',run:function(){clickExisting('audioFile')}},
+      {group:'媒体导入',label:'导入 LRC 歌词',run:function(){clickExisting('lrcFile')}},
+      {group:'播放模式',label:'音乐模式',selected:music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('music');paintModeSelection();}},
+      {group:'播放模式',label:'文字模式',selected:!music,close:false,run:function(){if(typeof window.YiuSetMode!=='function')throw new Error('模式控制接口未就绪');window.YiuSetMode('text');paintModeSelection();}},
+      action('性能与监测','性能优化','qtPerf',false),
+      action('性能与监测','实时 FPS','qtFps',false),
+      action('性能与监测','卡顿检测','qtLag',false),
+      action('性能与监测','节拍可视化','qtBeat',false),
+      action('性能与监测','底部文案','qtFoot',false),
+      action('性能与监测','强制刷新','qtRefresh'),
+      action('项目与数据','导出项目','expBtn'),
+      action('项目与数据','导入项目','impBtn'),
+      action('项目与数据','批量导入本地媒体','localImportBtn'),
+      action('项目与数据','清空本地导入','localClearBtn')
     ]);
     paintModeSelection();
   }
@@ -201,12 +220,15 @@
   /* “视觉效果”恢复旧版主题卡片选择器：复用 THEMES / theme-editor / theme-picker，
      保留用户已有主题、添加/删除/排序与背景配置，不再打开新的动效清单。 */
   $('ccVisual').addEventListener('click',function(){
-    var pickerButton=$('cfs'),picker=$('mediaMenu');
-    if(!pickerButton||!picker){
-      console.error('[Yiu Control Center] 旧版主题选择器未就绪');
+    var picker=window.YiuThemePicker;
+    if(picker&&typeof picker.open==='function'){
+      picker.open();
       return;
     }
-    if(!picker.classList.contains('show'))pickerButton.click();
+    /* 兼容主题选择器 API 尚未初始化的极早期调用。 */
+    var pickerButton=$('cfs'),menu=$('mediaMenu');
+    if(pickerButton&&menu&&!menu.classList.contains('show'))pickerButton.click();
+    else if(!pickerButton||!menu)console.error('[Yiu Control Center] 主题选择器节点不存在');
   });
   function openDisplaySheet(){
     var music=document.body.classList.contains('music-mode');
