@@ -108,8 +108,12 @@ document.addEventListener("pointerdown",function(e){
     var t=document.createElement("button");t.type="button";t.className="cb";t.id="cmore";t.title="系统设置";t.setAttribute("aria-label","系统设置");t.setAttribute("aria-expanded","false");
     t.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>`;
     fold.parentNode.insertBefore(t,fold.nextSibling);
+    t.addEventListener("click",function(){
+      var settingsTab=document.querySelector('.nb[data-i="3"]');
+      if(settingsTab)settingsTab.click();
+    });
 
-    // Settings controls are now assembled by settings-page.js in the settings module.
+    // Settings controls are native children of #pg3; no overlay/staging DOM.
   })();
 
   /* ---- Q弹气泡里的两个新功能：循环播放 / 屏幕常亮 ---- */
