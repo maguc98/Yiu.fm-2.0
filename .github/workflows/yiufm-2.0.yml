@@ -13,6 +13,7 @@ on:
     paths:
       - "APP/**"
       - "index.html"
+      - "style.css"
       - "YiuFM/**"
       - ".github/workflows/yiufm-2.0.yml"
 
