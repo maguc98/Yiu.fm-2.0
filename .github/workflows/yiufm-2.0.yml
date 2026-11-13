@@ -59,6 +59,8 @@ jobs:
           cp APP/theme-picker.js YiuFM/Resources/Web/APP/theme-picker.js
           # Ship the branch devtools build so the adjustable global FPS limiter is included in the IPA.
           cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
+          # Ship the current system logger so the expanded runtime error stack is present in the IPA.
+          cp APP/sys-log.js YiuFM/Resources/Web/APP/sys-log.js
           # Ship the branch menu implementation so the new Other sections are included in the IPA.
           cp APP/menus.js YiuFM/Resources/Web/APP/menus.js
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
@@ -99,15 +101,14 @@ jobs:
           test -s YiuFM/Resources/Web/APP/library-service.js
           test -s YiuFM/Resources/Web/APP/playback-preferences-service.js
           python3 - <<'PY'
+          import re
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
-          old_devtools = '<script src="./APP/devtools.js?v=20261101a"></script>'
-          new_devtools = '<script src="./APP/devtools.js?v=20261114a"></script>'
-          # The current branch may already contain the updated cache-busted tags.
-          if html.count(old_devtools) == 1:
-              html = html.replace(old_devtools, new_devtools, 1)
-          elif html.count(new_devtools) != 1:
+          # The devtools asset is copied from this branch; accept its current cache key
+          # instead of pinning the restore step to a stale UI revision.
+          devtools_tags = re.findall(r'<script src="./APP/devtools\\.js\\?v=[^"]+"></script>', html)
+          if len(devtools_tags) != 1:
               raise SystemExit("Expected exactly one current devtools.js script tag; refusing to patch.")
           # menus.js is copied from this branch; keep its source-matched cache key.
           old_menus = '<script src="./APP/menus.js?v=20261113b"></script>'
