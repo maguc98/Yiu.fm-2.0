@@ -191,7 +191,16 @@
     if(document.body.classList.contains('open')&&!hub.classList.contains('cc-home'))back.click();
   });
   $('ccEngine').addEventListener('click',openEngineSheet);
-  $('ccVisual').addEventListener('click',openVisualSheet);
+  /* “视觉效果”恢复旧版主题卡片选择器：复用 THEMES / theme-editor / theme-picker，
+     保留用户已有主题、添加/删除/排序与背景配置，不再打开新的动效清单。 */
+  $('ccVisual').addEventListener('click',function(){
+    var pickerButton=$('cfs'),picker=$('mediaMenu');
+    if(!pickerButton||!picker){
+      console.error('[Yiu Control Center] 旧版主题选择器未就绪');
+      return;
+    }
+    if(!picker.classList.contains('show'))pickerButton.click();
+  });
   function openDisplaySheet(){
     var music=document.body.classList.contains('music-mode');
     openActionSheet('显示模式',[
