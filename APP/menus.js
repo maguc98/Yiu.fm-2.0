@@ -108,19 +108,99 @@ document.addEventListener("pointerdown",function(e){
     var t=document.createElement("button");t.type="button";t.className="cb";t.id="cmore";t.title="系统设置";t.setAttribute("aria-label","系统设置");t.setAttribute("aria-expanded","false");
     t.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>`;
     fold.parentNode.insertBefore(t,fold.nextSibling);
-    t.addEventListener("click",function(){
-      // Reuse the stage navigation API so page state, active tab and spring thumb
-      // are updated together. Do not synthesize a click on the navigation button.
-      if(typeof window.__openSettingsPage==="function"){
-        window.__openSettingsPage();
-        return;
-      }
-      // Defensive fallback for an older or partially loaded stage module.
-      var settingsTab=document.querySelector('#lg .lg-btns .nb[data-i="3"]');
-      if(settingsTab)settingsTab.click();
+
+    var menu=document.createElement("div");menu.id="pg5";menu.className="pg hide";
+    menu.innerHTML=`<div class="ph">系统设置</div><div class="pm-box">
+
+      <!-- 1. 系统设置 -->
+      <div class="grp">
+        <button class="gh" type="button" aria-expanded="false"><span>系统设置</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp">
+          <div class="qh" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
+            <b>界面动画速度</b><em id="uiSpdV" class="av" style="font-style:normal; color:var(--sub);">1.00×</em>
+          </div>
+          <div class="qr" style="margin-top:8px; display:flex; align-items:center; gap:8px; padding:0 4px;">
+            <span style="font-size:12px; color:var(--sub);">0.25×</span>
+            <input type="range" id="uiSpd" min="25" max="300" step="5" value="100" aria-label="界面动画速度" style="flex:1;">
+            <span style="font-size:12px; color:var(--sub);">3×</span>
+          </div>
+          <div class="qtip" style="margin:6px 4px 0">调节面板、按钮、菜单等界面动画的快慢，不影响文字特效。</div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px;">
+            <label class="chk" style="display:none !important;display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">高光描边</span>
+              <input type="checkbox" id="uiH" checked>
+            </label>
+            <label class="chk" style="display:none !important;display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">柔和阴影</span>
+              <input type="checkbox" id="uiS" checked>
+            </label>
+            <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
+              <span style="font-size:14px; color:#fff;">性能优化</span>
+              <input type="checkbox" id="performanceMode" checked>
+            </label>
+          </div>
+
+          <div class="qd" style="margin-top:20px; display:flex; justify-content:center;">
+            <button class="chip" id="qrstMoved" type="button" style="flex:1; padding:10px 0;">恢复默认设置</button>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- 2. Beta 测试功能 -->
+      <div class="grp" id="betaBox">
+        <button class="gh" type="button" aria-expanded="false" style="background:rgba(80,125,240,.25); border:1px solid rgba(80,125,240,.4);"><span style="color:#a3c2ff">Beta 测试功能</span><em class="beta-tag" style="margin-left:auto; margin-right:8px;">BETA</em><svg viewBox="0 0 24 24" style="stroke:#a3c2ff"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp" id="betaBody" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="qtip" style="margin-top:0; margin-bottom:8px;">测试中的功能，可能不稳定。音乐模式和音频 / 歌词导入已移到底部「···」菜单。</div>
+        </div></div></div>
+      </div>
+
+      <!-- 3. 开发者选项（由 devtools.js 注入） -->
+      <div id="devOptionsHolder"></div>
+
+      <div class="qtip" id="appVersion" style="text-align:center;margin-top:24px">版本 v0.1.1 Beta 3</div>
+    </div>`;
+    var pg4=document.getElementById("pg4");pg4.parentNode.insertBefore(menu,pg4);
+    /* 绑定折叠面板事件 */
+    [].forEach.call(menu.querySelectorAll(".gh"), function(btn) {
+      btn.addEventListener("click", function() {
+        var grp = btn.parentNode;
+        var on = grp.classList.toggle("open");
+        btn.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) setTimeout(function(){ grp.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, 460);
+      });
     });
 
-    // Settings controls are native children of #pg3; no overlay/staging DOM.
+    var $$=function(i){return document.getElementById(i)},timer=0;
+    [].forEach.call(menu.querySelectorAll("input[type=range]"),wrapRange);
+    bindUiSpd();
+    var qrm=$$("qrstMoved");if(qrm)qrm.onclick=function(){setUiSpdPct(100);var d=$$("qdemo");if(d)d.checked=!d.checked};
+    function refresh(){
+      [].forEach.call(menu.querySelectorAll("[data-t]"),function(b){var c=$$(b.dataset.t);b.classList.toggle("on",!!(c&&c.checked))});
+    }
+    menu.addEventListener("click",function(e){
+      var b=e.target.closest&&e.target.closest("button");if(!b)return;e.stopPropagation();
+      var tg=b.dataset.t;
+      if(tg){var c=$$(tg);if(c)c.click()}
+      refresh();
+    });
+    var menuOn=false,_sp=showPg;
+    function setMenu(on){
+      on=!!on;if(on===menuOn)return;menuOn=on;
+      t.classList.toggle("on",on);t.setAttribute("aria-expanded",on?"true":"false");clearInterval(timer);
+      if(on){
+        for(var k=0;k<5;k++){var e=$$("pg"+k);e.classList.remove("leave","go");e.classList.add("hide")}
+        menu.classList.remove("leave","hide","go");menu.style.setProperty("--dx","18px");void menu.offsetWidth;menu.classList.add("go");
+        clearTimeout(menu._g);menu._g=setTimeout(function(){menu.classList.remove("go")},uiT(400));
+        $$("panel").scrollTop=0;refresh();timer=setInterval(refresh,300);
+      }else{menu.classList.remove("go");menu.classList.add("hide");_sp(curTab,0)}
+    }
+    /* 其它地方切换页面时（点上方标签等），自动退出播放菜单 */
+    showPg=function(i,d){if(menuOn){menuOn=false;t.classList.remove("on");t.setAttribute("aria-expanded","false");clearInterval(timer);menu.classList.remove("go");menu.classList.add("hide")}_sp(i,d)};
+    var nav=document.querySelector(".nav");
+    if(nav)nav.addEventListener("pointerdown",function(){if(menuOn)setMenu(false)},true);
+    t.addEventListener("click",function(e){e.stopPropagation();close();setMenu(!menuOn)});
+    new MutationObserver(function(){if(!document.body.classList.contains("open"))setMenu(false)}).observe(document.body,{attributes:true,attributeFilter:["class"]});
   })();
 
   /* ---- Q弹气泡里的两个新功能：循环播放 / 屏幕常亮 ---- */
