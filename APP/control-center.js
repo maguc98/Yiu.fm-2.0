@@ -163,6 +163,10 @@
     var n=0;api.groups.forEach(function(g){g.items.forEach(function(e){var b=buttons[n++];if(!b)return;b.classList.toggle('is-selected',e.id===current);b.setAttribute('aria-pressed',e.id===current?'true':'false')})});
   }
   function clickExisting(id){
+    if(id==='__devLogFull')return clickSelector('.log-entry-btn');
+    if(id==='__devSysLog')return clickSelector('.sys-log-entry-btn');
+    if(id==='__devCmd')return clickSelector('.cmd-console-entry-btn');
+    if(id==='__devReload')return clickSelector('.force-reload-btn');
     var target=$(id);
     if(!target)throw new Error('功能入口不存在：'+id);
     target.click();
@@ -196,6 +200,11 @@
       }
       list.appendChild(row);
     }};
+  }
+  function clickSelector(selector){
+    var target=document.querySelector(selector);
+    if(!target)throw new Error('功能入口不存在：'+selector);
+    target.click();
   }
   function proxySegment(group,label,id){
     return {group:group,render:function(list){
@@ -266,7 +275,21 @@
       action('项目与数据','导出项目','expBtn'),
       action('项目与数据','导入项目','impBtn'),
       action('项目与数据','批量导入本地媒体','localImportBtn'),
-      action('项目与数据','清空本地导入','localClearBtn')
+      action('项目与数据','清空本地导入','localClearBtn'),
+      proxyControl('开发者选项','卡顿检测','devJank','checkbox'),
+      proxyControl('开发者选项','实时帧率显示','devFps','checkbox'),
+      proxyControl('开发者选项','悬浮窗日志','devFloatLogChk','checkbox'),
+      proxyControl('开发者选项','暂停抓取日志','devPauseLogChk','checkbox'),
+      proxyControl('开发者选项','背景换图等待','dev_bgSwapDelay','range'),
+      proxyControl('开发者选项','封面换图等待','dev_coverSwapDelay','range'),
+      proxyControl('开发者选项','全局渲染分辨率','devResMul','range'),
+      proxyControl('开发者选项','键盘弹出收起速度','dev_cm_up','range'),
+      proxyControl('开发者选项','键盘收起展开速度','dev_cm_down','range'),
+      proxyControl('开发者选项','键盘收起后等待','dev_cm_wait','range'),
+      action('开发者选项','全屏日志','__devLogFull'),
+      action('开发者选项','系统日志','__devSysLog'),
+      action('开发者选项','命令窗口','__devCmd'),
+      action('开发者选项','开发者强制刷新','__devReload')
     ]);
     paintModeSelection();
   }
