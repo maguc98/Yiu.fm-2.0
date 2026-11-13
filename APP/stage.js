@@ -145,7 +145,21 @@ function endDrag(e){
 }
 lgEl.addEventListener("pointerup",endDrag);
 lgEl.addEventListener("pointercancel",endDrag);
-NB.forEach(function(b,k){b.onclick=function(e){if(e.detail===0){choose(k);release(k)}}});
+/* 点击兜底：主导航以 pointer 事件处理拖动，同时保留原生 click 路径，避免 WKWebView 未派发 pointerup 时点击无响应 */
+lgEl.addEventListener("click",function(e){
+  var b=e.target&&e.target.closest?e.target.closest(".nb"):null;
+  var k=b?NB.indexOf(b):-1;
+  if(k<0)k=nearest(fx(e));
+  if(k<0)return;
+  choose(k);release(k);
+});
+/* 对外提供唯一的设置页入口，供迷你播放器按钮复用同一导航逻辑 */
+window.__openSettingsPage=function(){
+  var k=-1;
+  for(var j=0;j<NB.length;j++)if(+NB[j].dataset.i===3){k=j;break}
+  if(k<0)return false;
+  choose(k);release(k);return true;
+};
 window.addEventListener("resize",function(){putThumb(curK(),true)});
 (function(){var k=curK();mark(k);putThumb(k,true)})();
 showPg(0,1);
