@@ -105,14 +105,30 @@ document.addEventListener("pointerdown",function(e){
   /* ---- 控制栏：第 4 个按钮 → 在控制栏下方整块展开的"播放菜单"（播放控制 / 速度 / 跳转 / 快捷开关） ---- */
   (function(){
     var bar=document.getElementById("cbar"),fold=document.getElementById("cfold");if(!bar||!fold)return;
-    var t=document.createElement("button");t.type="button";t.className="cb";t.id="cmore";t.title="系统设置";t.setAttribute("aria-label","系统设置");t.setAttribute("aria-expanded","false");
+    var t=document.createElement("button");t.type="button";t.className="cb";t.id="cmore";t.title="其他";t.setAttribute("aria-label","其他");t.setAttribute("aria-expanded","false");
     t.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>`;
     fold.parentNode.insertBefore(t,fold.nextSibling);
 
     var menu=document.createElement("div");menu.id="pg5";menu.className="pg hide";
     menu.innerHTML=`<div class="ph">系统设置</div><div class="pm-box">
 
-      <!-- 1. 系统设置 -->
+      <!-- 1. 音频设置：复用原有音频 / LRC / 模式入口 -->
+      <div class="grp" id="audioSettingsBox">
+        <button class="gh" type="button" aria-expanded="false"><span>音频设置</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp">
+          <div class="row" style="gap:8px;margin-top:0">
+            <button class="chip" type="button" data-proxy="btnPickAudio" style="flex:1;padding:10px 0">选择音频</button>
+            <button class="chip" type="button" data-proxy="btnPickLrc" style="flex:1;padding:10px 0">导入 LRC</button>
+          </div>
+          <div class="row" style="gap:8px;margin-top:10px">
+            <button class="chip" type="button" data-proxy="btnModeMusic" style="flex:1;padding:10px 0">音乐模式</button>
+            <button class="chip" type="button" data-proxy="btnModeText" style="flex:1;padding:10px 0">文字模式</button>
+          </div>
+          <div class="qtip">这里集中管理音频导入、歌词导入和播放模式；操作仍由原有播放器处理。</div>
+        </div></div></div>
+      </div>
+
+      <!-- 2. 系统设置 -->
       <div class="grp">
         <button class="gh" type="button" aria-expanded="false"><span>系统设置</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="gb"><div class="gi"><div class="gp">
@@ -147,7 +163,7 @@ document.addEventListener("pointerdown",function(e){
         </div></div></div>
       </div>
 
-      <!-- 2. Beta 测试功能 -->
+      <!-- 3. Beta 测试功能 -->
       <div class="grp" id="betaBox">
         <button class="gh" type="button" aria-expanded="false" style="background:rgba(80,125,240,.25); border:1px solid rgba(80,125,240,.4);"><span style="color:#a3c2ff">Beta 测试功能</span><em class="beta-tag" style="margin-left:auto; margin-right:8px;">BETA</em><svg viewBox="0 0 24 24" style="stroke:#a3c2ff"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="gb"><div class="gi"><div class="gp" id="betaBody" style="display:flex;flex-direction:column;gap:8px;">
@@ -155,7 +171,7 @@ document.addEventListener("pointerdown",function(e){
         </div></div></div>
       </div>
 
-      <!-- 3. 开发者选项（由 devtools.js 注入） -->
+      <!-- 4. 开发者选项（由 devtools.js 注入） -->
       <div id="devOptionsHolder"></div>
 
       <div class="qtip" id="appVersion" style="text-align:center;margin-top:24px">版本 v0.1.1 Beta 3</div>
@@ -180,8 +196,15 @@ document.addEventListener("pointerdown",function(e){
     }
     menu.addEventListener("click",function(e){
       var b=e.target.closest&&e.target.closest("button");if(!b)return;e.stopPropagation();
+      var proxy=b.dataset.proxy;
+      if(proxy){
+        setMenu(false);
+        var target=$(proxy);
+        if(target)target.click();
+        return;
+      }
       var tg=b.dataset.t;
-      if(tg){var c=$$(tg);if(c)c.click()}
+      if(tg){var c=$(tg);if(c)c.click()}
       refresh();
     });
     var menuOn=false,_sp=showPg;
