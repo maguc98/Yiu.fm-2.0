@@ -118,6 +118,8 @@
     }
     actionSheet.innerHTML='<div class="cc-action-head"><strong></strong><button type="button" aria-label="关闭">×</button></div><div class="cc-action-list"></div>';
     actionSheet.dataset.view=title.indexOf('功能分类')>=0?'categories':'category';
+    actionSheet.setAttribute('role','dialog');actionSheet.setAttribute('aria-modal','true');
+    actionSheet.style.pointerEvents='auto';actionSheet.style.zIndex='9999';
     actionSheet.querySelector('.cc-action-head strong').textContent=title;
     actionSheet.querySelector('.cc-action-head button').addEventListener('click',closeActionSheet);
     var list=actionSheet.querySelector('.cc-action-list');
@@ -137,11 +139,15 @@
       }else b.textContent=item.label;
       b.disabled=!!item.disabled;
       if(item.selected)b.classList.add('is-selected');
-      b.addEventListener('click',function(){
+      b.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
         if(b.disabled)return;
-        try{item.run()}catch(e){console.error('[Yiu Control Center] 操作失败',e);return}
-        if(item.close!==false)closeActionSheet();
+        b.disabled=true;
+        try{item.run();if(item.close!==false)closeActionSheet();}
+        catch(e){console.error('[Yiu Control Center] 操作失败',e);b.disabled=false;}
       });
+      b.style.touchAction='manipulation';
+      b.setAttribute('aria-label',item.label);
       list.appendChild(b);
     });
     closeEngineSheet();actionSheet.hidden=false;
@@ -347,17 +353,27 @@
   $('ccEngine').addEventListener('click',openEngineSheet);
   /* “视觉效果”恢复旧版主题卡片选择器：复用 THEMES / theme-editor / theme-picker，
      保留用户已有主题、添加/删除/排序与背景配置，不再打开新的动效清单。 */
-  $('ccVisual').addEventListener('click',function(){
-    var picker=window.YiuThemePicker;
-    if(picker&&typeof picker.open==='function'){
-      picker.open();
-      return;
-    }
-    /* 兼容主题选择器 API 尚未初始化的极早期调用。 */
-    var pickerButton=$('cfs'),menu=$('mediaMenu');
-    if(pickerButton&&menu&&!menu.classList.contains('show'))pickerButton.click();
-    else if(!pickerButton||!menu)console.error('[Yiu Control Center] 主题选择器节点不存在');
+  $('ccVisual').addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var menu=$('mediaMenu'),dock=$('cdock'),picker=window.YiuThemePicker;
+    if(!menu||!dock){console.error('[Yiu Control Center] 旧版主题选择器结构不完整');return}
+    hub.classList.add('cc-theme-picker-open');
+    if(picker&&typeof picker.open==='function')picker.open();
+    else{var pickerButton=$('cfs');if(pickerButton)pickerButton.click();}
+    requestAnimationFrame(function(){
+      menu.classList.add('show');menu.setAttribute('aria-hidden','false');
+      menu.style.pointerEvents='auto';menu.style.zIndex='1001';
+    });
   });
+  (function(){
+    var menu=$('mediaMenu');if(!menu)return;
+    new MutationObserver(function(){
+      if(!menu.classList.contains('show')){
+        hub.classList.remove('cc-theme-picker-open');
+        menu.style.removeProperty('pointer-events');menu.style.removeProperty('z-index');
+      }
+    }).observe(menu,{attributes:true,attributeFilter:['class']});
+  })();
   function openDisplaySheet(){
     var music=document.body.classList.contains('music-mode');
     openActionSheet('显示模式',[
