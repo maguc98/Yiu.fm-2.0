@@ -109,28 +109,24 @@
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
   $('ccOther').addEventListener('click',function(){
-    /* 打开真实存在的原生「···」菜单 #qpop；仓库中并不存在 #cmore 元素。 */
+    /* #cmore 与 #pg5 由 menus.js 动态创建；复用原生「其他」菜单开关。 */
+    var more=$('cmore');
+    if(!more)return;
     lastLegacy='other';
     hub.classList.remove('cc-home');
     hub.classList.add('cc-legacy');
     document.body.classList.remove('cc-home');
     sheet.hidden=true;
-    var pop=$('qpop');
-    if(pop){
-      pop.classList.remove('sub');
-      pop.classList.add('show');
-      pop.setAttribute('aria-hidden','false');
-    }
+    if(!more.classList.contains('on'))more.click();
   });
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
   home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true});
   back.addEventListener('click',function(){
-    var pop=$('qpop');
-    if(pop){
-      pop.classList.remove('show','sub');
-      pop.setAttribute('aria-hidden','true');
-    }
+    /* 分开关闭「其他」菜单与 Q 弹菜单，避免只隐藏页面却遗留菜单开关状态。 */
+    var more=$('cmore'),quick=$('qpop'),quickToggle=$('cq');
+    if(more&&more.classList.contains('on'))more.click();
+    if(quick&&quick.classList.contains('show')&&quickToggle)quickToggle.click();
     setHome(true);
   });
   var was=document.body.classList.contains('open');
