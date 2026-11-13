@@ -50,8 +50,10 @@ jobs:
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
           git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
-          # Apply the current branch control-center stylesheet after restoring the verified HTML baseline.
+          # Replace the pinned legacy UI shell with the current branch's fully integrated control-center UI.
+          cp index.html YiuFM/Resources/Web/index.html
           cp style.css YiuFM/Resources/Web/style.css
+          cp APP/control-center.js YiuFM/Resources/Web/APP/control-center.js
           # Ship the branch devtools build so the adjustable global FPS limiter is included in the IPA.
           cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           # Ship the branch menu implementation so the new Other sections are included in the IPA.
@@ -81,6 +83,10 @@ jobs:
           cp APP/yiu-runtime.js YiuFM/Resources/Web/APP/yiu-runtime.js
           test -s YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/style.css
+          test -s YiuFM/Resources/Web/APP/control-center.js
+          grep -q 'id="ccHome"' YiuFM/Resources/Web/index.html
+          grep -q 'ccResolutionValue' YiuFM/Resources/Web/index.html
+          grep -q 'APP/control-center.js' YiuFM/Resources/Web/index.html
           test -s YiuFM/Resources/Web/APP/sonnet/sonnet.js
           test -s YiuFM/Resources/Web/APP/tempera/tempera-pixi.js
           test -s YiuFM/Resources/Web/APP/lumiere/lumiere-pixi.js
