@@ -9,6 +9,7 @@ on:
     paths:
       - "APP/**"
       - "YiuFM/**"
+      - "style.css"
       - ".github/workflows/yiufm-2.0.yml"
 
 jobs:
@@ -49,6 +50,8 @@ jobs:
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
           git archive FETCH_HEAD index.html style.css APP | tar -x -C YiuFM/Resources/Web
+          # Apply the current branch control-center stylesheet after restoring the verified HTML baseline.
+          cp style.css YiuFM/Resources/Web/style.css
           # Ship the branch devtools build so the adjustable global FPS limiter is included in the IPA.
           cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
