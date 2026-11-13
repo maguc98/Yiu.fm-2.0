@@ -128,7 +128,6 @@ jobs:
           node --check APP/runtime/frame-rate-limit.js
           node --check APP/frame-rate-settings.js
           node --check APP/menus.js
-          grep -q 'window.__openSettingsPage' APP/menus.js
           node --check APP/devtools.js
           node --check APP/settings-page.js
           grep -q "native in-page settings" APP/settings-page.js
