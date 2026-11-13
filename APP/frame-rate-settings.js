@@ -20,7 +20,7 @@ function mount(){
  if(typeof w.wrapRange==='function')try{w.wrapRange(slider)}catch(_){}
  enabled.addEventListener('change',function(){api.setConfig({enabled:enabled.checked});refresh();});
  slider.addEventListener('input',function(){api.setConfig({fps:Number(slider.value)});refresh();});
- if(resetButton)resetButton.addEventListener('click',function(){api.reset();refresh();});
+ // The system-wide reset button is handled by settings-page.js.
  refresh();var meter=setInterval(function(){if(!d.getElementById('yiuFrameRateSettings')){clearInterval(meter);return;}refresh();},1000);return true;
 }
 if(!mount()){var attempts=0,timer=setInterval(function(){if(mount()||++attempts>=20)clearInterval(timer);},50);}
