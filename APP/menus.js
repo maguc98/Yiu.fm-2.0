@@ -109,7 +109,14 @@ document.addEventListener("pointerdown",function(e){
     t.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>`;
     fold.parentNode.insertBefore(t,fold.nextSibling);
     t.addEventListener("click",function(){
-      var settingsTab=document.querySelector('.nb[data-i="3"]');
+      // Reuse the stage navigation API so page state, active tab and spring thumb
+      // are updated together. Do not synthesize a click on the navigation button.
+      if(typeof window.__openSettingsPage==="function"){
+        window.__openSettingsPage();
+        return;
+      }
+      // Defensive fallback for an older or partially loaded stage module.
+      var settingsTab=document.querySelector('#lg .lg-btns .nb[data-i="3"]');
       if(settingsTab)settingsTab.click();
     });
 
