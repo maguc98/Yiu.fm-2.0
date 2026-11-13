@@ -258,6 +258,8 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet-perf-governor.js
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          node --check YiuFM/Resources/Web/APP/control-center.js
+          node --check YiuFM/Resources/Web/APP/menus.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/fume/fume.js
           node --check YiuFM/Resources/Web/APP/fume-folia/fume-folia.js
