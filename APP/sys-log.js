@@ -208,10 +208,12 @@
       if (src) Engine.log('error', 'resource', '资源加载失败', { url: src, tag: e.target.nodeName });
       return;
     }
-    Engine.log('error', 'global', e.message || 'Unknown error', {
-      file: e.filename ? e.filename.split('/').pop() : '',
+    var err = e.error;
+    Engine.log('error', 'global', e.message || (err && err.message) || 'Unknown error', {
+      file: e.filename || '',
       line: e.lineno || 0,
-      col: e.colno || 0
+      col: e.colno || 0,
+      stack: err && err.stack ? String(err.stack) : ''
     });
   }, true);
 
