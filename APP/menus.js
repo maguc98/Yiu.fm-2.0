@@ -128,7 +128,20 @@ document.addEventListener("pointerdown",function(e){
         </div></div></div>
       </div>
 
-      <!-- 2. 系统设置 -->
+      <!-- 2. 更多功能：原有页面继续保留，由「其他」统一进入 -->
+      <div class="grp" id="ccMoreFunctions">
+        <button class="gh" type="button" aria-expanded="false"><span>更多功能</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="gb"><div class="gi"><div class="gp">
+          <div class="row" style="gap:8px;margin-top:0">
+            <button class="chip" type="button" data-nav="0" style="flex:1;padding:10px 6px">文字内容</button>
+            <button class="chip" type="button" data-nav="2" style="flex:1;padding:10px 6px">背景与封面</button>
+            <button class="chip" type="button" data-nav="3" style="flex:1;padding:10px 6px">性能与调节</button>
+          </div>
+          <div class="qtip">原有文字编辑、背景封面、性能与高级调节功能都保留在这里。</div>
+        </div></div></div>
+      </div>
+
+      <!-- 3. 系统设置 -->
       <div class="grp">
         <button class="gh" type="button" aria-expanded="false"><span>系统设置</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="gb"><div class="gi"><div class="gp">
@@ -196,6 +209,13 @@ document.addEventListener("pointerdown",function(e){
     }
     menu.addEventListener("click",function(e){
       var b=e.target.closest&&e.target.closest("button");if(!b)return;e.stopPropagation();
+      var navIndex=b.dataset.nav;
+      if(navIndex!==undefined){
+        setMenu(false);
+        var navButton=document.querySelector('#lg .nb[data-i="'+navIndex+'"]');
+        if(navButton)navButton.click();
+        return;
+      }
       var proxy=b.dataset.proxy;
       if(proxy){
         setMenu(false);
