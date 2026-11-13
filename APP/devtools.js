@@ -450,11 +450,10 @@
     toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1600);
   }
 
-  /* ---------- 注入入口按钮到设置数据源 ---------- */
+  /* ---------- 注入实时日志入口到原生调节页 ---------- */
   function injectEntry(){
-    var root = document.getElementById('yiuSettingsDataRoot');
-    if (!root || root.querySelector('.log-entry-btn')) return;
-    var box = root.querySelector('.yiu-settings-source') || root;
+    var box = document.getElementById('pg3');
+    if (!box || box.querySelector('.log-entry-btn')) return;
     var ver = null;
     box.querySelectorAll('.qtip').forEach(function(el){
       if (el.textContent.indexOf('版本') >= 0) ver = el;
@@ -469,10 +468,10 @@
     else box.appendChild(btn);
   }
 
-  if (document.getElementById('yiuSettingsDataRoot')) injectEntry();
+  if (document.getElementById('pg3')) injectEntry();
   else {
     var mo = new MutationObserver(function(){
-      if (document.getElementById('yiuSettingsDataRoot')){ injectEntry(); mo.disconnect(); }
+      if (document.getElementById('pg3')){ injectEntry(); mo.disconnect(); }
     });
     mo.observe(document.body, { childList: true, subtree: true });
   }
