@@ -12,7 +12,7 @@
 (function(){
   'use strict';
 
-  var AUDIO_RE = /\.(mp3|m4a|flac|wav|aac|ogg|opus)$/i;
+  var AUDIO_RE = /\.(mp3|m4a|flac|wav|aac|ogg|opus|aif|aiff|caf|alac)$/i;
   var IMG_RE   = /\.(jpe?g|png|webp)$/i;
   var LRC_RE   = /\.lrc$/i;
   var META_RE  = /\.json$/i;
