@@ -101,13 +101,12 @@ jobs:
           test -s YiuFM/Resources/Web/APP/library-service.js
           test -s YiuFM/Resources/Web/APP/playback-preferences-service.js
           python3 - <<'PY'
-          import re
           from pathlib import Path
           page = Path("YiuFM/Resources/Web/index.html")
           html = page.read_text(encoding="utf-8")
           # The devtools asset is copied from this branch; accept its current cache key
           # instead of pinning the restore step to a stale UI revision.
-          devtools_tags = re.findall(r'<script src="./APP/devtools\\.js\\?v=[^"]+"></script>', html)
+          devtools_tags = [line for line in html.splitlines() if 'src="./APP/devtools.js?v=' in line]
           if len(devtools_tags) != 1:
               raise SystemExit("Expected exactly one current devtools.js script tag; refusing to patch.")
           # menus.js is copied from this branch; keep its source-matched cache key.
