@@ -74,32 +74,22 @@
     }
     paintResolution();
   }
+  /* 旧设置页仅保留隐藏的兼容 DOM 与业务逻辑；控制中心始终停留在新版首页。 */
   function setHome(on){
-    hub.classList.toggle('cc-home',!!on);
-    hub.classList.toggle('cc-legacy',!on);
-    document.body.classList.toggle('cc-home',!!on);
-    if(on){sheet.hidden=true;paintEngine();paintResolution();refreshSwitchState();}
+    hub.classList.add('cc-home');
+    hub.classList.remove('cc-legacy');
+    document.body.classList.add('cc-home');
+    sheet.hidden=true;
+    paintEngine();paintResolution();refreshSwitchState();
   }
   function openLegacyTab(index){
-    setHome(false);lastLegacy='tab';
-    var b=document.querySelector('#lg .nb[data-i="'+index+'"]');
-    if(b)b.click();
-    else if(typeof window.showPg==='function')window.showPg(index,1);
+    /* 对应设置尚未迁入新版控制中心：不再切换到旧页面。 */
+    lastLegacy='home';
+    setHome(true);
   }
   function openCurrentEngineDetails(){
-    openLegacyTab(1);
-    /* Fume 当前没有独立参数面板；进入视觉效果页即可，不再查找不存在的 #fumebox。 */
-    if(active==='fume')return;
-    window.setTimeout(function(){
-      var box=active&&$(active+'box');
-      if(!box)return;
-      var group=box.closest('.grp');
-      if(group&&!group.classList.contains('open')){
-        var toggle=group.querySelector('.gh');
-        if(toggle)toggle.click();
-      }
-      box.scrollIntoView({block:'center',behavior:'smooth'});
-    },90);
+    /* 不打开旧版引擎参数页，避免旧 UI 重新出现。 */
+    setHome(true);
   }
   $('ccClose').addEventListener('click',function(){var b=$('mini');if(b)b.click();else document.body.classList.remove('open')});
   /* 从旧设置页再次点迷你条设置键时，回到控制中心首页；若在「其他」页则复用统一返回逻辑。 */
@@ -113,15 +103,14 @@
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
   $('ccOther').addEventListener('click',function(){
-    setHome(false);lastLegacy='other';
-    var more=$('cmore');if(more)more.click();
+    /* 「其他」尚未迁入新版页面，保持新版控制中心，不打开旧菜单。 */
+    lastLegacy='home';
+    setHome(true);
   });
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
   home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true});
   back.addEventListener('click',function(){
-    var more=$('cmore'),pg5=$('pg5');
-    if(lastLegacy==='other'&&more&&pg5&&!pg5.classList.contains('hide'))more.click();
     setHome(true);
   });
   var was=document.body.classList.contains('open');
