@@ -390,7 +390,7 @@
       proxyControl('开发者工具','键盘收起展开速度','dev_cm_down','range'),
       proxyControl('开发者工具','键盘收起后等待','dev_cm_wait','range'),
       action('开发者工具','全屏日志','__devLogFull'),
-      action('开发者工具','系统日志','__devSysLog'),
+      action('开发者工具','错误详情与系统日志','__devSysLog'),
       action('开发者工具','命令窗口','__devCmd'),
       action('开发者工具','开发者强制刷新','__devReload')
     ];
