@@ -407,7 +407,7 @@ jobs:
           grep -q 'APP/settings-page.js?v=20261113b' "$WEB_ROOT/index.html"
           grep -q 'APP/frame-rate-settings.js?v=20261113b' "$WEB_ROOT/index.html"
           grep -q 'APP/menus.js?v=20261113b' "$WEB_ROOT/index.html"
-          grep -q 'APP/devtools.js?v=20261113a' "$WEB_ROOT/index.html"
+          grep -q 'APP/devtools.js?v=20261113b' "$WEB_ROOT/index.html"
           grep -q 'native in-page settings' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'systemSettingsGroup' "$WEB_ROOT/index.html"
           grep -q 'function bindSettingsGroups' "$WEB_ROOT/APP/settings-page.js"
