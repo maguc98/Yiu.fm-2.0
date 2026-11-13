@@ -107,7 +107,7 @@ jobs:
           elif html.count(new_devtools) != 1:
               raise SystemExit("Expected exactly one current devtools.js script tag; refusing to patch.")
           # menus.js is copied from this branch; keep its source-matched cache key.
-          old_menus = '<script src="./APP/menus.js?v=20261113a"></script>'
+          old_menus = '<script src="./APP/menus.js?v=20261113b"></script>'
           new_menus = old_menus
           if html.count(old_menus) != 1:
               raise SystemExit("Expected exactly one current menus.js script tag; refusing to patch.")
