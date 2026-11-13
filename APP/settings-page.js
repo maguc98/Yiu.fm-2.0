@@ -81,6 +81,8 @@ function mount(){
   var source=root&&root.querySelector('.yiu-settings-source');
   if(!root||!source||d.getElementById('yiuSettingsPage'))return false;
   if(!d.getElementById('devOptionsGroup'))return false;
+  var frameRateScript=d.querySelector('script[src*="frame-rate-settings.js"]');
+  if(frameRateScript&&!d.getElementById('yiuFrameRateSettings')&&tries<10)return false;
 
   var oldSystem=source.querySelector(':scope > .grp:not(#betaBox)');
   var beta=source.querySelector('#betaBox');
