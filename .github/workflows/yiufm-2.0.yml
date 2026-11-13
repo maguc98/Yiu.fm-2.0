@@ -128,6 +128,7 @@ jobs:
           node --check APP/runtime/frame-rate-limit.js
           node --check APP/frame-rate-settings.js
           node --check APP/menus.js
+          grep -q 'window.__openSettingsPage' APP/menus.js
           node --check APP/devtools.js
           node --check APP/settings-page.js
           grep -q "native in-page settings" APP/settings-page.js
@@ -234,7 +235,7 @@ jobs:
               raise SystemExit("A service facade is already injected; refusing duplicate insertion.")
           html = html.replace(anchor, injected, 1)
           menus_anchor = '<script src="./APP/menus.js?v=20261113a"></script>'
-          menus_script = '<script src="./APP/menus.js?v=20261113b"></script>'
+          menus_script = '<script src="./APP/menus.js?v=20261113c"></script>'
           fps_settings_script = '<script src="./APP/frame-rate-settings.js?v=20261113b"></script>'
           full_settings_script = '<script src="./APP/settings-page.js?v=20261113b"></script>'
           if html.count(menus_anchor) != 1 or menus_script in html or fps_settings_script in html:
@@ -406,7 +407,7 @@ jobs:
           grep -q "fume.js?v=20261109c" "$WEB_ROOT/index.html"
           grep -q 'APP/settings-page.js?v=20261113b' "$WEB_ROOT/index.html"
           grep -q 'APP/frame-rate-settings.js?v=20261113b' "$WEB_ROOT/index.html"
-          grep -q 'APP/menus.js?v=20261113b' "$WEB_ROOT/index.html"
+          grep -q 'APP/menus.js?v=20261113c' "$WEB_ROOT/index.html"
           grep -q 'APP/devtools.js?v=20261113b' "$WEB_ROOT/index.html"
           grep -q 'native in-page settings' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'systemSettingsGroup' "$WEB_ROOT/index.html"
