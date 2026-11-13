@@ -781,23 +781,22 @@ body.light-bg .deco{color:rgba(0,0,0,.45)}
 #hub .panel{min-height:0;overflow-y:auto;background:transparent;box-shadow:none;border-radius:0;padding:8px 7px 4px!important;scrollbar-gutter:auto}
 #hub .ph{display:flex;align-items:center;justify-content:space-between;margin:0 2px 7px;font-size:11px;font-weight:650;color:var(--p-sub)}
 #hub #cdock{order:4;flex:none;width:100%;margin:6px 0 0}
-/* 底部四项合并为一个「其他」功能组，按钮本身仍分别执行原功能 */
+/* 底部保留常用播放控制；低频入口统一由「其他」按钮打开 */
 #hub #cbar{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;
-  gap:3px;height:auto;min-height:58px;padding:6px 7px;
-  border-radius:15px;background:var(--p-fill);border:1px solid var(--p-line);
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:center;
+  gap:2px;height:auto;min-height:46px;padding:4px 5px;
+  border-radius:14px;background:var(--p-fill);border:1px solid var(--p-line);
   box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
 }
-#hub #cbar::before{
-  content:"其他";display:block;grid-column:1/-1;padding:0 3px 2px;
-  color:var(--p-sub);font-size:10px;font-weight:650;line-height:1.2;
-}
+#hub #cbar::before{content:none!important;display:none!important}
 #hub .csep{display:none!important}
 #hub .cb{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  flex:initial;width:100%;height:34px;border-radius:10px;
+  flex:initial;width:100%;min-width:0;height:36px;border-radius:9px;
   color:var(--p-text);background:transparent;border:0;box-shadow:none;
 }
+#hub #cmore{background:#e8eef8;color:#285fae}
+#hub #cmore::after{content:"其他";color:#285fae;font-weight:650}
 #hub .cb svg{width:17px;height:17px;stroke:currentColor}
 #hub .cb::after{content:attr(title);display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;line-height:1.1;color:var(--p-sub)}
 #hub .cb.on{background:#e5edfb;color:#2768d8;box-shadow:none}
