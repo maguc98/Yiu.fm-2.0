@@ -231,6 +231,7 @@
       proxyControl('播放设置','自动隐藏 UI','qImmerse','range'),
       proxySegment('播放设置','默认页面','qDefTab'),
       proxySegment('播放设置','灵动岛样式','qAiStyle'),
+      action('文字内容','添加一句','addc'),
       action('显示与排版','开屏封面设置','splashOpen'),
       proxyControl('显示与排版','字号','size','range'),
       proxyControl('显示与排版','文字阴影','shd','range'),
