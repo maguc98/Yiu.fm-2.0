@@ -106,15 +106,6 @@
     engineSheet.hidden=false;
     paintEngine();
   }
-  /* 旧设置页仅保留隐藏的兼容 DOM 与业务逻辑；新版入口不再跳转旧页。 */
-  function setHome(on){
-    lastLegacy='home';
-    hub.classList.add('cc-home');
-    hub.classList.remove('cc-legacy');
-    document.body.classList.add('cc-home');
-    sheet.hidden=true;closeEngineSheet();
-    paintEngine();paintResolution();refreshSwitchState();
-  }
   var actionSheet=null;
   function closeActionSheet(){if(actionSheet)actionSheet.hidden=true}
   function openActionSheet(title,items){
