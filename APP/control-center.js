@@ -7,7 +7,7 @@
   var $=function(id){return document.getElementById(id)};
   var home=$('ccHome'),sheet=$('ccModeSheet'),back=$('ccBack'),res=$('ccResolution'),resV=$('ccResolutionValue');
   var engineMap={sonnet:['SONNET','商籁'],tempera:['TEMPERA','凝彩'],lumiere:['LUMIÈRE','绘光'],partita:['PARTITA','云阶'],fume:['FUME','浮墨']};
-  var active=null,lastLegacy='home';
+  var active=null,lastLegacy='home',engineSheet=null;
   window.__YiuControlCenterLeavingOther=function(){lastLegacy='tab'};
   function getEngine(){
     var stage=$('stage'),manager=window.VisualizerManager;
@@ -30,6 +30,7 @@
   }
   function paintEngine(){
     active=getEngine();
+    if(engineSheet){engineSheet.querySelectorAll('[data-engine]').forEach(function(b){var on=b.getAttribute('data-engine')===active;b.classList.toggle('is-selected',on);b.setAttribute('aria-pressed',on?'true':'false')})}
     var pair=engineMap[active]||['未选择','尚未启动'];
     $('ccEngineName').textContent=pair[0];$('ccEngineCn').textContent=pair[1];
     var state=engineIsRunning(),pill=$('ccEngineState').parentNode;
@@ -74,13 +75,44 @@
     }
     paintResolution();
   }
-  /* 旧设置页仅保留隐藏的兼容 DOM 与业务逻辑；控制中心始终停留在新版首页。 */
+
+  function closeEngineSheet(){if(engineSheet)engineSheet.hidden=true}
+  function openEngineSheet(){
+    if(!engineSheet){
+      engineSheet=document.createElement('section');
+      engineSheet.className='cc-engine-sheet';
+      engineSheet.id='ccEngineSheet';
+      engineSheet.hidden=true;
+      engineSheet.setAttribute('aria-label','选择视觉引擎');
+      engineSheet.innerHTML='<div class="cc-engine-sheet-head"><strong>选择视觉引擎</strong><button type="button" class="cc-engine-sheet-close" aria-label="关闭">×</button></div><div class="cc-engine-options">'+
+        '<button type="button" data-engine="sonnet"><span><b>SONNET</b><small>商籁</small></span><i>✓</i></button>'+
+        '<button type="button" data-engine="tempera"><span><b>TEMPERA</b><small>凝彩</small></span><i>✓</i></button>'+
+        '<button type="button" data-engine="lumiere"><span><b>LUMIÈRE</b><small>绘光</small></span><i>✓</i></button>'+
+        '<button type="button" data-engine="partita"><span><b>PARTITA</b><small>云阶</small></span><i>✓</i></button>'+
+        '<button type="button" data-engine="fume"><span><b>FUME</b><small>浮墨</small></span><i>✓</i></button>'+
+        '</div>';
+      home.appendChild(engineSheet);
+      engineSheet.querySelector('.cc-engine-sheet-close').addEventListener('click',closeEngineSheet);
+      engineSheet.querySelectorAll('[data-engine]').forEach(function(b){
+        b.addEventListener('click',function(){
+          var name=b.getAttribute('data-engine');
+          if(typeof window.setStyle!=='function'){console.warn('[Yiu Control Center] setStyle 不可用，无法切换视觉引擎');return}
+          try{window.setStyle(name);closeEngineSheet();paintEngine();refreshSwitchState()}
+          catch(e){console.error('[Yiu Control Center] 视觉引擎切换失败',e)}
+        });
+      });
+    }
+    sheet.hidden=true;
+    engineSheet.hidden=false;
+    paintEngine();
+  }
+  /* 旧设置页仅保留隐藏的兼容 DOM 与业务逻辑；新版入口不再跳转旧页。 */
   function setHome(on){
     lastLegacy='home';
     hub.classList.add('cc-home');
     hub.classList.remove('cc-legacy');
     document.body.classList.add('cc-home');
-    sheet.hidden=true;
+    sheet.hidden=true;closeEngineSheet();
     paintEngine();paintResolution();refreshSwitchState();
   }
   function openLegacyTab(index){
@@ -103,8 +135,8 @@
   if(miniSettings)miniSettings.addEventListener('click',function(){
     if(document.body.classList.contains('open')&&!hub.classList.contains('cc-home'))back.click();
   });
-  $('ccEngine').addEventListener('click',openCurrentEngineDetails);
-  $('ccVisual').addEventListener('click',function(){openLegacyTab(1)});
+  $('ccEngine').addEventListener('click',openEngineSheet);
+  $('ccVisual').addEventListener('click',openEngineSheet);
   $('ccDisplay').addEventListener('click',function(){sheet.hidden=!sheet.hidden});
   $('ccMusicMode').addEventListener('click',function(){var b=$('btnModeMusic');if(b)b.click();sheet.hidden=true});
   $('ccTextMode').addEventListener('click',function(){var b=$('btnModeText');if(b)b.click();sheet.hidden=true});
@@ -121,12 +153,13 @@
   });
   res.addEventListener('input',function(){resV.textContent=resolutionLabel(res.value);var p=(+res.value- +res.min)/(+res.max- +res.min)*100;res.style.setProperty('--cc-progress',p+'%')});
   res.addEventListener('change',applyResolution);
-  home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true});
+  home.addEventListener('click',function(e){if(!sheet.hidden&&!e.target.closest('#ccDisplay')&&!sheet.contains(e.target))sheet.hidden=true;if(engineSheet&&!engineSheet.hidden&&!e.target.closest('#ccEngine,#ccVisual')&&!engineSheet.contains(e.target))closeEngineSheet()});
   back.addEventListener('click',function(){
     /* 分开关闭「其他」菜单与 Q 弹菜单，避免只隐藏页面却遗留菜单开关状态。 */
     var more=$('cmore'),quick=$('qpop'),quickToggle=$('cq');
     if(more&&more.classList.contains('on'))more.click();
     if(quick&&quick.classList.contains('show')&&quickToggle)quickToggle.click();
+    closeEngineSheet();
     setHome(true);
   });
   var was=document.body.classList.contains('open');
