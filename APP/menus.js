@@ -110,7 +110,7 @@ document.addEventListener("pointerdown",function(e){
     fold.parentNode.insertBefore(t,fold.nextSibling);
 
     var menu=document.createElement("div");menu.id="pg5";menu.className="pg hide";
-    menu.innerHTML=`<div class="ph">系统设置</div><div class="pm-box">
+    menu.innerHTML=`<div class="ph">其他</div><div class="pm-box">
 
       <!-- 1. 音频设置：复用原有音频 / LRC / 模式入口 -->
       <div class="grp" id="audioSettingsBox">
