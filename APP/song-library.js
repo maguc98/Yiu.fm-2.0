@@ -1155,7 +1155,7 @@
   }
 
   /* ---------------- 导入：包一层原有的 onchange ---------------- */
-  var MIME = {mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', opus: 'audio/ogg'};
+  var MIME = {mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', opus: 'audio/ogg', aif: 'audio/aiff', aiff: 'audio/aiff', caf: 'audio/x-caf', alac: 'audio/mp4'};
 
   function addSong(f){
     var ext = (f.name.split('.').pop() || '').toLowerCase();
