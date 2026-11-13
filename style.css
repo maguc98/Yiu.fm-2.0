@@ -1562,59 +1562,7 @@ html body #mediaMenu.theme-picker.show.show.show.show.show {
   box-shadow: none !important;
 }
 
-/* ===== 主面板 #hub：玻璃改由独立层 #hubGlass 提供 =====
-   原因同主题选择器：#hub 展开 / 收起时 opacity<1（收起还带 mask），会成为 backdrop root，
-   画在 #hub::before 上的 backdrop-filter 采样不到背景，动画期间是透明的。
-   #hub::before 只保留阴影 / 高光规则（背景和模糊移走），玻璃由与 #hub 同步过渡、但不带 mask 的独立层 #hubGlass 承担。 */
-html body #hub#hub::before{
-  background:transparent!important;
-  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-}
-/* #hubGlass：与 #hub 同步的玻璃层。transform / 原点 / 时长 / 缓动抄 #hub（见 app.js「主面板从点击位置展开」），
-   不带 mask、不让祖先 opacity<1，所以 backdrop-filter 全程有效。收起时用 opacity 代替 #hub 的 mask 淡出。 */
-html body #hubGlass{position:fixed;left:auto;top:auto;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);width:0;height:0;margin:0;pointer-events:none;z-index:4;
-  border-radius:28px;background:var(--p-bg);
-  -webkit-backdrop-filter:var(--g-blur);backdrop-filter:var(--g-blur);
-  transform-origin:var(--hx,100%) var(--hy,100%);
-  opacity:0;visibility:hidden;transform:scale(.12);
-  --fo:100;-webkit-mask-image:none;mask-image:none;
-  transition:transform calc(.65s/var(--ui-spd,1)/var(--hub-spd,1)) cubic-bezier(.55,0,.25,1),opacity calc(.4s/var(--ui-spd,1)/var(--hub-spd,1)) ease-in calc(.15s/var(--ui-spd,1)/var(--hub-spd,1)),--fo calc(.6s/var(--ui-spd,1)/var(--hub-spd,1)) cubic-bezier(.4,0,.8,.6),visibility 0s linear calc(.68s/var(--ui-spd,1)/var(--hub-spd,1))}
-html body:not(.open) #hubGlass{--fo:-35;
-  -webkit-mask-image:radial-gradient(circle farthest-corner at 50% 50%,#000 calc(var(--fo)*1%),transparent calc(var(--fo)*1% + 35%));
-  mask-image:radial-gradient(circle farthest-corner at 50% 50%,#000 calc(var(--fo)*1%),transparent calc(var(--fo)*1% + 35%))}
-html body.hubClosing:not(.open) #hubGlass{transform-origin:50% 50%;transform:translate(var(--tx,0px),var(--ty,0px)) scale(.12)}
-html body.open #hubGlass{--fo:100;-webkit-mask-image:none;mask-image:none;opacity:1;visibility:visible;transform:none;
-  transition:transform calc(.7s/var(--ui-spd,1)/var(--hub-spd,1)) var(--spring-pop,cubic-bezier(.32,.72,0,1)),opacity calc(.22s/var(--ui-spd,1)/var(--hub-spd,1)) ease,visibility 0s}
-@media (prefers-reduced-motion:reduce){
-  html body:not(.open) #hubGlass,html body.hubClosing:not(.open) #hubGlass{transform:none;transition:opacity calc(.2s/var(--ui-spd,1)/var(--hub-spd,1)) linear,visibility 0s linear calc(.2s/var(--ui-spd,1)/var(--hub-spd,1))}}
-
-/* #hub 里的按钮不再自己带 backdrop-filter：
-   收起时 #hub 带 mask / 缩放，会成为 backdrop root，按钮的 backdrop-filter 只能采样面板内部，
-   采不到现在放在 #hub 外面的 #hubGlass 的深色底，结果按钮变亮、发灰（像没套上高斯模糊）。
-   去掉后按钮只是"半透明填充叠在面板上"，面板整体再叠在玻璃上，展开、收起、静止三种状态颜色一致。
-   玻璃本身已经是模糊过的平面，按钮这层二次模糊几乎看不出差别。 */
-html body #hub#hub .cb,
-html body #hub#hub .chip,
-html body #hub#hub .ctl button,
-html body #hub#hub .mini{
-  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-}
-
-/* ===== 边缘高光 / 投影也交给 #hubGlass =====
-   #hub 收起时带 mask（border-box 裁剪），展开时 opacity<1：画在 #hub 自己身上的 outline（高光）
-   和 #hub::before 的投影会在动画中被裁掉或跟着淡掉。玻璃层没有 mask，高光和投影跟着它一起走。
-   规则逐条对应原来作用在 #hub::before / #hub 上的 ui-glow、ui-shadow、性能模式。 */
-html body #hub#hub::before{box-shadow:none!important}
-html body.ui-glow #hub#hub{outline:none!important}
-html body #hubGlass{box-shadow:0 10px 30px rgba(0,0,0,.36)}
-html body.ui-glow #hubGlass{box-shadow:0 10px 28px rgba(0,0,0,.32),inset 0 0 0 1px rgba(255,255,255,.2)!important}
-html body.light-bg.ui-glow #hubGlass{box-shadow:0 8px 20px rgba(0,0,0,.10),inset 0 0 0 1px rgba(255,255,255,.2)!important}
-html body.ui-shadow #hubGlass{box-shadow:0 14px 34px rgba(0,0,0,.26)!important}
-html body.light-bg.ui-shadow #hubGlass{box-shadow:0 12px 28px rgba(0,0,0,.10)!important}
-html body.ui-glow.ui-shadow #hubGlass{box-shadow:0 12px 30px rgba(0,0,0,.34),0 4px 12px rgba(0,0,0,.16),inset 0 0 0 1px rgba(255,255,255,.2)!important}
-html body.light-bg.ui-glow.ui-shadow #hubGlass{box-shadow:0 10px 24px rgba(0,0,0,.10),0 3px 10px rgba(0,0,0,.06),inset 0 0 0 1px rgba(255,255,255,.2)!important}
-html body.performance-mode.ui-shadow #hubGlass{box-shadow:0 8px 22px rgba(0,0,0,.18)!important}
-html body.performance-mode.ui-glow #hubGlass{box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.2)!important}
+/* 主面板继续使用现有 #hub::before 玻璃层；控制中心首页单独覆盖为浅灰底。 */
 
 /* ==========================================================================
  * 图片放大预览（#zoomPop）增强：展开 Q 弹 + 收起时由四周向内收缩成圆
