@@ -2851,3 +2851,15 @@ body.open #lg{ }
 /* 新版控制中心中允许旧主题选择器作为独立弹层显示；其余旧控制栏仍保持隐藏。 */
 #hub.cc-home>#cdock:has(>#mediaMenu.show){display:block!important}
 #hub.cc-home>#cdock:has(>#mediaMenu.show)>:not(#mediaMenu){display:none!important}
+
+/* New control center · compact proxy controls for restored settings */
+#hub.cc-home .cc-action-control{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 11px;border:1px solid rgba(45,55,70,.07);border-radius:12px;background:#f7f8fa;color:#343c48;box-sizing:border-box}
+#hub.cc-home .cc-action-control-label{flex:1;min-width:0;font-size:12px;font-weight:650}
+#hub.cc-home .cc-action-control input[type=range]{flex:1;min-width:72px;max-width:48%;accent-color:#91b7a0}
+#hub.cc-home .cc-action-control input[type=checkbox]{width:20px;height:20px;accent-color:#91b7a0}
+#hub.cc-home .cc-action-control input[type=color]{width:36px;height:28px;padding:0;border:0;border-radius:8px;background:transparent}
+#hub.cc-home .cc-action-control-value{flex:none;min-width:34px;text-align:right;font-size:11px;font-style:normal;color:#7d8795}
+#hub.cc-home .cc-action-segment{display:block}
+#hub.cc-home .cc-action-segment-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#hub.cc-home .cc-action-segment-option{flex:1;min-width:0;padding:8px 9px;border:1px solid rgba(45,55,70,.08);border-radius:9px;background:#fff;color:#586270;font-size:11px}
+#hub.cc-home .cc-action-segment-option.is-selected{background:#eaf5ed;border-color:rgba(104,165,130,.35);color:#315e43}
