@@ -2816,6 +2816,8 @@ body.open #lg{ }
 #hub.cc-home .cc-shortcut,
 #hub.cc-home .cc-other,
 #hub.cc-home .cc-close,
+#hub.cc-home .cc-engine-sheet-close,
+#hub.cc-home .cc-action-head button,
 #hub.cc-home .cc-engine-options>button,
 #hub.cc-home .cc-action-item{
   transition:transform .18s cubic-bezier(.2,.75,.25,1),background-color .18s ease,border-color .18s ease,box-shadow .18s ease;
@@ -2825,7 +2827,9 @@ body.open #lg{ }
 #hub.cc-home .cc-other:active,
 #hub.cc-home .cc-engine-options>button:active,
 #hub.cc-home .cc-action-item:not(:disabled):active{transform:scale(.985)}
-#hub.cc-home .cc-close:active{transform:scale(.9)}
+#hub.cc-home .cc-close:active,
+#hub.cc-home .cc-engine-sheet-close:active,
+#hub.cc-home .cc-action-head button:active{transform:scale(.9)}
 @media(prefers-reduced-motion:reduce){
   #hub.cc-home #ccHome,
   #hub.cc-home .cc-engine-sheet:not([hidden]),
@@ -2839,5 +2843,7 @@ body.open #lg{ }
   #hub.cc-home .cc-resolution,
   #hub.cc-home .cc-engine-options>button,
   #hub.cc-home .cc-action-item,
-  #hub.cc-home .cc-close{transition:none!important}
+  #hub.cc-home .cc-close,
+  #hub.cc-home .cc-engine-sheet-close,
+  #hub.cc-home .cc-action-head button{transition:none!important}
 }
