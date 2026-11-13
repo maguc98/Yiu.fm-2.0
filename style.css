@@ -2847,3 +2847,7 @@ body.open #lg{ }
   #hub.cc-home .cc-engine-sheet-close,
   #hub.cc-home .cc-action-head button{transition:none!important}
 }
+
+/* 新版控制中心中允许旧主题选择器作为独立弹层显示；其余旧控制栏仍保持隐藏。 */
+#hub.cc-home>#cdock:has(>#mediaMenu.show){display:block!important}
+#hub.cc-home>#cdock:has(>#mediaMenu.show)>:not(#mediaMenu){display:none!important}
