@@ -24,6 +24,13 @@
       var n = parseInt(a[0], 10) || 40, rows = [];
       E.logs.forEach(function (x) { rows.push({ t: x.t, k: x.k === 'error' ? 'err' : x.k === 'warn' ? 'warn' : 'log', s: x.s }); });
       E.errs.forEach(function (x) { rows.push({ t: x.t, k: 'err', s: x.msg + (x.src ? '  ' + x.src : '') + (x.stack ? '\n' + x.stack : '') }); });
+      /* index.html 的最早期捕获队列与 cmd-early 是两条独立通道；展开原始 detail，避免只看到 {time,message,file,...} 字段名。 */
+      (Array.isArray(window.__YiuEarlyErrors) ? window.__YiuEarlyErrors : []).forEach(function (x) {
+        var d = x && x.detail || {}, when = x && x.time ? Date.parse(x.time) : NaN;
+        var stamp = isFinite(when) ? when : (E ? E.t0 : Date.now());
+        var raw; try { raw = JSON.stringify(d, null, 2); } catch (_) { raw = String(d); }
+        rows.push({ t: stamp, k: 'err', s: '[early-raw][' + ((x && x.kind) || 'unknown') + '] ' + (d.message || '') + (d.file ? '\\nfile: ' + d.file : '') + (d.url ? '\\nurl: ' + d.url : '') + (d.line ? '\\nline: ' + d.line : '') + (d.column ? '\\ncolumn: ' + d.column : '') + (d.stack ? '\\nstack: ' + d.stack : '') + '\\nraw: ' + (raw || '{}') });
+      });
       rows.sort(function (p, q) { return p.t - q.t; });
       if (!rows.length) return c.print('没有记录。console 只记页面加载后 3 秒内的输出，报错一直记', 'info');
       c.print('从页面开始起共 ' + rows.length + ' 条，显示最近 ' + Math.min(n, rows.length) + ' 条（时间是页面开始后的秒数）', 'info');
