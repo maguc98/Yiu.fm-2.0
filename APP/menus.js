@@ -128,12 +128,12 @@ document.addEventListener("pointerdown",function(e){
 
           <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px;">
             <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
-              <span style="font-size:14px; color:#fff;">高光描边</span>
-              <input type="checkbox" id="uiH" checked>
+              <span style="font-size:14px; color:#fff;">高光描边 <small style="font-size:11px;opacity:.6;margin-left:6px;">固定开启</small></span>
+              <input type="checkbox" id="uiH" checked disabled aria-label="高光描边，固定开启">
             </label>
             <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
-              <span style="font-size:14px; color:#fff;">柔和阴影</span>
-              <input type="checkbox" id="uiS" checked>
+              <span style="font-size:14px; color:#fff;">柔和阴影 <small style="font-size:11px;opacity:.6;margin-left:6px;">固定开启</small></span>
+              <input type="checkbox" id="uiS" checked disabled aria-label="柔和阴影，固定开启">
             </label>
             <label class="chk" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin:0; padding:10px 14px; background:rgba(255,255,255,.04); border-radius:12px; box-sizing:border-box;">
               <span style="font-size:14px; color:#fff;">性能优化</span>
@@ -170,8 +170,8 @@ document.addEventListener("pointerdown",function(e){
       var perf=document.getElementById("performanceMode");
       if(perf){perf.checked=true;perf.dispatchEvent(new Event("change",{bubbles:true}))}
       var glow=document.getElementById("uiH"),shadow=document.getElementById("uiS");
-      if(glow){glow.checked=true;glow.dispatchEvent(new Event("change",{bubbles:true}))}
-      if(shadow){shadow.checked=true;shadow.dispatchEvent(new Event("change",{bubbles:true}))}
+      if(glow)glow.checked=true;
+      if(shadow)shadow.checked=true;
     };
     function refresh(){
       [].forEach.call(settingsData.querySelectorAll("[data-t]"),function(b){var c=$$(b.dataset.t);b.classList.toggle("on",!!(c&&c.checked))});
