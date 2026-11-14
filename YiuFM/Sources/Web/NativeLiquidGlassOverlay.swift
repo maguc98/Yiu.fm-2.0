@@ -72,9 +72,12 @@ final class NativeLiquidGlassOverlay: UIView {
         });
       }
       if (window.MutationObserver) {
-        new MutationObserver(function () { schedule(); track(850); }).observe(document.body, {
-          attributes:true, attributeFilter:['class']
-        });
+        var lastOpen = !!(document.body && document.body.classList.contains('open'));
+        new MutationObserver(function () {
+          var open = !!(document.body && document.body.classList.contains('open'));
+          schedule();
+          if (open !== lastOpen) { lastOpen = open; track(850); }
+        }).observe(document.body, { attributes:true, attributeFilter:['class'] });
         [mini,cbar].forEach(function (el) {
           if (el) new MutationObserver(schedule).observe(el, {
             attributes:true, childList:true, subtree:true, attributeFilter:['class','style']
@@ -83,7 +86,7 @@ final class NativeLiquidGlassOverlay: UIView {
       }
       document.addEventListener('transitionrun', function (event) {
         var target = event.target;
-        if (target && target.closest && target.closest('#mini,#hub,#cbar')) track(900);
+        if (target && (target.id === 'mini' || target.id === 'hub' || target.id === 'cbar')) track(900);
       }, true);
       document.addEventListener('transitionend', schedule, true);
       window.addEventListener('resize', schedule, {passive:true});
