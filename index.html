@@ -3166,32 +3166,7 @@ html body #hbTools .hbt.hbt-lp.lp-on{background:#ffd60a;color:#1c1c1e;box-shadow
   var btn=document.getElementById('hbLp'); if(!btn) return;
   function cb(){return document.getElementById('performanceMode')}
   function isOn(){var c=cb(); return c?!!c.checked:document.body.classList.contains('performance-mode')}
-  /* ---- 低功耗：限帧到约 30fps（所有 requestAnimationFrame 动画：渲染器、灵动岛、进度条…） ---- */
-  var merged = !!window.__rafWrapped;   // perf: devtools.js 已包装过 rAF 时不再叠一层
-  var capFps=false, lastTs=-1, lastBucket=-1, lastOk=true;
-  function allowed(ts){
-    if(ts===lastTs) return lastOk;                       // 同一帧里的多个回调共用同一个判断
-    var b=Math.floor(ts/33.34); lastTs=ts; lastOk=(b!==lastBucket); if(lastOk) lastBucket=b; return lastOk;
-  }
-  if(!merged){
-    var rawRaf=window.requestAnimationFrame.bind(window), rawCancel=window.cancelAnimationFrame.bind(window);
-    var seq=1e9, map=Object.create(null);
-    window.requestAnimationFrame=function(fn){
-      if(!capFps) return rawRaf(fn);
-      var id=++seq;
-      (function go(){
-        map[id]=rawRaf(function(ts){
-          if(!(id in map)) return;
-          if(!capFps||allowed(ts)){ delete map[id]; fn(ts); } else go();
-        });
-      })();
-      return id;
-    };
-    window.cancelAnimationFrame=function(id){
-      if(id in map){ rawCancel(map[id]); delete map[id]; } else rawCancel(id);
-    };
-    window.__rafWrapped = true;
-  }
+  /* 低功耗只调整视觉样式，不接管 WebKit 原生 requestAnimationFrame。 */
 
   var swT=0;
   function paint(animate){
@@ -3204,8 +3179,7 @@ html body #hbTools .hbt.hbt-lp.lp-on{background:#ffd60a;color:#1c1c1e;box-shadow
       clearTimeout(swT); swT=setTimeout(function(){document.body.classList.remove('lp-switching')},850);
     }
     document.body.classList.toggle('low-power',on);
-    window.__lowPower=on;   // perf: 低功耗上限由统一 RAF 门控读取，避免覆盖用户帧率设置
-    window.__rafCapActive=on || Number(window.__rafLimitFps)<60;
+    window.__lowPower=on;
     if(animate&&was!==on&&btn.animate){
       var k=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-spd'))||1;
       btn.animate([{transform:'scale(.78)'},{transform:'scale(1.16)',offset:.4},{transform:'scale(.97)',offset:.72},{transform:'scale(1)'}],{duration:480/k,easing:'cubic-bezier(.3,1.3,.5,1)'});
