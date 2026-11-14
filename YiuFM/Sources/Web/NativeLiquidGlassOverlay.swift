@@ -14,11 +14,15 @@ final class NativeLiquidGlassOverlay: UIView {
         var r = el.getBoundingClientRect();
         return { x:r.left, y:r.top, width:r.width, height:r.height };
       }
-      function collect(el, forceVisible) {
-        if (!el) return { visible:false, rect:{x:0,y:0,width:0,height:0}, holes:[] };
-        var r = el.getBoundingClientRect(), cs = getComputedStyle(el);
-        var visible = forceVisible && r.width > 0 && r.height > 0 &&
-          cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity || 1) > 0.02;
+      function collect(el) {
+        if (!el) return { visible:false, opacity:0, rect:{x:0,y:0,width:0,height:0}, holes:[] };
+        var r = el.getBoundingClientRect(), visible = r.width > 0 && r.height > 0, opacity = 1;
+        for (var node = el; node && node !== document.documentElement; node = node.parentElement) {
+          var a = getComputedStyle(node);
+          if (a.display === 'none' || a.visibility === 'hidden') visible = false;
+          opacity *= Number(a.opacity || 1);
+        }
+        visible = visible && opacity > 0.02;
         var holes = [];
         if (visible) {
           Array.prototype.forEach.call(el.children, function (child) {
@@ -28,14 +32,15 @@ final class NativeLiquidGlassOverlay: UIView {
             holes.push(rectOf(child));
           });
         }
-        return { visible:!!visible, rect:{x:r.left,y:r.top,width:r.width,height:r.height}, holes:holes };
+        return { visible:!!visible, opacity:Math.max(0,Math.min(1,opacity)),
+          rect:{x:r.left,y:r.top,width:r.width,height:r.height}, holes:holes };
       }
       function send() {
         try {
           var mini = document.getElementById('mini');
           var cbar = document.getElementById('cbar');
           var open = !!(document.body && document.body.classList.contains('open'));
-          bridge.postMessage({ mini:collect(mini,true), cbar:collect(cbar,open) });
+          bridge.postMessage({ mini:collect(mini), cbar:collect(cbar) });
         } catch (_) {}
       }
 
@@ -134,6 +139,7 @@ final class NativeLiquidGlassOverlay: UIView {
 
         let frame = CGRect(x: x, y: y, width: width, height: height)
         glass.frame = frame
+        glass.alpha = CGFloat(max(0, min(1, (value["opacity"] as? NSNumber)?.doubleValue ?? 1)))
         glass.isHidden = false
         glass.layer.cornerRadius = radius
 
