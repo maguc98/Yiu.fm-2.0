@@ -27,15 +27,16 @@
   E.brief = brief;
 
   /* ---- 报错 ---- */
-  function errPush(msg, src) { if (!E.errOn) return; E.errs.push({ t: Date.now(), msg: msg, src: src || '' }); if (E.errs.length > 100) E.errs.shift(); }
+  function errPush(msg, src, extra) { if (!E.errOn) return; var item = Object.assign({ t: Date.now(), msg: msg, src: src || '', file: '', line: 0, column: 0, stack: '' }, extra || {}); E.errs.push(item); if (E.errs.length > 100) E.errs.shift(); }
   window.addEventListener('error', function (e) {
     var t = e.target;
-    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), ''); return; }
-    errPush(e.message || brief(e.error), e.filename ? String(e.filename).split('/').pop() + ':' + e.lineno + ':' + e.colno : '');
+    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), '', { file: t.src || t.href, tag: t.nodeName || '' }); return; }
+    var file = e.filename || '', line = e.lineno || 0, column = e.colno || 0, err = e.error;
+    errPush(e.message || brief(err), file ? file + ':' + line + ':' + column : '', { file: file, line: line, column: column, stack: err && err.stack ? String(err.stack) : '' });
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
-    var r = e.reason;
-    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : brief(r)), r && r.stack ? String(r.stack).split('\n')[1] || '' : '');
+    var r = e.reason, stack = r && r.stack ? String(r.stack) : '';
+    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : brief(r)), stack ? (stack.split('\n')[1] || '') : '', { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0 });
   });
 
   /* ---- console：只记到页面加载完 3 秒后，之后交给「同步 console」 ---- */
