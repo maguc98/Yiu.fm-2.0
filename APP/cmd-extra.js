@@ -23,7 +23,7 @@
       if (!E) return c.print('没有加载 cmd-early.js：要放在 index.html 的 <head> 最前面', 'err');
       var n = parseInt(a[0], 10) || 40, rows = [];
       E.logs.forEach(function (x) { rows.push({ t: x.t, k: x.k === 'error' ? 'err' : x.k === 'warn' ? 'warn' : 'log', s: x.s }); });
-      E.errs.forEach(function (x) { rows.push({ t: x.t, k: 'err', s: x.msg + (x.src ? '  ' + x.src : '') }); });
+      E.errs.forEach(function (x) { rows.push({ t: x.t, k: 'err', s: x.msg + (x.src ? '  ' + x.src : '') + (x.stack ? '\n' + x.stack : '') }); });
       rows.sort(function (p, q) { return p.t - q.t; });
       if (!rows.length) return c.print('没有记录。console 只记页面加载后 3 秒内的输出，报错一直记', 'info');
       c.print('从页面开始起共 ' + rows.length + ' 条，显示最近 ' + Math.min(n, rows.length) + ' 条（时间是页面开始后的秒数）', 'info');
