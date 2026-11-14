@@ -364,12 +364,15 @@ final class NativeLiquidGlassOverlay: UIView {
                       let hw = (hole["width"] as? NSNumber)?.doubleValue,
                       let hh = (hole["height"] as? NSNumber)?.doubleValue,
                       hw > 0, hh > 0 else { continue }
+                // Keep the complete original element box above the material.
+                // Rounded cut-outs can leave corner pixels of artwork, glyphs,
+                // and compact controls underneath the glass. A slightly expanded
+                // rectangular cut-out also protects antialiased edges and shadows.
                 let local = CGRect(x: hx - x, y: hy - y, width: hw, height: hh)
-                    .insetBy(dx: -1.5, dy: -1.5)
+                    .insetBy(dx: -2.5, dy: -2.5)
                     .intersection(CGRect(origin: .zero, size: frame.size))
                 if !local.isNull && !local.isEmpty {
-                    path.append(UIBezierPath(roundedRect: local,
-                                             cornerRadius: min(14, min(local.width, local.height) / 2)))
+                    path.append(UIBezierPath(rect: local))
                 }
             }
         }
