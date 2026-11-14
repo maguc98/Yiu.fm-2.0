@@ -61,6 +61,10 @@ jobs:
           cp APP/devtools.js YiuFM/Resources/Web/APP/devtools.js
           # Ship the current system logger so the expanded runtime error stack is present in the IPA.
           cp APP/sys-log.js YiuFM/Resources/Web/APP/sys-log.js
+          # Ship the current early-error capture and command diagnostics; index.html references these current cache keys.
+          cp APP/cmd-early.js YiuFM/Resources/Web/APP/cmd-early.js
+          cp APP/cmd-console.js YiuFM/Resources/Web/APP/cmd-console.js
+          cp APP/cmd-extra.js YiuFM/Resources/Web/APP/cmd-extra.js
           # Ship the branch menu implementation so the new Other sections are included in the IPA.
           cp APP/menus.js YiuFM/Resources/Web/APP/menus.js
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
@@ -270,6 +274,9 @@ jobs:
           node --check YiuFM/Resources/Web/APP/sonnet-adapter.js
           node --check YiuFM/Resources/Web/APP/sonnet/sonnet.js
           node --check YiuFM/Resources/Web/APP/control-center.js
+          node --check YiuFM/Resources/Web/APP/cmd-early.js
+          node --check YiuFM/Resources/Web/APP/cmd-console.js
+          node --check YiuFM/Resources/Web/APP/cmd-extra.js
           node --check YiuFM/Resources/Web/APP/menus.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/fume/fume.js
@@ -338,6 +345,8 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/visualizer-manager.js"
           grep -q "devFrameLimit" "$WEB_ROOT/APP/devtools.js"
+          grep -q "window.__YiuEarlyErrors" "$WEB_ROOT/APP/cmd-console.js"
+          grep -q "stack" "$WEB_ROOT/APP/cmd-early.js"
           grep -q 'src="./APP/devtools.js?v=' "$WEB_ROOT/index.html"
           grep -q "window.__lowPower=on;" "$WEB_ROOT/index.html"
           grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
