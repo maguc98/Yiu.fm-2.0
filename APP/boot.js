@@ -3,17 +3,7 @@ applyPreset(0);render();$("gbox").classList.toggle("hide",bgMode!=="grad");$("ib
 
 /* ===== Original script block separator ===== */
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // 仅在 HTTPS 或 localhost 环境下注册，避免本地 file:// 或编辑器预览时报错
-    if (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('SW ready:', reg.scope))
-        .catch(err => console.log('SW bypassed:', err.message));
-    }
-  });
-}
-
+/* 仓库没有 sw.js；原注册逻辑在 HTTPS 环境必然失败并制造无效请求。当前 WKWebView 使用 file://，暂不注册不存在的 Service Worker。 */
 
 /* ===== 配合原生 WebFilePicker.swift：记录最近一次文件选择的 accept ===== */
 (function () {
