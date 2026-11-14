@@ -626,7 +626,8 @@
   (function flushEarlyErrors() {
     var pending = window.__YiuEarlyErrors;
     if (!Array.isArray(pending) || !pending.length) return;
-    var batch = pending.splice(0, pending.length);
+    /* 不清空共享队列：cmd-console.js 随后还要读取同一批启动异常供 /err 展示。 */
+    var batch = pending.slice();
     batch.forEach(function (item) {
       var d = item.detail || {};
       api.error('启动早期异常：' + item.kind, {
