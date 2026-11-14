@@ -78,16 +78,7 @@ final class YiuDiagnosticsBridge: NSObject, WKScriptMessageHandler {
               stack: error && error.stack
             });
           }, true);
-          window.onerror = function (message, source, line, column, error) {
-            send("onerror", {
-              message: message,
-              url: source,
-              line: line,
-              column: column,
-              stack: error && error.stack
-            });
-            return false;
-          };
+          // addEventListener('error') above already captures window errors; a second onerror hook duplicates every record.
           window.addEventListener("unhandledrejection", function (event) {
             var reason = event && event.reason;
             send("unhandled-rejection", {
