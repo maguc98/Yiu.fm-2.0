@@ -85,13 +85,28 @@ final class NativeLiquidGlassOverlay: UIView {
           if (s.display === 'none' || s.visibility === 'hidden' ||
               Number(s.opacity || 1) < 0.02) return;
           var r = node.getBoundingClientRect();
-          // A real box protects its entire original contents (including
-          // backgrounds, images and custom controls); display:contents has no
-          // box, so descend and protect its children individually.
-          if (s.display !== 'contents' && r.width > 0.5 && r.height > 0.5) {
-            // Protect this box, but keep walking: descendants can overflow it
-            // (absolute controls, SVG artwork, badges, shadows, translated labels).
-            // Stopping here allowed those protruding pixels to sit underneath glass.
+          // Only cut out boxes that actually paint pixels. Transparent layout
+          // wrappers (for example .mi-txt / #hubGlow) must not punch giant holes
+          // through the native glass. Text nodes are protected by Range rects;
+          // painted artwork and controls are protected by their own boxes.
+          function alphaOf(color) {
+            if (!color || color === 'transparent') return 0;
+            var match = color.match(/^rgba?\\((.*)\\)$/i);
+            if (!match) return 1;
+            var parts = match[1].split(/[\\s,\\/]+/).filter(Boolean);
+            return parts.length >= 4 ? Math.max(0, Math.min(1, parseFloat(parts[3]) || 0)) : 1;
+          }
+          var tag = String(node.tagName || '').toLowerCase();
+          var nativeArtwork = /^(img|picture|video|canvas|svg|iframe|object|embed|input|textarea|select|button|progress|meter)$/.test(tag);
+          var hasFill = alphaOf(s.backgroundColor) > 0.015 || (s.backgroundImage && s.backgroundImage !== 'none');
+          var hasBorder = ['Top','Right','Bottom','Left'].some(function (edge) {
+            return parseFloat(s['border' + edge + 'Width'] || '0') > 0 &&
+              alphaOf(s['border' + edge + 'Color']) > 0.015;
+          });
+          var hasPaintedBox = nativeArtwork || hasFill || hasBorder ||
+            (s.boxShadow && s.boxShadow !== 'none') ||
+            (s.filter && s.filter !== 'none');
+          if (s.display !== 'contents' && hasPaintedBox && r.width > 0.5 && r.height > 0.5) {
             addRect(r);
           }
           Array.prototype.forEach.call(node.childNodes || [], walk);
@@ -331,7 +346,13 @@ final class NativeLiquidGlassOverlay: UIView {
         glass.clipsToBounds = true
         glass.layer.cornerCurve = .continuous
         if #available(iOS 26.0, *) {
-            glass.effect = UIGlassEffect(style: .regular)
+            let effect = UIGlassEffect(style: .regular)
+            // Keep the system material untinted so background artwork can
+            // contribute to the native refraction. Interactive response adds
+            // the system's adaptive edge highlights on touch.
+            effect.tintColor = nil
+            effect.isInteractive = true
+            glass.effect = effect
         } else {
             glass.effect = UIBlurEffect(style: .systemMaterial)
         }
