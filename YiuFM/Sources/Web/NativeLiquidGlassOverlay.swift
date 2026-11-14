@@ -1,8 +1,9 @@
 import UIKit
 
 /// Bridges eligible CSS glass surfaces to native UIKit materials.
-/// iOS 26+ uses UIGlassEffect inside one UIGlassContainerEffect; older iOS
-/// releases use the system standard material as a compatibility fallback.
+/// iOS 26+ uses UIGlassEffect; older iOS releases use the system standard
+/// material as a compatibility fallback. Surface order and geometry are
+/// synchronized from the web renderer on every update.
 final class NativeLiquidGlassOverlay: UIView {
     static let webScript = """
     (function () {
@@ -210,7 +211,16 @@ final class NativeLiquidGlassOverlay: UIView {
         var opacity = visibleThroughAncestors(el);
         if (pseudo) opacity *= Math.max(0, Math.min(1, Number(style.opacity || 1)));
         if (!opacity || rect.width < 1 || rect.height < 1) return null;
-        var radius = parsePx(style.borderTopLeftRadius, 16);
+        // getBoundingClientRect() already includes the host transform. CSS
+        // corner radii are measured in the untransformed layout coordinate
+        // space, so scale the radius with the same transform before sending it
+        // to UIKit. The minimum axis scale keeps circular UIKit corners inside
+        // the transformed CSS corner when a non-uniform scale is used.
+        var layoutWidth = el.offsetWidth || rect.width || 1;
+        var layoutHeight = el.offsetHeight || rect.height || 1;
+        var sx = (el.getBoundingClientRect().width || layoutWidth) / layoutWidth;
+        var sy = (el.getBoundingClientRect().height || layoutHeight) / layoutHeight;
+        var radius = parsePx(style.borderTopLeftRadius, 16) * Math.min(sx, sy);
         return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
       }
       function hasNativeGlassAncestor(el) {
@@ -274,18 +284,83 @@ final class NativeLiquidGlassOverlay: UIView {
         if (document.body) inspectTree(document.body);
         schedule();
       }
+      function createsStackingContext(node, style) {
+        if (!node || !style) return false;
+        var positioned = style.position === 'absolute' || style.position === 'relative' ||
+          style.position === 'fixed' || style.position === 'sticky';
+        return node === document.documentElement ||
+          ((style.zIndex !== 'auto') && positioned) ||
+          Number(style.opacity || 1) < 1 ||
+          style.transform !== 'none' || style.translate !== 'none' ||
+          style.rotate !== 'none' || style.scale !== 'none' ||
+          style.filter !== 'none' || style.backdropFilter !== 'none' ||
+          style.webkitBackdropFilter !== 'none' ||
+          style.perspective !== 'none' || style.isolation === 'isolate' ||
+          style.mixBlendMode !== 'normal' ||
+          /(^|\\s)(paint|layout)(\\s|$)/.test(style.contain || '') ||
+          /transform|opacity|filter|perspective|contain/.test(style.willChange || '');
+      }
+      function stackingPath(item) {
+        var chain = [], node = item.el;
+        while (node && node.nodeType === 1 && node !== document.documentElement) {
+          chain.push(node);
+          node = node.parentElement;
+        }
+        chain.reverse();
+        var path = [];
+        chain.forEach(function (entry) {
+          var cs = getComputedStyle(entry);
+          if (!createsStackingContext(entry, cs)) return;
+          var z = cs.zIndex === 'auto' ? 0 : (parseInt(cs.zIndex, 10) || 0);
+          path.push({ z:z, node:entry, pseudoOrder:0 });
+        });
+        if (item.pseudo) {
+          var ps = getComputedStyle(item.el, item.pseudo);
+          var pz = ps.zIndex === 'auto' ? 0 : (parseInt(ps.zIndex, 10) || 0);
+          // A filtered pseudo-element creates its own paint layer. Keep its
+          // z-index attached to the host's tree position for stable ordering.
+          path.push({ z:pz, node:item.el, pseudoOrder:item.pseudo === '::before' ? -1 : 1 });
+        }
+        return path;
+      }
+      function comparePaintEntries(a, b) {
+        var length = Math.min(a.path.length, b.path.length);
+        for (var i = 0; i < length; i++) {
+          var left = a.path[i], right = b.path[i];
+          if (left.node === right.node && left.pseudoOrder !== right.pseudoOrder) {
+            return left.pseudoOrder - right.pseudoOrder;
+          }
+          if (left.z !== right.z) return left.z - right.z;
+          if (left.node !== right.node) {
+            var relation = left.node.compareDocumentPosition(right.node);
+            if (relation & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+            if (relation & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+          }
+        }
+        // A stacking context paints its own background before descendants.
+        if (a.path.length !== b.path.length) return a.path.length - b.path.length;
+        return a.index - b.index;
+      }
       function send() {
         pending = 0;
         try {
-          var surfaces = [];
-          candidates.forEach(function (item) {
+          var entries = [];
+          candidates.forEach(function (item, index) {
             var style = getComputedStyle(item.el, item.pseudo || null);
             var rect = item.pseudo ? pseudoRect(item.el, item.pseudo, style) : (function () {
               var r = item.el.getBoundingClientRect();
               return { x:r.left, y:r.top, width:r.width, height:r.height };
             })();
             var itemData = descriptor(item.el, item.id, rect, style, !!item.pseudo);
-            if (itemData) surfaces.push(itemData);
+            if (itemData) entries.push({ itemData:itemData, path:stackingPath(item), index:index });
+          });
+          // Sort low-to-high so UIKit can add/reorder the final entry above
+          // earlier ones. This is a stacking-context-aware approximation,
+          // not a single global z-index sort: nested contexts remain grouped.
+          entries.sort(comparePaintEntries);
+          var surfaces = entries.map(function (entry, order) {
+            entry.itemData.paintOrder = order;
+            return entry.itemData;
           });
           bridge.postMessage({ surfaces:surfaces });
         } catch (_) {}
@@ -384,7 +459,8 @@ final class NativeLiquidGlassOverlay: UIView {
     func apply(_ payload: [String: Any]) {
         guard let surfaces = payload["surfaces"] as? [[String: Any]] else { return }
         var activeIDs = Set<String>()
-        for surface in surfaces {
+        var orderedViews: [(order: Int, view: UIVisualEffectView)] = []
+        for (index, surface) in surfaces.enumerated() {
             guard let id = surface["id"] as? String,
                   let visible = surface["visible"] as? Bool, visible,
                   let rawRect = surface["rect"] as? [String: Any],
@@ -400,6 +476,14 @@ final class NativeLiquidGlassOverlay: UIView {
                 addSubview(glass)
             }
             update(glass, id: id, surface: surface, x: x, y: y, width: width, height: height)
+            let paintOrder = (surface["paintOrder"] as? NSNumber)?.intValue ?? index
+            orderedViews.append((paintOrder, glass))
+        }
+        // Existing UIVisualEffectViews are not reordered by updating their
+        // frames. Reapply the JS-computed low-to-high paint order every time;
+        // bringSubviewToFront preserves the WKWebView as a separate lower layer.
+        for entry in orderedViews.sorted(by: { $0.order < $1.order }) {
+            bringSubviewToFront(entry.view)
         }
         let staleIDs = glassViews.keys.filter { !activeIDs.contains($0) }
         for id in staleIDs {
