@@ -239,6 +239,7 @@
       active = false;
       hostEl = host;
       lineIndex = -1;
+      lastClockFeedAt = 0;
       lastLines = []; // 初始化时保证是空的
 
       if (host) {
