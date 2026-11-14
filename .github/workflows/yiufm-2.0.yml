@@ -332,6 +332,45 @@ jobs:
           # Syntax-check every JavaScript source and every JavaScript file actually shipped in the IPA, not only the hand-picked runtime subset.
           find APP -type f -name '*.js' -print0 | xargs -0 -n 1 node --check
           find YiuFM/Resources/Web/APP -type f -name '*.js' -print0 | xargs -0 -n 1 node --check
+          # HTML inline scripts are not covered by node --check on external files; parse each executable inline block too.
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import subprocess, tempfile
+          class InlineScripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.current = None
+                  self.items = []
+              def handle_starttag(self, tag, attrs):
+                  if tag != "script":
+                      return
+                  a = dict(attrs)
+                  typ = (a.get("type") or "").lower()
+                  if "src" not in a and typ in ("", "text/javascript", "application/javascript", "module"):
+                      self.current = []
+                  else:
+                      self.current = None
+              def handle_data(self, data):
+                  if self.current is not None:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == "script" and self.current is not None:
+                      self.items.append("".join(self.current))
+                      self.current = None
+          page = Path("YiuFM/Resources/Web/index.html")
+          parser = InlineScripts()
+          parser.feed(page.read_text(encoding="utf-8"))
+          for i, source in enumerate(parser.items, 1):
+              with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as f:
+                  f.write(source)
+                  f.flush()
+                  check = subprocess.run(["node", "--check", f.name], capture_output=True, text=True)
+              if check.returncode:
+                  print(f"Inline script #{i} syntax error:\\n{check.stderr}")
+                  raise SystemExit(check.returncode)
+          print(f"Verified {len(parser.items)} executable inline scripts")
+          PY
           node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
           du -sh YiuFM/Resources/Web
 
