@@ -123,10 +123,10 @@ jobs:
           # Temporarily enable callback/error tracing in the diagnostic build.
           # Leave the baseline error reporter untouched; do not force diagnostic wrappers in production IPA.
           # Keep low-power visual behavior, but do not replace or gate native RAF callbacks.
-          old_low_power_cap = "if(merged) window.__rafCap=on?allowed:null; else capFps=on;   // perf: 并入 devtools 的 rAF 包装统一限帧\n    window.__lowPower=on;"
-          if html.count(old_low_power_cap) == 1:
-              html = html.replace(old_low_power_cap, "window.__lowPower=on;", 1)
-          elif html.count("window.__lowPower=on;") != 1:
+          # Low-power mode must not install a second global RAF wrapper or reactivate the disabled FPS cap.
+          if "var capFps=false" in html or "window.__rafCapActive=on" in html:
+              raise SystemExit("Obsolete low-power RAF wrapper found in index.html; refusing to package.")
+          if html.count("window.__lowPower=on;") != 1:
               raise SystemExit("Expected exactly one low-power mode assignment; refusing to patch.")
           old_anchor = '<script src="./APP/player.js?v=20261029a"></script>'
           anchor = '<script src="./APP/player.js?v=20261102c"></script>'
