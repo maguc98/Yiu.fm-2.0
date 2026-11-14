@@ -2531,3 +2531,14 @@ html.native-liquid-glass [data-yiu-glass-native~="after"]::after{
   backdrop-filter:none!important;
   box-shadow:none!important;
 }
+
+/* Nested controls keep their subtle fill; Apple recommends avoiding stacked Liquid Glass layers. */
+html.native-liquid-glass [data-yiu-glass-native~="flat-self"]{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+html.native-liquid-glass [data-yiu-glass-native~="flat-before"]::before,
+html.native-liquid-glass [data-yiu-glass-native~="flat-after"]::after{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
