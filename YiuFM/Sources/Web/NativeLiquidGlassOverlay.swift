@@ -57,7 +57,44 @@ final class NativeLiquidGlassOverlay: UIView {
         }
         return Math.max(0, Math.min(1, opacity));
       }
-      function holesOf(el, rect) {
+      function isAboveGlassPseudo(node, host, pseudo) {
+        if (!pseudo) return true;
+        var chain = [], current = node;
+        while (current && current !== host) {
+          if (current.nodeType === 1) chain.push(current);
+          current = current.parentElement;
+        }
+        if (current !== host) return false;
+        chain.reverse();
+
+        // ::before is painted before normal-flow children; ::after is painted
+        // after them. Positioned/stacking descendants are evaluated as a unit:
+        // a negative stacking context stays below either pseudo surface, while
+        // an auto/zero/positive context is painted above ::after.
+        if (pseudo === '::before') {
+          for (var i = 0; i < chain.length; i++) {
+            var beforeStyle = getComputedStyle(chain[i]);
+            if (!createsStackingContext(chain[i], beforeStyle)) continue;
+            var beforeZ = beforeStyle.zIndex === 'auto' ? 0 : (parseInt(beforeStyle.zIndex, 10) || 0);
+            if (beforeZ < 0) return false;
+            break;
+          }
+          return true;
+        }
+
+        for (var j = 0; j < chain.length; j++) {
+          var style = getComputedStyle(chain[j]);
+          if (createsStackingContext(chain[j], style)) {
+            var z = style.zIndex === 'auto' ? 0 : (parseInt(style.zIndex, 10) || 0);
+            return z >= 0;
+          }
+          // Positioned descendants with z-index:auto paint in the positioned
+          // phase, after the host's in-flow ::after pseudo-element.
+          if (style.position !== 'static') return true;
+        }
+        return false;
+      }
+      function holesOf(el, rect, glassPseudo) {
         // Cut out every visible content region so the native material never
         // covers original UI: nested labels, controls, artwork, SVG/canvas,
         // images, badges and text all remain rendered by WKWebView.
@@ -89,6 +126,7 @@ final class NativeLiquidGlassOverlay: UIView {
             return;
           }
           if (node.nodeType !== 1) return;
+          if (glassPseudo && !isAboveGlassPseudo(node, el, glassPseudo)) return;
           var s = getComputedStyle(node);
           if (s.display === 'none' || s.visibility === 'hidden' ||
               Number(s.opacity || 1) < 0.02) return;
@@ -221,7 +259,7 @@ final class NativeLiquidGlassOverlay: UIView {
         var sx = (el.getBoundingClientRect().width || layoutWidth) / layoutWidth;
         var sy = (el.getBoundingClientRect().height || layoutHeight) / layoutHeight;
         var radius = parsePx(style.borderTopLeftRadius, 16) * Math.min(sx, sy);
-        return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
+        return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect, pseudo || null) };
       }
       function hasNativeGlassAncestor(el) {
         for (var parent = el.parentElement; parent && parent !== document.documentElement; parent = parent.parentElement) {
@@ -288,8 +326,10 @@ final class NativeLiquidGlassOverlay: UIView {
         if (!node || !style) return false;
         var positioned = style.position === 'absolute' || style.position === 'relative' ||
           style.position === 'fixed' || style.position === 'sticky';
+        var parentStyle = node.parentElement ? getComputedStyle(node.parentElement) : null;
+        var flexOrGridItem = parentStyle && /^(inline-)?(flex|grid)$/.test(parentStyle.display);
         return node === document.documentElement ||
-          ((style.zIndex !== 'auto') && positioned) ||
+          ((style.zIndex !== 'auto') && (positioned || flexOrGridItem)) ||
           Number(style.opacity || 1) < 1 ||
           style.transform !== 'none' || style.translate !== 'none' ||
           style.rotate !== 'none' || style.scale !== 'none' ||
@@ -351,7 +391,7 @@ final class NativeLiquidGlassOverlay: UIView {
               var r = item.el.getBoundingClientRect();
               return { x:r.left, y:r.top, width:r.width, height:r.height };
             })();
-            var itemData = descriptor(item.el, item.id, rect, style, !!item.pseudo);
+            var itemData = descriptor(item.el, item.id, rect, style, item.pseudo || null);
             if (itemData) entries.push({ itemData:itemData, path:stackingPath(item), index:index });
           });
           // Sort low-to-high so UIKit can add/reorder the final entry above
