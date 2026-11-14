@@ -164,7 +164,7 @@ document.addEventListener("pointerdown",function(e){
     var $$=function(i){return document.getElementById(i)};
     [].forEach.call(settingsData.querySelectorAll("input[type=range]"),wrapRange);
     bindUiSpd();
-    var qrm=$("qrstMoved");if(qrm)qrm.onclick=function(){
+    var qrm=document.getElementById("qrstMoved");if(qrm)qrm.onclick=function(){
       // 恢复系统设置的默认值：界面动画 1×、性能优化开启；高光与阴影由当前版本固定开启。
       setUiSpdPct(100);
       var perf=document.getElementById("performanceMode");
