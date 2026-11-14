@@ -77,17 +77,16 @@ final class NativeLiquidGlassOverlay: UIView {
           if (hasGlass(own)) {
             kinds.push('self');
             candidates.push({ el:el, pseudo:null, id:idFor(el) });
-          } else {
-            var before = getComputedStyle(el, '::before');
-            if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
-              kinds.push('before');
-              candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
-            }
-            var after = getComputedStyle(el, '::after');
-            if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
-              kinds.push('after');
-              candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
-            }
+          }
+          var before = getComputedStyle(el, '::before');
+          if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
+            kinds.push('before');
+            candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+          }
+          var after = getComputedStyle(el, '::after');
+          if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
+            kinds.push('after');
+            candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
           }
           if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
         }
