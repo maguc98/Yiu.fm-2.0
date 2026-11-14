@@ -51,7 +51,19 @@ final class NativeLiquidGlassOverlay: UIView {
       }
       function holesOf(el, rect) {
         var holes = [];
-        Array.prototype.forEach.call(el.children || [], function (child) {
+        Array.prototype.forEach.call(el.childNodes || [], function (child) {
+          if (child.nodeType === 3) {
+            if (!String(child.textContent || '').trim()) return;
+            try {
+              var range = document.createRange();
+              range.selectNode(child);
+              Array.prototype.forEach.call(range.getClientRects(), function (r) {
+                if (r.width > 0 && r.height > 0) holes.push({ x:r.left, y:r.top, width:r.width, height:r.height });
+              });
+            } catch (_) {}
+            return;
+          }
+          if (child.nodeType !== 1) return;
           var s = getComputedStyle(child), cr = child.getBoundingClientRect();
           if (s.display === 'none' || s.visibility === 'hidden' ||
               Number(s.opacity || 1) < 0.02 || cr.width < 1 || cr.height < 1) return;
