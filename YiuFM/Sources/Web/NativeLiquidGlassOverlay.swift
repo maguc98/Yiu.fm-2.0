@@ -126,8 +126,12 @@ final class NativeLiquidGlassOverlay: UIView {
         });
         return merged;
       }
-      function descriptor(el, id, rect, style) {
+      function descriptor(el, id, rect, style, pseudo) {
+        // Element opacity is already included by visibleThroughAncestors().
+        // Pseudo-elements have their own computed opacity and must be folded
+        // into the host's effective opacity separately.
         var opacity = visibleThroughAncestors(el);
+        if (pseudo) opacity *= Math.max(0, Math.min(1, Number(style.opacity || 1)));
         if (!opacity || rect.width < 1 || rect.height < 1) return null;
         var radius = parsePx(style.borderTopLeftRadius, 16);
         return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
@@ -200,7 +204,7 @@ final class NativeLiquidGlassOverlay: UIView {
               var r = item.el.getBoundingClientRect();
               return { x:r.left, y:r.top, width:r.width, height:r.height };
             })();
-            var itemData = descriptor(item.el, item.id, rect, style);
+            var itemData = descriptor(item.el, item.id, rect, style, !!item.pseudo);
             if (itemData) surfaces.push(itemData);
           });
           bridge.postMessage({ surfaces:surfaces });
@@ -267,6 +271,8 @@ final class NativeLiquidGlassOverlay: UIView {
     """
 
     private var glassViews: [String: UIVisualEffectView] = [:]
+    private var glassMasks: [String: UIView] = [:]
+    private var glassMaskLayers: [String: CAShapeLayer] = [:]
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -304,12 +310,15 @@ final class NativeLiquidGlassOverlay: UIView {
                 glassViews[id] = glass
                 addSubview(glass)
             }
-            update(glass, surface: surface, x: x, y: y, width: width, height: height)
+            update(glass, id: id, surface: surface, x: x, y: y, width: width, height: height)
         }
         let staleIDs = glassViews.keys.filter { !activeIDs.contains($0) }
         for id in staleIDs {
             guard let glass = glassViews.removeValue(forKey: id) else { continue }
             glass.effect = nil
+            glass.mask = nil
+            glassMasks.removeValue(forKey: id)
+            glassMaskLayers.removeValue(forKey: id)
             glass.removeFromSuperview()
         }
     }
@@ -329,12 +338,16 @@ final class NativeLiquidGlassOverlay: UIView {
         return glass
     }
 
-    private func update(_ glass: UIVisualEffectView, surface: [String: Any],
+    private func update(_ glass: UIVisualEffectView, id: String, surface: [String: Any],
                         x: Double, y: Double, width: Double, height: Double) {
         let frame = CGRect(x: x, y: y, width: width, height: height)
         glass.frame = frame
-        glass.alpha = CGFloat(max(0, min(1, (surface["opacity"] as? NSNumber)?.doubleValue ?? 1)))
-        glass.isHidden = false
+        // UIKit advises against changing UIVisualEffectView.alpha. Apply the
+        // effective CSS opacity to the mask instead, preserving the backdrop
+        // effect's own compositing pipeline.
+        let opacity = CGFloat(max(0, min(1, (surface["opacity"] as? NSNumber)?.doubleValue ?? 1)))
+        glass.alpha = 1
+        glass.isHidden = opacity <= 0.001
         let radius = CGFloat(max(0, (surface["radius"] as? NSNumber)?.doubleValue ?? 16))
         glass.layer.cornerRadius = min(radius, min(frame.width, frame.height) / 2)
 
@@ -359,20 +372,29 @@ final class NativeLiquidGlassOverlay: UIView {
                 }
             }
         }
-        // UIVisualEffectView has its own backdrop-compositing pipeline.
-        // Use UIView.maskView so the alpha cut-outs are applied to the complete
-        // visual effect output, rather than relying on a mask attached directly
-        // to the effect view's backing layer.
-        let mask = CAShapeLayer()
-        mask.frame = glass.bounds
+        // Reuse the UIView mask and its shape layer. Updating only the path
+        // avoids allocating a new mask hierarchy during tracked animations.
+        let maskView: UIView
+        let mask: CAShapeLayer
+        if let existingView = glassMasks[id], let existingLayer = glassMaskLayers[id] {
+            maskView = existingView
+            mask = existingLayer
+        } else {
+            maskView = UIView(frame: glass.bounds)
+            maskView.backgroundColor = .clear
+            maskView.isUserInteractionEnabled = false
+            maskView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            mask = CAShapeLayer()
+            mask.fillRule = .evenOdd
+            maskView.layer.addSublayer(mask)
+            glassMasks[id] = maskView
+            glassMaskLayers[id] = mask
+            glass.mask = maskView
+        }
+        maskView.frame = glass.bounds
+        mask.frame = maskView.bounds
         mask.path = path.cgPath
-        mask.fillRule = .evenOdd
-        mask.fillColor = UIColor.white.cgColor
-        let maskView = UIView(frame: glass.bounds)
-        maskView.backgroundColor = .clear
-        maskView.isUserInteractionEnabled = false
-        maskView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        maskView.layer.addSublayer(mask)
+        mask.fillColor = UIColor(white: 1, alpha: opacity).cgColor
         glass.mask = maskView
         glass.layer.mask = nil
     }
