@@ -89,6 +89,7 @@ final class NativeLiquidGlassOverlay: UIView {
           // wrappers (for example .mi-txt / #hubGlow) must not punch giant holes
           // through the native glass. Text nodes are protected by Range rects;
           // painted artwork and controls are protected by their own boxes.
+          // Computed CSS colors are normalized to rgb()/rgba() by WebKit.
           function alphaOf(color) {
             if (!color || color === 'transparent') return 0;
             var match = color.match(/^rgba?\((.*)\)$/i);
