@@ -266,32 +266,17 @@ final class NativeLiquidGlassOverlay: UIView {
     })();
     """
 
-    private let glassContainer = UIVisualEffectView(effect: nil)
     private var glassViews: [String: UIVisualEffectView] = [:]
-    private var usesGlassContainer = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         isOpaque = false
         isUserInteractionEnabled = false
-        glassContainer.frame = bounds
-        glassContainer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        glassContainer.backgroundColor = .clear
-        glassContainer.contentView.backgroundColor = .clear
-        glassContainer.isUserInteractionEnabled = false
-        addSubview(glassContainer)
-
-        if #available(iOS 26.0, *) {
-            let effect = UIGlassContainerEffect()
-            effect.spacing = 10
-            glassContainer.effect = effect
-            usesGlassContainer = true
-        } else {
-            // iOS 18–25 don't provide Liquid Glass. Keep a native system material
-            // fallback instead of imitating Liquid Glass with custom CSS.
-            glassContainer.isHidden = true
-        }
+        // Keep each native glass surface independent. A UIGlassContainerEffect
+        // around masked UIGlassEffect children can introduce a second compositing
+        // pass, causing content cut-outs to be lost on some OS releases.
+        // iOS 26+ still uses the system UIGlassEffect on each surface directly.
     }
 
     required init?(coder: NSCoder) {
@@ -317,11 +302,7 @@ final class NativeLiquidGlassOverlay: UIView {
             let glass = glassViews[id] ?? makeGlassView()
             if glassViews[id] == nil {
                 glassViews[id] = glass
-                if usesGlassContainer {
-                    glassContainer.contentView.addSubview(glass)
-                } else {
-                    addSubview(glass)
-                }
+                addSubview(glass)
             }
             update(glass, surface: surface, x: x, y: y, width: width, height: height)
         }
@@ -390,6 +371,7 @@ final class NativeLiquidGlassOverlay: UIView {
         let maskView = UIView(frame: glass.bounds)
         maskView.backgroundColor = .clear
         maskView.isUserInteractionEnabled = false
+        maskView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         maskView.layer.addSublayer(mask)
         glass.maskView = maskView
         glass.layer.mask = nil
