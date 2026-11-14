@@ -174,12 +174,22 @@ final class NativeLiquidGlassOverlay: UIView {
             // A shadow/filter does not make the interior opaque, and generated
             // text may occupy only a tiny part of the host; using the host-sized
             // fallback rect for either case creates oversized transparent holes.
+            var hostRect = node.getBoundingClientRect();
+            var pseudoArea = pr.width * pr.height;
+            var hostArea = Math.max(1, hostRect.width * hostRect.height);
+            var generatedContent = ps.content && ps.content !== 'none' &&
+              ps.content !== 'normal' && ps.content !== '""' && ps.content !== "''";
+            // Generated glyphs are protected only when their pseudo box is
+            // genuinely bounded. An auto-sized pseudo commonly inherits the
+            // full host rectangle, which is not the glyph's actual footprint.
+            var boundedGeneratedContent = generatedContent &&
+              pseudoArea < hostArea * 0.35 && pr.width < 120 && pr.height < 80;
             var pseudoPaint = alphaOf(ps.backgroundColor) > 0.015 ||
               (ps.backgroundImage && ps.backgroundImage !== 'none') ||
               ['Top','Right','Bottom','Left'].some(function (edge) {
                 return parseFloat(ps['border' + edge + 'Width'] || '0') > 0 &&
                   alphaOf(ps['border' + edge + 'Color']) > 0.015;
-              });
+              }) || boundedGeneratedContent;
             if (pseudoPaint) {
               addRect({ left:pr.x, top:pr.y, right:pr.x + pr.width, bottom:pr.y + pr.height,
                         width:pr.width, height:pr.height });
