@@ -89,8 +89,10 @@ final class NativeLiquidGlassOverlay: UIView {
           // backgrounds, images and custom controls); display:contents has no
           // box, so descend and protect its children individually.
           if (s.display !== 'contents' && r.width > 0.5 && r.height > 0.5) {
+            // Protect this box, but keep walking: descendants can overflow it
+            // (absolute controls, SVG artwork, badges, shadows, translated labels).
+            // Stopping here allowed those protruding pixels to sit underneath glass.
             addRect(r);
-            return;
           }
           Array.prototype.forEach.call(node.childNodes || [], walk);
         }
