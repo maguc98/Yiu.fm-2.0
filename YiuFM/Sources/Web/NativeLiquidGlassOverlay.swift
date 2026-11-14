@@ -58,41 +58,16 @@ final class NativeLiquidGlassOverlay: UIView {
         return Math.max(0, Math.min(1, opacity));
       }
       function isAboveGlassPseudo(node, host, pseudo) {
-        if (!pseudo) return true;
-        var chain = [], current = node;
-        while (current && current !== host) {
-          if (current.nodeType === 1) chain.push(current);
-          current = current.parentElement;
-        }
-        if (current !== host) return false;
-        chain.reverse();
-
-        // ::before is painted before normal-flow children; ::after is painted
-        // after them. Positioned/stacking descendants are evaluated as a unit:
-        // a negative stacking context stays below either pseudo surface, while
-        // an auto/zero/positive context is painted above ::after.
-        if (pseudo === '::before') {
-          for (var i = 0; i < chain.length; i++) {
-            var beforeStyle = getComputedStyle(chain[i]);
-            if (!createsStackingContext(chain[i], beforeStyle)) continue;
-            var beforeZ = beforeStyle.zIndex === 'auto' ? 0 : (parseInt(beforeStyle.zIndex, 10) || 0);
-            if (beforeZ < 0) return false;
-            break;
-          }
-          return true;
-        }
-
-        for (var j = 0; j < chain.length; j++) {
-          var style = getComputedStyle(chain[j]);
-          if (createsStackingContext(chain[j], style)) {
-            var z = style.zIndex === 'auto' ? 0 : (parseInt(style.zIndex, 10) || 0);
-            return z >= 0;
-          }
-          // Positioned descendants with z-index:auto paint in the positioned
-          // phase, after the host's in-flow ::after pseudo-element.
-          if (style.position !== 'static') return true;
-        }
-        return false;
+        // Foreground protection must be conservative. CSS pseudo-element paint
+        // phases are more nuanced than a simple positioned/z-index test:
+        // ordinary-flow descendants can still be visually exposed above a
+        // detached native glass surface depending on the host's stacking tree.
+        // Omitting them from the mask lets the UIKit material blur real UI.
+        // Protect every visible descendant; at worst this reveals a decorative
+        // layer more clearly, but it never sacrifices text or controls.
+        if (!pseudo || !node || node === host) return true;
+        for (var current = node; current && current !== host; current = current.parentElement) {}
+        return current === host;
       }
       function holesOf(el, rect, glassPseudo) {
         // Cut out every visible content region so the native material never
