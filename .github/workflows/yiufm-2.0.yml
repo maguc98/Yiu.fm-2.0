@@ -329,6 +329,9 @@ jobs:
           grep -q '<input type="range" id="sonnet-res" min="50" max="400" step="25" value="100">' YiuFM/Resources/Web/index.html
           grep -q 'resolution: options.tuning.textureResolution,' YiuFM/Resources/Web/APP/sonnet/sonnet.js
           ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' YiuFM/Resources/Web/APP/sonnet/sonnet.js
+          # Syntax-check every JavaScript source and every JavaScript file actually shipped in the IPA, not only the hand-picked runtime subset.
+          find APP -type f -name '*.js' -print0 | xargs -0 -n 1 node --check
+          find YiuFM/Resources/Web/APP -type f -name '*.js' -print0 | xargs -0 -n 1 node --check
           node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
           du -sh YiuFM/Resources/Web
 
