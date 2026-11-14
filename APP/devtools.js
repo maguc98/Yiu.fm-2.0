@@ -758,7 +758,7 @@
     (function go() {
       rafMap[id] = origRAF.call(window, function(ts) {
         if (!(id in rafMap)) return;
-        var cap = window.__rafCap;
+        var cap = window.__rafCapActive && window.__rafCap;
         if (cap && !cap(ts)) { go(); return; }
         delete rafMap[id];
         syncRafWrapper(); // 关闭诊断后，最后一个包装回调结束时再恢复原生 cancelAnimationFrame
