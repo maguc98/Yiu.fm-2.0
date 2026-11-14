@@ -65,6 +65,7 @@ jobs:
           cp APP/cmd-early.js YiuFM/Resources/Web/APP/cmd-early.js
           cp APP/cmd-console.js YiuFM/Resources/Web/APP/cmd-console.js
           cp APP/cmd-extra.js YiuFM/Resources/Web/APP/cmd-extra.js
+          cp APP/boot.js YiuFM/Resources/Web/APP/boot.js
           # Ship the branch menu implementation so the new Other sections are included in the IPA.
           cp APP/menus.js YiuFM/Resources/Web/APP/menus.js
           # Ship the branch's Sonnet fixes; keep the legacy UI/assets pinned to the verified baseline.
@@ -277,6 +278,7 @@ jobs:
           node --check YiuFM/Resources/Web/APP/cmd-early.js
           node --check YiuFM/Resources/Web/APP/cmd-console.js
           node --check YiuFM/Resources/Web/APP/cmd-extra.js
+          node --check YiuFM/Resources/Web/APP/boot.js
           node --check YiuFM/Resources/Web/APP/menus.js
           node --check YiuFM/Resources/Web/APP/renderer.js
           node --check YiuFM/Resources/Web/APP/fume/fume.js
