@@ -65,14 +65,15 @@
   });
 })();
 </script>
+<script>window.__YIU_DIAGNOSTIC_TRACE = true;</script>
 <script id="errTraceJS">
 /* 诊断用：file:// 下外部脚本抛的错会被 WebKit 抹成「Script error. @:0」，看不到文件和行号。
    这里包住 rAF / setTimeout / setInterval / 事件回调 / Promise 拒绝，在错误被抹掉之前把真正的 message 和 stack 写进日志（前缀 [trace]），
    每种错误只记一次、最多 40 条，之后原样抛出，不改变原有行为。排查完把 window.__ERR_TRACE_OFF=true 或删掉本段即可。 */
 (function(){
   /* 详细回调追踪只在主动开启时运行；正式版默认不包装全局 rAF / timer / EventTarget。 */
-  var traceEnabled=false;
-  try{traceEnabled=localStorage.getItem('yiuDebugTrace')==='1'}catch(_){}
+  var traceEnabled = window.__YIU_DIAGNOSTIC_TRACE === true;
+  try{traceEnabled=traceEnabled||localStorage.getItem('yiuDebugTrace')==='1'}catch(_){}
   if(!traceEnabled||window.__ERR_TRACE_OFF||window.__errTrace) return; window.__errTrace=true;
   var seen={}, n=0;
   function report(e,tag){
