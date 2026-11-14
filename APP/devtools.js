@@ -761,6 +761,7 @@
         var cap = window.__rafCap;
         if (cap && !cap(ts)) { go(); return; }
         delete rafMap[id];
+        syncRafWrapper(); // 关闭诊断后，最后一个包装回调结束时再恢复原生 cancelAnimationFrame
         // Native requestAnimationFrame invokes callbacks with Window as `this`; preserve that contract.
         if (!state.jank) { if (typeof cb === 'function') cb.call(window, ts); return; }
         var t0 = performance.now();
@@ -794,19 +795,27 @@
   var wrappedCancelRAF = function(id) {
     if (id in rafMap) { origCancel.call(window, rafMap[id]); delete rafMap[id]; }
     else origCancel.call(window, id);
+    syncRafWrapper();
   };
-  /* 常态下不替换 WebKit 的全局 RAF/cancelRAF；仅卡顿溯源或限帧需要时短暂接管。 */
+  function hasPendingWrappedRaf() {
+    for (var id in rafMap) if (Object.prototype.hasOwnProperty.call(rafMap, id)) return true;
+    return false;
+  }
+  /* 常态下不替换 WebKit 的 RAF；停用诊断后，保留 cancel 包装直到旧编号全部结束/取消。 */
   function syncRafWrapper() {
     var needed = !!state.jank || !!window.__rafCapActive;
     if (needed) {
       if (window.requestAnimationFrame !== wrappedRAF) window.requestAnimationFrame = wrappedRAF;
       if (window.cancelAnimationFrame !== wrappedCancelRAF) window.cancelAnimationFrame = wrappedCancelRAF;
-      window.__rafWrapped = true;
     } else {
       if (window.requestAnimationFrame === wrappedRAF) window.requestAnimationFrame = origRAF;
-      if (window.cancelAnimationFrame === wrappedCancelRAF) window.cancelAnimationFrame = origCancel;
-      window.__rafWrapped = false;
+      if (hasPendingWrappedRaf()) {
+        if (window.cancelAnimationFrame !== wrappedCancelRAF) window.cancelAnimationFrame = wrappedCancelRAF;
+      } else if (window.cancelAnimationFrame === wrappedCancelRAF) {
+        window.cancelAnimationFrame = origCancel;
+      }
     }
+    window.__rafWrapped = window.requestAnimationFrame === wrappedRAF || window.cancelAnimationFrame === wrappedCancelRAF;
   }
   syncRafWrapper();
 
