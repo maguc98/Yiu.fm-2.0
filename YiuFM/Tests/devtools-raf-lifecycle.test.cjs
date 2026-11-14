@@ -81,6 +81,7 @@ test('RAF wrapper restores native cancel after the final pending callback comple
   h.context.state.jank = false;
   h.context.syncRafWrapper();
   const [nativeId, callback] = h.pending.entries().next().value;
+  h.pending.delete(nativeId); // Native RAF consumes its request before invoking the callback.
   callback(16);
 
   assert.equal(called, true);
