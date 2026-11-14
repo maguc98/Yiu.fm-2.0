@@ -139,19 +139,31 @@ final class NativeLiquidGlassOverlay: UIView {
         // First protect the glass host's own foreground descendants.
         Array.prototype.forEach.call(el.childNodes || [], walk);
 
-        // A number of Yiu surfaces deliberately separate their material from
-        // their foreground: #hubGlass sits immediately before #hub, and the
-        // bottom navigation keeps .lg-bg, .lg-thumb and .lg-btns as siblings.
-        // A descendant-only walk misses all of those controls and lets the
-        // native effect cover them. Include later siblings that paint after
-        // this surface in DOM order; addRect() clips every item to this glass
-        // surface, so unrelated content outside its bounds is ignored.
-        for (var sibling = el.nextElementSibling; sibling; sibling = sibling.nextElementSibling) {
-          var sr = sibling.getBoundingClientRect();
-          if (sr.right <= rect.x || sr.left >= rect.x + rect.width ||
-              sr.bottom <= rect.y || sr.top >= rect.y + rect.height) continue;
-          walk(sibling);
+        // Detached material layers need an explicit foreground owner. DOM
+        // order alone is not paint order: a later sibling may be behind this
+        // glass because of stacking contexts, z-index, transforms or isolation.
+        // Protect only the known Yiu structures whose foreground relationship
+        // is intentional, rather than punching holes through arbitrary siblings.
+        var foregroundRoots = [];
+        if (el.id === 'hubGlass') {
+          var hub = document.getElementById('hub');
+          if (hub) foregroundRoots.push(hub);
+        } else if (el.classList && el.classList.contains('lg-bg')) {
+          var nav = el.parentElement;
+          if (nav) {
+            Array.prototype.forEach.call(nav.children, function (child) {
+              if (child !== el && (child.classList.contains('lg-thumb') ||
+                                   child.classList.contains('lg-btns'))) {
+                foregroundRoots.push(child);
+              }
+            });
+          }
         }
+        foregroundRoots.forEach(function (root) {
+          var rr = root.getBoundingClientRect();
+          if (rr.right > rect.x && rr.left < rect.x + rect.width &&
+              rr.bottom > rect.y && rr.top < rect.y + rect.height) walk(root);
+        });
 
         // Merge intersecting cutouts. With an even-odd mask, overlapping
         // holes would otherwise toggle back to glass and hide content again.
