@@ -2102,7 +2102,7 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
       var n = parseInt(s, 10) || 15;
       if (!errs.length) return c.print('没有记录到报错', 'ok');
       c.print('共 ' + errs.length + ' 条，显示最近 ' + Math.min(n, errs.length) + ' 条', 'info');
-      errs.slice(-n).forEach(function (e) { c.print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : ''), 'err'); });
+      errs.slice(-n).forEach(function (e) { c.print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : '') + (e.stack ? '\n' + e.stack : ''), 'err'); });
     }
   });
 
