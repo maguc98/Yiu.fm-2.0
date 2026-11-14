@@ -112,7 +112,22 @@ final class NativeLiquidGlassOverlay: UIView {
           }
           Array.prototype.forEach.call(node.childNodes || [], walk);
         }
+        // First protect the glass host's own foreground descendants.
         Array.prototype.forEach.call(el.childNodes || [], walk);
+
+        // A number of Yiu surfaces deliberately separate their material from
+        // their foreground: #hubGlass sits immediately before #hub, and the
+        // bottom navigation keeps .lg-bg, .lg-thumb and .lg-btns as siblings.
+        // A descendant-only walk misses all of those controls and lets the
+        // native effect cover them. Include later siblings that paint after
+        // this surface in DOM order; addRect() clips every item to this glass
+        // surface, so unrelated content outside its bounds is ignored.
+        for (var sibling = el.nextElementSibling; sibling; sibling = sibling.nextElementSibling) {
+          var sr = sibling.getBoundingClientRect();
+          if (sr.right <= rect.x || sr.left >= rect.x + rect.width ||
+              sr.bottom <= rect.y || sr.top >= rect.y + rect.height) continue;
+          walk(sibling);
+        }
 
         // Merge intersecting cutouts. With an even-odd mask, overlapping
         // holes would otherwise toggle back to glass and hide content again.
