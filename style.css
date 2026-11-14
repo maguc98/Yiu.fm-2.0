@@ -2543,44 +2543,6 @@ html.native-liquid-glass [data-yiu-glass-native~="flat-after"]::after{
   backdrop-filter:none!important;
 }
 
-/* ===== Liquid Glass 可读性保护 =====
-   原则：文字始终由 WKWebView 清晰绘制，不进入玻璃模糊层；
-   在文字轮廓下提供轻量对比度保护，避免透明镂空区域透出复杂背景后难以辨认。
-   不改变字号、布局和交互，只增强文字/图标的边缘辨识度。 */
-html.native-liquid-glass [data-yiu-glass-native~="self"],
-html.native-liquid-glass [data-yiu-glass-native~="before"],
-html.native-liquid-glass [data-yiu-glass-native~="after"] {
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-html.native-liquid-glass [data-yiu-glass-native~="self"] :is(
-  p, span, label, strong, b, em, small, time, output,
-  button, a, input, textarea, select, .title, .label, .stat, .ph, .mt
-),
-html.native-liquid-glass [data-yiu-glass-native~="before"] :is(
-  p, span, label, strong, b, em, small, time, output,
-  button, a, input, textarea, select, .title, .label, .stat, .ph, .mt
-),
-html.native-liquid-glass [data-yiu-glass-native~="after"] :is(
-  p, span, label, strong, b, em, small, time, output,
-  button, a, input, textarea, select, .title, .label, .stat, .ph, .mt
-) {
-  text-shadow: 0 1px 2px rgba(0,0,0,.78), 0 0 7px rgba(0,0,0,.32);
-}
-html.native-liquid-glass [data-yiu-glass-native~="self"] :is(svg, img),
-html.native-liquid-glass [data-yiu-glass-native~="before"] :is(svg, img),
-html.native-liquid-glass [data-yiu-glass-native~="after"] :is(svg, img) {
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.55));
-}
-html.native-liquid-glass [data-yiu-glass-native~="self"] :is(input, textarea, select),
-html.native-liquid-glass [data-yiu-glass-native~="before"] :is(input, textarea, select),
-html.native-liquid-glass [data-yiu-glass-native~="after"] :is(input, textarea, select) {
-  -webkit-text-fill-color: currentColor;
-}
-html.native-liquid-glass [data-yiu-glass-native~="self"] :is(input, textarea, select)::placeholder,
-html.native-liquid-glass [data-yiu-glass-native~="before"] :is(input, textarea, select)::placeholder,
-html.native-liquid-glass [data-yiu-glass-native~="after"] :is(input, textarea, select)::placeholder {
-  color: rgba(245,247,255,.72);
-  opacity: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,.72);
-}
+/* Original typography and artwork filters are intentionally untouched.
+   Content visibility is handled by native mask cut-outs, not by replacing
+   the app's existing text-shadow, image filters, or font rasterization. */
