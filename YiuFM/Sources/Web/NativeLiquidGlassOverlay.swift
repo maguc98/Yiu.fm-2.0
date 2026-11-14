@@ -150,9 +150,12 @@ final class NativeLiquidGlassOverlay: UIView {
             return parseFloat(s['border' + edge + 'Width'] || '0') > 0 &&
               alphaOf(s['border' + edge + 'Color']) > 0.015;
           });
-          var hasPaintedBox = nativeArtwork || hasFill || hasBorder ||
-            (s.boxShadow && s.boxShadow !== 'none') ||
-            (s.filter && s.filter !== 'none');
+          // Shadows and filters can paint outside an element without
+          // filling its interior. Treating either as an opaque box punched out
+          // the whole layout rectangle and made large glass surfaces disappear.
+          // Their actual foreground content is protected by text ranges,
+          // artwork descendants, and explicitly painted backgrounds/borders.
+          var hasPaintedBox = nativeArtwork || hasFill || hasBorder;
           if (s.display !== 'contents' && hasPaintedBox && r.width > 0.5 && r.height > 0.5) {
             addRect(r);
           }
@@ -167,14 +170,16 @@ final class NativeLiquidGlassOverlay: UIView {
                 Number(ps.opacity || 1) < 0.02) return;
             var pr = pseudoRect(node, pseudo, ps);
             if (pr.width < 0.5 || pr.height < 0.5) return;
+            // Only a real fill or border justifies cutting the pseudo's box.
+            // A shadow/filter does not make the interior opaque, and generated
+            // text may occupy only a tiny part of the host; using the host-sized
+            // fallback rect for either case creates oversized transparent holes.
             var pseudoPaint = alphaOf(ps.backgroundColor) > 0.015 ||
               (ps.backgroundImage && ps.backgroundImage !== 'none') ||
-              (ps.boxShadow && ps.boxShadow !== 'none') ||
-              (ps.filter && ps.filter !== 'none') ||
               ['Top','Right','Bottom','Left'].some(function (edge) {
                 return parseFloat(ps['border' + edge + 'Width'] || '0') > 0 &&
                   alphaOf(ps['border' + edge + 'Color']) > 0.015;
-              }) || (ps.content && ps.content !== '""');
+              });
             if (pseudoPaint) {
               addRect({ left:pr.x, top:pr.y, right:pr.x + pr.width, bottom:pr.y + pr.height,
                         width:pr.width, height:pr.height });
