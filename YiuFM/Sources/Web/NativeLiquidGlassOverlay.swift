@@ -12,7 +12,7 @@ final class NativeLiquidGlassOverlay: UIView {
       document.documentElement.classList.add('native-liquid-glass');
 
       var ids = new WeakMap(), nextID = 1, candidates = [], pending = 0;
-      var observed = new WeakSet(), trackingUntil = 0, tracking = false;
+      var observed = new WeakSet(), knownGlass = new WeakSet(), trackingUntil = 0, tracking = false;
       var filterNone = function (value) { return !value || value === 'none' || value === 'initial'; };
       function hasGlass(style) {
         return style && (!filterNone(style.backdropFilter) || !filterNone(style.webkitBackdropFilter));
@@ -155,6 +155,9 @@ final class NativeLiquidGlassOverlay: UIView {
         if (el.id === 'hubGlass') {
           var hub = document.getElementById('hub');
           if (hub) foregroundRoots.push(hub);
+        } else if (el.id === 'tpGlass') {
+          var menu = document.getElementById('mediaMenu');
+          if (menu) foregroundRoots.push(menu);
         } else if (el.classList && el.classList.contains('lg-bg')) {
           var nav = el.parentElement;
           if (nav) {
@@ -249,7 +252,10 @@ final class NativeLiquidGlassOverlay: UIView {
             candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
           }
         }
-        if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
+        if (kinds.length) {
+          knownGlass.add(el);
+          el.setAttribute('data-yiu-glass-native', kinds.join(' '));
+        }
         if (kinds.some(function (kind) { return kind === 'self' || kind === 'before' || kind === 'after'; }) &&
             !observed.has(el) && resizeObserver) {
           observed.add(el);
@@ -313,10 +319,19 @@ final class NativeLiquidGlassOverlay: UIView {
             // Ancestor classes can change descendant pseudo-element materials.
             inspectTree(record.target);
             needsTracking = true;
-          } else if (record.attributeName === 'style' &&
-                     /backdrop-filter|--g-blur|--gb/i.test(record.target.getAttribute('style') || '')) {
-            inspectTree(record.target);
-            needsTracking = true;
+          } else if (record.attributeName === 'style') {
+            var inlineStyle = record.target.getAttribute('style') || '';
+            var changesGlassVariable = /--g-blur|--gb/i.test(inlineStyle);
+            // Keep previously discovered glass elements eligible for re-detection.
+            // A drag gesture can temporarily set backdrop-filter:none and then
+            // clear the inline property; the latter style string no longer
+            // contains "backdrop-filter", even though the stylesheet glass returns.
+            if (knownGlass.has(record.target) || /backdrop-filter/i.test(inlineStyle) ||
+                changesGlassVariable) {
+              if (changesGlassVariable) inspectTree(record.target);
+              else inspectElement(record.target);
+              needsTracking = true;
+            }
           }
         });
         schedule();
