@@ -100,7 +100,7 @@
   }
   function wrap(fn,tag){
     if(typeof fn!=='function'||fn.__tr) return fn;
-    var w=function(){ try{ return fn.apply(this,arguments) }catch(e){ report(e,tag); throw e } };
+    var w=function(){ 'use strict'; try{ return fn.apply(this,arguments) }catch(e){ report(e,tag); throw e } };
     w.__tr=1; return w;
   }
   /* Safari/WebKit can hide the original exception when it escapes a native forEach callback.
