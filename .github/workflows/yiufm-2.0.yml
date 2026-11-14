@@ -298,7 +298,7 @@ jobs:
           root = Path("YiuFM/Resources/Web")
           html = (root / "index.html").read_text(encoding="utf-8")
           missing = []
-          for attr, value in re.findall(r'\\b(src|href)\\s*=\\s*["\\']([^"\\']+)["\\']', html, re.I):
+          for attr, value in re.findall(r"""(src|href)\s*=\s*["']([^"']+)["']""", html, re.I):
               if not value.startswith("./"):
                   continue
               rel = urlsplit(value).path
