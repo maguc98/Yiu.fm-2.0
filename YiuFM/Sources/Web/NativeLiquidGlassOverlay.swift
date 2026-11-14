@@ -91,9 +91,9 @@ final class NativeLiquidGlassOverlay: UIView {
           // painted artwork and controls are protected by their own boxes.
           function alphaOf(color) {
             if (!color || color === 'transparent') return 0;
-            var match = color.match(/^rgba?\\((.*)\\)$/i);
+            var match = color.match(/^rgba?\((.*)\)$/i);
             if (!match) return 1;
-            var parts = match[1].split(/[\\s,\\/]+/).filter(Boolean);
+            var parts = match[1].split(/[\s,\/]+/).filter(Boolean);
             return parts.length >= 4 ? Math.max(0, Math.min(1, parseFloat(parts[3]) || 0)) : 1;
           }
           var tag = String(node.tagName || '').toLowerCase();
