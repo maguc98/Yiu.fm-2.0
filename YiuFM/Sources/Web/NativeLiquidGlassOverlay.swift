@@ -42,7 +42,7 @@ final class NativeLiquidGlassOverlay: UIView {
         var width = parsePx(style.width, Math.max(0, layoutWidth - left - right));
         var height = parsePx(style.height, Math.max(0, layoutHeight - top - bottom));
         var x = r.left + left * sx, y = r.top + top * sy;
-        var move = String(style.translate || '').split(/\s+/);
+        var move = String(style.translate || '').split(/\\s+/);
         x += parsePx(move[0], 0) * sx;
         y += parsePx(move[1], 0) * sy;
         return { x:x, y:y, width:width * sx, height:height * sy };
@@ -140,7 +140,7 @@ final class NativeLiquidGlassOverlay: UIView {
             if (!color || color === 'transparent') return 0;
             var match = color.match(/^rgba?\((.*)\)$/i);
             if (!match) return 1;
-            var parts = match[1].split(/[\s,\/]+/).filter(Boolean);
+            var parts = match[1].split(/[\\s,\\/]+/).filter(Boolean);
             return parts.length >= 4 ? Math.max(0, Math.min(1, parseFloat(parts[3]) || 0)) : 1;
           }
           var tag = String(node.tagName || '').toLowerCase();
