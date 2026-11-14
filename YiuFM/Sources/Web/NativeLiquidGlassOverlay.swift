@@ -110,6 +110,30 @@ final class NativeLiquidGlassOverlay: UIView {
           if (s.display !== 'contents' && hasPaintedBox && r.width > 0.5 && r.height > 0.5) {
             addRect(r);
           }
+
+          // Pseudo-elements are real painted foreground too, but they do not
+          // appear in childNodes. Protect visible ::before/::after artwork and
+          // generated labels when they sit above a detached glass background.
+          ['::before', '::after'].forEach(function (pseudo) {
+            var ps = getComputedStyle(node, pseudo);
+            if (!ps || ps.content === 'none' || ps.content === 'normal' ||
+                ps.display === 'none' || ps.visibility === 'hidden' ||
+                Number(ps.opacity || 1) < 0.02) return;
+            var pr = pseudoRect(node, pseudo, ps);
+            if (pr.width < 0.5 || pr.height < 0.5) return;
+            var pseudoPaint = alphaOf(ps.backgroundColor) > 0.015 ||
+              (ps.backgroundImage && ps.backgroundImage !== 'none') ||
+              (ps.boxShadow && ps.boxShadow !== 'none') ||
+              (ps.filter && ps.filter !== 'none') ||
+              ['Top','Right','Bottom','Left'].some(function (edge) {
+                return parseFloat(ps['border' + edge + 'Width'] || '0') > 0 &&
+                  alphaOf(ps['border' + edge + 'Color']) > 0.015;
+              }) || (ps.content && ps.content !== '""');
+            if (pseudoPaint) {
+              addRect({ left:pr.x, top:pr.y, right:pr.x + pr.width, bottom:pr.y + pr.height,
+                        width:pr.width, height:pr.height });
+            }
+          });
           Array.prototype.forEach.call(node.childNodes || [], walk);
         }
         // First protect the glass host's own foreground descendants.
