@@ -1,7 +1,8 @@
 import UIKit
 
-/// Native Liquid Glass surfaces for the legacy Web UI's mini player and control dock.
-/// The HTML reports geometry and foreground cutouts; UIKit owns the actual material.
+/// Bridges eligible CSS glass surfaces to native UIKit materials.
+/// iOS 26+ uses UIGlassEffect inside one UIGlassContainerEffect; older iOS
+/// releases use the system standard material as a compatibility fallback.
 final class NativeLiquidGlassOverlay: UIView {
     static let webScript = """
     (function () {
@@ -10,108 +11,173 @@ final class NativeLiquidGlassOverlay: UIView {
       window.__yiuNativeGlassInstalled = true;
       document.documentElement.classList.add('native-liquid-glass');
 
-      function rectOf(el) {
-        var r = el.getBoundingClientRect();
-        return { x:r.left, y:r.top, width:r.width, height:r.height };
+      var ids = new WeakMap(), nextID = 1, candidates = [], pending = 0;
+      var observed = new WeakSet(), trackingUntil = 0, tracking = false;
+      var filterNone = function (value) { return !value || value === 'none' || value === 'initial'; };
+      function hasGlass(style) {
+        return style && (!filterNone(style.backdropFilter) || !filterNone(style.webkitBackdropFilter));
       }
-      function collect(el) {
-        if (!el) return { visible:false, opacity:0, rect:{x:0,y:0,width:0,height:0}, holes:[] };
-        var r = el.getBoundingClientRect(), visible = r.width > 0 && r.height > 0, opacity = 1;
+      function idFor(el, suffix) {
+        var id = ids.get(el);
+        if (!id) { id = 'yiu-glass-' + nextID++; ids.set(el, id); }
+        return suffix ? id + ':' + suffix : id;
+      }
+      function parsePx(value, fallback) {
+        if (!value || value === 'auto') return fallback;
+        var n = parseFloat(value);
+        return isFinite(n) ? n : fallback;
+      }
+      function pseudoRect(el, pseudo, style) {
+        var r = el.getBoundingClientRect();
+        var left = parsePx(style.left, 0), right = parsePx(style.right, 0);
+        var top = parsePx(style.top, 0), bottom = parsePx(style.bottom, 0);
+        var width = parsePx(style.width, Math.max(0, r.width - left - right));
+        var height = parsePx(style.height, Math.max(0, r.height - top - bottom));
+        var x = r.left + left, y = r.top + top;
+        var move = String(style.translate || '').split(/\\s+/);
+        x += parsePx(move[0], 0);
+        y += parsePx(move[1], 0);
+        return { x:x, y:y, width:width, height:height };
+      }
+      function visibleThroughAncestors(el) {
+        var opacity = 1;
         for (var node = el; node && node !== document.documentElement; node = node.parentElement) {
-          var a = getComputedStyle(node);
-          if (a.display === 'none' || a.visibility === 'hidden') visible = false;
-          opacity *= Number(a.opacity || 1);
+          var s = getComputedStyle(node);
+          if (s.display === 'none' || s.visibility === 'hidden') return 0;
+          opacity *= Number(s.opacity || 1);
+          if (opacity <= 0.02) return 0;
         }
-        visible = visible && opacity > 0.02;
+        return Math.max(0, Math.min(1, opacity));
+      }
+      function holesOf(el, rect) {
         var holes = [];
-        if (visible) {
-          Array.prototype.forEach.call(el.children, function (child) {
-            var c = getComputedStyle(child), cr = child.getBoundingClientRect();
-            if (c.display === 'none' || c.visibility === 'hidden' || Number(c.opacity || 1) < 0.02 ||
-                cr.width < 1 || cr.height < 1) return;
-            holes.push(rectOf(child));
-          });
+        Array.prototype.forEach.call(el.children || [], function (child) {
+          var s = getComputedStyle(child), cr = child.getBoundingClientRect();
+          if (s.display === 'none' || s.visibility === 'hidden' ||
+              Number(s.opacity || 1) < 0.02 || cr.width < 1 || cr.height < 1) return;
+          holes.push({ x:cr.left, y:cr.top, width:cr.width, height:cr.height });
+        });
+        return holes;
+      }
+      function descriptor(el, id, rect, style) {
+        var opacity = visibleThroughAncestors(el);
+        if (!opacity || rect.width < 1 || rect.height < 1) return null;
+        var radius = parsePx(style.borderTopLeftRadius, 16);
+        return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
+      }
+      function refreshCandidates() {
+        candidates = [];
+        var all = document.querySelectorAll('body *');
+        for (var i = 0; i < all.length; i++) {
+          var el = all[i], own = getComputedStyle(el);
+          if (hasGlass(own)) {
+            el.setAttribute('data-yiu-glass-native', '');
+            candidates.push({ el:el, pseudo:null, id:idFor(el) });
+            continue;
+          }
+          var before = getComputedStyle(el, '::before');
+          if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
+            el.setAttribute('data-yiu-glass-native', '');
+            candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+          }
+          var after = getComputedStyle(el, '::after');
+          if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
+            el.setAttribute('data-yiu-glass-native', '');
+            candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
+          }
         }
-        return { visible:!!visible, opacity:Math.max(0,Math.min(1,opacity)),
-          rect:{x:r.left,y:r.top,width:r.width,height:r.height}, holes:holes };
+        candidates.forEach(function (item) {
+          if (!observed.has(item.el) && window.ResizeObserver) {
+            observed.add(item.el);
+            resizeObserver.observe(item.el);
+          }
+        });
+        schedule();
       }
       function send() {
+        pending = 0;
         try {
-          var mini = document.getElementById('mini');
-          var cbar = document.getElementById('cbar');
-          var open = !!(document.body && document.body.classList.contains('open'));
-          bridge.postMessage({ mini:collect(mini), cbar:collect(cbar) });
+          var surfaces = [];
+          candidates.forEach(function (item) {
+            var style = getComputedStyle(item.el, item.pseudo || null);
+            var rect = item.pseudo ? pseudoRect(item.el, item.pseudo, style) : (function () {
+              var r = item.el.getBoundingClientRect();
+              return { x:r.left, y:r.top, width:r.width, height:r.height };
+            })();
+            var itemData = descriptor(item.el, item.id, rect, style);
+            if (itemData) surfaces.push(itemData);
+          });
+          bridge.postMessage({ surfaces:surfaces });
         } catch (_) {}
       }
-
-      var trackingUntil = 0, tracking = false, pending = 0;
       function schedule() {
         if (pending) return;
-        pending = requestAnimationFrame(function () { pending = 0; send(); });
+        pending = requestAnimationFrame(send);
       }
       function track(ms) {
         trackingUntil = Math.max(trackingUntil, performance.now() + ms);
         if (tracking) return;
         tracking = true;
-        function tick() {
-          send();
-          if (performance.now() < trackingUntil) requestAnimationFrame(tick);
+        var last = 0;
+        function tick(now) {
+          if (!last || now - last >= 1000 / 30) { send(); last = now; }
+          if (now < trackingUntil) requestAnimationFrame(tick);
           else tracking = false;
         }
         requestAnimationFrame(tick);
       }
-
-      var mini = document.getElementById('mini');
-      var cbar = document.getElementById('cbar');
-      var hub = document.getElementById('hub');
-      if (window.ResizeObserver) {
-        var ro = new ResizeObserver(schedule);
-        [mini,cbar,hub].forEach(function (el) { if (el) ro.observe(el); });
-        [mini,cbar].forEach(function (el) {
-          if (el) Array.prototype.forEach.call(el.children, function (child) { ro.observe(child); });
-        });
-      }
-      if (window.MutationObserver) {
-        var lastOpen = !!(document.body && document.body.classList.contains('open'));
-        new MutationObserver(function () {
-          var open = !!(document.body && document.body.classList.contains('open'));
-          schedule();
-          if (open !== lastOpen) { lastOpen = open; track(850); }
-        }).observe(document.body, { attributes:true, attributeFilter:['class'] });
-        [mini,cbar].forEach(function (el) {
-          if (el) new MutationObserver(schedule).observe(el, {
-            attributes:true, childList:true, subtree:true, attributeFilter:['class','style']
-          });
+      var resizeObserver = window.ResizeObserver ? new ResizeObserver(schedule) : null;
+      var mutationObserver = window.MutationObserver ? new MutationObserver(function () {
+        refreshCandidates();
+        track(420);
+      }) : null;
+      if (mutationObserver && document.body) {
+        mutationObserver.observe(document.body, {
+          subtree:true, childList:true, attributes:true,
+          attributeFilter:['class','style','hidden','open']
         });
       }
       document.addEventListener('transitionrun', function (event) {
         var target = event.target;
-        if (target && (target.id === 'mini' || target.id === 'hub' || target.id === 'cbar')) track(900);
+        if (target && target.nodeType === 1) {
+          var s = getComputedStyle(target);
+          if (hasGlass(s) || candidates.some(function (item) { return item.el === target; })) track(700);
+        }
       }, true);
       document.addEventListener('transitionend', schedule, true);
-      window.addEventListener('resize', schedule, {passive:true});
-      window.addEventListener('orientationchange', function () { track(500); }, {passive:true});
+      window.addEventListener('resize', function () { refreshCandidates(); track(500); }, {passive:true});
+      window.addEventListener('orientationchange', function () { refreshCandidates(); track(500); }, {passive:true});
       window.addEventListener('scroll', schedule, true);
-      send();
-      setTimeout(send, 180);
+      refreshCandidates();
+      setTimeout(refreshCandidates, 180);
     })();
     """
 
-    private let miniGlass = UIVisualEffectView(effect: nil)
-    private let controlGlass = UIVisualEffectView(effect: nil)
+    private let glassContainer = UIVisualEffectView(effect: nil)
+    private var glassViews: [String: UIVisualEffectView] = [:]
+    private var usesGlassContainer = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         isOpaque = false
         isUserInteractionEnabled = false
-        [miniGlass, controlGlass].forEach { glass in
-            glass.backgroundColor = .clear
-            glass.contentView.backgroundColor = .clear
-            glass.isUserInteractionEnabled = false
-            glass.clipsToBounds = true
-            glass.layer.cornerCurve = .continuous
-            addSubview(glass)
+        glassContainer.frame = bounds
+        glassContainer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        glassContainer.backgroundColor = .clear
+        glassContainer.contentView.backgroundColor = .clear
+        glassContainer.isUserInteractionEnabled = false
+        addSubview(glassContainer)
+
+        if #available(iOS 26.0, *) {
+            let effect = UIGlassContainerEffect()
+            effect.spacing = 10
+            glassContainer.effect = effect
+            usesGlassContainer = true
+        } else {
+            // iOS 18–25 don't provide Liquid Glass. Keep a native system material
+            // fallback instead of imitating Liquid Glass with custom CSS.
+            glassContainer.isHidden = true
         }
     }
 
@@ -123,34 +189,61 @@ final class NativeLiquidGlassOverlay: UIView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? { nil }
 
     func apply(_ payload: [String: Any]) {
-        update(miniGlass, data: payload["mini"], radius: 24)
-        update(controlGlass, data: payload["cbar"], radius: 28)
+        guard let surfaces = payload["surfaces"] as? [[String: Any]] else { return }
+        var activeIDs = Set<String>()
+        for surface in surfaces {
+            guard let id = surface["id"] as? String,
+                  let visible = surface["visible"] as? Bool, visible,
+                  let rawRect = surface["rect"] as? [String: Any],
+                  let x = (rawRect["x"] as? NSNumber)?.doubleValue,
+                  let y = (rawRect["y"] as? NSNumber)?.doubleValue,
+                  let width = (rawRect["width"] as? NSNumber)?.doubleValue,
+                  let height = (rawRect["height"] as? NSNumber)?.doubleValue,
+                  width > 0, height > 0 else { continue }
+            activeIDs.insert(id)
+            let glass = glassViews[id] ?? makeGlassView()
+            if glassViews[id] == nil {
+                glassViews[id] = glass
+                if usesGlassContainer {
+                    glassContainer.contentView.addSubview(glass)
+                } else {
+                    addSubview(glass)
+                }
+            }
+            update(glass, surface: surface, x: x, y: y, width: width, height: height)
+        }
+        for (id, glass) in glassViews where !activeIDs.contains(id) {
+            glass.isHidden = true
+        }
     }
 
-    private func update(_ glass: UIVisualEffectView, data: Any?, radius: CGFloat) {
-        guard let value = data as? [String: Any],
-              (value["visible"] as? Bool) == true,
-              let rawRect = value["rect"] as? [String: Any],
-              let x = (rawRect["x"] as? NSNumber)?.doubleValue,
-              let y = (rawRect["y"] as? NSNumber)?.doubleValue,
-              let width = (rawRect["width"] as? NSNumber)?.doubleValue,
-              let height = (rawRect["height"] as? NSNumber)?.doubleValue,
-              width > 0, height > 0 else {
-            glass.isHidden = true
-            return
+    private func makeGlassView() -> UIVisualEffectView {
+        let glass = UIVisualEffectView(effect: nil)
+        glass.backgroundColor = .clear
+        glass.contentView.backgroundColor = .clear
+        glass.isUserInteractionEnabled = false
+        glass.clipsToBounds = true
+        glass.layer.cornerCurve = .continuous
+        if #available(iOS 26.0, *) {
+            glass.effect = UIGlassEffect(style: .regular)
+        } else {
+            glass.effect = UIBlurEffect(style: .systemMaterial)
         }
+        return glass
+    }
 
+    private func update(_ glass: UIVisualEffectView, surface: [String: Any],
+                        x: Double, y: Double, width: Double, height: Double) {
         let frame = CGRect(x: x, y: y, width: width, height: height)
         glass.frame = frame
-        glass.alpha = CGFloat(max(0, min(1, (value["opacity"] as? NSNumber)?.doubleValue ?? 1)))
+        glass.alpha = CGFloat(max(0, min(1, (surface["opacity"] as? NSNumber)?.doubleValue ?? 1)))
         glass.isHidden = false
-        glass.layer.cornerRadius = radius
+        let radius = CGFloat(max(0, (surface["radius"] as? NSNumber)?.doubleValue ?? 16))
+        glass.layer.cornerRadius = min(radius, min(frame.width, frame.height) / 2)
 
-        // Leave transparent cutouts over the album tile, labels, and buttons so
-        // the native material never blurs the HTML controls underneath it.
         let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: frame.size),
-                                cornerRadius: radius)
-        if let holes = value["holes"] as? [[String: Any]] {
+                                cornerRadius: glass.layer.cornerRadius)
+        if let holes = surface["holes"] as? [[String: Any]] {
             for hole in holes {
                 guard let hx = (hole["x"] as? NSNumber)?.doubleValue,
                       let hy = (hole["y"] as? NSNumber)?.doubleValue,
@@ -171,13 +264,5 @@ final class NativeLiquidGlassOverlay: UIView {
         mask.path = path.cgPath
         mask.fillRule = .evenOdd
         glass.layer.mask = mask
-
-        if glass.effect == nil {
-            if #available(iOS 26.0, *) {
-                glass.effect = UIGlassEffect(style: .regular)
-            } else {
-                glass.effect = UIBlurEffect(style: .systemUltraThinMaterial)
-            }
-        }
     }
 }
