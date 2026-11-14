@@ -132,14 +132,23 @@ final class NativeLiquidGlassOverlay: UIView {
         requestAnimationFrame(tick);
       }
       var resizeObserver = window.ResizeObserver ? new ResizeObserver(schedule) : null;
-      var mutationObserver = window.MutationObserver ? new MutationObserver(function () {
-        refreshCandidates();
-        track(420);
+      var mutationObserver = window.MutationObserver ? new MutationObserver(function (records) {
+        var needsRefresh = false;
+        records.forEach(function (record) {
+          if (record.type === 'childList' || record.attributeName === 'class') {
+            needsRefresh = true;
+          } else if (record.attributeName === 'style' &&
+                     /backdrop-filter/i.test(record.target.getAttribute('style') || '')) {
+            needsRefresh = true;
+          }
+        });
+        if (needsRefresh) { refreshCandidates(); track(420); }
+        else schedule();
       }) : null;
       if (mutationObserver && document.body) {
         mutationObserver.observe(document.body, {
           subtree:true, childList:true, attributes:true,
-          attributeFilter:['class','style','hidden','open']
+          attributeFilter:['class','style']
         });
       }
       document.addEventListener('transitionrun', function (event) {
@@ -217,8 +226,11 @@ final class NativeLiquidGlassOverlay: UIView {
             }
             update(glass, surface: surface, x: x, y: y, width: width, height: height)
         }
-        for (id, glass) in glassViews where !activeIDs.contains(id) {
-            glass.isHidden = true
+        let staleIDs = glassViews.keys.filter { !activeIDs.contains($0) }
+        for id in staleIDs {
+            guard let glass = glassViews.removeValue(forKey: id) else { continue }
+            glass.effect = nil
+            glass.removeFromSuperview()
         }
     }
 
