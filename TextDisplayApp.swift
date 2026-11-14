@@ -19,23 +19,47 @@ struct ContentView: View {
 }
 
 struct LocalWebView: UIViewRepresentable {
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
 
-        // 移除了之前可能导致崩溃的 WebGL 强制开启代码
-
-        // 音乐目录：启动时确保 Documents/Music 存在（有了它，「文件」App 里才会出现本 App 的文件夹），
-        // 并把读取入口交给网页（window.webkit.messageHandlers.yiuMusic，网页端见 APP/ios-music.js）
+        // 原生音乐目录读取桥。
         MusicBridge.ensureMusicDir()
-        configuration.userContentController.addScriptMessageHandler(MusicBridge.shared, contentWorld: .page, name: "yiuMusic")
+        configuration.userContentController.addScriptMessageHandler(
+            MusicBridge.shared,
+            contentWorld: .page,
+            name: "yiuMusic"
+        )
+
+        // 原生 Liquid Glass：网页只负责报告两个玻璃区域与内容避让区，
+        // 材质由 UIKit 在 WKWebView 上方绘制，触摸仍完整落到网页控件。
+        configuration.userContentController.add(context.coordinator, name: "yiuLiquidGlass")
+        configuration.userContentController.addUserScript(
+            WKUserScript(
+                source: Self.nativeLiquidGlassScript,
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true
+            )
+        )
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
-
         webView.isOpaque = false
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+
+        let glassOverlay = NativeLiquidGlassOverlay(frame: .zero)
+        glassOverlay.translatesAutoresizingMaskIntoConstraints = false
+        webView.addSubview(glassOverlay)
+        NSLayoutConstraint.activate([
+            glassOverlay.leadingAnchor.constraint(equalTo: webView.leadingAnchor),
+            glassOverlay.trailingAnchor.constraint(equalTo: webView.trailingAnchor),
+            glassOverlay.topAnchor.constraint(equalTo: webView.topAnchor),
+            glassOverlay.bottomAnchor.constraint(equalTo: webView.bottomAnchor)
+        ])
+        context.coordinator.overlay = glassOverlay
 
         if let url = Bundle.main.url(forResource: "index", withExtension: "html") {
             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
@@ -45,6 +69,203 @@ struct LocalWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
+
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        uiView.stopLoading()
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "yiuLiquidGlass")
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "yiuMusic")
+        coordinator.overlay = nil
+    }
+
+    final class Coordinator: NSObject, WKScriptMessageHandler {
+        weak var overlay: NativeLiquidGlassOverlay?
+
+        func userContentController(_ userContentController: WKUserContentController,
+                                   didReceive message: WKScriptMessage) {
+            guard message.name == "yiuLiquidGlass",
+                  let payload = message.body as? [String: Any] else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.overlay?.apply(payload)
+            }
+        }
+    }
+
+    private static let nativeLiquidGlassScript = """
+    (function () {
+      var bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.yiuLiquidGlass;
+      if (!bridge || window.__yiuNativeGlassInstalled) return;
+      window.__yiuNativeGlassInstalled = true;
+      document.documentElement.classList.add('native-liquid-glass');
+
+      function rectOf(el) {
+        var r = el.getBoundingClientRect();
+        return { x:r.left, y:r.top, width:r.width, height:r.height };
+      }
+      function collect(el, forceVisible) {
+        if (!el) return { visible:false, rect:{x:0,y:0,width:0,height:0}, holes:[] };
+        var r = el.getBoundingClientRect();
+        var cs = getComputedStyle(el);
+        var visible = forceVisible && r.width > 0 && r.height > 0 &&
+          cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity || 1) > 0.02;
+        var holes = [];
+        if (visible) {
+          Array.prototype.forEach.call(el.children, function (child) {
+            var c = getComputedStyle(child), cr = child.getBoundingClientRect();
+            if (c.display === 'none' || c.visibility === 'hidden' || Number(c.opacity || 1) < 0.02 ||
+                cr.width < 1 || cr.height < 1) return;
+            holes.push(rectOf(child));
+          });
+        }
+        return { visible:!!visible, rect:{x:r.left,y:r.top,width:r.width,height:r.height}, holes:holes };
+      }
+      function send() {
+        try {
+          var mini = document.getElementById('mini');
+          var cbar = document.getElementById('cbar');
+          var open = !!(document.body && document.body.classList.contains('open'));
+          bridge.postMessage({
+            mini: collect(mini, true),
+            cbar: collect(cbar, open)
+          });
+        } catch (_) {}
+      }
+
+      var trackingUntil = 0, tracking = false, pending = 0;
+      function schedule() {
+        if (pending) return;
+        pending = requestAnimationFrame(function () { pending = 0; send(); });
+      }
+      function track(ms) {
+        trackingUntil = Math.max(trackingUntil, performance.now() + ms);
+        if (tracking) return;
+        tracking = true;
+        function tick() {
+          send();
+          if (performance.now() < trackingUntil) requestAnimationFrame(tick);
+          else tracking = false;
+        }
+        requestAnimationFrame(tick);
+      }
+
+      var mini = document.getElementById('mini');
+      var cbar = document.getElementById('cbar');
+      var hub = document.getElementById('hub');
+      if (window.ResizeObserver) {
+        var ro = new ResizeObserver(schedule);
+        [mini,cbar,hub].forEach(function (el) { if (el) ro.observe(el); });
+        [mini,cbar].forEach(function (el) {
+          if (el) Array.prototype.forEach.call(el.children, function (child) { ro.observe(child); });
+        });
+      }
+      if (window.MutationObserver) {
+        new MutationObserver(function () { schedule(); track(850); }).observe(document.body, {
+          attributes:true, attributeFilter:['class']
+        });
+        [mini,cbar].forEach(function (el) {
+          if (el) new MutationObserver(schedule).observe(el, {
+            attributes:true, childList:true, subtree:true, attributeFilter:['class','style']
+          });
+        });
+      }
+      document.addEventListener('transitionrun', function (event) {
+        var target = event.target;
+        if (target && target.closest && target.closest('#mini,#hub,#cbar')) track(900);
+      }, true);
+      document.addEventListener('transitionend', schedule, true);
+      window.addEventListener('resize', schedule, {passive:true});
+      window.addEventListener('orientationchange', function () { track(500); }, {passive:true});
+      window.addEventListener('scroll', schedule, true);
+      send();
+      setTimeout(send, 180);
+    })();
+    """
+}
+
+private final class NativeLiquidGlassOverlay: UIView {
+    private let miniGlass = UIVisualEffectView(effect: nil)
+    private let controlGlass = UIVisualEffectView(effect: nil)
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        isOpaque = false
+        isUserInteractionEnabled = false
+        [miniGlass, controlGlass].forEach { glass in
+            glass.backgroundColor = .clear
+            glass.contentView.backgroundColor = .clear
+            glass.isUserInteractionEnabled = false
+            glass.clipsToBounds = true
+            glass.layer.cornerCurve = .continuous
+            addSubview(glass)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // 玻璃层不参与命中测试，所有点击、拖动和长按继续由 WKWebView 内的原控件处理。
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? { nil }
+
+    func apply(_ payload: [String: Any]) {
+        update(miniGlass, data: payload["mini"], radius: 24)
+        update(controlGlass, data: payload["cbar"], radius: 28)
+    }
+
+    private func update(_ glass: UIVisualEffectView, data: Any?, radius: CGFloat) {
+        guard let value = data as? [String: Any],
+              (value["visible"] as? Bool) == true,
+              let rawRect = value["rect"] as? [String: Any],
+              let x = (rawRect["x"] as? NSNumber)?.doubleValue,
+              let y = (rawRect["y"] as? NSNumber)?.doubleValue,
+              let width = (rawRect["width"] as? NSNumber)?.doubleValue,
+              let height = (rawRect["height"] as? NSNumber)?.doubleValue,
+              width > 0, height > 0 else {
+            glass.isHidden = true
+            return
+        }
+
+        let frame = CGRect(x: x, y: y, width: width, height: height)
+        glass.frame = frame
+        glass.isHidden = false
+        glass.layer.cornerRadius = radius
+
+        // 避让网页里的封面、文字和按钮：玻璃只覆盖它们之间的空隙，不会把控件本身模糊掉。
+        let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: frame.size),
+                                cornerRadius: radius)
+        if let holes = value["holes"] as? [[String: Any]] {
+            for hole in holes {
+                guard let hx = (hole["x"] as? NSNumber)?.doubleValue,
+                      let hy = (hole["y"] as? NSNumber)?.doubleValue,
+                      let hw = (hole["width"] as? NSNumber)?.doubleValue,
+                      let hh = (hole["height"] as? NSNumber)?.doubleValue,
+                      hw > 0, hh > 0 else { continue }
+                let local = CGRect(x: hx - x, y: hy - y, width: hw, height: hh)
+                    .insetBy(dx: -1.5, dy: -1.5)
+                    .intersection(CGRect(origin: .zero, size: frame.size))
+                if !local.isNull && !local.isEmpty {
+                    path.append(UIBezierPath(roundedRect: local,
+                                             cornerRadius: min(14, min(local.width, local.height) / 2)))
+                }
+            }
+        }
+
+        let mask = CAShapeLayer()
+        mask.frame = glass.bounds
+        mask.path = path.cgPath
+        mask.fillRule = .evenOdd
+        glass.layer.mask = mask
+
+        if glass.effect == nil {
+            if #available(iOS 26.0, *) {
+                let effect = UIGlassEffect(style: .regular)
+                glass.effect = effect
+            } else {
+                // iOS 18–25 使用系统材质回退；iOS 26+ 使用上面的真正 Liquid Glass。
+                glass.effect = UIBlurEffect(style: .systemUltraThinMaterial)
+            }
+        }
+    }
 }
 
 // MARK: - Documents/Music 读取桥
