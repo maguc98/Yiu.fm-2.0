@@ -2493,12 +2493,14 @@ html body #hub.hub-busy,html body #hub.hub-busy *{transition:none!important}
    原生宿主通过 yiuLiquidGlass 同步两个区域的几何信息，并以 UIGlassEffect 绘制玻璃。
    这里仅移除网页重复绘制的底色与模糊；浏览器/PWA 没有原生桥时继续使用上面的 CSS 版本。 */
 html.native-liquid-glass #mini::before{
-  background:transparent!important;
+  /* Keep original artwork/gradients; only hand off the blur material. */
+  background-color:transparent!important;
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
   box-shadow:none!important;
 }
 html.native-liquid-glass #cbar{
-  background:transparent!important;
+  /* Do not reset background-image: existing artwork must remain visible. */
+  background-color:transparent!important;
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
   box-shadow:none!important;
 }
@@ -2517,16 +2519,14 @@ html.native-liquid-glass #cbar .cb.on{
    The browser keeps the original CSS material only when no native bridge is present.
    Background artwork blur (filter: blur) is intentionally untouched. */
 html.native-liquid-glass [data-yiu-glass-native~="self"]{
-  background:transparent!important;
-  background-image:none!important;
+  background-color:transparent!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
   box-shadow:none!important;
 }
 html.native-liquid-glass [data-yiu-glass-native~="before"]::before,
 html.native-liquid-glass [data-yiu-glass-native~="after"]::after{
-  background:transparent!important;
-  background-image:none!important;
+  background-color:transparent!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
   box-shadow:none!important;
