@@ -38,7 +38,9 @@
  汇报约定：只写在 Chromium 里看到的结果，不声称 iPhone 真机验证过。
 ================================================================================
 -->
+<script>window.__YIU_ACTIVE_SCRIPT={index:0,label:"./APP/cmd-early.js?v=20261114b",startedAt:performance.now()};</script>
 <script src="./APP/cmd-early.js?v=20261114b"></script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:1,label:"#yiuEarlyErrorCapture",startedAt:performance.now()};</script>
 <script id="yiuEarlyErrorCapture">
 /* 启动早期错误缓存：在日志模块加载前也保留异常原文与堆栈。 */
 (function(){
@@ -48,6 +50,7 @@
   function save(kind,detail){
     try{
       if(window.SysLog&&typeof window.SysLog.error==='function')return;
+      if(detail&&typeof detail==='object'&&!detail.activeScript)detail.activeScript=window.__YIU_ACTIVE_SCRIPT||null;
       queue.push({kind:kind,time:new Date().toISOString(),detail:detail});
       if(queue.length>80)queue.shift();
     }catch(_){}
@@ -65,7 +68,9 @@
   });
 })();
 </script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:2,label:"#inline",startedAt:performance.now()};</script>
 <script>window.__YIU_DIAGNOSTIC_TRACE = true;</script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:3,label:"#errTraceJS",startedAt:performance.now()};</script>
 <script id="errTraceJS">
 /* 诊断用：file:// 下外部脚本抛的错会被 WebKit 抹成「Script error. @:0」，看不到文件和行号。
    这里包住 rAF / setTimeout / setInterval / 事件回调 / Promise 拒绝，在错误被抹掉之前把真正的 message 和 stack 写进日志（前缀 [trace]），
@@ -434,6 +439,7 @@ html body #saWin .chip:active{scale:.97}
     </div>
   </div>
 </div>
+<script>window.__YIU_ACTIVE_SCRIPT={index:4,label:"#splashArtJS",startedAt:performance.now()};</script>
 <script id="splashArtJS">
 /* 开屏动画 + 表情自定义：呼吸 / 蹦出来 / 打拍子 / 晚安；眼睛、嘴巴、配饰、腮红可自由组合。
    设置存在 localStorage 的 splashCfg（设置 → 更多选项 → 开屏动画）。
@@ -656,6 +662,7 @@ function initWin(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initWin);else initWin();
 })();
 </script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:5,label:"#inline",startedAt:performance.now()};</script>
 <script>
 /* 启动封面：封面真正画出来后至少展示 1.4 秒，等主线程空下来，再从屏幕上任意一点开一个圆，向四周扩散，把封面“擦掉”。
    点一下封面可提前结束，圆从点击处扩散；window.__hideSplash(x, y) 可手动指定起点；
@@ -1350,7 +1357,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <!-- 引擎按需加载器：商籁 / 凝彩 / 绘光 的重型运行时脚本（含 Pixi）不再启动时全部下载，
          第一次真正用到时由各适配器通过 __EngineLoader.load(名字) 加载；适配器本身仍同步加载。
          回退到原来的「全部同步加载」：地址后加 ?eager=1，或控制台执行 localStorage.qt_eager_engines='1'（删掉即恢复） -->
-    <script id="engineLoaderJS">
+    <script>window.__YIU_ACTIVE_SCRIPT={index:6,label:"#engineLoaderJS",startedAt:performance.now()};</script>
+<script id="engineLoaderJS">
     (function(){
       var G={
         sonnet:['./APP/sonnet/sonnet.js?v=20261028b','./APP/sonnet-perf-governor.js?v=20261028a'],
@@ -1379,7 +1387,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       // 回退模式：在原位置用 document.write 同步写入，行为与改动前完全一致
       function eagerWrite(name){
         if(!eager)return;
-        G[name].forEach(function(u){document.write('<script src="'+u+'"><\/script>')});
+        G[name].forEach(function(u){document.write('<script>window.__YIU_ACTIVE_SCRIPT={index:7,label:"#inline",startedAt:performance.now()};</script>
+<script src="'+u+'"><\/script>')});
         cache[name]=Promise.resolve();
       }
       window.__EngineLoader={load:load,eager:eager,write:eagerWrite,groups:G};
@@ -1387,76 +1396,124 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     </script>
 
     <!-- 商籁 (Sonnet)：sonnet.js / sonnet-perf-governor.js 改为按需加载（见上） -->
-    <script>__EngineLoader.write('sonnet')</script>
-    <script src="./APP/sonnet-adapter.js?v=20261029a"></script>                <!-- Sonnet 适配器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:8,label:"#inline",startedAt:performance.now()};</script>
+<script>__EngineLoader.write('sonnet')</script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:9,label:"./APP/sonnet-adapter.js?v=20261029a",startedAt:performance.now()};</script>
+<script src="./APP/sonnet-adapter.js?v=20261029a"></script>                <!-- Sonnet 适配器 -->
     
     <!-- 凝彩 (Tempera)：tempera-boot / tempera-pixi / tempera 改为按需加载（见上） -->
-    <script>__EngineLoader.write('tempera')</script>
-    <script src="./APP/tempera-adapter.js?v=20261114a"></script>               <!-- Tempera 适配器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:10,label:"#inline",startedAt:performance.now()};</script>
+<script>__EngineLoader.write('tempera')</script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:11,label:"./APP/tempera-adapter.js?v=20261114a",startedAt:performance.now()};</script>
+<script src="./APP/tempera-adapter.js?v=20261114a"></script>               <!-- Tempera 适配器 -->
     
     <!-- 绘光 (Lumiere)：lumiere-pixi / lumiere / lumiere-importmap 改为按需加载（见上） -->
-    <script>__EngineLoader.write('lumiere')</script>
-    <script src="./APP/lumiere-adapter.js?v=20261105i"></script>               <!-- Lumiere 适配器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:12,label:"#inline",startedAt:performance.now()};</script>
+<script>__EngineLoader.write('lumiere')</script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:13,label:"./APP/lumiere-adapter.js?v=20261105i",startedAt:performance.now()};</script>
+<script src="./APP/lumiere-adapter.js?v=20261105i"></script>               <!-- Lumiere 适配器 -->
 
     <!-- 云阶 (Partita) -->
-    <script src="./APP/P1.js?v=1"></script>                                    <!-- Partita 核心引擎 (原partita) -->
-    <script src="./APP/partita-adapter.js?v=1"></script>                       <!-- Partita 适配器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:14,label:"./APP/P1.js?v=1",startedAt:performance.now()};</script>
+<script src="./APP/P1.js?v=1"></script>                                    <!-- Partita 核心引擎 (原partita) -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:15,label:"./APP/partita-adapter.js?v=1",startedAt:performance.now()};</script>
+<script src="./APP/partita-adapter.js?v=1"></script>                       <!-- Partita 适配器 -->
 
     <!-- 引擎统一管理器 -->
-    <script src="./APP/fume/fume.js?v=20261109b"></script>
-    <script src="./APP/fume-adapter.js?v=20261109b"></script>
-    <script src="./APP/visualizer-manager.js?v=20261109b"></script>            <!-- 特效切换总管 -->
-    <script src="./APP/lum-trace.js?v=1"></script>                             <!-- Lumiere 调试追踪 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:16,label:"./APP/fume/fume.js?v=20261109b",startedAt:performance.now()};</script>
+<script src="./APP/fume/fume.js?v=20261109b"></script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:17,label:"./APP/fume-adapter.js?v=20261109b",startedAt:performance.now()};</script>
+<script src="./APP/fume-adapter.js?v=20261109b"></script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:18,label:"./APP/visualizer-manager.js?v=20261109b",startedAt:performance.now()};</script>
+<script src="./APP/visualizer-manager.js?v=20261109b"></script>            <!-- 特效切换总管 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:19,label:"./APP/lum-trace.js?v=1",startedAt:performance.now()};</script>
+<script src="./APP/lum-trace.js?v=1"></script>                             <!-- Lumiere 调试追踪 -->
 
 
     <!-- ========================================== -->
     <!-- 2. 全局核心逻辑与底层支撑 (Core & Utils)   -->
     <!-- ========================================== -->
-    <script src="./APP/core.js?v=20261025a"></script>                          <!-- 全局变量、基础状态 -->
-    <script src="./APP/utils.js?v=20261021m"></script>                         <!-- 通用工具函数 -->
-    <script src="./APP/player.js?v=20261029a"></script>                        <!-- 播放器核心：音频、时间轴 -->
-    <script src="./APP/renderer.js?v=20261113a"></script>                      <!-- 渲染器：文字舞台挂载 -->
-    <script src="./APP/poster.js?v=20261021m"></script>                        <!-- 海报生成与排版 -->
-    <script src="./APP/timeline.js?v=20261031a"></script>                      <!-- 进度条与时间轴控制 -->
-    <script src="./APP/cards.js?v=20261021m"></script>                         <!-- 歌词卡片列表 -->
-    <script src="./APP/pkg-manager.js?v=20261023a"></script>                   <!-- 文件包管理 -->
-    <script src="./APP/stage.js?v=20261021m"></script>                         <!-- 舞台尺寸与逻辑 -->
-    <script src="./APP/background.js?v=20261026e"></script>                    <!-- 背景图片与颜色管理 -->
-    <script src="./APP/storage.js?v=20261021m"></script>                       <!-- 本地存储封装 -->
-    <script src="./APP/song-library.js?v=20261027c"></script>                  <!-- 歌曲库列表 -->
-    <script src="./APP/nolyric-note.js?v=20261027a"></script>                  <!-- 无歌词提示 -->
-    <script src="./APP/mini-player.js?v=20261031a"></script>
-    <script src="./APP/glass-adapt.js?v=20261031h"></script>                  <!-- 玻璃随背景亮度自适应（写 --ui-k） -->                   <!-- 迷你播放条 -->
-    <script src="./APP/hub-panel.js?v=20261021m"></script>                     <!-- 底部主控制面板 -->
-    <script src="./APP/menus.js?v=20261113b"></script>
-    <script src="./APP/theme-picker.js?v=20261113n"></script>                  <!-- 主题选择器 -->
-    <script src="./APP/control-center.js?v=20261114c"></script>                         <!-- 新版控制中心 -->
-    <script src="./APP/theme-editor.js?v=20261101a"></script>                  <!-- 主题编辑器 -->
-    <script src="./APP/textbar.js?v=20261021m"></script>                       <!-- 顶部文字输入栏 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:20,label:"./APP/core.js?v=20261025a",startedAt:performance.now()};</script>
+<script src="./APP/core.js?v=20261025a"></script>                          <!-- 全局变量、基础状态 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:21,label:"./APP/utils.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/utils.js?v=20261021m"></script>                         <!-- 通用工具函数 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:22,label:"./APP/player.js?v=20261029a",startedAt:performance.now()};</script>
+<script src="./APP/player.js?v=20261029a"></script>                        <!-- 播放器核心：音频、时间轴 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:23,label:"./APP/renderer.js?v=20261113a",startedAt:performance.now()};</script>
+<script src="./APP/renderer.js?v=20261113a"></script>                      <!-- 渲染器：文字舞台挂载 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:24,label:"./APP/poster.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/poster.js?v=20261021m"></script>                        <!-- 海报生成与排版 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:25,label:"./APP/timeline.js?v=20261031a",startedAt:performance.now()};</script>
+<script src="./APP/timeline.js?v=20261031a"></script>                      <!-- 进度条与时间轴控制 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:26,label:"./APP/cards.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/cards.js?v=20261021m"></script>                         <!-- 歌词卡片列表 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:27,label:"./APP/pkg-manager.js?v=20261023a",startedAt:performance.now()};</script>
+<script src="./APP/pkg-manager.js?v=20261023a"></script>                   <!-- 文件包管理 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:28,label:"./APP/stage.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/stage.js?v=20261021m"></script>                         <!-- 舞台尺寸与逻辑 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:29,label:"./APP/background.js?v=20261026e",startedAt:performance.now()};</script>
+<script src="./APP/background.js?v=20261026e"></script>                    <!-- 背景图片与颜色管理 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:30,label:"./APP/storage.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/storage.js?v=20261021m"></script>                       <!-- 本地存储封装 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:31,label:"./APP/song-library.js?v=20261027c",startedAt:performance.now()};</script>
+<script src="./APP/song-library.js?v=20261027c"></script>                  <!-- 歌曲库列表 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:32,label:"./APP/nolyric-note.js?v=20261027a",startedAt:performance.now()};</script>
+<script src="./APP/nolyric-note.js?v=20261027a"></script>                  <!-- 无歌词提示 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:33,label:"./APP/mini-player.js?v=20261031a",startedAt:performance.now()};</script>
+<script src="./APP/mini-player.js?v=20261031a"></script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:34,label:"./APP/glass-adapt.js?v=20261031h",startedAt:performance.now()};</script>
+<script src="./APP/glass-adapt.js?v=20261031h"></script>                  <!-- 玻璃随背景亮度自适应（写 --ui-k） -->                   <!-- 迷你播放条 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:35,label:"./APP/hub-panel.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/hub-panel.js?v=20261021m"></script>                     <!-- 底部主控制面板 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:36,label:"./APP/menus.js?v=20261113b",startedAt:performance.now()};</script>
+<script src="./APP/menus.js?v=20261113b"></script>
+    <script>window.__YIU_ACTIVE_SCRIPT={index:37,label:"./APP/theme-picker.js?v=20261113n",startedAt:performance.now()};</script>
+<script src="./APP/theme-picker.js?v=20261113n"></script>                  <!-- 主题选择器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:38,label:"./APP/control-center.js?v=20261114c",startedAt:performance.now()};</script>
+<script src="./APP/control-center.js?v=20261114c"></script>                         <!-- 新版控制中心 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:39,label:"./APP/theme-editor.js?v=20261101a",startedAt:performance.now()};</script>
+<script src="./APP/theme-editor.js?v=20261101a"></script>                  <!-- 主题编辑器 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:40,label:"./APP/textbar.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/textbar.js?v=20261021m"></script>                       <!-- 顶部文字输入栏 -->
 
 
     <!-- ========================================== -->
     <!-- 3. 开发者工具、启动与扩展                  -->
     <!-- ========================================== -->
-    <script src="./APP/devtools.js?v=20261114e"></script>                      <!-- 开发者选项与性能 -->
-    <script src="./APP/sys-log.js?v=20261114d"></script>                       <!-- 系统日志记录 -->
-    <script src="./APP/cmd-console.js?v=20261114b"></script>                   <!-- 命令窗口核心 -->
-    <script src="./APP/cmd-keyboard.js?v=20261031a"></script>                  <!-- 命令窗口自带键盘（须在 cmd-console 之后） -->
-    <script src="./APP/cmd-extra.js?v=20261114c"></script>                     <!-- 命令窗口扩展 -->
-    <script src="./APP/splash-cover.js?v=20261023a"></script>                  <!-- 开屏封面与动画 -->
-    <script src="./APP/changelog.js?v=20261021m"></script>                     <!-- 更新日志 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:41,label:"./APP/devtools.js?v=20261114e",startedAt:performance.now()};</script>
+<script src="./APP/devtools.js?v=20261114e"></script>                      <!-- 开发者选项与性能 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:42,label:"./APP/sys-log.js?v=20261114d",startedAt:performance.now()};</script>
+<script src="./APP/sys-log.js?v=20261114d"></script>                       <!-- 系统日志记录 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:43,label:"./APP/cmd-console.js?v=20261114b",startedAt:performance.now()};</script>
+<script src="./APP/cmd-console.js?v=20261114b"></script>                   <!-- 命令窗口核心 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:44,label:"./APP/cmd-keyboard.js?v=20261031a",startedAt:performance.now()};</script>
+<script src="./APP/cmd-keyboard.js?v=20261031a"></script>                  <!-- 命令窗口自带键盘（须在 cmd-console 之后） -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:45,label:"./APP/cmd-extra.js?v=20261114c",startedAt:performance.now()};</script>
+<script src="./APP/cmd-extra.js?v=20261114c"></script>                     <!-- 命令窗口扩展 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:46,label:"./APP/splash-cover.js?v=20261023a",startedAt:performance.now()};</script>
+<script src="./APP/splash-cover.js?v=20261023a"></script>                  <!-- 开屏封面与动画 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:47,label:"./APP/changelog.js?v=20261021m",startedAt:performance.now()};</script>
+<script src="./APP/changelog.js?v=20261021m"></script>                     <!-- 更新日志 -->
     
     <!-- 终极启动脚本 (必须在这里) -->
-    <script src="./APP/boot.js?v=20261114a"></script>                          <!-- 总启动脚本，唤醒一切 -->
-    <script src="./APP/partita-connect.js?v=1"></script>                       <!-- 云阶数据与时间轴桥接 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:48,label:"./APP/boot.js?v=20261114a",startedAt:performance.now()};</script>
+<script src="./APP/boot.js?v=20261114a"></script>                          <!-- 总启动脚本，唤醒一切 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:49,label:"./APP/partita-connect.js?v=1",startedAt:performance.now()};</script>
+<script src="./APP/partita-connect.js?v=1"></script>                       <!-- 云阶数据与时间轴桥接 -->
     
     <!-- 其他扩展模块 -->
-    <script src="./APP/ios-music.js?v=20261024b"></script>                     <!-- iOS 音乐本地读取 -->
-    <script src="./APP/local-import.js?v=20261024c"></script>                  <!-- 本地文件批量导入 -->
-    <script src="./APP/mode-pref.js?v=20261024a"></script>                     <!-- 模式偏好设置 -->
-    <script src="./APP/ai-ui.js?v=6"></script>                                 <!-- AI 灵动岛 UI -->
-    <script src="./APP/beat.js?v=4"></script>                                  <!-- 节拍可视化 -->
-    <script src="./APP/pause-doodle.js?v=20261028a"></script>                  <!-- 暂停涂鸦小游戏 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:50,label:"./APP/ios-music.js?v=20261024b",startedAt:performance.now()};</script>
+<script src="./APP/ios-music.js?v=20261024b"></script>                     <!-- iOS 音乐本地读取 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:51,label:"./APP/local-import.js?v=20261024c",startedAt:performance.now()};</script>
+<script src="./APP/local-import.js?v=20261024c"></script>                  <!-- 本地文件批量导入 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:52,label:"./APP/mode-pref.js?v=20261024a",startedAt:performance.now()};</script>
+<script src="./APP/mode-pref.js?v=20261024a"></script>                     <!-- 模式偏好设置 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:53,label:"./APP/ai-ui.js?v=6",startedAt:performance.now()};</script>
+<script src="./APP/ai-ui.js?v=6"></script>                                 <!-- AI 灵动岛 UI -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:54,label:"./APP/beat.js?v=4",startedAt:performance.now()};</script>
+<script src="./APP/beat.js?v=4"></script>                                  <!-- 节拍可视化 -->
+    <script>window.__YIU_ACTIVE_SCRIPT={index:55,label:"./APP/pause-doodle.js?v=20261028a",startedAt:performance.now()};</script>
+<script src="./APP/pause-doodle.js?v=20261028a"></script>                  <!-- 暂停涂鸦小游戏 -->
     
         <!-- ========================================== -->
     <!--        窗口结束                -->
@@ -1736,6 +1793,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div></div></div>
 </div>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:56,label:"#beatVizJS",startedAt:performance.now()};</script>
 <script id="beatVizJS">
 (function(){
   var viz=document.getElementById('beatViz'), cv=document.getElementById('bvCanvas'), orb=document.getElementById('bvOrb');
@@ -2435,6 +2493,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <style id="cbarSwapCSS">
 #cbar > .cb.cb-ghost{position:absolute!important;margin:0!important;pointer-events:none!important;z-index:1}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:57,label:"#cbarSwapJS",startedAt:performance.now()};</script>
 <script id="cbarSwapJS">
 (function(){
   var bar=document.getElementById('cbar'); if(!bar||!bar.animate) return;
@@ -2542,6 +2601,7 @@ html body #hback svg{transition:transform calc(.55s/var(--ui-spd,1)) var(--sprin
 html body #hback.hbt-on svg{transform:rotate(180deg)}
 
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:58,label:"#hbToolsJS",startedAt:performance.now()};</script>
 <script id="hbToolsJS">
 (function(){
   var back=document.getElementById('hback'), tools=document.getElementById('hbTools');
@@ -2685,6 +2745,7 @@ html body #hback.hbt-on svg{transform:rotate(180deg)}
 html.cm-open .aiui-pill{z-index:1!important}
 </style>
 <button id="cmdFab" type="button" aria-label="命令窗口"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3.5"/><path d="M7.5 10l3 2.5-3 2.5"/><path d="M13 15h3.5"/></svg><span>命令窗口</span></button>
+<script>window.__YIU_ACTIVE_SCRIPT={index:59,label:"#cmdFabJS",startedAt:performance.now()};</script>
 <script id="cmdFabJS">
 (function(){
   var b=document.getElementById('cmdFab'), t=document.getElementById('hbCmd'); if(!b) return;
@@ -2754,7 +2815,9 @@ html.cm-open .aiui-pill{z-index:1!important}
     <button id="bravais-fplay" type="button" aria-label="播放/暂停"></button>
   </div>
 </div>
+<script>window.__YIU_ACTIVE_SCRIPT={index:60,label:"./APP/bravais.js?v=20261026i",startedAt:performance.now()};</script>
 <script src="./APP/bravais.js?v=20261026i"></script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:61,label:"#fxScript",startedAt:performance.now()};</script>
 <script id="fxScript">
 /* 风格切换过渡：window.StyleFX.swap(commit) + 参数面板测量 + #styleSelTx 文字淡入。
    不碰 #splash、player.js、音频链路；所有时长都经 T() 除以 --ui-spd。 */
@@ -2904,6 +2967,7 @@ body.light-bg #qpop .qdef-row .chip{color:rgba(255,255,255,.6)}
 html body .cb:active,html body #miSet:active,html body #hbTools .hbt:active,html body #hback:active,html body .mi-b:active,html body #mini:active{scale:1}
 html body .cb,html body #miSet,html body #hbTools .hbt,html body #hback,html body .mi-b{touch-action:none}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:62,label:"#qPressJS",startedAt:performance.now()};</script>
 <script id="qPressJS">
 (function(){
   if(!Element.prototype.animate) return;
@@ -3037,6 +3101,7 @@ body.open:not(.mx):not(.immerse) #miSet,body.hubClosing:not(.mx):not(.immerse) #
 @keyframes iaLn{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 @media (prefers-reduced-motion:reduce){#lg .nb.ia svg,#lg .nb.ia svg *,#cbar .cb.ia svg,#cbar .cb.ia svg *,#cbar .cb.ia::after,#miSet.ia svg,#miSet.ia svg *{animation:none!important}}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:63,label:"#iconAnimJS",startedAt:performance.now()};</script>
 <script id="iconAnimJS">
 (function(){
   var last=new WeakMap();
@@ -3082,6 +3147,7 @@ body.open:not(.mx):not(.immerse) #miSet,body.hubClosing:not(.mx):not(.immerse) #
   new MutationObserver(function(ms){ ms.forEach(function(m){ var el=m.target; if(el.classList&&el.classList.contains('on')&&el.classList.contains('nb')) pulse(el); }); }).observe(lg,{attributes:true,subtree:true,attributeFilter:['class']});
 })();
 </script>
+<script>window.__YIU_ACTIVE_SCRIPT={index:64,label:"#defTabJS",startedAt:performance.now()};</script>
 <script id="defTabJS">
 (function(){
   var KM='yiu.defTab', KL='yiu.lastTab', BG='2';
@@ -3116,6 +3182,7 @@ html body.ai-blur .aiui-pill .aiui-glass,html body.ai-blur .aiui-pill.is-awake .
   background:var(--g-fill2)!important;-webkit-backdrop-filter:var(--g-blur)!important;backdrop-filter:var(--g-blur)!important;
   box-shadow:var(--g-rim),0 3px 10px rgba(0,0,0,.18)!important}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:65,label:"#aiStyleJS",startedAt:performance.now()};</script>
 <script id="aiStyleJS">
 (function(){
   var K='yiu.aiStyle', box=document.getElementById('qAiStyle');
@@ -3162,6 +3229,7 @@ html body .pkg-dlg.lpd{-webkit-backdrop-filter:var(--g-blur,blur(23px))!importan
 .pkg-dlg-mask.lpd-mask.show .pkg-dlg{opacity:1;transform:none}
 html body #hbTools .hbt.hbt-lp.lp-on{background:#ffd60a;color:#1c1c1e;box-shadow:0 2px 10px rgba(255,214,10,.35)}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:66,label:"#hbLpJS",startedAt:performance.now()};</script>
 <script id="hbLpJS">
 (function(){
   var btn=document.getElementById('hbLp'); if(!btn) return;
@@ -3232,6 +3300,7 @@ html body #hub.cb-hid .dock{flex-basis:calc(var(--cb-db,170px) + (1 - var(--cbk)
   max-height:calc(var(--cb-dm,190px) + (1 - var(--cbk)) * var(--cb-free,48px))!important}
 html body #hub.cb-hid :is(.dock,#cdock,#cbar){transition:none!important}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:67,label:"#cbarHideJS",startedAt:performance.now()};</script>
 <script id="cbarHideJS">
 (function(){
   var hub=document.getElementById('hub'), bar=document.getElementById('cbar'), cdock=document.getElementById('cdock'),
@@ -3290,6 +3359,7 @@ html body #hub.cb-hid :is(.dock,#cdock,#cbar){transition:none!important}
 <style id="lgTouchCSS">
 #lg .nb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:68,label:"#lgTouchJS",startedAt:performance.now()};</script>
 <script id="lgTouchJS">
 (function(){
   var lg=document.getElementById('lg'), thumb=document.getElementById('thumb'); if(!lg||!thumb) return;
@@ -3356,6 +3426,7 @@ html body .tb-btn:active{scale:.94}
 html body .tb-cancel{background:rgba(255,255,255,.14)!important;color:rgba(255,255,255,.88)!important;box-shadow:none!important}
 html body .tb-ok{background:linear-gradient(180deg,#6593ff,#3f6df0)!important;color:#fff!important;box-shadow:0 4px 14px rgba(63,109,240,.5),inset 0 1px 0 rgba(255,255,255,.35)!important}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:69,label:"#tbUnderIslandJS",startedAt:performance.now()};</script>
 <script id="tbUnderIslandJS">
 (function(){
   var bar=null, t=0, GAP=12, runRaf=0, lastBtnN=-1;
@@ -3433,6 +3504,7 @@ body.is-sonnet #sonnetHideWrap{grid-template-rows:0fr;opacity:0;visibility:hidde
 body.is-sonnet #sonnetHideWrap>.shw-in{translate:0 -8px}
 @media (prefers-reduced-motion:reduce){#sonnetHideWrap,#sonnetHideWrap>.shw-in{transition:none!important}}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:70,label:"#sonnetHideGrpJS",startedAt:performance.now()};</script>
 <script id="sonnetHideGrpJS">
 (function(){
   var st=document.getElementById('stage');if(!st)return;
@@ -3445,6 +3517,7 @@ body.is-sonnet #sonnetHideWrap>.shw-in{translate:0 -8px}
 })();
 </script>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:71,label:"#temperaBoxJS",startedAt:performance.now()};</script>
 <script id="temperaBoxJS">
 /* 凝彩：动效细节面板 → TemperaAdapter.updateConfig。选中凝彩（#stage.mode-tempera）时显示，并隐藏打散重组等其他参数盒 */
 (function(){
@@ -3489,6 +3562,7 @@ body.is-sonnet #sonnetHideWrap>.shw-in{translate:0 -8px}
 })();
 </script>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:72,label:"#lumiereBoxJS",startedAt:performance.now()};</script>
 <script id="lumiereBoxJS">
 /* 绘光：动效细节面板 → LumiereAdapter.updateConfig（实时 setTuning）。选中绘光（#stage.mode-lumiere）时显示 */
 (function(){
@@ -3530,6 +3604,7 @@ body.is-sonnet #sonnetHideWrap>.shw-in{translate:0 -8px}
 })();
 </script>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:73,label:"#partitaBoxJS",startedAt:performance.now()};</script>
 <script id="partitaBoxJS">
 /* 云阶：动效细节面板 → PartitaAdapter.updateConfig（实时）。选中云阶（#stage.mode-partita）时显示 */
 (function(){
@@ -3653,6 +3728,7 @@ body.light-bg #footerText{color:rgba(20,20,20,.6)}
 #ftTb.on{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.pg:not(.hide) #quickToggles .qt,#quickToggles .qt.fire::after,#quickToggles .qt.fire svg,#quickToggles .qt.fire svg path{animation:none!important}}
 </style>
+<script>window.__YIU_ACTIVE_SCRIPT={index:74,label:"#quickToggleJS",startedAt:performance.now()};</script>
 <script id="quickToggleJS">
 (function(){
   var box=document.getElementById('quickToggles');if(!box)return;
@@ -3790,6 +3866,7 @@ body.light-bg #footerText{color:rgba(20,20,20,.6)}
 })();
 </script>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:75,label:"#inline",startedAt:performance.now()};</script>
 <script>
 /* 进度条左右时间：直接读 #audio，不依赖 timeline.js；元素被删了会自动补回来 */
 (function(){
@@ -3812,6 +3889,7 @@ body.light-bg #footerText{color:rgba(20,20,20,.6)}
 </script>
 
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:76,label:"#chkEnforceJS",startedAt:performance.now()};</script>
 <script id="chkEnforceJS">
 /* 开关行兜底：文字在左、开关在右。用行内 !important 写死位置，防止别的规则（或手机上的差异）把开关挤回左边或和文字重叠 */
 (function(){
@@ -3849,6 +3927,7 @@ body.light-bg #footerText{color:rgba(20,20,20,.6)}
 })();
 </script>
 
+<script>window.__YIU_ACTIVE_SCRIPT={index:77,label:"#hubSizeJS",startedAt:performance.now()};</script>
 <script id="hubSizeJS">
 /* 控制窗口大小：点窗口左上角圆角 → 出现白色 R 角浮条（离圆角留 10px）；按住浮条拖动，窗口左上角跟着手指放大，右下角不动，松手后停留。
    左边、上边留安全距离；浮条双击还原；几秒不动自动淡出。只改宽高，字号和控件尺寸不变。 */
