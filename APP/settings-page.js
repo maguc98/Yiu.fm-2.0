@@ -9,7 +9,8 @@ function mount(){
   var root=d.getElementById('yiuSettingsDataRoot');
   var source=root&&root.querySelector('.yiu-settings-source');
   if(!root||!source||d.getElementById('yiuSettingsPage'))return false;
-  if(!d.getElementById('yiuFrameRateSettings')||!d.getElementById('devOptionsGroup'))return false;
+  // 帧率面板是可选扩展；Build 226 未在入口脚本中加载其独立模块，不能因此阻止整个设置页挂载。
+  if(!d.getElementById('devOptionsGroup'))return false;
 
   var oldSystem=source.querySelector(':scope > .grp:not(#betaBox)');
   var beta=source.querySelector('#betaBox');
