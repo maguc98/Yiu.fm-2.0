@@ -65,37 +65,44 @@ final class NativeLiquidGlassOverlay: UIView {
         var radius = parsePx(style.borderTopLeftRadius, 16);
         return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
       }
+      function inspectElement(el) {
+        if (!el || el.nodeType !== 1) return;
+        candidates = candidates.filter(function (item) { return item.el !== el; });
+        var previousMarker = el.getAttribute('data-yiu-glass-native');
+        // Temporarily remove our marker while measuring: native-mode CSS disables
+        // the original CSS blur after a surface has been discovered.
+        if (previousMarker !== null) el.removeAttribute('data-yiu-glass-native');
+        var own = getComputedStyle(el), kinds = [];
+        if (hasGlass(own)) {
+          kinds.push('self');
+          candidates.push({ el:el, pseudo:null, id:idFor(el) });
+        }
+        var before = getComputedStyle(el, '::before');
+        if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
+          kinds.push('before');
+          candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+        }
+        var after = getComputedStyle(el, '::after');
+        if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
+          kinds.push('after');
+          candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
+        }
+        if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
+        if (kinds.length && !observed.has(el) && resizeObserver) {
+          observed.add(el);
+          resizeObserver.observe(el);
+        }
+      }
+      function inspectTree(root) {
+        if (!root || root.nodeType !== 1) return;
+        inspectElement(root);
+        if (root.querySelectorAll) {
+          Array.prototype.forEach.call(root.querySelectorAll('*'), inspectElement);
+        }
+      }
       function refreshCandidates() {
         candidates = [];
-        var all = document.querySelectorAll('body *');
-        for (var i = 0; i < all.length; i++) {
-          var el = all[i], previousMarker = el.getAttribute('data-yiu-glass-native');
-          // Temporarily remove our marker while measuring: the native-mode CSS
-          // intentionally disables the original CSS blur after a surface is found.
-          if (previousMarker !== null) el.removeAttribute('data-yiu-glass-native');
-          var own = getComputedStyle(el), kinds = [];
-          if (hasGlass(own)) {
-            kinds.push('self');
-            candidates.push({ el:el, pseudo:null, id:idFor(el) });
-          }
-          var before = getComputedStyle(el, '::before');
-          if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
-            kinds.push('before');
-            candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
-          }
-          var after = getComputedStyle(el, '::after');
-          if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
-            kinds.push('after');
-            candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
-          }
-          if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
-        }
-        candidates.forEach(function (item) {
-          if (!observed.has(item.el) && window.ResizeObserver) {
-            observed.add(item.el);
-            resizeObserver.observe(item.el);
-          }
-        });
+        if (document.body) inspectTree(document.body);
         schedule();
       }
       function send() {
@@ -132,17 +139,25 @@ final class NativeLiquidGlassOverlay: UIView {
       }
       var resizeObserver = window.ResizeObserver ? new ResizeObserver(schedule) : null;
       var mutationObserver = window.MutationObserver ? new MutationObserver(function (records) {
-        var needsRefresh = false;
+        var needsTracking = false;
         records.forEach(function (record) {
-          if (record.type === 'childList' || record.attributeName === 'class') {
-            needsRefresh = true;
+          if (record.type === 'childList') {
+            Array.prototype.forEach.call(record.addedNodes, function (node) {
+              if (node.nodeType === 1) inspectTree(node);
+            });
+            needsTracking = true;
+          } else if (record.attributeName === 'class') {
+            // Ancestor classes can change descendant pseudo-element materials.
+            inspectTree(record.target);
+            needsTracking = true;
           } else if (record.attributeName === 'style' &&
-                     /backdrop-filter/i.test(record.target.getAttribute('style') || '')) {
-            needsRefresh = true;
+                     /backdrop-filter|--g-blur|--gb/i.test(record.target.getAttribute('style') || '')) {
+            inspectTree(record.target);
+            needsTracking = true;
           }
         });
-        if (needsRefresh) { refreshCandidates(); track(420); }
-        else schedule();
+        schedule();
+        if (needsTracking) track(420);
       }) : null;
       if (mutationObserver && document.body) {
         mutationObserver.observe(document.body, {
