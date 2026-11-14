@@ -714,6 +714,7 @@
     if (state.jank || state.fps) fpsTimer = setInterval(sampleFps, state.fps ? refreshRate : 1000);
   }
   function syncJankMonitoring() {
+    syncRafWrapper();
     if (state.jank || state.fps) {
       startFrameCounter();
       restartFpsTimer();
@@ -751,7 +752,7 @@
 
   // perf: 拦截 rAF 抓取卡顿溯源；统一帧率限制与卡顿检测共用同一层包装
   var rafSeq = 1e9, rafMap = Object.create(null);
-  window.requestAnimationFrame = function(cb) {
+  var wrappedRAF = function(cb) {
     if (!state.jank && !window.__rafCapActive) return origRAF.call(window, cb);
     var id = ++rafSeq;
     (function go() {
@@ -790,11 +791,24 @@
     })();
     return id;
   };
-  window.cancelAnimationFrame = function(id) {
+  var wrappedCancelRAF = function(id) {
     if (id in rafMap) { origCancel.call(window, rafMap[id]); delete rafMap[id]; }
     else origCancel.call(window, id);
   };
-  window.__rafWrapped = true;
+  /* 常态下不替换 WebKit 的全局 RAF/cancelRAF；仅卡顿溯源或限帧需要时短暂接管。 */
+  function syncRafWrapper() {
+    var needed = !!state.jank || !!window.__rafCapActive;
+    if (needed) {
+      if (window.requestAnimationFrame !== wrappedRAF) window.requestAnimationFrame = wrappedRAF;
+      if (window.cancelAnimationFrame !== wrappedCancelRAF) window.cancelAnimationFrame = wrappedCancelRAF;
+      window.__rafWrapped = true;
+    } else {
+      if (window.requestAnimationFrame === wrappedRAF) window.requestAnimationFrame = origRAF;
+      if (window.cancelAnimationFrame === wrappedCancelRAF) window.cancelAnimationFrame = origCancel;
+      window.__rafWrapped = false;
+    }
+  }
+  syncRafWrapper();
 
   // 4. 悬浮窗日志
   var floatLog = document.createElement('div');
