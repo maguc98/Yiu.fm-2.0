@@ -94,6 +94,24 @@
     var w=function(){ try{ return fn.apply(this,arguments) }catch(e){ report(e,tag); throw e } };
     w.__tr=1; return w;
   }
+  /* Safari/WebKit can hide the original exception when it escapes a native forEach callback.
+     Wrap collection callbacks while diagnostics are enabled so report() captures the real stack first. */
+  function traceForEach(proto,tag){
+    if(!proto||typeof proto.forEach!=='function'||proto.forEach.__yiuTraceForEach)return;
+    var raw=proto.forEach;
+    var traced=function(cb){
+      if(typeof cb!=='function')return raw.apply(this,arguments);
+      var args=[].slice.call(arguments); args[0]=wrap(cb,tag);
+      return raw.apply(this,args);
+    };
+    traced.__yiuTraceForEach=true;
+    try{proto.forEach=traced}catch(_){}
+  }
+  traceForEach(Array.prototype,'array.forEach');
+  try{traceForEach(window.NodeList&&NodeList.prototype,'nodeList.forEach')}catch(_){}
+  try{traceForEach(window.Map&&Map.prototype,'map.forEach')}catch(_){}
+  try{traceForEach(window.Set&&Set.prototype,'set.forEach')}catch(_){}
+
   var raf=window.requestAnimationFrame; if(raf) window.requestAnimationFrame=function(cb){ return raf.call(window,wrap(cb,'raf')) };
   var st0=window.setTimeout; window.setTimeout=function(cb){ var a=[].slice.call(arguments); a[0]=wrap(cb,'timeout'); return st0.apply(window,a) };
   var si0=window.setInterval; window.setInterval=function(cb){ var a=[].slice.call(arguments); a[0]=wrap(cb,'interval'); return si0.apply(window,a) };
