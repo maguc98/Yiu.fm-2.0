@@ -167,9 +167,9 @@ document.addEventListener("pointerdown",function(e){
     var qrm=$("qrstMoved");if(qrm)qrm.onclick=function(){
       // 恢复系统设置的默认值：界面动画 1×、性能优化开启；高光与阴影由当前版本固定开启。
       setUiSpdPct(100);
-      var perf=$("performanceMode");
+      var perf=document.getElementById("performanceMode");
       if(perf){perf.checked=true;perf.dispatchEvent(new Event("change",{bubbles:true}))}
-      var glow=$("uiH"),shadow=$("uiS");
+      var glow=document.getElementById("uiH"),shadow=document.getElementById("uiS");
       if(glow){glow.checked=true;glow.dispatchEvent(new Event("change",{bubbles:true}))}
       if(shadow){shadow.checked=true;shadow.dispatchEvent(new Event("change",{bubbles:true}))}
     };
