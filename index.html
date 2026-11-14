@@ -86,6 +86,15 @@
       if(n>=40) return;
       var msg=(e&&e.message)||String(e), st=String((e&&e.stack)||'').split('\n').slice(0,6).join(' | ');
       var key=msg+'|'+st.slice(0,160); if(seen[key]) return; seen[key]=1; n++;
+      /* 直接写入早期异常队列：启动期 console.error 可能尚未被日志系统接管，
+         只写控制台会导致 /early 看不到真正的回调异常。 */
+      try{
+        var q=window.__YiuEarlyErrors=window.__YiuEarlyErrors||[];
+        q.push({kind:'callback-trace',time:new Date().toISOString(),detail:{
+          message:msg,tag:tag,stack:String((e&&e.stack)||''),activeScript:window.__YIU_ACTIVE_SCRIPT||null
+        }});
+        if(q.length>80)q.shift();
+      }catch(_){}
       console.error('[trace]['+tag+'] '+msg+' :: '+st);
     }catch(_){}
   }
