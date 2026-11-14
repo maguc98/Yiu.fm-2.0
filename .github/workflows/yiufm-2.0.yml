@@ -373,7 +373,7 @@ jobs:
                   raise SystemExit(check.returncode)
           print(f"Verified {len(parser.items)} executable inline scripts")
           PY
-          node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs
+          node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs YiuFM/Tests/devtools-raf-lifecycle.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
