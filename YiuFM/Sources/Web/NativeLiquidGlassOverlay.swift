@@ -604,7 +604,9 @@ final class NativeLiquidGlassOverlay: UIView {
         mask.frame = maskView.bounds
         mask.path = path.cgPath
         mask.fillColor = UIColor(white: 1, alpha: opacity).cgColor
+        // Keep the alpha mask attached. Clearing glass.layer.mask here would
+        // detach the very cut-outs that protect WKWebView foreground content,
+        // leaving the native material covering text, artwork and controls.
         glass.mask = maskView
-        glass.layer.mask = nil
     }
 }
