@@ -50,26 +50,79 @@ final class NativeLiquidGlassOverlay: UIView {
         return Math.max(0, Math.min(1, opacity));
       }
       function holesOf(el, rect) {
-        var holes = [];
-        Array.prototype.forEach.call(el.childNodes || [], function (child) {
-          if (child.nodeType === 3) {
-            if (!String(child.textContent || '').trim()) return;
+        // Cut out every visible content region so the native material never
+        // covers original UI: nested labels, controls, artwork, SVG/canvas,
+        // images, badges and text all remain rendered by WKWebView.
+        var holes = [], seen = new Set();
+        function addRect(r) {
+          if (!r || r.width < 1 || r.height < 1) return;
+          var clipped = {
+            x: Math.max(rect.x, r.left),
+            y: Math.max(rect.y, r.top),
+            right: Math.min(rect.x + rect.width, r.right),
+            bottom: Math.min(rect.y + rect.height, r.bottom)
+          };
+          clipped.width = clipped.right - clipped.x;
+          clipped.height = clipped.bottom - clipped.y;
+          if (clipped.width > 0.5 && clipped.height > 0.5) {
+            holes.push({ x:clipped.x, y:clipped.y, width:clipped.width, height:clipped.height });
+          }
+        }
+        function walk(node) {
+          if (!node || seen.has(node)) return;
+          seen.add(node);
+          if (node.nodeType === 3) {
+            if (!String(node.textContent || '').trim()) return;
             try {
               var range = document.createRange();
-              range.selectNode(child);
-              Array.prototype.forEach.call(range.getClientRects(), function (r) {
-                if (r.width > 0 && r.height > 0) holes.push({ x:r.left, y:r.top, width:r.width, height:r.height });
-              });
+              range.selectNode(node);
+              Array.prototype.forEach.call(range.getClientRects(), addRect);
             } catch (_) {}
             return;
           }
-          if (child.nodeType !== 1) return;
-          var s = getComputedStyle(child), cr = child.getBoundingClientRect();
+          if (node.nodeType !== 1) return;
+          var s = getComputedStyle(node);
           if (s.display === 'none' || s.visibility === 'hidden' ||
-              Number(s.opacity || 1) < 0.02 || cr.width < 1 || cr.height < 1) return;
-          holes.push({ x:cr.left, y:cr.top, width:cr.width, height:cr.height });
+              Number(s.opacity || 1) < 0.02) return;
+          var r = node.getBoundingClientRect();
+          // A real box protects its entire original contents (including
+          // backgrounds, images and custom controls); display:contents has no
+          // box, so descend and protect its children individually.
+          if (s.display !== 'contents' && r.width > 0.5 && r.height > 0.5) {
+            addRect(r);
+            return;
+          }
+          Array.prototype.forEach.call(node.childNodes || [], walk);
+        }
+        Array.prototype.forEach.call(el.childNodes || [], walk);
+
+        // Merge intersecting cutouts. With an even-odd mask, overlapping
+        // holes would otherwise toggle back to glass and hide content again.
+        var merged = [];
+        holes.forEach(function (hole) {
+          var current = { x:hole.x, y:hole.y, width:hole.width, height:hole.height };
+          var changed = true;
+          while (changed) {
+            changed = false;
+            for (var i = merged.length - 1; i >= 0; i--) {
+              var other = merged[i];
+              var separated = current.x > other.x + other.width ||
+                current.x + current.width < other.x ||
+                current.y > other.y + other.height ||
+                current.y + current.height < other.y;
+              if (!separated) {
+                var left = Math.min(current.x, other.x), top = Math.min(current.y, other.y);
+                var right = Math.max(current.x + current.width, other.x + other.width);
+                var bottom = Math.max(current.y + current.height, other.y + other.height);
+                current = { x:left, y:top, width:right-left, height:bottom-top };
+                merged.splice(i, 1);
+                changed = true;
+              }
+            }
+          }
+          merged.push(current);
         });
-        return holes;
+        return merged;
       }
       function descriptor(el, id, rect, style) {
         var opacity = visibleThroughAncestors(el);
