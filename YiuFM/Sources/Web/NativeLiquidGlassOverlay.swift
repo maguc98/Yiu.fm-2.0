@@ -77,6 +77,13 @@ final class NativeLiquidGlassOverlay: UIView {
         var radius = parsePx(style.borderTopLeftRadius, 16);
         return { id:id, visible:true, opacity:opacity, radius:radius, rect:rect, holes:holesOf(el, rect) };
       }
+      function hasNativeGlassAncestor(el) {
+        for (var parent = el.parentElement; parent && parent !== document.documentElement; parent = parent.parentElement) {
+          var marker = parent.getAttribute('data-yiu-glass-native') || '';
+          if (/(^|\\s)(self|before|after)(\\s|$)/.test(marker)) return true;
+        }
+        return false;
+      }
       function inspectElement(el) {
         if (!el || el.nodeType !== 1) return;
         candidates = candidates.filter(function (item) { return item.el !== el; });
@@ -84,23 +91,34 @@ final class NativeLiquidGlassOverlay: UIView {
         // Temporarily remove our marker while measuring: native-mode CSS disables
         // the original CSS blur after a surface has been discovered.
         if (previousMarker !== null) el.removeAttribute('data-yiu-glass-native');
-        var own = getComputedStyle(el), kinds = [];
+        var nested = hasNativeGlassAncestor(el), own = getComputedStyle(el), kinds = [];
         if (hasGlass(own)) {
-          kinds.push('self');
-          candidates.push({ el:el, pseudo:null, id:idFor(el) });
+          if (nested) kinds.push('flat-self');
+          else {
+            kinds.push('self');
+            candidates.push({ el:el, pseudo:null, id:idFor(el) });
+          }
         }
+        var parentHasGlass = nested || kinds.indexOf('self') >= 0;
         var before = getComputedStyle(el, '::before');
         if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
-          kinds.push('before');
-          candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+          if (parentHasGlass) kinds.push('flat-before');
+          else {
+            kinds.push('before');
+            candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+          }
         }
         var after = getComputedStyle(el, '::after');
         if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
-          kinds.push('after');
-          candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
+          if (parentHasGlass) kinds.push('flat-after');
+          else {
+            kinds.push('after');
+            candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
+          }
         }
         if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
-        if (kinds.length && !observed.has(el) && resizeObserver) {
+        if (kinds.some(function (kind) { return kind === 'self' || kind === 'before' || kind === 'after'; }) &&
+            !observed.has(el) && resizeObserver) {
           observed.add(el);
           resizeObserver.observe(el);
         }
