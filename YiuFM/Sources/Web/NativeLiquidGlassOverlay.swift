@@ -378,10 +378,20 @@ final class NativeLiquidGlassOverlay: UIView {
                 }
             }
         }
+        // UIVisualEffectView has its own backdrop-compositing pipeline.
+        // Use UIView.maskView so the alpha cut-outs are applied to the complete
+        // visual effect output, rather than relying on a mask attached directly
+        // to the effect view's backing layer.
         let mask = CAShapeLayer()
         mask.frame = glass.bounds
         mask.path = path.cgPath
         mask.fillRule = .evenOdd
-        glass.layer.mask = mask
+        mask.fillColor = UIColor.white.cgColor
+        let maskView = UIView(frame: glass.bounds)
+        maskView.backgroundColor = .clear
+        maskView.isUserInteractionEnabled = false
+        maskView.layer.addSublayer(mask)
+        glass.maskView = maskView
+        glass.layer.mask = nil
     }
 }
