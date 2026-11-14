@@ -69,22 +69,27 @@ final class NativeLiquidGlassOverlay: UIView {
         candidates = [];
         var all = document.querySelectorAll('body *');
         for (var i = 0; i < all.length; i++) {
-          var el = all[i], own = getComputedStyle(el);
+          var el = all[i], previousMarker = el.getAttribute('data-yiu-glass-native');
+          // Temporarily remove our marker while measuring: the native-mode CSS
+          // intentionally disables the original CSS blur after a surface is found.
+          if (previousMarker !== null) el.removeAttribute('data-yiu-glass-native');
+          var own = getComputedStyle(el), kinds = [];
           if (hasGlass(own)) {
-            el.setAttribute('data-yiu-glass-native', '');
+            kinds.push('self');
             candidates.push({ el:el, pseudo:null, id:idFor(el) });
-            continue;
+          } else {
+            var before = getComputedStyle(el, '::before');
+            if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
+              kinds.push('before');
+              candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
+            }
+            var after = getComputedStyle(el, '::after');
+            if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
+              kinds.push('after');
+              candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
+            }
           }
-          var before = getComputedStyle(el, '::before');
-          if (before && before.content !== 'none' && before.content !== 'normal' && hasGlass(before)) {
-            el.setAttribute('data-yiu-glass-native', '');
-            candidates.push({ el:el, pseudo:'::before', id:idFor(el, 'before') });
-          }
-          var after = getComputedStyle(el, '::after');
-          if (after && after.content !== 'none' && after.content !== 'normal' && hasGlass(after)) {
-            el.setAttribute('data-yiu-glass-native', '');
-            candidates.push({ el:el, pseudo:'::after', id:idFor(el, 'after') });
-          }
+          if (kinds.length) el.setAttribute('data-yiu-glass-native', kinds.join(' '));
         }
         candidates.forEach(function (item) {
           if (!observed.has(item.el) && window.ResizeObserver) {
