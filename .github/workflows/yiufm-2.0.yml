@@ -409,6 +409,7 @@ jobs:
           test -s "$WEB_ROOT/APP/partita-vendor.js"
           test -s "$WEB_ROOT/APP/visualizer-manager.js"
           grep -q "devFrameLimit" "$WEB_ROOT/APP/devtools.js"
+          grep -q "var cap = window.__rafCapActive && window.__rafCap;" "$WEB_ROOT/APP/devtools.js"
           grep -q "window.__YiuEarlyErrors" "$WEB_ROOT/APP/cmd-console.js"
           grep -q "stack" "$WEB_ROOT/APP/cmd-early.js"
           grep -q 'src="./APP/devtools.js?v=' "$WEB_ROOT/index.html"
