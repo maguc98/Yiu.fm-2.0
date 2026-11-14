@@ -33,19 +33,22 @@
     showText: true, lyricsFontScale: 1
   };
   var lastExtDriveAt = 0;
+  var lastClockFeedAt = 0;
   // Keep Partita's clock on the player's authoritative timeline.
-  // Framer Motion owns the display-frame animation loop; advancing this MotionValue
-  // on a second 60Hz RAF makes every word/chunk subscriber run twice as often
-  // without improving Framer Motion's own interpolation. The player already
-  // supplies clock samples at ~30Hz, which is sufficient for state thresholds.
+  // The player loop may run at 60Hz, but MotionValue subscribers only need
+  // ~30Hz samples; Framer Motion owns interpolation between those samples.
+  // Line changes and real seeks bypass the throttle for immediate synchronization.
   function clockNow() {
     return (window.performance && typeof window.performance.now === 'function')
       ? window.performance.now() : Date.now();
   }
-  function feedSmoothClock(ct) {
+  function feedSmoothClock(ct, force) {
     if (!currentTimeObj) return;
+    var now = clockNow();
+    if (!force && lastClockFeedAt && now - lastClockFeedAt < 1000 / 30) return;
     var prev = currentTimeObj.get();
     if (Math.abs(ct - prev) > 0.0005) currentTimeObj.set(ct);
+    lastClockFeedAt = now;
   }
   var fitByLine = {}, fitPass = {}, fitTimer = 0;   // 每句歌词的「防出屏」修正：{k: 字号倍率, cap: 左右错位上限(px)}
   var fontComp = 1;   // 低分辨率模式下，如果浏览器没有把 vw 一起缩小，用它补偿字号
@@ -319,12 +322,10 @@
         if (typeof ct !== 'number' || !isFinite(ct)) return;
         var prev = currentTimeObj.get();
         // Ignore only tiny backward jitter; a real backward movement is a seek.
-        if (ct < prev && prev - ct < 0.03) {
-          feedSmoothClock(Math.max(ct, prev));
-        } else {
-          feedSmoothClock(ct);
-        }
+        if (ct < prev && prev - ct < 0.03) ct = Math.max(ct, prev);
         var idx = findIndex(ct);
+        var seek = ct < prev - 0.03 || Math.abs(ct - prev) > 0.12;
+        feedSmoothClock(ct, idx !== lineIndex || seek);
         if (idx !== lineIndex) {
           lineIndex = idx;
           this._render();
