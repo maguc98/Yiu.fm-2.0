@@ -29,15 +29,22 @@ final class NativeLiquidGlassOverlay: UIView {
       }
       function pseudoRect(el, pseudo, style) {
         var r = el.getBoundingClientRect();
+        // Computed pseudo dimensions are in the host's untransformed CSS
+        // coordinate space, while getBoundingClientRect() is post-transform.
+        // Convert offsets and dimensions using the host's current scale so a
+        // scaled/animating panel does not leave its native glass out of sync.
+        var layoutWidth = el.offsetWidth || r.width || 1;
+        var layoutHeight = el.offsetHeight || r.height || 1;
+        var sx = r.width / layoutWidth, sy = r.height / layoutHeight;
         var left = parsePx(style.left, 0), right = parsePx(style.right, 0);
         var top = parsePx(style.top, 0), bottom = parsePx(style.bottom, 0);
-        var width = parsePx(style.width, Math.max(0, r.width - left - right));
-        var height = parsePx(style.height, Math.max(0, r.height - top - bottom));
-        var x = r.left + left, y = r.top + top;
-        var move = String(style.translate || '').split(/\\s+/);
-        x += parsePx(move[0], 0);
-        y += parsePx(move[1], 0);
-        return { x:x, y:y, width:width, height:height };
+        var width = parsePx(style.width, Math.max(0, layoutWidth - left - right));
+        var height = parsePx(style.height, Math.max(0, layoutHeight - top - bottom));
+        var x = r.left + left * sx, y = r.top + top * sy;
+        var move = String(style.translate || '').split(/\s+/);
+        x += parsePx(move[0], 0) * sx;
+        y += parsePx(move[1], 0) * sy;
+        return { x:x, y:y, width:width * sx, height:height * sy };
       }
       function visibleThroughAncestors(el) {
         var opacity = 1;
