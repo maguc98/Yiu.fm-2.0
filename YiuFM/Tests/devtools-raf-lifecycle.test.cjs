@@ -19,7 +19,7 @@ function createHarness() {
   const cancelled = [];
   const window = {
     __rafCapActive: false,
-    __rafLimitFps: 60,
+    __rafLimitFps: 30, // cap must stay inactive when only jank tracing is enabled
     __lowPower: false
   };
   const origRAF = callback => {
