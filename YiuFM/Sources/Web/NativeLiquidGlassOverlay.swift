@@ -138,7 +138,7 @@ final class NativeLiquidGlassOverlay: UIView {
           // Computed CSS colors are normalized to rgb()/rgba() by WebKit.
           function alphaOf(color) {
             if (!color || color === 'transparent') return 0;
-            var match = color.match(/^rgba?\((.*)\)$/i);
+            var match = color.match(/^rgba?[(](.*)[)]$/i);
             if (!match) return 1;
             var parts = match[1].split(/[\\s,\\/]+/).filter(Boolean);
             return parts.length >= 4 ? Math.max(0, Math.min(1, parseFloat(parts[3]) || 0)) : 1;
