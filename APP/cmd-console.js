@@ -2067,21 +2067,30 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
   });
 
   /* ---------- /err 错误收集（从脚本加载起一直在记） ---------- */
-  var errs = ((window.__cmEarly && window.__cmEarly.errs) || []).slice(-100), errLive = false;   // 命令窗口加载之前的报错，由 cmd-early.js 记下
+  var errs = ((window.__cmEarly && window.__cmEarly.errs) || []).slice(-100).map(function (x) { return { t: x.t || Date.now(), msg: x.msg || '启动异常', src: x.src || '', file: x.file || '', line: x.line || 0, column: x.column || 0, stack: x.stack || '' }; }), errLive = false;
+  /* 合并 index.html 在 sys-log.js 加载前保存的异常。之前这份队列只进系统日志，/err 看不到。 */
+  (window.__YiuEarlyErrors || []).forEach(function (x) {
+    var d = x.detail || {}, msg = d.message || ('启动早期异常：' + (x.kind || 'unknown'));
+    var src = d.file ? d.file + ':' + (d.line || 0) + ':' + (d.column || 0) : (d.url || '');
+    var key = msg + '|' + src;
+    if (!errs.some(function (old) { return old.msg + '|' + (old.src || '') === key; })) errs.push({ t: x.time ? (Date.parse(x.time) || Date.now()) : Date.now(), msg: msg, src: src, file: d.file || d.url || '', line: d.line || 0, column: d.column || 0, stack: d.stack || '' });
+  });
+  errs.sort(function (a, b) { return a.t - b.t; }); if (errs.length > 100) errs = errs.slice(-100);
   if (window.__cmEarly) window.__cmEarly.errOn = false;
-  function errPush(msg, src) {
-    var e = { t: Date.now(), msg: msg, src: src || '' };
+  function errPush(msg, src, extra) {
+    var e = Object.assign({ t: Date.now(), msg: msg, src: src || '', file: '', line: 0, column: 0, stack: '' }, extra || {});
     errs.push(e); if (errs.length > 100) errs.shift();
-    if (errLive) print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : ''), 'err');
+    if (errLive) print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : '') + (e.stack ? '\n' + e.stack : ''), 'err');
   }
   window.addEventListener('error', function (e) {
     var t = e.target;
-    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), ''); return; }
-    errPush(e.message || fmt(e.error), e.filename ? String(e.filename).split('/').pop() + ':' + e.lineno + ':' + e.colno : '');
+    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), '', { file: t.src || t.href, tag: t.nodeName || '' }); return; }
+    var file = e.filename || '', line = e.lineno || 0, column = e.colno || 0, stack = e.error && e.error.stack ? String(e.error.stack) : '';
+    errPush(e.message || fmt(e.error), file ? file + ':' + line + ':' + column : '', { file: file, line: line, column: column, stack: stack });
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
-    var r = e.reason;
-    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : fmt(r)), r && r.stack ? String(r.stack).split('\n')[1] || '' : '');
+    var r = e.reason, stack = r && r.stack ? String(r.stack) : '';
+    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : fmt(r)), stack ? (stack.split('\n')[1] || '') : '', { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0 });
   });
   register('err', {
     group: '开发者', desc: '页面里的报错和未捕获的 Promise 拒绝（不用开 /console 也会一直记）', usage: '/err [条数|clear|live [on|off]]',
