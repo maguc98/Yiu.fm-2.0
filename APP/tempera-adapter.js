@@ -183,7 +183,15 @@
     } catch (_) {}
   }
   window.addEventListener('unhandledrejection', function (e) { dumpErr('UNHANDLED', e.reason); });
-  window.addEventListener('error', function (e) { dumpErr('ERR', e.message + ' @' + e.filename + ':' + e.lineno); });
+  window.addEventListener('error', function (e) {
+    var target = e && e.target;
+    if (target && target !== window && target.nodeType === 1) {
+      dumpErr('RESOURCE', '资源加载失败: ' + (target.src || target.href || target.nodeName || 'unknown'));
+      return;
+    }
+    var err = e && e.error;
+    dumpErr('ERR', err && err.stack ? err : ((e && e.message) || 'Unknown error') + ' @' + ((e && e.filename) || '') + ':' + ((e && e.lineno) || 0) + ':' + ((e && e.colno) || 0));
+  }, true);
 
   function chainInfo(o) {
     var a = 1, bad = '', d = 0;
