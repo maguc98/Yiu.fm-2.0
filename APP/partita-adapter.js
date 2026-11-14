@@ -215,10 +215,13 @@
     return B;
   }
 
+  // 歌词时间轴有序：用二分查找，避免每帧从第一句线性扫描。
   function findIndex(ct) {
-    var r = -1;
-    for (var i = 0; i < lastLines.length; i++) {
-      if (lastLines[i].startTime <= ct) r = i; else break;
+    var lo = 0, hi = lastLines.length - 1, r = -1;
+    while (lo <= hi) {
+      var mid = (lo + hi) >> 1;
+      if (lastLines[mid].startTime <= ct) { r = mid; lo = mid + 1; }
+      else hi = mid - 1;
     }
     return r;
   }
