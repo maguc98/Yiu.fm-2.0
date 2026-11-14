@@ -373,7 +373,7 @@ final class NativeLiquidGlassOverlay: UIView {
         maskView.isUserInteractionEnabled = false
         maskView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         maskView.layer.addSublayer(mask)
-        glass.maskView = maskView
+        glass.mask = maskView
         glass.layer.mask = nil
     }
 }
