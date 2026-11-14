@@ -291,6 +291,26 @@ jobs:
           grep -q 'ticker.maxFPS = 30' YiuFM/Resources/Web/APP/tempera-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-adapter.js
           node --check YiuFM/Resources/Web/APP/partita-connect.js
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          root = Path("YiuFM/Resources/Web")
+          html = (root / "index.html").read_text(encoding="utf-8")
+          missing = []
+          for attr, value in re.findall(r'\\b(src|href)\\s*=\\s*["\\']([^"\\']+)["\\']', html, re.I):
+              if not value.startswith("./"):
+                  continue
+              rel = urlsplit(value).path
+              target = (root / rel).resolve()
+              if not target.exists() or root.resolve() not in target.parents and target != root.resolve():
+                  missing.append((attr, value))
+          if missing:
+              for attr, value in missing:
+                  print(f"Missing local HTML resource: {attr}={value}")
+              raise SystemExit(1)
+          print("Verified all relative src/href resources in index.html")
+          PY
           grep -q '}, 33);' YiuFM/Resources/Web/APP/partita-connect.js
           node --check YiuFM/Resources/Web/APP/P1.js
           node --check YiuFM/Resources/Web/APP/song-library.js
