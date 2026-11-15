@@ -120,8 +120,10 @@ final class NativeWebContainer: UIView {
             let foreground = (settings["color"] as? String).flatMap { Self.cssColor($0) }
             nativeSettingsButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
                                         visible: visible, opacity: opacity, tint: tint, foreground: foreground)
+            setNativeFloatingPresentation(id: "miSet", active: visible)
         } else {
             nativeSettingsButton.isHidden = true
+            setNativeFloatingPresentation(id: "miSet", active: false)
         }
         if nativeFloatingToolsRenderingEnabled {
             let tools = payload["floatingTools"] as? [String: Any] ?? ["open": false]
