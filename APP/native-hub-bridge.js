@@ -358,6 +358,7 @@
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
+    if (id === 'tlLens') open = open && root.classList.contains('show');
     if (!open) return { open: false, nodes: [] };
     return {
       open: true,
@@ -440,6 +441,7 @@
       floatingTools: floatingSurfaceSnapshot('hbTools'),
       commandButton: floatingSurfaceSnapshot('cmdFab'),
       splashWindow: floatingSurfaceSnapshot('saWinCard'),
+      timelineLens: floatingSurfaceSnapshot('tlLens'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
