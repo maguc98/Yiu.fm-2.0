@@ -52,6 +52,14 @@
         console.warn('[YiuHubBridge] subscriber failed', error);
       }
     });
+    // Keep the native layer informed without creating a second source of truth.
+    try {
+      var handler = window.webkit && window.webkit.messageHandlers &&
+        window.webkit.messageHandlers.yiuNativeHub;
+      if (handler) handler.postMessage(state);
+    } catch (error) {
+      console.warn('[YiuHubBridge] native notification failed', error);
+    }
   }
 
   function scheduleNotify() {
