@@ -15,6 +15,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
     private var aiHistoryExpandedPath: CGPath?
     private var aiHistoryCloseTranslation: CGPoint = .zero
     private var aiHistoryCloseDuration: TimeInterval = 0.46
+    private var fpsDragInitialFrame: CGRect?
     var onDidHide: (() -> Void)?
 
     override init(frame: CGRect) {
@@ -34,6 +35,34 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
             return UIBezierPath(cgPath: path).contains(point)
         }
         return super.point(inside: point, with: event)
+    }
+
+    @objc private func handleFPSPan(_ recognizer: UIPanGestureRecognizer) {
+        guard let parent = superview else { return }
+        let translation = recognizer.translation(in: parent)
+        switch recognizer.state {
+        case .began:
+            fpsDragInitialFrame = frame
+        case .changed:
+            if let initial = fpsDragInitialFrame {
+                frame = initial.offsetBy(dx: translation.x, dy: translation.y)
+            }
+        case .ended:
+            let moved = hypot(translation.x, translation.y) >= 5
+            let id = recognizer.view?.accessibilityIdentifier ?? ""
+            actionHandler?(id, [
+                "nativeGesture": "fpsPan",
+                "dx": Double(translation.x),
+                "dy": Double(translation.y),
+                "moved": moved
+            ])
+            fpsDragInitialFrame = nil
+        case .cancelled, .failed:
+            if let initial = fpsDragInitialFrame { frame = initial }
+            fpsDragInitialFrame = nil
+        default:
+            break
+        }
     }
 
     @objc private func handleCropPan(_ recognizer: UIPanGestureRecognizer) {
@@ -294,6 +323,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 slider.minimumValue = Float(minimum)
                 slider.maximumValue = Float(maximum > minimum ? maximum : minimum + 1)
                 slider.value = Float(number(node["value"]) ?? number(node["ariaValueNow"]) ?? minimum)
+                if classNames.contains("fpsSlider") { slider.isContinuous = false }
                 slider.setMinimumTrackImage(sliderTrackImage(color: UIColor.white.withAlphaComponent(0.62)), for: .normal)
                 slider.setMaximumTrackImage(sliderTrackImage(color: UIColor.white.withAlphaComponent(0.14)), for: .normal)
                 slider.setThumbImage(sliderThumbImage(), for: .normal)
@@ -365,6 +395,13 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 view = UIView()
             }
             view.frame = localFrame
+            view.accessibilityIdentifier = id
+            if classNames.contains("fpsCap") {
+                let pan = UIPanGestureRecognizer(target: self, action: #selector(handleFPSPan(_:)))
+                pan.maximumNumberOfTouches = 1
+                pan.delegate = self
+                view.addGestureRecognizer(pan)
+            }
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             if let glassView = view as? YiuLiquidGlassSurface {
                 glassView.updateGlassTint(cssColor(appearance["backgroundColor"]))
