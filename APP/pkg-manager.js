@@ -18,7 +18,7 @@
     var mask = document.createElement("div");
     mask.className = "pkg-dlg-mask";
     var box = document.createElement("div");
-    box.className = "pkg-dlg"; box.setAttribute("role", "alertdialog");
+    box.id = "pkgDialog"; box.className = "pkg-dlg"; box.setAttribute("role", "alertdialog");
     var p = document.createElement("p"); p.textContent = msg;       // 一律 textContent，包名里有 < > 也安全
     var row = document.createElement("div"); row.className = "row";
     function close(fn) {
@@ -219,7 +219,7 @@
   function openMenu(tab, i) {
     closeMenu();
     menu = document.createElement("div");
-    menu.className = "pkg-menu"; menu.setAttribute("role", "menu");
+    menu.id = "pkgMenu"; menu.className = "pkg-menu"; menu.setAttribute("role", "menu");
     menu.appendChild(mkItem("编辑", "", function() {
       closeMenu(); startRename(window.PACKAGES[i]);
     }));
