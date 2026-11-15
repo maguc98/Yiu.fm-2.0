@@ -113,9 +113,15 @@ final class YiuNativeHubRenderer: UIView {
                 let imageView = UIImageView()
                 imageView.contentMode = ((node["objectFit"] as? String) == "cover") ? .scaleAspectFill : .scaleAspectFit
                 imageView.clipsToBounds = true
-                if let source = node["src"] as? String, let url = URL(string: source),
-                   url.isFileURL {
-                    imageView.image = UIImage(contentsOfFile: url.path)
+                if let source = node["src"] as? String {
+                    if source.hasPrefix("data:image/"), let comma = source.firstIndex(of: ",") {
+                        let encoded = String(source[source.index(after: comma)...])
+                        if let data = Data(base64Encoded: encoded) {
+                            imageView.image = UIImage(data: data)
+                        }
+                    } else if let url = URL(string: source), url.isFileURL {
+                        imageView.image = UIImage(contentsOfFile: url.path)
+                    }
                 }
                 view = imageView
             } else if tag == "input" && inputType == "checkbox" {
