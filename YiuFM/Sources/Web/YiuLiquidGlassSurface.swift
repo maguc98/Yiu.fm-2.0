@@ -18,24 +18,38 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
     }
 
     private(set) var material: Material = .regular
+    private var glassTintColor: UIColor?
 
-    init(material: Material = .regular, interactive: Bool = true) {
+    init(material: Material = .regular, interactive: Bool = true, tintColor: UIColor? = nil) {
         self.material = material
-        super.init(effect: Self.makeEffect(material: material, interactive: interactive))
+        self.glassTintColor = tintColor
+        super.init(effect: Self.makeEffect(material: material, interactive: interactive, tintColor: tintColor))
         configureSurface()
     }
 
     required init?(coder: NSCoder) {
         self.material = .regular
+        self.glassTintColor = nil
         super.init(coder: coder)
-        effect = Self.makeEffect(material: .regular, interactive: true)
+        effect = Self.makeEffect(material: .regular, interactive: true, tintColor: nil)
         configureSurface()
     }
 
     func setMaterial(_ material: Material, interactive: Bool = true) {
         guard self.material != material else { return }
         self.material = material
-        effect = Self.makeEffect(material: material, interactive: interactive)
+        effect = Self.makeEffect(material: material, interactive: interactive, tintColor: glassTintColor)
+    }
+
+    func setTintColor(_ tintColor: UIColor?) {
+        guard glassTintColor != tintColor else { return }
+        glassTintColor = tintColor
+        effect = Self.makeEffect(material: material, interactive: true, tintColor: tintColor)
+        if #available(iOS 26.0, *) {
+            backgroundColor = .clear
+        } else {
+            backgroundColor = tintColor
+        }
     }
 
     /// Add all native labels, symbols and controls to this view.
@@ -43,7 +57,11 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
     var foregroundView: UIView { contentView }
 
     private func configureSurface() {
-        backgroundColor = .clear
+        if #available(iOS 26.0, *) {
+            backgroundColor = .clear
+        } else {
+            backgroundColor = glassTintColor
+        }
         contentView.backgroundColor = .clear
         isOpaque = false
         clipsToBounds = true
@@ -51,10 +69,10 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
         isUserInteractionEnabled = true
     }
 
-    private static func makeEffect(material: Material, interactive: Bool) -> UIVisualEffect {
+    private static func makeEffect(material: Material, interactive: Bool, tintColor: UIColor?) -> UIVisualEffect {
         if #available(iOS 26.0, *) {
             let glass = UIGlassEffect(style: material == .regular ? .regular : .clear)
-            glass.tintColor = nil
+            glass.tintColor = tintColor
             glass.isInteractive = interactive
             return glass
         }
