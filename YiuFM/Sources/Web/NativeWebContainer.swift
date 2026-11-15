@@ -13,6 +13,7 @@ final class NativeWebContainer: UIView {
     private let nativeTimelineLensRenderer = YiuNativeHubRenderer()
     private let nativeCropRenderer = YiuNativeHubRenderer()
     private let nativeControlBarRenderer = YiuNativeHubRenderer()
+    private let nativeNavigationBarRenderer = YiuNativeHubRenderer()
     private let nativeQuickPopupRenderer = YiuNativeHubRenderer()
     private let nativeDropdownPopupRenderer = YiuNativeHubRenderer()
     private let nativeZoomPopupRenderer = YiuNativeHubRenderer()
@@ -33,6 +34,7 @@ final class NativeWebContainer: UIView {
     private let nativeTimelineLensRenderingEnabled = false
     private let nativeCropRenderingEnabled = false
     private let nativeControlBarRenderingEnabled = false
+    private let nativeNavigationBarRenderingEnabled = false
     private let nativeQuickPopupRenderingEnabled = false
     private let nativeDropdownPopupRenderingEnabled = false
     private let nativeZoomPopupRenderingEnabled = false
@@ -57,6 +59,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeTimelineLensRenderer)
         addSubview(nativeCropRenderer)
         addSubview(nativeControlBarRenderer)
+        addSubview(nativeNavigationBarRenderer)
         addSubview(nativeQuickPopupRenderer)
         addSubview(nativeDropdownPopupRenderer)
         addSubview(nativeZoomPopupRenderer)
@@ -75,6 +78,8 @@ final class NativeWebContainer: UIView {
         nativeCropRenderer.isUserInteractionEnabled = false
         nativeControlBarRenderer.isHidden = true
         nativeControlBarRenderer.isUserInteractionEnabled = false
+        nativeNavigationBarRenderer.isHidden = true
+        nativeNavigationBarRenderer.isUserInteractionEnabled = false
         nativeQuickPopupRenderer.isHidden = true
         nativeQuickPopupRenderer.isUserInteractionEnabled = false
         nativeDropdownPopupRenderer.isHidden = true
@@ -217,6 +222,15 @@ final class NativeWebContainer: UIView {
         } else {
             nativeCropRenderer.isHidden = true
             setNativeMirrorPresentation(id: "crop", active: false)
+        }
+        if nativeNavigationBarRenderingEnabled {
+            let bar = payload["navigationBar"] as? [String: Any] ?? ["open": false]
+            nativeNavigationBarRenderer.render(bar) { _, _ in }
+            nativeNavigationBarRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "lg", active: !nativeNavigationBarRenderer.isHidden)
+        } else {
+            nativeNavigationBarRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "lg", active: false)
         }
         if nativeControlBarRenderingEnabled {
             let bar = payload["controlBar"] as? [String: Any] ?? ["open": false]
