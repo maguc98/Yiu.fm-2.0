@@ -391,7 +391,6 @@
     if (id === 'aiuiBubble') open = open && root.classList.contains('is-show');
     if (id === 'aiuiHist') open = open && root.classList.contains('is-open');
     if (id === 'textBar') open = open && root.classList.contains('show');
-    if (id === 'slToast') open = open && Number(style.opacity || 1) > 0.01;
 
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (id === 'npCard') { openDuration = 0.6; closeDuration = 0.35; }
