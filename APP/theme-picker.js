@@ -269,7 +269,19 @@
     updateStyles();
     suspend = false;
   }
-  window.__tpApi = { deleteTheme: deleteTheme, reorder: reorderTheme };
+  function nativeLongPress(card) {
+    if (!card || !carousel.contains(card) || card.classList.contains('add-card')) return false;
+    exitDeleteMode();
+    card.classList.add('deleting');
+    lpFired = true;
+    setTimeout(function() { lpFired = false; }, 900);
+    return true;
+  }
+  window.__tpApi = {
+    deleteTheme: deleteTheme,
+    reorder: reorderTheme,
+    nativeLongPress: nativeLongPress
+  };
 
   renderCarousel();
 })();
