@@ -40,6 +40,7 @@ final class YiuNativeHubRenderer: UIView {
         frame = CGRect(x: x, y: y, width: width, height: height)
         let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
         applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: 28)
+        glass.setTintColor(cssColor(surfaceAppearance["backgroundColor"]))
         glass.frame = bounds
         glass.layer.cornerRadius = 28
         glass.clipsToBounds = true
@@ -117,7 +118,11 @@ final class YiuNativeHubRenderer: UIView {
                 scroll.alwaysBounceVertical = overflowY == "scroll"
                 scroll.alwaysBounceHorizontal = overflowX == "scroll"
                 if usesGlass {
-                    scroll.setGlassBackground(YiuLiquidGlassSurface(material: .regular, interactive: false))
+                    scroll.setGlassBackground(YiuLiquidGlassSurface(
+                        material: .regular,
+                        interactive: false,
+                        tintColor: cssColor(appearance["backgroundColor"])
+                    ))
                 }
                 scroll.onScrollEnded = { [weak self] offset in
                     self?.actionHandler?(id, ["scrollTop": offset.y, "scrollLeft": offset.x])
@@ -125,7 +130,11 @@ final class YiuNativeHubRenderer: UIView {
                 scrollViews[id] = scroll
                 view = scroll
             } else if usesGlass {
-                view = YiuLiquidGlassSurface(material: .regular, interactive: false)
+                view = YiuLiquidGlassSurface(
+                    material: .regular,
+                    interactive: false,
+                    tintColor: cssColor(appearance["backgroundColor"])
+                )
             } else if tag == "svg" {
                 let imageView = UIImageView()
                 imageView.contentMode = .scaleAspectFit
@@ -232,7 +241,11 @@ final class YiuNativeHubRenderer: UIView {
             }
             view.frame = localFrame
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
-            view.backgroundColor = cssColor(appearance["backgroundColor"])
+            if let glassView = view as? YiuLiquidGlassSurface {
+                glassView.setTintColor(cssColor(appearance["backgroundColor"]))
+            } else {
+                view.backgroundColor = cssColor(appearance["backgroundColor"])
+            }
             let contentHost = (view as? YiuLiquidGlassSurface)?.foregroundView ?? view
             if let cssBackground = appearance["backgroundImage"] as? String,
                let image = imageFromCSSBackground(cssBackground) {
