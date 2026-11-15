@@ -389,7 +389,9 @@
       surfaceAppearance: {
         backgroundColor: style.backgroundColor,
         boxShadow: style.boxShadow,
-        borderRadius: style.borderTopLeftRadius
+        borderRadius: style.borderTopLeftRadius,
+        borderWidth: style.borderTopWidth,
+        borderColor: style.borderTopColor
       },
       nodes: (function () {
         var children = readTree(root);
