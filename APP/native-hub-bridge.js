@@ -377,6 +377,8 @@
       sourcePointer !== 'none';
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'npCard') open = open && root.classList.contains('show');
+    if (id === 'pkgDialog') open = open && !!root.parentElement?.classList.contains('show');
+    if (id === 'pkgMenu') open = open && root.isConnected;
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
     if (id === 'crop' || id === 'qpop' || id === 'ddPop' || id === 'zoomPop') open = open && root.classList.contains('show');
@@ -495,6 +497,8 @@
       zoomPopup: floatingSurfaceSnapshot('zoomPop'),
       coverToast: floatingSurfaceSnapshot('npToast'),
       playbackCard: floatingSurfaceSnapshot('npCard'),
+      packageDialog: floatingSurfaceSnapshot('pkgDialog'),
+      packageMenu: floatingSurfaceSnapshot('pkgMenu'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -716,7 +720,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -740,7 +744,7 @@
   function setScroll(id, top, left) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el))) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el))) return false;
     el.scrollTop = Math.max(0, Number(top) || 0);
     el.scrollLeft = Math.max(0, Number(left) || 0);
     scheduleNotify();
@@ -750,7 +754,7 @@
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el)) || el.disabled) return false;
 
     if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
@@ -821,7 +825,7 @@
   var observedMirrorRoots = {};
   var mirrorAttachObserver = null;
   function attachMirrorObservers() {
-    ['crop', 'tlLens', 'lg', 'cbar', 'qpop', 'ddPop', 'zoomPop'].forEach(function (id) {
+    ['crop', 'tlLens', 'lg', 'cbar', 'qpop', 'ddPop', 'zoomPop', 'pkgDialog', 'pkgMenu'].forEach(function (id) {
       var root = document.getElementById(id);
       if (!root || observedMirrorRoots[id] === root) return;
       observedMirrorRoots[id] = root;
