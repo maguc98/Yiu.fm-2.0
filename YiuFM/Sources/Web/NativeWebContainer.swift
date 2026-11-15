@@ -96,6 +96,14 @@ final class NativeWebContainer: UIView {
         nativeThemeMenuRenderer.onDidHide = { [weak self] in
             self?.setThemeMenuNativePresentation(false)
         }
+        nativeTimelineLensRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "tlLens", active: false) }
+        nativeCropRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "crop", active: false) }
+        nativeControlBarRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "cbar", active: false) }
+        nativeNavigationBarRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "lg", active: false) }
+        nativeQuickPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "qpop", active: false) }
+        nativeDropdownPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "ddPop", active: false) }
+        nativeZoomPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "zoomPop", active: false) }
+        nativeCoverToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "npToast", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
