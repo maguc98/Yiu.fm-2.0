@@ -569,7 +569,7 @@
         return {
           visible: visible,
           rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-          opacity: Number(style.opacity || 1),
+          opacity: sourceOpacity,
           backgroundColor: style.backgroundColor,
           borderRadius: style.borderTopLeftRadius,
           color: style.color,
