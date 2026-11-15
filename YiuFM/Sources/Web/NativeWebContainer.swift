@@ -38,44 +38,44 @@ final class NativeWebContainer: UIView {
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
-    private let nativeHubRenderingEnabled = false
+    private let nativeHubRenderingEnabled = true
     // Theme picker remains opt-in until long-press deletion and visual parity pass device testing.
-    private let nativeThemeMenuRenderingEnabled = false
+    private let nativeThemeMenuRenderingEnabled = true
     // Keep the standalone toolbar surface off until its visual and hit-target parity is verified on device.
-    private let nativeBackButtonRenderingEnabled = false
+    private let nativeBackButtonRenderingEnabled = true
     // Keep the standalone settings surface opt-in until device parity is verified.
-    private let nativeSettingsButtonRenderingEnabled = false
-    private let nativeFloatingToolsRenderingEnabled = false
-    private let nativeCommandButtonRenderingEnabled = false
-    private let nativeSplashWindowRenderingEnabled = false
-    private let nativeTimelineLensRenderingEnabled = false
-    private let nativeCropRenderingEnabled = false
-    private let nativeControlBarRenderingEnabled = false
-    private let nativeNavigationBarRenderingEnabled = false
-    private let nativeQuickPopupRenderingEnabled = false
-    private let nativeDropdownPopupRenderingEnabled = false
-    private let nativeZoomPopupRenderingEnabled = false
-    private let nativeCoverToastRenderingEnabled = false
+    private let nativeSettingsButtonRenderingEnabled = true
+    private let nativeFloatingToolsRenderingEnabled = true
+    private let nativeCommandButtonRenderingEnabled = true
+    private let nativeSplashWindowRenderingEnabled = true
+    private let nativeTimelineLensRenderingEnabled = true
+    private let nativeCropRenderingEnabled = true
+    private let nativeControlBarRenderingEnabled = true
+    private let nativeNavigationBarRenderingEnabled = true
+    private let nativeQuickPopupRenderingEnabled = true
+    private let nativeDropdownPopupRenderingEnabled = true
+    private let nativeZoomPopupRenderingEnabled = true
+    private let nativeCoverToastRenderingEnabled = true
     // Playback card is wired to the native glass renderer but stays opt-in until swipe, artwork and controls pass device parity.
-    private let nativePlaybackCardRenderingEnabled = false
+    private let nativePlaybackCardRenderingEnabled = true
     // Package dialogs and context menus are wired for native material mirroring, pending interaction-parity tests.
-    private let nativePackageDialogRenderingEnabled = false
-    private let nativePackageMenuRenderingEnabled = false
+    private let nativePackageDialogRenderingEnabled = true
+    private let nativePackageMenuRenderingEnabled = true
     // Runtime developer tools stay opt-in until log export, scrolling and close behavior pass device parity.
-    private let nativeLogPanelRenderingEnabled = false
-    private let nativeLogToastRenderingEnabled = false
-    private let nativeCommandConsoleRenderingEnabled = false
-    private let nativeChangelogRenderingEnabled = false
-    private let nativeSystemLogRenderingEnabled = false
-    private let nativeSystemLogToastRenderingEnabled = false
-    private let nativeChangelogEditorRenderingEnabled = false
-    private let nativeSongDialogRenderingEnabled = false
-    private let nativeSongProgressRenderingEnabled = false
-    private let nativeAIInputBarRenderingEnabled = false
-    private let nativeAIReplyBubbleRenderingEnabled = false
-    private let nativeAIHistoryRenderingEnabled = false
-    private let nativeTextEntryBarRenderingEnabled = false
-    private let nativeFPSIndicatorRenderingEnabled = false
+    private let nativeLogPanelRenderingEnabled = true
+    private let nativeLogToastRenderingEnabled = true
+    private let nativeCommandConsoleRenderingEnabled = true
+    private let nativeChangelogRenderingEnabled = true
+    private let nativeSystemLogRenderingEnabled = true
+    private let nativeSystemLogToastRenderingEnabled = true
+    private let nativeChangelogEditorRenderingEnabled = true
+    private let nativeSongDialogRenderingEnabled = true
+    private let nativeSongProgressRenderingEnabled = true
+    private let nativeAIInputBarRenderingEnabled = true
+    private let nativeAIReplyBubbleRenderingEnabled = true
+    private let nativeAIHistoryRenderingEnabled = true
+    private let nativeTextEntryBarRenderingEnabled = true
+    private let nativeFPSIndicatorRenderingEnabled = true
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
