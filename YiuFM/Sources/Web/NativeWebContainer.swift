@@ -30,6 +30,7 @@ final class NativeWebContainer: UIView {
     private let nativeChangelogEditorRenderer = YiuNativeHubRenderer()
     private let nativeSongDialogRenderer = YiuNativeHubRenderer()
     private let nativeSongProgressRenderer = YiuNativeHubRenderer()
+    private let nativeAIInputBarRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -66,6 +67,7 @@ final class NativeWebContainer: UIView {
     private let nativeChangelogEditorRenderingEnabled = false
     private let nativeSongDialogRenderingEnabled = false
     private let nativeSongProgressRenderingEnabled = false
+    private let nativeAIInputBarRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -103,6 +105,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeChangelogEditorRenderer)
         addSubview(nativeSongDialogRenderer)
         addSubview(nativeSongProgressRenderer)
+        addSubview(nativeAIInputBarRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -139,6 +142,7 @@ final class NativeWebContainer: UIView {
         nativeChangelogEditorRenderer.isHidden = true
         nativeSongDialogRenderer.isHidden = true
         nativeSongProgressRenderer.isHidden = true
+        nativeAIInputBarRenderer.isHidden = true
         nativeSystemLogToastRenderer.isUserInteractionEnabled = false
         nativeLogToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
@@ -169,6 +173,7 @@ final class NativeWebContainer: UIView {
         nativeChangelogEditorRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "clEditCard", active: false) }
         nativeSongDialogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "ydDialogCard", active: false) }
         nativeSongProgressRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "ydProgressCard", active: false) }
+        nativeAIInputBarRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "aiuiBarIn", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -522,7 +527,19 @@ final class NativeWebContainer: UIView {
             nativeSongProgressRenderer.isHidden = true
             setNativeMirrorPresentation(id: "ydProgressCard", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeNavigationBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled || nativeChangelogEditorRenderingEnabled || nativeSongDialogRenderingEnabled || nativeSongProgressRenderingEnabled)
+        if nativeAIInputBarRenderingEnabled {
+            let bar = payload["aiInputBar"] as? [String: Any] ?? ["open": false]
+            nativeAIInputBarRenderer.render(bar) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value { self.setHubControl(id: controlID, value: value) }
+                else { self.activateHubControl(id: controlID) }
+            }
+            setNativeMirrorPresentation(id: "aiuiBarIn", active: !nativeAIInputBarRenderer.isHidden)
+        } else {
+            nativeAIInputBarRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "aiuiBarIn", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeNavigationBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled || nativeChangelogEditorRenderingEnabled || nativeSongDialogRenderingEnabled || nativeSongProgressRenderingEnabled || nativeAIInputBarRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
