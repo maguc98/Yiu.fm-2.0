@@ -792,6 +792,11 @@
     // Ignore per-frame crop transforms: rebuilding the UIKit tree would detach
     // the active gesture recognizers while the user is dragging or pinching.
     if (records && records.length && records.every(function (record) {
+      if (window.__yiuNativeCropGestureActive && record.target) {
+        var target = record.target;
+        if (target.id === 'crop' || target.id === 'cimg' ||
+            (target.closest && target.closest('#crop'))) return true;
+      }
       return record.type === 'attributes' &&
         record.attributeName === 'style' &&
         record.target && record.target.id === 'cimg';
