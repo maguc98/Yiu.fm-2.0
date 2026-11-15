@@ -50,7 +50,7 @@ final class NativeWebContainer: UIView {
     private let nativeSplashWindowRenderingEnabled = false
     private let nativeTimelineLensRenderingEnabled = false
     private let nativeCropRenderingEnabled = false
-    private let nativeControlBarRenderingEnabled = false
+    private let nativeControlBarRenderingEnabled = true
     private let nativeNavigationBarRenderingEnabled = false
     private let nativeQuickPopupRenderingEnabled = false
     private let nativeDropdownPopupRenderingEnabled = false
