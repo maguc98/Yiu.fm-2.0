@@ -90,10 +90,15 @@
          只写控制台会导致 /early 看不到真正的回调异常。 */
       try{
         var q=window.__YiuEarlyErrors=window.__YiuEarlyErrors||[];
+        var traceStack=String((e&&e.stack)||'');
         q.push({kind:'callback-trace',time:new Date().toISOString(),detail:{
-          message:msg,tag:tag,stack:String((e&&e.stack)||''),activeScript:window.__YIU_ACTIVE_SCRIPT||null
+          message:msg,tag:tag,stack:traceStack,activeScript:window.__YIU_ACTIVE_SCRIPT||null
         }});
         if(q.length>80)q.shift();
+        /* cmd-console 已加载时，直接把回调原始堆栈送入 /err；启动期则留在队列等待合并。 */
+        if(typeof window.__yiuPushRuntimeError==='function'){
+          window.__yiuPushRuntimeError('[trace]['+tag+'] '+msg,tag,{stack:traceStack,tag:tag});
+        }
       }catch(_){}
       console.error('[trace]['+tag+'] '+msg+' :: '+st);
     }catch(_){}
