@@ -483,13 +483,11 @@
         glassVisibility: glass ? glass.style.visibility : null,
         glassOpacity: glass ? glass.style.opacity : null
       };
-      menu.style.visibility = 'hidden';
+      // Hide only by opacity: visibility:hidden would cascade into every
+      // mirrored child and make the next native snapshot discard the content.
       menu.style.opacity = '0';
       menu.style.pointerEvents = 'none';
-      if (glass) {
-        glass.style.visibility = 'hidden';
-        glass.style.opacity = '0';
-      }
+      if (glass) glass.style.opacity = '0';
     } else {
       var saved = savedThemeMenuState || {};
       menu.style.visibility = saved.menuVisibility || '';
