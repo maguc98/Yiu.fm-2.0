@@ -3103,7 +3103,7 @@ body.open #lg{ }
 #hub{
   opacity:1 !important;
   transition:
-    transform calc(.8s/var(--ui-spd,1)/var(--hub-spd,1)) var(--spring),
+    transform calc(.25s/var(--ui-spd,1)/var(--hub-spd,1)) ease,
     visibility 0s linear calc(.25s/var(--ui-spd,1)/var(--hub-spd,1)) !important;
 }
 body.open #hub{
