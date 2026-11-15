@@ -121,9 +121,10 @@ final class YiuNativeHubRenderer: UIView {
                     let value = option["value"] as? String ?? ""
                     let disabled = option["disabled"] as? Bool ?? false
                     return UIAction(title: title,
+                                    attributes: disabled ? .disabled : [],
                                     state: value == currentValue ? .on : .off) { [weak self] _ in
                         self?.actionHandler?(id, value)
-                    }.withAttributes(disabled ? .disabled : [])
+                    }
                 }
                 button.menu = UIMenu(children: menuItems)
                 button.showsMenuAsPrimaryAction = true
