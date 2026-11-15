@@ -28,10 +28,12 @@ final class YiuNativeBackButtonView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func update(rect: CGRect, visible: Bool, opacity: CGFloat, label: String) {
+    func update(rect: CGRect, visible: Bool, opacity: CGFloat, label: String, tint: UIColor?, foreground: UIColor?) {
         frame = rect
         glass.frame = bounds
         glass.layer.cornerRadius = min(bounds.width, bounds.height) / 2
+        glass.updateGlassTint(tint)
+        glyph.strokeColor = (foreground ?? .white).cgColor
         glass.clipsToBounds = true
         accessibilityLabel = label
         alpha = min(1, max(0, opacity))
