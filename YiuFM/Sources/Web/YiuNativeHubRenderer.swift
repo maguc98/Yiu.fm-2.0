@@ -163,7 +163,7 @@ final class YiuNativeHubRenderer: UIView {
                 }, for: .valueChanged)
                 view = slider
             } else if tag == "input" && inputType == "color" {
-                let colorButton = YiuNativeColorPickerButton()
+                let colorButton = YiuNativeColorPickerButton(frame: .zero)
                 colorButton.backgroundColor = cssColor(node["value"]) ?? .white
                 colorButton.onColorChange = { [weak self] hex in self?.actionHandler?(id, hex) }
                 view = colorButton
@@ -386,7 +386,7 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
 private final class YiuNativeColorPickerButton: UIButton, UIColorPickerViewControllerDelegate {
     var onColorChange: ((String) -> Void)?
 
-    override init(frame: CGRect = .zero) {
+    override init(frame: CGRect) {
         super.init(frame: frame)
         layer.cornerRadius = 8
         layer.borderWidth = 1
