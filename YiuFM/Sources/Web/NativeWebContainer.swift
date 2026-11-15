@@ -22,7 +22,6 @@ final class NativeWebContainer: UIView {
     private let nativePackageDialogRenderer = YiuNativeHubRenderer()
     private let nativePackageMenuRenderer = YiuNativeHubRenderer()
     private let nativeLogPanelRenderer = YiuNativeHubRenderer()
-    private let nativeLogExportRenderer = YiuNativeHubRenderer()
     private let nativeLogToastRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
@@ -52,7 +51,6 @@ final class NativeWebContainer: UIView {
     private let nativePackageMenuRenderingEnabled = false
     // Runtime developer tools stay opt-in until log export, scrolling and close behavior pass device parity.
     private let nativeLogPanelRenderingEnabled = false
-    private let nativeLogExportRenderingEnabled = false
     private let nativeLogToastRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
@@ -83,7 +81,6 @@ final class NativeWebContainer: UIView {
         addSubview(nativePackageDialogRenderer)
         addSubview(nativePackageMenuRenderer)
         addSubview(nativeLogPanelRenderer)
-        addSubview(nativeLogExportRenderer)
         addSubview(nativeLogToastRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
@@ -113,7 +110,6 @@ final class NativeWebContainer: UIView {
         nativePackageDialogRenderer.isHidden = true
         nativePackageMenuRenderer.isHidden = true
         nativeLogPanelRenderer.isHidden = true
-        nativeLogExportRenderer.isHidden = true
         nativeLogToastRenderer.isHidden = true
         nativeLogToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
@@ -136,7 +132,6 @@ final class NativeWebContainer: UIView {
         nativePackageDialogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "pkgDialog", active: false) }
         nativePackageMenuRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "pkgMenu", active: false) }
         nativeLogPanelRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "logPanel", active: false) }
-        nativeLogExportRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "logExportModal", active: false) }
         nativeLogToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "logToast", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
@@ -392,19 +387,6 @@ final class NativeWebContainer: UIView {
             nativeLogPanelRenderer.isHidden = true
             setNativeMirrorPresentation(id: "logPanel", active: false)
         }
-        if nativeLogExportRenderingEnabled {
-            let modal = payload["logExportModal"] as? [String: Any] ?? ["open": false]
-            nativeLogExportRenderer.render(modal) { [weak self] controlID, value in
-                guard let self else { return }
-                if let value { self.setHubControl(id: controlID, value: value) }
-                else { self.activateHubControl(id: controlID)
-                }
-            }
-            setNativeMirrorPresentation(id: "logExportModal", active: !nativeLogExportRenderer.isHidden)
-        } else {
-            nativeLogExportRenderer.isHidden = true
-            setNativeMirrorPresentation(id: "logExportModal", active: false)
-        }
         if nativeLogToastRenderingEnabled {
             let toast = payload["logToast"] as? [String: Any] ?? ["open": false]
             nativeLogToastRenderer.render(toast) { _, _ in }
@@ -414,7 +396,7 @@ final class NativeWebContainer: UIView {
             nativeLogToastRenderer.isHidden = true
             setNativeMirrorPresentation(id: "logToast", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogExportRenderingEnabled || nativeLogToastRenderingEnabled)
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
