@@ -118,6 +118,10 @@
       appearance: {
         color: style.color,
         backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backgroundSize: style.backgroundSize,
+        backgroundPosition: style.backgroundPosition,
+        backgroundRepeat: style.backgroundRepeat,
         fontFamily: style.fontFamily,
         fontSize: style.fontSize,
         fontWeight: style.fontWeight,
