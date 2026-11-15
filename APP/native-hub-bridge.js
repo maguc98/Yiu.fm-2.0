@@ -122,7 +122,7 @@
   }
 
   function readNode(el, parentId) {
-    var rect = el.getBoundingClientRect();
+    var rect = layoutRect(el);
     var style = window.getComputedStyle(el);
     var item = {
       nativeId: nativeId(el),
