@@ -379,6 +379,7 @@ html body #saWin .chip:active{scale:.97}
   :is(#styles,#styles2,#styles3,#easeIn,#easeOut,#lyAlign,#lyPos,#lyWrap,#pdTs,#pdOs) .chip.on{scale:none}
 }
 </style>
+<link rel="stylesheet" href="./APP/control-center.css?v=20261115cc1">
 </head>
 <body>
 <div id="splash" aria-hidden="true"></div>
@@ -1387,7 +1388,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <!-- 3. 开发者工具、启动与扩展                  -->
     <!-- ========================================== -->
     <script src="./APP/devtools.js?v=20261115glassdev1"></script>                      <!-- 开发者选项与性能 -->
-    <script src="./APP/settings-page.js?v=20261114a"></script>                  <!-- 新版设置 UI：唯一可见设置入口 -->
+    <script src="./APP/settings-page.js?v=20261114a"></script>
+    <script src="./APP/control-center.js?v=20261115cc1"></script>                  <!-- 新版设置 UI：唯一可见设置入口 -->
     <script src="./APP/sys-log.js?v=20261115glasssys1"></script>                       <!-- 系统日志记录 -->
     <script src="./APP/cmd-console.js?v=20261115glasscmd1"></script>                   <!-- 命令窗口核心 -->
     <script src="./APP/cmd-keyboard.js?v=20261031a"></script>                  <!-- 命令窗口自带键盘（须在 cmd-console 之后） -->
