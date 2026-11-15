@@ -495,7 +495,7 @@ final class YiuNativeHubRenderer: UIView {
         guard let start = value.range(of: "url("),
               let end = value[start.upperBound...].firstIndex(of: ")") else { return nil }
         let source = value[start.upperBound..<end]
-            .trimmingCharacters(in: CharacterSet(charactersIn: " \\"'"))
+            .trimmingCharacters(in: CharacterSet(charactersIn: " \u{5C}\"'"))
         if source.hasPrefix("data:image/"),
            let comma = source.firstIndex(of: ",") {
             let encoded = String(source[source.index(after: comma)...])
