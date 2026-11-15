@@ -11,6 +11,7 @@ on:
       - refactor/system-settings-native
       - fix/system-settings-readability-search
       - restart/build-226-baseline
+      - feature/global-native-liquid-glass
     paths:
       - "APP/**"
       - "index.html"
