@@ -222,6 +222,16 @@
     return true;
   }
 
+  function setScroll(id, top, left) {
+    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
+    var el = document.getElementById(id) || elementsByNativeId.get(id);
+    if (!el || !hub.contains(el)) return false;
+    el.scrollTop = Math.max(0, Number(top) || 0);
+    el.scrollLeft = Math.max(0, Number(left) || 0);
+    scheduleNotify();
+    return true;
+  }
+
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
