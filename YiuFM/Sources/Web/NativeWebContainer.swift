@@ -51,7 +51,10 @@ final class NativeWebContainer: UIView {
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
-                if let value {
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
                     self.setHubControl(id: controlID, value: value)
                 } else {
                     self.activateHubControl(id: controlID)
@@ -73,6 +76,12 @@ final class NativeWebContainer: UIView {
         guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let json = String(data: data, encoding: .utf8) else { return }
         evaluate("window.YiuHubBridge?.activateControl(\(json))")
+    }
+
+    func setHubScroll(id: String, top: Double, left: Double) {
+        guard let idData = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let idJSON = String(data: idData, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.setScroll(\\(idJSON), \\(top), \\(left))")
     }
 
     func setHubControl(id: String, value: Any) {
