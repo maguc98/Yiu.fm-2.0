@@ -585,12 +585,24 @@
     var root = document.getElementById(id);
     if (!root) return false;
     if (active) {
-      if (!root.hasAttribute('data-yiu-native-opacity')) root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
+      if (!root.hasAttribute('data-yiu-native-opacity')) {
+        root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
+        root.setAttribute('data-yiu-native-backdrop', root.style.getPropertyValue('backdrop-filter'));
+        root.setAttribute('data-yiu-native-webkit-backdrop', root.style.getPropertyValue('-webkit-backdrop-filter'));
+      }
       root.style.opacity = '0';
+      root.style.setProperty('backdrop-filter', 'none', 'important');
+      root.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
     } else if (root.hasAttribute('data-yiu-native-opacity')) {
       var opacity = root.getAttribute('data-yiu-native-opacity');
+      var backdrop = root.getAttribute('data-yiu-native-backdrop');
+      var webkitBackdrop = root.getAttribute('data-yiu-native-webkit-backdrop');
       if (opacity) root.style.opacity = opacity; else root.style.removeProperty('opacity');
+      if (backdrop) root.style.setProperty('backdrop-filter', backdrop); else root.style.removeProperty('backdrop-filter');
+      if (webkitBackdrop) root.style.setProperty('-webkit-backdrop-filter', webkitBackdrop); else root.style.removeProperty('-webkit-backdrop-filter');
       root.removeAttribute('data-yiu-native-opacity');
+      root.removeAttribute('data-yiu-native-backdrop');
+      root.removeAttribute('data-yiu-native-webkit-backdrop');
     }
     return true;
   }
@@ -822,6 +834,7 @@
   window.addEventListener('pagehide', function () {
     if (observer) observer.disconnect();
     if (themeMenuAttachObserver) themeMenuAttachObserver.disconnect();
+    if (mirrorAttachObserver) mirrorAttachObserver.disconnect();
     if (notifyTimer) window.clearTimeout(notifyTimer);
     listeners = [];
   }, { once: true });
