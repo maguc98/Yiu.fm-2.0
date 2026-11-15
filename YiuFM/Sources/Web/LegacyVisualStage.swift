@@ -127,9 +127,21 @@ struct LegacyVisualStage: UIViewRepresentable {
         mini.style.opacity = '0';
         mini.style.pointerEvents = 'none';
         report();
-        window.__yiuNativeMiniTimer = setInterval(report, 100);
+        const startReporting = () => {
+          if (window.__yiuNativeMiniTimer) clearInterval(window.__yiuNativeMiniTimer);
+          window.__yiuNativeMiniTimer = document.hidden ? 0 : setInterval(report, 100);
+        };
         window.addEventListener('resize', report, {passive:true});
-        document.addEventListener('visibilitychange', report, {passive:true});
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            if (window.__yiuNativeMiniTimer) clearInterval(window.__yiuNativeMiniTimer);
+            window.__yiuNativeMiniTimer = 0;
+          } else {
+            report();
+            startReporting();
+          }
+        }, {passive:true});
+        startReporting();
       };
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start, {once:true});
