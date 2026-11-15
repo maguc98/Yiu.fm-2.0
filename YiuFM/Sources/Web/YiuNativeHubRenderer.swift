@@ -110,6 +110,24 @@ final class YiuNativeHubRenderer: UIView {
                 slider.value = Float(number(node["value"]) ?? Double(slider.minimumValue))
                 slider.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, slider.value) }, for: .valueChanged)
                 view = slider
+            } else if tag == "select" {
+                let button = UIButton(type: .system)
+                let options = node["options"] as? [[String: Any]] ?? []
+                let currentValue = node["value"] as? String ?? ""
+                let selectedTitle = (options.first { ($0["value"] as? String) == currentValue }?["label"] as? String) ?? currentValue
+                button.setTitle(selectedTitle, for: .normal)
+                let menuItems = options.map { option -> UIAction in
+                    let title = option["label"] as? String ?? ""
+                    let value = option["value"] as? String ?? ""
+                    let disabled = option["disabled"] as? Bool ?? false
+                    return UIAction(title: title,
+                                    state: value == currentValue ? .on : .off) { [weak self] _ in
+                        self?.actionHandler?(id, value)
+                    }.withAttributes(disabled ? .disabled : [])
+                }
+                button.menu = UIMenu(children: menuItems)
+                button.showsMenuAsPrimaryAction = true
+                view = button
             } else if tag == "textarea" {
                 let textView = YiuNativeHubTextView(frame: .zero, textContainer: nil)
                 textView.text = node["value"] as? String ?? ""
