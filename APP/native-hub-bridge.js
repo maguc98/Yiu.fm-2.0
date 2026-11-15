@@ -373,12 +373,12 @@
     var nativeHidden = root.hasAttribute('data-yiu-native-opacity');
     var savedOpacity = root.getAttribute('data-yiu-native-opacity');
     var savedPointer = root.getAttribute('data-yiu-native-pointer');
-    var fpsNativeHidden = id === 'fpsIndicator' && root.hasAttribute('data-yiu-native-visibility');
+    var fpsNativeHidden = id === 'fpsIndicator' && root.classList.contains('yiu-native-fps-hidden');
     var sourceOpacity = id === 'fpsIndicator' ? Number(root.style.opacity || 1) :
       (nativeHidden ? (savedOpacity ? Number(savedOpacity) : 1) : Number(style.opacity || 1));
     var sourcePointer = id === 'fpsIndicator' ? root.style.pointerEvents :
       (nativeHidden ? savedPointer : style.pointerEvents);
-    var sourceVisibility = fpsNativeHidden ? (root.getAttribute('data-yiu-native-visibility') || 'visible') : style.visibility;
+    var sourceVisibility = style.visibility;
     var open = rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
       sourceVisibility !== 'hidden' && sourceOpacity > 0.01 &&
       (sourcePointer !== 'none' || id === 'logToast' || id === 'slToast');
@@ -678,14 +678,17 @@
     var root = document.getElementById(id);
     if (!root) return false;
     if (id === 'fpsIndicator') {
-      if (active && !root.hasAttribute('data-yiu-native-visibility')) {
-        root.setAttribute('data-yiu-native-visibility', root.style.visibility || '');
-        root.style.setProperty('visibility', 'hidden', 'important');
-      } else if (!active && root.hasAttribute('data-yiu-native-visibility')) {
-        var savedVisibility = root.getAttribute('data-yiu-native-visibility');
-        if (savedVisibility) root.style.setProperty('visibility', savedVisibility);
-        else root.style.removeProperty('visibility');
-        root.removeAttribute('data-yiu-native-visibility');
+      if (active) {
+        var fpsStyle = document.getElementById('yiuNativeFPSMirrorStyle');
+        if (!fpsStyle) {
+          fpsStyle = document.createElement('style');
+          fpsStyle.id = 'yiuNativeFPSMirrorStyle';
+          fpsStyle.textContent = '.yiu-native-fps-hidden{opacity:0!important;pointer-events:none!important}';
+          document.head.appendChild(fpsStyle);
+        }
+        root.classList.add('yiu-native-fps-hidden');
+      } else {
+        root.classList.remove('yiu-native-fps-hidden');
       }
       return true;
     }
