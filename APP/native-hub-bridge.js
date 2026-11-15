@@ -383,6 +383,11 @@
 
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (!open) return { open: false, nodes: [] };
+    var openDuration = 0.22, closeDuration = 0.18;
+    if (id === 'crop') { openDuration = 0.3; closeDuration = 0.3; }
+    if (id === 'tlLens') { openDuration = 0.16; closeDuration = 0.14; }
+    if (id === 'npToast') { openDuration = 0.18; closeDuration = 0.16; }
+    if (id === 'cbar' || id === 'lg') { openDuration = 0; closeDuration = 0; }
     return {
       open: true,
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
@@ -393,6 +398,8 @@
         borderRadius: style.borderTopLeftRadius,
         borderWidth: style.borderTopWidth,
         borderColor: style.borderTopColor,
+        openDuration: openDuration,
+        closeDuration: closeDuration,
         hideGlass: id === 'lg'
       },
       nodes: (function () {
