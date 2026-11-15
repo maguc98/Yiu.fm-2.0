@@ -317,7 +317,7 @@ final class YiuNativeHubRenderer: UIView {
         }
         let numericSource = raw.replacingOccurrences(of: colorString, with: "")
             .replacingOccurrences(of: "inset", with: "")
-        let values = numericSource.split(whereSeparator: { $0 == " " || $0 == "\\t" })
+        let values = numericSource.split(whereSeparator: { $0 == " " || $0 == "\t" })
             .compactMap { Double(String($0).replacingOccurrences(of: "px", with: "")) }
         guard values.count >= 3 else { return }
         let color = cssColor(colorString) ?? .black
