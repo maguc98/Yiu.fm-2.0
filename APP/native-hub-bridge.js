@@ -553,6 +553,20 @@
     return true;
   }
 
+  function longPressControl(id) {
+    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
+    var el = document.getElementById(id) || elementsByNativeId.get(id);
+    var menu = document.getElementById('mediaMenu');
+    if (!el || !menu || !menu.contains(el)) return false;
+    var card = el.closest ? el.closest('.tp-card') : null;
+    if (!card || card.classList.contains('add-card')) return false;
+    var api = window.__tpApi;
+    if (!api || typeof api.nativeLongPress !== 'function') return false;
+    var result = api.nativeLongPress(card);
+    scheduleNotify();
+    return !!result;
+  }
+
   function setScroll(id, top, left) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
@@ -587,6 +601,7 @@
     snapshot: snapshot,
     activate: activate,
     activateControl: activateControl,
+    longPressControl: longPressControl,
     setControl: setControl,
     setScroll: setScroll,
     setNativePresentation: setNativePresentation,
