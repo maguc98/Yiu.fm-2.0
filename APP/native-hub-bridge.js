@@ -20,6 +20,7 @@
   var svgImageCache = new Map();
   var svgImagePending = new Set();
   var nativePresentation = false;
+  var nativeBridgeEnabled = false;
   var savedHubOpacity = null;
   var savedHubPointerEvents = null;
 
@@ -220,8 +221,8 @@
     var isOpen = document.body.classList.contains('open');
     // The native control center is irrelevant while closed. Avoid walking up to
     // 1,800 DOM nodes during background player/visualizer activity.
-    var nodes = isOpen ? readTree() : [];
-    var controls = isOpen ? Array.prototype.map.call(
+    var nodes = isOpen && nativeBridgeEnabled ? readTree() : [];
+    var controls = isOpen && nativeBridgeEnabled ? Array.prototype.map.call(
       hub.querySelectorAll('input,select,textarea,button,[role="button"],a[href],[tabindex]:not([tabindex="-1"])'),
       function (el) {
         var item = readControl(el);
@@ -267,6 +268,14 @@
       notifyTimer = 0;
       requestAnimationFrame(notify);
     }, 100);
+  }
+
+  function setEnabled(enabled) {
+    enabled = !!enabled;
+    if (enabled === nativeBridgeEnabled) return true;
+    nativeBridgeEnabled = enabled;
+    scheduleNotify();
+    return true;
   }
 
   function setNativePresentation(active) {
@@ -351,6 +360,7 @@
     setControl: setControl,
     setScroll: setScroll,
     setNativePresentation: setNativePresentation,
+    setEnabled: setEnabled,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
       listeners.push(listener);
