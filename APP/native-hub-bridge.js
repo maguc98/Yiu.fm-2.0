@@ -757,6 +757,38 @@
     attributes: true,
     attributeFilter: ['class']
   });
+  var observedCropPanel = null;
+  var observedTimelineLens = null;
+  var mirrorAttachObserver = null;
+  function attachMirrorObservers() {
+    var cropRoot = document.getElementById('crop');
+    if (cropRoot && cropRoot !== observedCropPanel) {
+      observedCropPanel = cropRoot;
+      observer.observe(cropRoot, {
+        subtree: true, childList: true, attributes: true,
+        attributeFilter: ['class', 'style', 'aria-hidden', 'value'],
+        characterData: true
+      });
+    }
+    var lensRoot = document.getElementById('tlLens');
+    if (lensRoot && lensRoot !== observedTimelineLens) {
+      observedTimelineLens = lensRoot;
+      observer.observe(lensRoot, {
+        subtree: true, childList: true, attributes: true,
+        attributeFilter: ['class', 'style', 'aria-hidden'],
+        characterData: true
+      });
+    }
+    if (observedCropPanel && observedTimelineLens && mirrorAttachObserver) {
+      mirrorAttachObserver.disconnect();
+      mirrorAttachObserver = null;
+    }
+  }
+  mirrorAttachObserver = new MutationObserver(attachMirrorObservers);
+  attachMirrorObservers();
+  if (!observedCropPanel || !observedTimelineLens) {
+    mirrorAttachObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
   var observedThemeMenu = null;
   var themeMenuAttachObserver = null;
   function attachThemeMenuObserver() {
