@@ -747,7 +747,7 @@
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el)) || el.disabled) return false;
 
     if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
