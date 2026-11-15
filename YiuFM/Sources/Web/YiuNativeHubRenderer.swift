@@ -40,7 +40,7 @@ final class YiuNativeHubRenderer: UIView {
         frame = CGRect(x: x, y: y, width: width, height: height)
         let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
         applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: 28)
-        glass.setTintColor(cssColor(surfaceAppearance["backgroundColor"]))
+        glass.updateGlassTint(cssColor(surfaceAppearance["backgroundColor"]))
         glass.frame = bounds
         glass.layer.cornerRadius = 28
         glass.clipsToBounds = true
@@ -242,7 +242,7 @@ final class YiuNativeHubRenderer: UIView {
             view.frame = localFrame
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             if let glassView = view as? YiuLiquidGlassSurface {
-                glassView.setTintColor(cssColor(appearance["backgroundColor"]))
+                glassView.updateGlassTint(cssColor(appearance["backgroundColor"]))
             } else {
                 view.backgroundColor = cssColor(appearance["backgroundColor"])
             }
