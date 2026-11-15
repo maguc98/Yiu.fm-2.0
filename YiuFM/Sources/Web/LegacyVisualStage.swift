@@ -87,7 +87,19 @@ struct LegacyVisualStage: UIViewRepresentable {
             const rect = mini.getBoundingClientRect();
             const style = getComputedStyle(mini);
             const body = document.body;
-            const hidden = body.classList.contains('immerse') ||
+            const blockers = document.querySelectorAll(
+              '#crop, #mediaMenu.show, #ddPop, #tlLens, #qpop, .pkg-menu, .pkg-dlg-mask.show, .gpop'
+            );
+            const obstructed = Array.from(blockers).some(el => {
+              const blockerStyle = getComputedStyle(el);
+              if (blockerStyle.display === 'none' || blockerStyle.visibility === 'hidden' ||
+                  Number(blockerStyle.opacity) < 0.02) return false;
+              const blockerRect = el.getBoundingClientRect();
+              return blockerRect.width > 0 && blockerRect.height > 0 &&
+                blockerRect.left < rect.right && blockerRect.right > rect.left &&
+                blockerRect.top < rect.bottom && blockerRect.bottom > rect.top;
+            });
+            const hidden = body.classList.contains('immerse') || obstructed ||
               style.display === 'none' || style.visibility === 'hidden' ||
               rect.width < 1 || rect.height < 1;
             const artwork = tile ? getComputedStyle(tile).backgroundImage : '';
