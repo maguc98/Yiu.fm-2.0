@@ -9,6 +9,8 @@ final class NativeWebContainer: UIView {
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
     private let nativeHubRenderingEnabled = false
     private var miniFrame = CGRect.zero
+    private var nativeHubBridgeEnabledState: Bool?
+    private var nativeHubPresentationState: Bool?
     private(set) var latestHubState: [String: Any] = [:]
     var onHubStateChanged: (([String: Any]) -> Void)?
 
@@ -70,12 +72,16 @@ final class NativeWebContainer: UIView {
     }
 
     private func setHubBridgeEnabled(_ enabled: Bool) {
+        guard nativeHubBridgeEnabledState != enabled else { return }
+        nativeHubBridgeEnabledState = enabled
         evaluate("window.YiuHubBridge?.setEnabled(\(enabled ? "true" : "false"))")
     }
 
     /// Native controls send commands back to the existing page runtime.
     /// The web DOM remains the single source of truth for settings and actions.
     private func setHubNativePresentation(_ active: Bool) {
+        guard nativeHubPresentationState != active else { return }
+        nativeHubPresentationState = active
         evaluate("window.YiuHubBridge?.setNativePresentation(\(active ? "true" : "false"))")
     }
 
