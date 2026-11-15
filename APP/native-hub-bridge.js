@@ -13,13 +13,33 @@
   var listeners = [];
   var queued = false;
   var observer = null;
+  var generatedIds = new WeakMap();
+  var elementsByNativeId = new Map();
+  var nextGeneratedId = 1;
+
+  function nativeId(el) {
+    if (el.id) return el.id;
+    var value = generatedIds.get(el);
+    if (!value) {
+      value = 'yiu-native-' + nextGeneratedId++;
+      generatedIds.set(el, value);
+    }
+    return value;
+  }
 
   function readControl(el) {
-    if (!el || !el.id) return null;
+    if (!el) return null;
     var rect = el.getBoundingClientRect();
     var style = window.getComputedStyle(el);
     var item = {
-      id: el.id,
+      id: el.id || '',
+      nativeId: nativeId(el),
+      className: typeof el.className === 'string' ? el.className : '',
+      ariaLabel: el.getAttribute('aria-label') || '',
+      placeholder: el.getAttribute('placeholder') || '',
+      min: el.getAttribute('min'),
+      max: el.getAttribute('max'),
+      step: el.getAttribute('step'),
       tag: el.tagName.toLowerCase(),
       type: el.type || '',
       disabled: !!el.disabled,
@@ -39,7 +59,12 @@
         borderColor: style.borderColor,
         opacity: style.opacity,
         display: style.display,
-        visibility: style.visibility
+        visibility: style.visibility,
+        padding: style.padding,
+        margin: style.margin,
+        borderStyle: style.borderStyle,
+        lineHeight: style.lineHeight,
+        letterSpacing: style.letterSpacing
       }
     };
     if ('value' in el) item.value = el.value;
@@ -50,9 +75,14 @@
 
   function snapshot() {
     var rect = hub.getBoundingClientRect();
+    elementsByNativeId.clear();
     var controls = Array.prototype.map.call(
-      hub.querySelectorAll('input[id],select[id],textarea[id],button[id],[role="button"][id]'),
-      readControl
+      hub.querySelectorAll('input,select,textarea,button,[role="button"],a[href],[tabindex]:not([tabindex="-1"])'),
+      function (el) {
+        var item = readControl(el);
+        if (item) elementsByNativeId.set(item.nativeId, el);
+        return item;
+      }
     ).filter(Boolean);
 
     return {
@@ -105,7 +135,7 @@
 
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
-    var el = document.getElementById(id);
+    var el = document.getElementById(id) || elementsByNativeId.get(id);
     if (!el || !hub.contains(el) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
@@ -115,7 +145,7 @@
 
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
-    var el = document.getElementById(id);
+    var el = document.getElementById(id) || elementsByNativeId.get(id);
     if (!el || !hub.contains(el) || el.disabled) return false;
 
     if (el.type === 'checkbox' || el.type === 'radio') {
