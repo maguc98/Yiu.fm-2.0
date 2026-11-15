@@ -288,9 +288,9 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 button.menu = UIMenu(children: menuItems)
                 button.showsMenuAsPrimaryAction = true
                 view = button
-            } else if tag == "textarea" {
+            } else if tag == "textarea" || (node["contentEditable"] as? Bool == true) {
                 let textView = YiuNativeHubTextView(frame: .zero, textContainer: nil)
-                textView.text = node["value"] as? String ?? ""
+                textView.text = (node["contentEditable"] as? Bool == true) ? (node["text"] as? String ?? "") : (node["value"] as? String ?? "")
                 textView.placeholderText = node["placeholder"] as? String
                 textView.font = .systemFont(ofSize: CGFloat(number(appearance["fontSize"]) ?? 14))
                 textView.textColor = cssColor(appearance["color"]) ?? .label
@@ -350,7 +350,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 view.layer.borderWidth = CGFloat(number(appearance["borderWidth"]) ?? 0)
                 view.layer.borderColor = cssColor(appearance["borderColor"])?.cgColor
             }
-            if let text = node["text"] as? String, !text.isEmpty {
+            if node["contentEditable"] as? Bool != true, let text = node["text"] as? String, !text.isEmpty {
                 let padding = edgeInsets(appearance["padding"])
                 let label = UILabel(frame: view.bounds.inset(by: padding))
                 label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
