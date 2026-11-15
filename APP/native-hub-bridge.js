@@ -123,7 +123,8 @@
         overflow: style.overflow,
         overflowX: style.overflowX,
         overflowY: style.overflowY,
-        whiteSpace: style.whiteSpace
+        whiteSpace: style.whiteSpace,
+        zIndex: style.zIndex
       }
     };
     if (el.getAttribute('role')) item.role = el.getAttribute('role');
