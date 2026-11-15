@@ -6,6 +6,8 @@ final class NativeWebContainer: UIView {
     let webView: WKWebView
     private let miniBar = YiuNativeMiniPlayerView()
     private var miniFrame = CGRect.zero
+    private(set) var latestHubState: [String: Any] = [:]
+    var onHubStateChanged: (([String: Any]) -> Void)?
 
     init(webView: WKWebView) {
         self.webView = webView
@@ -37,6 +39,11 @@ final class NativeWebContainer: UIView {
         super.layoutSubviews()
         webView.frame = bounds
         if !miniFrame.isEmpty { miniBar.frame = miniFrame }
+    }
+
+    func applyHubPayload(_ payload: [String: Any]) {
+        latestHubState = payload
+        onHubStateChanged?(payload)
     }
 
     func applyMiniPayload(_ payload: [String: Any]) {
