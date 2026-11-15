@@ -213,6 +213,16 @@ final class YiuNativeHubRenderer: UIView {
             view.frame = localFrame
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             view.backgroundColor = cssColor(appearance["backgroundColor"])
+            if let cssBackground = appearance["backgroundImage"] as? String,
+               let image = imageFromCSSBackground(cssBackground) {
+                let imageView = UIImageView(frame: view.bounds)
+                imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                let size = (appearance["backgroundSize"] as? String ?? "").lowercased()
+                imageView.contentMode = size.contains("contain") ? .scaleAspectFit : .scaleAspectFill
+                imageView.image = image
+                imageView.clipsToBounds = true
+                view.insertSubview(imageView, at: 0)
+            }
             view.alpha = opacity
             if ["hidden", "clip", "auto", "scroll"].contains(overflowY) || ["hidden", "clip", "auto", "scroll"].contains(overflowX) { view.clipsToBounds = true }
             if true {
@@ -266,6 +276,23 @@ final class YiuNativeHubRenderer: UIView {
                                            y: number(source?["scrollTop"]) ?? 0)
         }
         isHidden = false
+    }
+
+
+    private func imageFromCSSBackground(_ value: String) -> UIImage? {
+        guard let start = value.range(of: "url("),
+              let end = value[start.upperBound...].firstIndex(of: ")") else { return nil }
+        let source = value[start.upperBound..<end]
+            .trimmingCharacters(in: CharacterSet(charactersIn: " \"'"))
+        if source.hasPrefix("data:image/"),
+           let comma = source.firstIndex(of: ",") {
+            let encoded = String(source[source.index(after: comma)...])
+            if let data = Data(base64Encoded: encoded) { return UIImage(data: data) }
+        }
+        if let url = URL(string: source), url.isFileURL {
+            return UIImage(contentsOfFile: url.path)
+        }
+        return nil
     }
 
     private func edgeInsets(_ value: Any?) -> UIEdgeInsets {
