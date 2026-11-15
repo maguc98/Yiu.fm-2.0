@@ -16,6 +16,7 @@ final class NativeWebContainer: UIView {
     private let nativeQuickPopupRenderer = YiuNativeHubRenderer()
     private let nativeDropdownPopupRenderer = YiuNativeHubRenderer()
     private let nativeZoomPopupRenderer = YiuNativeHubRenderer()
+    private let nativeCoverToastRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -35,6 +36,7 @@ final class NativeWebContainer: UIView {
     private let nativeQuickPopupRenderingEnabled = false
     private let nativeDropdownPopupRenderingEnabled = false
     private let nativeZoomPopupRenderingEnabled = false
+    private let nativeCoverToastRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -58,6 +60,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeQuickPopupRenderer)
         addSubview(nativeDropdownPopupRenderer)
         addSubview(nativeZoomPopupRenderer)
+        addSubview(nativeCoverToastRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -78,6 +81,8 @@ final class NativeWebContainer: UIView {
         nativeDropdownPopupRenderer.isUserInteractionEnabled = false
         nativeZoomPopupRenderer.isHidden = true
         nativeZoomPopupRenderer.isUserInteractionEnabled = false
+        nativeCoverToastRenderer.isHidden = true
+        nativeCoverToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -249,7 +254,16 @@ final class NativeWebContainer: UIView {
             nativeZoomPopupRenderer.isHidden = true
             setNativeMirrorPresentation(id: "zoomPop", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled)
+        if nativeCoverToastRenderingEnabled {
+            let toast = payload["coverToast"] as? [String: Any] ?? ["open": false]
+            nativeCoverToastRenderer.render(toast) { _, _ in }
+            nativeCoverToastRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "npToast", active: !nativeCoverToastRenderer.isHidden)
+        } else {
+            nativeCoverToastRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "npToast", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
