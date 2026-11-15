@@ -141,7 +141,7 @@ final class NativeWebContainer: UIView {
     }
 
     private func setThemeMenuNativePresentation(_ active: Bool) {
-        evaluate("window.YiuHubBridge?.setNativeThemePresentation(\\(active ? "true" : "false"))")
+        evaluate("window.YiuHubBridge?.setNativeThemePresentation(\(active ? "true" : "false"))")
     }
 
     func setHubOpen(_ open: Bool) {
