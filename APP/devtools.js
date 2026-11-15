@@ -436,14 +436,17 @@
   }
 
   /* ---------- Toast ---------- */
-  var toastEl = null, toastTimer = 0;
+  var toastEl = null, toastTextEl = null, toastTimer = 0;
   function toast(msg){
     if (!toastEl){
       toastEl = document.createElement('div');
       toastEl.id = 'logToast';
+      toastTextEl = document.createElement('span');
+      toastTextEl.className = 'log-toast-text';
+      toastEl.appendChild(toastTextEl);
       document.body.appendChild(toastEl);
     }
-    toastEl.textContent = msg;
+    toastTextEl.textContent = msg;
     void toastEl.offsetWidth;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
