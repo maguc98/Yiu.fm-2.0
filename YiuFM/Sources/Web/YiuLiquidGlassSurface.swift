@@ -19,10 +19,12 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
 
     private(set) var material: Material = .regular
     private var glassTintColor: UIColor?
+    private var glassInteractive: Bool = true
 
     init(material: Material = .regular, interactive: Bool = true, tintColor: UIColor? = nil) {
         self.material = material
         self.glassTintColor = tintColor
+        self.glassInteractive = interactive
         super.init(effect: Self.makeEffect(material: material, interactive: interactive, tintColor: tintColor))
         configureSurface()
     }
@@ -30,6 +32,7 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
     required init?(coder: NSCoder) {
         self.material = .regular
         self.glassTintColor = nil
+        self.glassInteractive = true
         super.init(coder: coder)
         effect = Self.makeEffect(material: .regular, interactive: true, tintColor: nil)
         configureSurface()
@@ -38,13 +41,14 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
     func setMaterial(_ material: Material, interactive: Bool = true) {
         guard self.material != material else { return }
         self.material = material
+        glassInteractive = interactive
         effect = Self.makeEffect(material: material, interactive: interactive, tintColor: glassTintColor)
     }
 
     func setTintColor(_ tintColor: UIColor?) {
         guard glassTintColor != tintColor else { return }
         glassTintColor = tintColor
-        effect = Self.makeEffect(material: material, interactive: true, tintColor: tintColor)
+        effect = Self.makeEffect(material: material, interactive: glassInteractive, tintColor: tintColor)
         if #available(iOS 26.0, *) {
             backgroundColor = .clear
         } else {
