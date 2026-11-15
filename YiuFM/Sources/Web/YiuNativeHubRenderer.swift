@@ -61,8 +61,14 @@ final class YiuNativeHubRenderer: UIView {
             // the glass surface; nested nodes are relative to their native parent.
             let parentOrigin = parentID.isEmpty ? CGPoint.zero :
                 (views[parentID]?.convert(.zero, to: self) ?? .zero)
-            let localFrame = CGRect(x: nx - x - parentOrigin.x,
-                                    y: ny - y - parentOrigin.y,
+            // getBoundingClientRect() reports children inside a scroller at
+            // their viewport position. Native scroll content uses content-space
+            // coordinates, so restore the source scroll offset before insertion.
+            let parentNode = nodes.first { ($0["nativeId"] as? String) == parentID }
+            let parentScrollLeft = parentID.isEmpty ? 0 : (number(parentNode?["scrollLeft"]) ?? 0)
+            let parentScrollTop = parentID.isEmpty ? 0 : (number(parentNode?["scrollTop"]) ?? 0)
+            let localFrame = CGRect(x: nx - x - parentOrigin.x + parentScrollLeft,
+                                    y: ny - y - parentOrigin.y + parentScrollTop,
                                     width: nw, height: nh)
             let appearance = node["appearance"] as? [String: Any] ?? [:]
             let display = (appearance["display"] as? String ?? "block")
