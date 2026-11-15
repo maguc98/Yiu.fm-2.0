@@ -12,6 +12,7 @@
 
   var listeners = [];
   var queued = false;
+  var notifyTimer = 0;
   var observer = null;
   var generatedIds = new WeakMap();
   var elementsByNativeId = new Map();
@@ -133,19 +134,22 @@
 
   function snapshot() {
     var rect = hub.getBoundingClientRect();
-    var nodes = readTree();
-    var controls = Array.prototype.map.call(
+    var isOpen = document.body.classList.contains('open');
+    // The native control center is irrelevant while closed. Avoid walking up to
+    // 1,800 DOM nodes during background player/visualizer activity.
+    var nodes = isOpen ? readTree() : [];
+    var controls = isOpen ? Array.prototype.map.call(
       hub.querySelectorAll('input,select,textarea,button,[role="button"],a[href],[tabindex]:not([tabindex="-1"])'),
       function (el) {
         var item = readControl(el);
         if (item) elementsByNativeId.set(item.nativeId, el);
         return item;
       }
-    ).filter(Boolean);
+    ).filter(Boolean) : [];
 
     return {
       version: 1,
-      open: document.body.classList.contains('open'),
+      open: isOpen,
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
       controls: controls,
@@ -174,7 +178,12 @@
   function scheduleNotify() {
     if (queued) return;
     queued = true;
-    requestAnimationFrame(notify);
+    // Coalesce bursts of DOM mutations. A 100 ms ceiling is enough for native
+    // control-state synchronization and avoids rebuilding the full tree at 60 Hz.
+    notifyTimer = window.setTimeout(function () {
+      notifyTimer = 0;
+      requestAnimationFrame(notify);
+    }, 100);
   }
 
   function setOpen(open) {
@@ -242,6 +251,7 @@
     subtree: true,
     childList: true,
     attributes: true,
+    attributeFilter: ['class', 'aria-expanded', 'aria-selected', 'aria-pressed', 'disabled', 'hidden'],
     characterData: true
   });
   observer.observe(document.body, {
@@ -251,6 +261,7 @@
   window.addEventListener('resize', scheduleNotify, { passive: true });
   window.addEventListener('pagehide', function () {
     if (observer) observer.disconnect();
+    if (notifyTimer) window.clearTimeout(notifyTimer);
     listeners = [];
   }, { once: true });
   // Publish the first state immediately so UIKit does not wait for a later mutation.
