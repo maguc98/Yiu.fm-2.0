@@ -111,7 +111,7 @@ struct LegacyVisualStage: UIViewRepresentable {
         mini.style.opacity = '0';
         mini.style.pointerEvents = 'none';
         report();
-        window.__yiuNativeMiniTimer = setInterval(report, 250);
+        window.__yiuNativeMiniTimer = setInterval(report, 100);
         window.addEventListener('resize', report, {passive:true});
         document.addEventListener('visibilitychange', report, {passive:true});
       };

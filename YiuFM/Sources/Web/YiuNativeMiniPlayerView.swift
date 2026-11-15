@@ -108,6 +108,8 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
 
         configureButton(playButton, symbol: "pause.fill", action: #selector(playTapped))
         configureButton(nextButton, symbol: "forward.end.fill", action: #selector(nextTapped))
+        playButton.accessibilityLabel = "暂停或继续"
+        nextButton.accessibilityLabel = "下一句"
         row.addArrangedSubview(playButton)
         row.addArrangedSubview(nextButton)
         playWidth = playButton.widthAnchor.constraint(equalToConstant: 0)
