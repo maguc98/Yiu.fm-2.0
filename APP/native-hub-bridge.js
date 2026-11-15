@@ -46,11 +46,12 @@
   // Convert transformed WebKit rectangles back to the hub's stable layout
   // coordinate space. The original #hub animates with scale/translate; feeding
   // those transient visual rects to UIKit would scale the native mirror twice.
-  function layoutRect(el) {
+  function layoutRect(el, coordinateRoot) {
     var visual = el.getBoundingClientRect();
-    var left = hub.offsetLeft || 0;
-    var top = hub.offsetTop || 0;
-    var style = window.getComputedStyle(hub);
+    var root = coordinateRoot || hub;
+    var left = root.offsetLeft || 0;
+    var top = root.offsetTop || 0;
+    var style = window.getComputedStyle(root);
     var matrix;
     try {
       matrix = style.transform && style.transform !== 'none' ?
@@ -62,9 +63,9 @@
     var scaleY = Math.hypot(matrix.c, matrix.d) || 1;
     var origin = (style.transformOrigin || '0px 0px').split(' ');
     var originX = origin[0] && origin[0].indexOf('%') >= 0 ?
-      (parseFloat(origin[0]) || 0) * hub.offsetWidth / 100 : (parseFloat(origin[0]) || 0);
+      (parseFloat(origin[0]) || 0) * root.offsetWidth / 100 : (parseFloat(origin[0]) || 0);
     var originY = origin[1] && origin[1].indexOf('%') >= 0 ?
-      (parseFloat(origin[1]) || 0) * hub.offsetHeight / 100 : (parseFloat(origin[1]) || 0);
+      (parseFloat(origin[1]) || 0) * root.offsetHeight / 100 : (parseFloat(origin[1]) || 0);
     var visualOriginX = left + originX - (matrix.a * originX + matrix.c * originY) + matrix.e;
     var visualOriginY = top + originY - (matrix.b * originX + matrix.d * originY) + matrix.f;
     return {
@@ -125,8 +126,8 @@
     return item;
   }
 
-  function readNode(el, parentId) {
-    var rect = layoutRect(el);
+  function readNode(el, parentId, coordinateRoot) {
+    var rect = layoutRect(el, coordinateRoot);
     var style = window.getComputedStyle(el);
     var item = {
       nativeId: nativeId(el),
@@ -265,14 +266,14 @@
     return item;
   }
 
-  function readTree() {
+  function readTree(root) {
+    root = root || hub;
     var nodes = [];
-    elementsByNativeId.clear();
     function visit(parent) {
       Array.prototype.forEach.call(parent.children || [], function (el) {
         if (nodes.length >= 1800) return;
-        var parentId = parent === hub ? '' : nativeId(parent);
-        var item = readNode(el, parentId);
+        var parentId = parent === root ? '' : nativeId(parent);
+        var item = readNode(el, parentId, root);
         nodes.push(item);
         elementsByNativeId.set(item.nativeId, el);
 
@@ -317,12 +318,32 @@
         visit(el);
       });
     }
-    visit(hub);
+    visit(root);
     return nodes;
   }
 
+  function themeMenuSnapshot() {
+    var menu = document.getElementById('mediaMenu');
+    if (!menu || !menu.classList.contains('show') || !nativeBridgeEnabled) return { open: false, nodes: [] };
+    var rect = layoutRect(menu, menu);
+    var nodes = readTree(menu);
+    var glass = document.getElementById('tpGlass');
+    var glassStyle = glass ? window.getComputedStyle(glass) : null;
+    return {
+      open: true,
+      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      surfaceAppearance: {
+        backgroundColor: glassStyle ? glassStyle.backgroundColor : 'rgba(255,255,255,.14)',
+        boxShadow: glassStyle ? glassStyle.boxShadow : 'none',
+        borderRadius: glassStyle ? glassStyle.borderTopLeftRadius : '20px'
+      },
+      nodes: nodes
+    };
+  }
+
   function snapshot() {
-    var rect = layoutRect(hub);
+    var rect = layoutRect(hub, hub);
     var isOpen = document.body.classList.contains('open');
     // The native control center is irrelevant while closed. Avoid walking up to
     // 1,800 DOM nodes during background player/visualizer activity.
@@ -366,7 +387,8 @@
         };
       })(),
       controls: controls,
-      nodes: nodes
+      nodes: nodes,
+      themeMenu: themeMenuSnapshot()
     };
   }
 
@@ -486,7 +508,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !hub.contains(el) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -496,7 +518,7 @@
   function setScroll(id, top, left) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !hub.contains(el)) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el))) return false;
     el.scrollTop = Math.max(0, Number(top) || 0);
     el.scrollLeft = Math.max(0, Number(left) || 0);
     scheduleNotify();
@@ -506,7 +528,7 @@
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !hub.contains(el) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el)) || el.disabled) return false;
 
     if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
