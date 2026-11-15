@@ -99,9 +99,20 @@ var openCrop=(function(){
     if(canvas)canvas.__yiuNativeCropVersion=(canvas.__yiuNativeCropVersion||0)+1;
     if(window.YiuHubBridge&&typeof window.YiuHubBridge.refresh==="function")window.YiuHubBridge.refresh();
   }
+  var nativeCropGestureCount=0;
   window.YiuCropNativeGesture=function(g){
     if(!g||!ov.classList.contains("show"))return false;
-    if(g.phase==="end"){refreshNativeCropMirror();return true;}
+    if(g.phase==="begin"){
+      nativeCropGestureCount++;
+      window.__yiuNativeCropGestureActive=true;
+      return true;
+    }
+    if(g.phase==="end"){
+      nativeCropGestureCount=Math.max(0,nativeCropGestureCount-1);
+      window.__yiuNativeCropGestureActive=nativeCropGestureCount>0;
+      if(!window.__yiuNativeCropGestureActive)refreshNativeCropMirror();
+      return true;
+    }
     if(g.nativeGesture==="cropPan"){
       var dx=Number(g.dx)||0,dy=Number(g.dy)||0;
       S.X+=dx;S.Y+=dy;paint();return true;
