@@ -10,6 +10,7 @@ final class NativeWebContainer: UIView {
     private let nativeFloatingToolsRenderer = YiuNativeHubRenderer()
     private let nativeCommandButtonRenderer = YiuNativeHubRenderer()
     private let nativeSplashWindowRenderer = YiuNativeHubRenderer()
+    private let nativeTimelineLensRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -23,6 +24,7 @@ final class NativeWebContainer: UIView {
     private let nativeFloatingToolsRenderingEnabled = false
     private let nativeCommandButtonRenderingEnabled = false
     private let nativeSplashWindowRenderingEnabled = false
+    private let nativeTimelineLensRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -40,6 +42,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeFloatingToolsRenderer)
         addSubview(nativeCommandButtonRenderer)
         addSubview(nativeSplashWindowRenderer)
+        addSubview(nativeTimelineLensRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -48,6 +51,8 @@ final class NativeWebContainer: UIView {
         nativeFloatingToolsRenderer.isHidden = true
         nativeCommandButtonRenderer.isHidden = true
         nativeSplashWindowRenderer.isHidden = true
+        nativeTimelineLensRenderer.isHidden = true
+        nativeTimelineLensRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -165,7 +170,16 @@ final class NativeWebContainer: UIView {
             nativeSplashWindowRenderer.isHidden = true
             setNativeFloatingPresentation(id: "saWinCard", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled)
+        if nativeTimelineLensRenderingEnabled {
+            let lens = payload["timelineLens"] as? [String: Any] ?? ["open": false]
+            nativeTimelineLensRenderer.render(lens) { _, _ in }
+            nativeTimelineLensRenderer.isUserInteractionEnabled = false
+            setNativeFloatingPresentation(id: "tlLens", active: !nativeTimelineLensRenderer.isHidden)
+        } else {
+            nativeTimelineLensRenderer.isHidden = true
+            setNativeFloatingPresentation(id: "tlLens", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
