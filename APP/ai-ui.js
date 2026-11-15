@@ -624,7 +624,7 @@
         '</div>' +
       '</div>' +
       // 底部输入胶囊
-      '<div class="aiui-bar" aria-hidden="true"><div class="aiui-bar-in">' +
+      '<div class="aiui-bar" aria-hidden="true"><div class="aiui-bar-in" id="aiuiBarIn">' +
         '<textarea class="aiui-ta" rows="1" placeholder="和我说点什么…" enterkeyhint="send" ' +
           'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="消息"></textarea>' +
         '<button class="aiui-send" type="button" aria-label="发送" disabled>' +
