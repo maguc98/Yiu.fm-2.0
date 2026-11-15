@@ -246,8 +246,8 @@ jobs:
           if html.count(full_settings_script) != 1:
               raise SystemExit("Expected exactly one native settings-page script in the current index.html.")
           html = html.replace(menus_anchor, menus_script + chr(10) + fps_settings_script, 1)
-          old_devtools = '<script src="./APP/devtools.js?v=20261101a"></script>'
-          new_devtools = '<script src="./APP/devtools.js?v=20261112b"></script>'
+          old_devtools = '<script src="./APP/devtools.js?v=20261115glassdev1"></script>'
+          new_devtools = '<script src="./APP/devtools.js?v=20261115glassdev2"></script>'
           if html.count(old_devtools) != 1:
               raise SystemExit("Expected one developer-tools script tag; refusing to patch.")
           html = html.replace(old_devtools, new_devtools, 1)
@@ -411,7 +411,7 @@ jobs:
           grep -q 'APP/settings-page.js?v=20261114a' "$WEB_ROOT/index.html"
           grep -q 'APP/frame-rate-settings.js?v=20261112d' "$WEB_ROOT/index.html"
           grep -q 'APP/menus.js?v=20261114d' "$WEB_ROOT/index.html"
-          grep -q 'APP/devtools.js?v=20261112b' "$WEB_ROOT/index.html"
+          grep -q 'APP/devtools.js?v=20261115glassdev2' "$WEB_ROOT/index.html"
           grep -q 'native settings architecture' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'function moveSystem' "$WEB_ROOT/APP/settings-page.js"
           grep -q 'function moveDeveloper' "$WEB_ROOT/APP/settings-page.js"
