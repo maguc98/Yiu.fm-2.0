@@ -108,7 +108,6 @@ final class YiuNativeHubRenderer: UIView {
                 view = UIView()
             }
             view.frame = localFrame
-            view.isUserInteractionEnabled = isControl || tag == "img"
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             view.backgroundColor = cssColor(appearance["backgroundColor"])
             view.alpha = opacity
