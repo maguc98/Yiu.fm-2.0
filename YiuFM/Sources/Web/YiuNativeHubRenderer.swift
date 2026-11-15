@@ -320,11 +320,57 @@ final class YiuNativeHubRenderer: UIView {
             scroll.contentOffset = CGPoint(x: number(source?["scrollLeft"]) ?? 0,
                                            y: number(source?["scrollTop"]) ?? 0)
         }
-        isHidden = false
+        setPresentation(open: true, appearance: surfaceAppearance)
     }
 
-
-
+    private func setPresentation(open: Bool, appearance: [String: Any]) {
+        if open {
+            guard !presentationOpen else {
+                isHidden = false
+                return
+            }
+            presentationOpen = true
+            isHidden = false
+            let scale: CGFloat = 0.12
+            let originX = CGFloat(number(appearance["openOriginX"]) ?? Double(bounds.width))
+            let originY = CGFloat(number(appearance["openOriginY"]) ?? Double(bounds.height))
+            let offsetX = (1 - scale) * (originX - bounds.width / 2)
+            let offsetY = (1 - scale) * (originY - bounds.height / 2)
+            transform = CGAffineTransform(translationX: offsetX, y: offsetY)
+                .scaledBy(x: scale, y: scale)
+            alpha = 0
+            UIView.animate(withDuration: 0.7,
+                           delay: 0,
+                           usingSpringWithDamping: 0.84,
+                           initialSpringVelocity: 0.15,
+                           options: [.beginFromCurrentState, .allowUserInteraction]) {
+                self.transform = .identity
+                self.alpha = 1
+            }
+        } else {
+            guard presentationOpen else {
+                isHidden = true
+                return
+            }
+            presentationOpen = false
+            let translateX = CGFloat(number(appearance["closeTranslateX"]) ?? 0)
+            let translateY = CGFloat(number(appearance["closeTranslateY"]) ?? 0)
+            let closeTransform = CGAffineTransform(translationX: translateX, y: translateY)
+                .scaledBy(x: 0.12, y: 0.12)
+            UIView.animate(withDuration: 0.65,
+                           delay: 0,
+                           options: [.beginFromCurrentState, .allowUserInteraction]) {
+                self.transform = closeTransform
+                self.alpha = 0
+            } completion: { _ in
+                guard !self.presentationOpen else { return }
+                self.isHidden = true
+                self.transform = .identity
+                self.alpha = 1
+                self.onDidHide?()
+            }
+        }
+    }
 
     private func applyCSSShadow(_ value: Any?, to target: CALayer, cornerRadius: CGFloat) {
         guard let raw = value as? String, raw != "none" else {
