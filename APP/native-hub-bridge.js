@@ -581,6 +581,20 @@
     return true;
   }
 
+  function setNativeMirrorPresentation(id, active) {
+    var root = document.getElementById(id);
+    if (!root) return false;
+    if (active) {
+      if (!root.hasAttribute('data-yiu-native-opacity')) root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
+      root.style.opacity = '0';
+    } else if (root.hasAttribute('data-yiu-native-opacity')) {
+      var opacity = root.getAttribute('data-yiu-native-opacity');
+      if (opacity) root.style.opacity = opacity; else root.style.removeProperty('opacity');
+      root.removeAttribute('data-yiu-native-opacity');
+    }
+    return true;
+  }
+
   function setNativeThemePresentation(active) {
     active = !!active;
     if (active === nativeThemePresentation) return true;
@@ -719,6 +733,7 @@
     setBackNativePresentation: setBackNativePresentation,
     setNativeThemePresentation: setNativeThemePresentation,
     setNativeFloatingPresentation: setNativeFloatingPresentation,
+    setNativeMirrorPresentation: setNativeMirrorPresentation,
     setEnabled: setEnabled,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
