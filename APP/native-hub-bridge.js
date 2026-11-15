@@ -96,6 +96,9 @@
       scrollLeft: el.scrollLeft || 0,
       scrollWidth: el.scrollWidth || 0,
       scrollHeight: el.scrollHeight || 0,
+      min: el.getAttribute('min'),
+      max: el.getAttribute('max'),
+      step: el.getAttribute('step'),
       appearance: {
         color: style.color,
         backgroundColor: style.backgroundColor,
