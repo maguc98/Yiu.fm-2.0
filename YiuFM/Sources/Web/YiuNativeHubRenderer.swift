@@ -192,14 +192,21 @@ final class YiuNativeHubRenderer: UIView {
                 textView.placeholderText = node["placeholder"] as? String
                 textView.font = .systemFont(ofSize: CGFloat(number(appearance["fontSize"]) ?? 14))
                 textView.textColor = cssColor(appearance["color"]) ?? .label
-                textView.onEditingEnded = { [weak self] text in self?.actionHandler?(id, text) }
+                textView.onTextChanged = { [weak self] text in self?.actionHandler?(id, text) }
                 view = textView
             } else if tag == "input" && ["text", "search", "email", "url", "number"].contains(inputType) {
                 let field = UITextField()
                 field.borderStyle = .none
                 field.text = node["value"] as? String
                 field.placeholder = node["placeholder"] as? String
-                field.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, field.text ?? "") }, for: .editingDidEnd)
+                switch inputType {
+                case "number": field.keyboardType = .decimalPad
+                case "email": field.keyboardType = .emailAddress
+                case "url": field.keyboardType = .URL
+                case "search": field.returnKeyType = .search
+                default: break
+                }
+                field.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, field.text ?? "") }, for: .editingChanged)
                 view = field
             } else if isControl {
                 let button = UIButton(type: .custom)
@@ -375,7 +382,7 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
     var placeholderText: String? {
         didSet { placeholderLabel.text = placeholderText; updatePlaceholder() }
     }
-    var onEditingEnded: ((String) -> Void)?
+    var onTextChanged: ((String) -> Void)?
     private let placeholderLabel = UILabel()
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
