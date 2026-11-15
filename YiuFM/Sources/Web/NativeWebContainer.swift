@@ -6,6 +6,7 @@ final class NativeWebContainer: UIView {
     let webView: WKWebView
     private let miniBar = YiuNativeMiniPlayerView()
     private let nativeHubRenderer = YiuNativeHubRenderer()
+    private let nativeBackButton = YiuNativeBackButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
     private let nativeHubRenderingEnabled = false
     private var miniFrame = CGRect.zero
@@ -21,10 +22,15 @@ final class NativeWebContainer: UIView {
         addSubview(webView)
         addSubview(miniBar)
         addSubview(nativeHubRenderer)
+        addSubview(nativeBackButton)
         miniBar.isHidden = true
         nativeHubRenderer.isHidden = true
+        nativeBackButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
             self?.setHubNativePresentation(false)
+        }
+        nativeBackButton.onTap = { [weak self] in
+            self?.evaluate("document.getElementById('hback')?.click()")
         }
         miniBar.onToggle = { [weak self] in
             self?.evaluate("document.getElementById('mini')?.click()")
@@ -53,6 +59,22 @@ final class NativeWebContainer: UIView {
 
     func applyHubPayload(_ payload: [String: Any]) {
         latestHubState = payload
+        if let back = payload["backButton"] as? [String: Any],
+           let rectData = back["rect"] as? [String: Any],
+           let x = rectData["x"] as? CGFloat,
+           let y = rectData["y"] as? CGFloat,
+           let width = rectData["width"] as? CGFloat,
+           let height = rectData["height"] as? CGFloat {
+            let visible = back["visible"] as? Bool ?? false
+            let opacity = back["opacity"] as? CGFloat ?? 1
+            let label = back["label"] as? String ?? "展开部分工具栏"
+            nativeBackButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
+                                    visible: visible, opacity: opacity, label: label)
+            evaluate("window.YiuHubBridge?.setBackNativePresentation(\u0024{visible ? "true" : "false"})")
+        } else {
+            nativeBackButton.isHidden = true
+            evaluate("window.YiuHubBridge?.setBackNativePresentation(false)")
+        }
         setHubBridgeEnabled(nativeHubRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
