@@ -48,6 +48,7 @@ final class NativeWebContainer: UIView {
 
     func applyHubPayload(_ payload: [String: Any]) {
         latestHubState = payload
+        setHubBridgeEnabled(nativeHubRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
@@ -66,6 +67,10 @@ final class NativeWebContainer: UIView {
             setHubNativePresentation(false)
         }
         onHubStateChanged?(payload)
+    }
+
+    private func setHubBridgeEnabled(_ enabled: Bool) {
+        evaluate("window.YiuHubBridge?.setEnabled(\\(enabled ? \"true\" : \"false\"))")
     }
 
     /// Native controls send commands back to the existing page runtime.
