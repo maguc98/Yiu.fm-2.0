@@ -4,24 +4,27 @@ import WebKit
 struct LegacyVisualStage: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    func makeUIView(context: Context) -> WKWebView {
+    func makeUIView(context: Context) -> NativeWebContainer {
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
-
-        // Preserve the existing local music bridge.
         YiuMusicBridge.ensureMusicDirectory()
         configuration.userContentController.addScriptMessageHandler(
-            YiuMusicBridge.shared,
-            contentWorld: .page,
-            name: "yiuMusic"
+            YiuMusicBridge.shared, contentWorld: .page, name: "yiuMusic"
         )
+        configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuNativeMini")
 
-        // Keep the original WebKit-rendered glass surfaces in place.
-        // The previous full-page UIKit overlay sat above the entire WKWebView
-        // and relied on heuristic mask cut-outs. That compositing model could
-        // obscure foreground content (including nested controls and artwork).
-        // Native glass will be reintroduced only for explicitly separated,
-        // empty background hosts with deterministic foreground layering.
+        let hideDOMMini = WKUserScript(
+            source: "(()=>{const s=document.createElement('style');s.textContent='#mini{opacity:0!important;pointer-events:none!important}';(document.documentElement||document).appendChild(s)})();",
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        configuration.userContentController.addUserScript(hideDOMMini)
+        configuration.userContentController.addUserScript(WKUserScript(
+            source: Self.miniBridgeScript,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        ))
+
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
         webView.backgroundColor = .black
@@ -29,7 +32,10 @@ struct LegacyVisualStage: UIViewRepresentable {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.bounces = false
 
-        // XcodeGen copies Resources/Web into the app bundle.
+        let container = NativeWebContainer(webView: webView)
+        context.coordinator.container = container
+        context.coordinator.webView = webView
+
         if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "Web") {
             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         } else if let url = Bundle.main.url(forResource: "index", withExtension: "html") {
@@ -37,16 +43,88 @@ struct LegacyVisualStage: UIViewRepresentable {
         } else {
             assertionFailure("Yiu.fm local Web resources are missing from the app bundle.")
         }
-
-        return webView
+        return container
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: NativeWebContainer, context: Context) {}
 
-    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
-        uiView.stopLoading()
-        uiView.configuration.userContentController.removeAllScriptMessageHandlers()
+    static func dismantleUIView(_ uiView: NativeWebContainer, coordinator: Coordinator) {
+        uiView.webView.stopLoading()
+        uiView.webView.configuration.userContentController.removeScriptMessageHandler(
+            forName: "yiuNativeMini", contentWorld: .page
+        )
+        uiView.webView.configuration.userContentController.removeAllScriptMessageHandlers()
+        coordinator.container = nil
+        coordinator.webView = nil
     }
 
-    final class Coordinator: NSObject {}
+    final class Coordinator: NSObject, WKScriptMessageHandler {
+        weak var container: NativeWebContainer?
+        weak var webView: WKWebView?
+
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard message.name == "yiuNativeMini",
+                  let payload = message.body as? [String: Any] else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.container?.applyMiniPayload(payload)
+            }
+        }
+    }
+
+    private static let miniBridgeScript = #"""
+    (() => {
+      const start = () => {
+        const mini = document.getElementById('mini');
+        if (!mini || window.__yiuNativeMiniBridge) return;
+        window.__yiuNativeMiniBridge = true;
+        const tile = document.getElementById('miTile');
+        const title = document.getElementById('miT');
+        const subtitle = mini.querySelector('.mi-s');
+        const status = mini.querySelector('.mi-l');
+        let lastArtwork = '';
+        const report = () => {
+          try {
+            const rect = mini.getBoundingClientRect();
+            const style = getComputedStyle(mini);
+            const body = document.body;
+            const hidden = body.classList.contains('open') ||
+              body.classList.contains('np-open') ||
+              body.classList.contains('immerse') ||
+              style.display === 'none' || style.visibility === 'hidden' ||
+              rect.width < 1 || rect.height < 1;
+            const artwork = tile ? getComputedStyle(tile).backgroundImage : '';
+            const payload = {
+              x: rect.left, y: rect.top, width: rect.width, height: rect.height,
+              visible: !hidden, expanded: body.classList.contains('mx'),
+              title: title ? title.textContent : '—',
+              subtitle: subtitle ? subtitle.textContent : '',
+              status: status ? status.textContent : '正在播放',
+              playing: (typeof playing !== 'undefined') ? !!playing : false
+            };
+            if (artwork && artwork !== lastArtwork) {
+              lastArtwork = artwork;
+              payload.artwork = artwork;
+            }
+            window.webkit.messageHandlers.yiuNativeMini.postMessage(payload);
+          } catch (_) {}
+        };
+        mini.style.opacity = '0';
+        mini.style.pointerEvents = 'none';
+        report();
+        window.__yiuNativeMiniTimer = setInterval(report, 250);
+        window.addEventListener('resize', report, {passive:true});
+        document.addEventListener('visibilitychange', report, {passive:true});
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start, {once:true});
+      } else {
+        start();
+      }
+      let attempts = 0;
+      const retry = setInterval(() => {
+        if (window.__yiuNativeMiniBridge || ++attempts > 40) { clearInterval(retry); return; }
+        start();
+      }, 100);
+    })();
+    """#
 }
