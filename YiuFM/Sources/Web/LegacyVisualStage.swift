@@ -16,33 +16,18 @@ struct LegacyVisualStage: UIViewRepresentable {
             name: "yiuMusic"
         )
 
-        // The browser reports geometry; UIKit draws the actual iOS Liquid Glass material.
-        configuration.userContentController.add(context.coordinator, name: "yiuLiquidGlass")
-        configuration.userContentController.addUserScript(
-            WKUserScript(
-                source: NativeLiquidGlassOverlay.webScript,
-                injectionTime: .atDocumentEnd,
-                forMainFrameOnly: true
-            )
-        )
-
+        // Keep the original WebKit-rendered glass surfaces in place.
+        // The previous full-page UIKit overlay sat above the entire WKWebView
+        // and relied on heuristic mask cut-outs. That compositing model could
+        // obscure foreground content (including nested controls and artwork).
+        // Native glass will be reintroduced only for explicitly separated,
+        // empty background hosts with deterministic foreground layering.
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.bounces = false
-
-        let glassOverlay = NativeLiquidGlassOverlay(frame: .zero)
-        glassOverlay.translatesAutoresizingMaskIntoConstraints = false
-        webView.addSubview(glassOverlay)
-        NSLayoutConstraint.activate([
-            glassOverlay.leadingAnchor.constraint(equalTo: webView.leadingAnchor),
-            glassOverlay.trailingAnchor.constraint(equalTo: webView.trailingAnchor),
-            glassOverlay.topAnchor.constraint(equalTo: webView.topAnchor),
-            glassOverlay.bottomAnchor.constraint(equalTo: webView.bottomAnchor)
-        ])
-        context.coordinator.overlay = glassOverlay
 
         // XcodeGen copies Resources/Web into the app bundle.
         if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "Web") {
@@ -61,19 +46,7 @@ struct LegacyVisualStage: UIViewRepresentable {
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
         uiView.stopLoading()
         uiView.configuration.userContentController.removeAllScriptMessageHandlers()
-        coordinator.overlay = nil
     }
 
-    final class Coordinator: NSObject, WKScriptMessageHandler {
-        weak var overlay: NativeLiquidGlassOverlay?
-
-        func userContentController(_ userContentController: WKUserContentController,
-                                   didReceive message: WKScriptMessage) {
-            guard message.name == "yiuLiquidGlass",
-                  let payload = message.body as? [String: Any] else { return }
-            DispatchQueue.main.async { [weak self] in
-                self?.overlay?.apply(payload)
-            }
-        }
-    }
+    final class Coordinator: NSObject {}
 }
