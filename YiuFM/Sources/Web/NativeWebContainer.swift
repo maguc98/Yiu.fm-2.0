@@ -160,7 +160,7 @@ final class NativeWebContainer: UIView {
     private func longPressHubControl(id: String) {
         guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let json = String(data: data, encoding: .utf8) else { return }
-        evaluate("window.YiuHubBridge?.longPressControl(\\(json))")
+        evaluate("window.YiuHubBridge?.longPressControl(\(json))")
     }
 
     func setHubScroll(id: String, top: Double, left: Double) {
