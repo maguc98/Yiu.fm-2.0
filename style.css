@@ -3135,3 +3135,43 @@ html body.cc-home #hub#hub.cc-home::before{
   backdrop-filter:var(--g-blur) !important;
   box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.16) !important;
 }
+
+
+/* ===== 2026-11-15 · Liquid Glass material pass =====
+   Keep the delivered control-center layout and Mini bar geometry unchanged.
+   Increase only the glass material: stronger backdrop sampling, layered
+   specular reflection, and a restrained inner rim. Content stays on its own
+   layer; no overlay is placed above text or controls.
+*/
+#mini::before{
+  background:
+    linear-gradient(145deg,
+      rgba(255,255,255,.22) 0%,
+      rgba(255,255,255,.075) 28%,
+      rgba(255,255,255,.025) 58%,
+      rgba(255,255,255,.12) 100%),
+    var(--ui-glass-fill) !important;
+  -webkit-backdrop-filter:blur(30px) saturate(1.42) !important;
+  backdrop-filter:blur(30px) saturate(1.42) !important;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.32),
+    inset 0 0 0 1px rgba(255,255,255,.075),
+    0 12px 34px rgba(0,0,0,.30) !important;
+}
+#hub::before{
+  background:
+    linear-gradient(145deg,
+      rgba(255,255,255,.19) 0%,
+      rgba(255,255,255,.06) 30%,
+      rgba(255,255,255,.02) 62%,
+      rgba(255,255,255,.105) 100%),
+    var(--ui-glass-fill) !important;
+  -webkit-backdrop-filter:blur(30px) saturate(1.42) !important;
+  backdrop-filter:blur(30px) saturate(1.42) !important;
+  border:1px solid rgba(255,255,255,.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 0 0 1px rgba(255,255,255,.07),
+    0 12px 34px rgba(0,0,0,.28) !important;
+}
