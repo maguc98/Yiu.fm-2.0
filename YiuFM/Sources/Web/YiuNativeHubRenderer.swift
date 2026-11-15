@@ -49,10 +49,11 @@ final class YiuNativeHubRenderer: UIView {
         lastSnapshotKey = key
 
         frame = CGRect(x: x, y: y, width: width, height: height)
-        applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: 28)
+        let surfaceRadius = CGFloat(number(surfaceAppearance["borderRadius"]) ?? 28)
+        applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: surfaceRadius)
         glass.updateGlassTint(cssColor(surfaceAppearance["backgroundColor"]))
         glass.frame = bounds
-        glass.layer.cornerRadius = 28
+        glass.layer.cornerRadius = surfaceRadius
         glass.clipsToBounds = true
         glass.isHidden = false
 
@@ -279,7 +280,19 @@ final class YiuNativeHubRenderer: UIView {
                 let padding = edgeInsets(appearance["padding"])
                 let label = UILabel(frame: view.bounds.inset(by: padding))
                 label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                label.numberOfLines = 0
+                let whiteSpace = (appearance["whiteSpace"] as? String) ?? "normal"
+                label.numberOfLines = whiteSpace == "nowrap" ? 1 : 0
+                label.lineBreakMode = whiteSpace == "nowrap" ? .byTruncatingTail : .byWordWrapping
+                label.adjustsFontSizeToFitWidth = whiteSpace == "nowrap"
+                label.minimumScaleFactor = 0.75
+                let textTransform = (appearance["textTransform"] as? String) ?? "none"
+                let renderedText: String
+                switch textTransform {
+                case "uppercase": renderedText = text.uppercased()
+                case "lowercase": renderedText = text.lowercased()
+                case "capitalize": renderedText = text.localizedCapitalized
+                default: renderedText = text
+                }
                 let textColor = cssColor(appearance["color"]) ?? .label
                 label.textColor = textColor
                 let size = CGFloat(number(appearance["fontSize"]) ?? 14)
@@ -289,6 +302,10 @@ final class YiuNativeHubRenderer: UIView {
                 let family = (appearance["fontFamily"] as? String)?
                     .split(separator: ",").first.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\"", with: "") }
                 label.font = family.flatMap { UIFont(name: $0, size: max(8, min(48, size))) } ?? fallbackFont
+                if (appearance["fontStyle"] as? String) == "italic",
+                   let italicDescriptor = label.font.fontDescriptor.withSymbolicTraits(.traitItalic) {
+                    label.font = UIFont(descriptor: italicDescriptor, size: label.font.pointSize)
+                }
                 let paragraph = NSMutableParagraphStyle()
                 if let align = appearance["textAlign"] as? String {
                     paragraph.alignment = align == "center" ? .center : (align == "right" ? .right : .left)
@@ -299,10 +316,18 @@ final class YiuNativeHubRenderer: UIView {
                     paragraph.maximumLineHeight = CGFloat(lineHeight)
                 }
                 let kern = CGFloat(number(appearance["letterSpacing"]) ?? 0)
-                label.attributedText = NSAttributedString(string: text, attributes: [
+                var textAttributes: [NSAttributedString.Key: Any] = [
                     .font: label.font as Any, .foregroundColor: textColor,
                     .kern: kern, .paragraphStyle: paragraph
-                ])
+                ]
+                let decoration = (appearance["textDecorationLine"] as? String) ?? "none"
+                if decoration.contains("underline") {
+                    textAttributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
+                }
+                if decoration.contains("line-through") {
+                    textAttributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+                }
+                label.attributedText = NSAttributedString(string: renderedText, attributes: textAttributes)
                 contentHost.addSubview(label)
             }
             parentHost.addSubview(view)
