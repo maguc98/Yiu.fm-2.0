@@ -23,16 +23,14 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     @objc private func handleCropPan(_ recognizer: UIPanGestureRecognizer) {
-        guard recognizer.state == .changed, let canvas = recognizer.view,
-              let area = canvas.superview else { return }
+        guard recognizer.state == .changed, let area = recognizer.view else { return }
         let delta = recognizer.translation(in: area)
         recognizer.setTranslation(.zero, in: area)
         actionHandler?("cimg", ["nativeGesture": "cropPan", "dx": Double(delta.x), "dy": Double(delta.y)])
     }
 
     @objc private func handleCropPinch(_ recognizer: UIPinchGestureRecognizer) {
-        guard recognizer.state == .changed, let canvas = recognizer.view,
-              let area = canvas.superview else { return }
+        guard recognizer.state == .changed, let area = recognizer.view else { return }
         let center = recognizer.location(in: area)
         let scale = recognizer.scale
         recognizer.scale = 1
@@ -191,16 +189,6 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 let imageView = UIImageView()
                 imageView.contentMode = .scaleAspectFit
                 imageView.clipsToBounds = true
-                if (node["id"] as? String) == "cimg" {
-                    imageView.isUserInteractionEnabled = true
-                    let pan = UIPanGestureRecognizer(target: self, action: #selector(handleCropPan(_:)))
-                    pan.delegate = self
-                    pan.maximumNumberOfTouches = 1
-                    imageView.addGestureRecognizer(pan)
-                    let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handleCropPinch(_:)))
-                    pinch.delegate = self
-                    imageView.addGestureRecognizer(pinch)
-                }
                 if let dataURL = node["imageData"] as? String,
                    let comma = dataURL.firstIndex(of: ",") {
                     let encoded = String(dataURL[dataURL.index(after: comma)...])
@@ -306,6 +294,16 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 view = button
             } else {
                 view = UIView()
+            }
+            if (node["id"] as? String) == "carea" {
+                view.isUserInteractionEnabled = true
+                let pan = UIPanGestureRecognizer(target: self, action: #selector(handleCropPan(_:)))
+                pan.delegate = self
+                pan.maximumNumberOfTouches = 1
+                view.addGestureRecognizer(pan)
+                let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handleCropPinch(_:)))
+                pinch.delegate = self
+                view.addGestureRecognizer(pinch)
             }
             view.frame = localFrame
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
