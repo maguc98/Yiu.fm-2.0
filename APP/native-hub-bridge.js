@@ -57,8 +57,10 @@
     var scaleX = Math.hypot(matrix.a, matrix.b) || 1;
     var scaleY = Math.hypot(matrix.c, matrix.d) || 1;
     var origin = (style.transformOrigin || '0px 0px').split(' ');
-    var originX = parseFloat(origin[0]) || 0;
-    var originY = parseFloat(origin[1]) || 0;
+    var originX = origin[0] && origin[0].indexOf('%') >= 0 ?
+      (parseFloat(origin[0]) || 0) * hub.offsetWidth / 100 : (parseFloat(origin[0]) || 0);
+    var originY = origin[1] && origin[1].indexOf('%') >= 0 ?
+      (parseFloat(origin[1]) || 0) * hub.offsetHeight / 100 : (parseFloat(origin[1]) || 0);
     var visualOriginX = left + originX - (matrix.a * originX + matrix.c * originY) + matrix.e;
     var visualOriginY = top + originY - (matrix.b * originX + matrix.d * originY) + matrix.f;
     return {
