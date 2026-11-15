@@ -125,6 +125,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
               let nodes = snapshot["nodes"] as? [[String: Any]], !nodes.isEmpty else {
             presentationOpen = false
             isHidden = true
+            lastSnapshotKey = ""
             onDidHide?()
             return
         }
@@ -583,6 +584,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 self.isHidden = true
                 self.transform = .identity
                 self.alpha = 1
+                self.lastSnapshotKey = ""
                 if self.nativeClipMode == "aiuiHistory" {
                     self.glass.layer.mask = nil
                     self.nativeClipMode = nil
