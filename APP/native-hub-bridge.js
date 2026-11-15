@@ -361,7 +361,12 @@
     var root = id === 'saWinCard' ? document.querySelector('#saWin.on:not(.yield) .sw-card') : document.getElementById(id);
     if (!root || !nativeBridgeEnabled) return { open: false, nodes: [] };
     var style = window.getComputedStyle(root);
-    var rect = layoutRect(root, root);
+    var layoutRootRect = layoutRect(root, root);
+    var visualRootRect = root.getBoundingClientRect();
+    var scaleX = layoutRootRect.width > 0 ? visualRootRect.width / layoutRootRect.width : 1;
+    var scaleY = layoutRootRect.height > 0 ? visualRootRect.height / layoutRootRect.height : 1;
+    var rect = { x: visualRootRect.left, y: visualRootRect.top,
+      width: visualRootRect.width, height: visualRootRect.height };
     var nativeHidden = root.hasAttribute('data-yiu-native-opacity');
     var savedOpacity = root.getAttribute('data-yiu-native-opacity');
     var savedPointer = root.getAttribute('data-yiu-native-pointer');
@@ -388,8 +393,18 @@
       },
       nodes: (function () {
         var children = readTree(root);
+        function toViewport(node) {
+          var frame = node.frame;
+          if (!frame) return;
+          frame.x = rect.x + (frame.x - layoutRootRect.x) * scaleX;
+          frame.y = rect.y + (frame.y - layoutRootRect.y) * scaleY;
+          frame.width *= scaleX;
+          frame.height *= scaleY;
+        }
+        children.forEach(toViewport);
         if (id !== 'cmdFab') return children;
         var buttonNode = readNode(root, '', root);
+        toViewport(buttonNode);
         buttonNode.appearance = Object.assign({}, buttonNode.appearance || {}, {
           backgroundColor: 'transparent',
           backdropFilter: 'none',
