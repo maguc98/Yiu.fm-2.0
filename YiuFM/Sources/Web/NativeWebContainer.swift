@@ -46,6 +46,20 @@ final class NativeWebContainer: UIView {
         onHubStateChanged?(payload)
     }
 
+    /// Native controls send commands back to the existing page runtime.
+    /// The web DOM remains the single source of truth for settings and actions.
+    func setHubOpen(_ open: Bool) {
+        evaluate("window.YiuHubBridge?.activate(\\(open ? \"'open'\" : \"'close'\"))")
+    }
+
+    func setHubControl(id: String, value: Any) {
+        guard let idData = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let valueData = try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]),
+              let idJSON = String(data: idData, encoding: .utf8),
+              let valueJSON = String(data: valueData, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.setControl(\\(idJSON), \\(valueJSON))")
+    }
+
     func applyMiniPayload(_ payload: [String: Any]) {
         miniBar.isHidden = !(payload["visible"] as? Bool ?? false)
         if let x = payload["x"] as? CGFloat,
