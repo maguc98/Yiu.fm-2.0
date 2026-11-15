@@ -607,7 +607,7 @@
         '</button>' +
       '</div>' +
       // 悬浮回复气泡
-      '<div class="aiui-bubble" id="aiuiBubble" role="button" tabindex="0" aria-label="展开对话记录" aria-live="polite"><div class="aiui-bubble-t"></div></div>' +
+      '<div class="aiui-bubble" id="aiuiBubble" role="status" aria-live="polite"><div class="aiui-bubble-t" role="button" tabindex="0" aria-label="展开对话记录"></div></div>' +
       // 悬浮胶囊
       '<div class="aiui-pill" role="button" tabindex="0" aria-label="AI 陪聊">' +
         '<div class="aiui-body">' +
