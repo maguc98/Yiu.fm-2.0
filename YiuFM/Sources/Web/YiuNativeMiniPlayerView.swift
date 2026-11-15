@@ -69,7 +69,7 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         artwork.backgroundColor = UIColor(red: 0.48, green: 0.58, blue: 0.88, alpha: 0.72)
         let gradient = CAGradientLayer()
         gradient.colors = [
-            UIColor(red: 143/255, green: 176/255, blue: 1, alpha: 0.60).cgColor,
+            UIColor(red: 143.0 / 255.0, green: 176.0 / 255.0, blue: 1.0, alpha: 0.60).cgColor,
             UIColor.white.withAlphaComponent(0.12).cgColor
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0)
