@@ -9,6 +9,8 @@ final class NativeWebContainer: UIView {
     private let nativeBackButton = YiuNativeBackButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
     private let nativeHubRenderingEnabled = false
+    // Keep the standalone toolbar surface off until its visual and hit-target parity is verified on device.
+    private let nativeBackButtonRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -65,7 +67,7 @@ final class NativeWebContainer: UIView {
            let y = rectData["y"] as? CGFloat,
            let width = rectData["width"] as? CGFloat,
            let height = rectData["height"] as? CGFloat {
-            let visible = back["visible"] as? Bool ?? false
+            let visible = nativeBackButtonRenderingEnabled && (back["visible"] as? Bool ?? false)
             let opacity = back["opacity"] as? CGFloat ?? 1
             let label = back["label"] as? String ?? "展开部分工具栏"
             nativeBackButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
