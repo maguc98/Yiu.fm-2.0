@@ -14,6 +14,8 @@ final class NativeWebContainer: UIView {
     private let nativeCropRenderer = YiuNativeHubRenderer()
     private let nativeControlBarRenderer = YiuNativeHubRenderer()
     private let nativeQuickPopupRenderer = YiuNativeHubRenderer()
+    private let nativeDropdownPopupRenderer = YiuNativeHubRenderer()
+    private let nativeZoomPopupRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -31,6 +33,8 @@ final class NativeWebContainer: UIView {
     private let nativeCropRenderingEnabled = false
     private let nativeControlBarRenderingEnabled = false
     private let nativeQuickPopupRenderingEnabled = false
+    private let nativeDropdownPopupRenderingEnabled = false
+    private let nativeZoomPopupRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -52,6 +56,8 @@ final class NativeWebContainer: UIView {
         addSubview(nativeCropRenderer)
         addSubview(nativeControlBarRenderer)
         addSubview(nativeQuickPopupRenderer)
+        addSubview(nativeDropdownPopupRenderer)
+        addSubview(nativeZoomPopupRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -68,6 +74,10 @@ final class NativeWebContainer: UIView {
         nativeControlBarRenderer.isUserInteractionEnabled = false
         nativeQuickPopupRenderer.isHidden = true
         nativeQuickPopupRenderer.isUserInteractionEnabled = false
+        nativeDropdownPopupRenderer.isHidden = true
+        nativeDropdownPopupRenderer.isUserInteractionEnabled = false
+        nativeZoomPopupRenderer.isHidden = true
+        nativeZoomPopupRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -221,7 +231,25 @@ final class NativeWebContainer: UIView {
             nativeQuickPopupRenderer.isHidden = true
             setNativeMirrorPresentation(id: "qpop", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled)
+        if nativeDropdownPopupRenderingEnabled {
+            let popup = payload["dropdownPopup"] as? [String: Any] ?? ["open": false]
+            nativeDropdownPopupRenderer.render(popup) { _, _ in }
+            nativeDropdownPopupRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "ddPop", active: !nativeDropdownPopupRenderer.isHidden)
+        } else {
+            nativeDropdownPopupRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "ddPop", active: false)
+        }
+        if nativeZoomPopupRenderingEnabled {
+            let popup = payload["zoomPopup"] as? [String: Any] ?? ["open": false]
+            nativeZoomPopupRenderer.render(popup) { _, _ in }
+            nativeZoomPopupRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "zoomPop", active: !nativeZoomPopupRenderer.isHidden)
+        } else {
+            nativeZoomPopupRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "zoomPop", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
