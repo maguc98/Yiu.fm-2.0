@@ -432,7 +432,7 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
     root.setAttribute('aria-hidden', 'true');
     root.innerHTML =
       '<div class="cm-mask"></div>' +
-      '<div class="cm-card" role="dialog" aria-modal="true" aria-label="命令窗口"><div class="cm-panel">' +
+      '<div class="cm-card" role="dialog" aria-modal="true" aria-label="命令窗口"><div class="cm-panel" id="cmPanel">' +
         '<div class="cm-head">' +
           '<div class="cm-ttl"><span class="cm-title">命令窗口</span><span class="cm-sub" id="cmSub"></span></div>' +
           '<button type="button" class="cm-btn cm-ico" data-act="copy" aria-label="复制全部输出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button>' +
