@@ -17,6 +17,8 @@
   var generatedIds = new WeakMap();
   var elementsByNativeId = new Map();
   var nextGeneratedId = 1;
+  var svgImageCache = new Map();
+  var svgImagePending = new Set();
   var nativePresentation = false;
   var savedHubOpacity = null;
   var savedHubPointerEvents = null;
@@ -129,7 +131,61 @@
         return { label: (option.textContent || '').trim(), value: option.value, disabled: !!option.disabled };
       }).slice(0, 100);
     }
-    if (el.tagName.toLowerCase() === 'svg') item.svg = el.outerHTML.slice(0, 5000);
+    if (el.tagName.toLowerCase() === 'svg') {
+      item.svg = el.outerHTML.slice(0, 5000);
+      var svgKey = item.nativeId;
+      if (svgImageCache.has(svgKey)) {
+        item.svgImage = svgImageCache.get(svgKey);
+      } else if (!svgImagePending.has(svgKey) && rect.width > 0 && rect.height > 0) {
+        svgImagePending.add(svgKey);
+        try {
+          var clone = el.cloneNode(true);
+          var sourceNodes = [el].concat(Array.prototype.slice.call(el.querySelectorAll('*')));
+          var cloneNodes = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll('*')));
+          sourceNodes.forEach(function (source, index) {
+            var target = cloneNodes[index];
+            if (!target) return;
+            var computed = window.getComputedStyle(source);
+            ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+             'opacity', 'fill-opacity', 'stroke-opacity', 'color', 'font-family',
+             'font-size', 'font-weight'].forEach(function (property) {
+              var value = computed.getPropertyValue(property);
+              if (value) target.style.setProperty(property, value);
+            });
+          });
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          clone.setAttribute('width', String(Math.min(512, Math.max(1, Math.ceil(rect.width * Math.min(3, window.devicePixelRatio || 1))))));
+          clone.setAttribute('height', String(Math.min(512, Math.max(1, Math.ceil(rect.height * Math.min(3, window.devicePixelRatio || 1))))));
+          var markup = new XMLSerializer().serializeToString(clone);
+          var blob = new Blob([markup], { type: 'image/svg+xml;charset=utf-8' });
+          var objectURL = URL.createObjectURL(blob);
+          var image = new Image();
+          image.onload = function () {
+            try {
+              var canvas = document.createElement('canvas');
+              canvas.width = Math.min(512, Math.max(1, Math.ceil(rect.width * Math.min(3, window.devicePixelRatio || 1))));
+              canvas.height = Math.min(512, Math.max(1, Math.ceil(rect.height * Math.min(3, window.devicePixelRatio || 1))));
+              var context = canvas.getContext('2d');
+              if (context) {
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                var dataURL = canvas.toDataURL('image/png');
+                if (dataURL.length < 180000) svgImageCache.set(svgKey, dataURL);
+              }
+            } catch (_) {}
+            URL.revokeObjectURL(objectURL);
+            svgImagePending.delete(svgKey);
+            scheduleNotify();
+          };
+          image.onerror = function () {
+            URL.revokeObjectURL(objectURL);
+            svgImagePending.delete(svgKey);
+          };
+          image.src = objectURL;
+        } catch (_) {
+          svgImagePending.delete(svgKey);
+        }
+      }
+    }
     if (el.tagName.toLowerCase() === 'img') {
       item.src = el.currentSrc || el.src || '';
       item.alt = el.alt || '';
