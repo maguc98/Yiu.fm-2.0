@@ -445,9 +445,14 @@
         if (!button) return { visible: false };
         var style = window.getComputedStyle(button);
         var rect = button.getBoundingClientRect();
+        var nativeHidden = button.hasAttribute('data-yiu-native-opacity');
+        var savedOpacity = button.getAttribute('data-yiu-native-opacity');
+        var savedPointer = button.getAttribute('data-yiu-native-pointer');
+        var sourceOpacity = nativeHidden ? (savedOpacity ? Number(savedOpacity) : 1) : Number(style.opacity || 1);
+        var sourcePointer = nativeHidden ? savedPointer : style.pointerEvents;
         var visible = rect.width > 0 && rect.height > 0 &&
           style.display !== 'none' && style.visibility !== 'hidden' &&
-          Number(style.opacity || 1) > 0.01 && style.pointerEvents !== 'none';
+          sourceOpacity > 0.01 && sourcePointer !== 'none';
         return {
           visible: visible,
           rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
