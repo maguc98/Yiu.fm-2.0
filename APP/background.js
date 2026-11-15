@@ -92,7 +92,8 @@ var openCrop=(function(){
     nk=Math.min(S.kmin*4,Math.max(S.kmin,nk));var r=nk/S.k;
     S.X=cx-(cx-S.X)*r;S.Y=cy-(cy-S.Y)*r;S.k=nk;paint();
   }
-  /* Native mirror gestures feed the same crop transform state as DOM pointer input. */
+  /* Native gestures update the single web crop state continuously. The UIKit
+     canvas mirror animates locally; refresh its snapshot once the gesture ends. */
   function refreshNativeCropMirror(){
     var canvas=document.getElementById("cimg");
     if(canvas)canvas.__yiuNativeCropVersion=(canvas.__yiuNativeCropVersion||0)+1;
@@ -100,14 +101,15 @@ var openCrop=(function(){
   }
   window.YiuCropNativeGesture=function(g){
     if(!g||!ov.classList.contains("show"))return false;
+    if(g.phase==="end"){refreshNativeCropMirror();return true;}
     if(g.nativeGesture==="cropPan"){
       var dx=Number(g.dx)||0,dy=Number(g.dy)||0;
-      S.X+=dx;S.Y+=dy;paint();refreshNativeCropMirror();return true;
+      S.X+=dx;S.Y+=dy;paint();return true;
     }
     if(g.nativeGesture==="cropPinch"){
       var scale=Number(g.scale),cx=Number(g.x),cy=Number(g.y);
       if(!isFinite(scale)||scale<=0||!isFinite(cx)||!isFinite(cy))return false;
-      zoomAt(S.k*scale,cx,cy);refreshNativeCropMirror();return true;
+      zoomAt(S.k*scale,cx,cy);return true;
     }
     return false;
   };
