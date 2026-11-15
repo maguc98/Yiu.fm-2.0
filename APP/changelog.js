@@ -162,7 +162,7 @@
 
   /* ---------- DOM ---------- */
   var sheet=mk("div");sheet.id="clSheet";sheet.setAttribute("role","dialog");sheet.setAttribute("aria-label","更新日志");sheet.setAttribute("aria-hidden","true");
-  sheet.innerHTML='<div class="cl-mask"></div><div class="cl-card"><div class="cl-glass"></div><div class="cl-body" id="clBody"></div>'
+  sheet.innerHTML='<div class="cl-mask"></div><div class="cl-card" id="clCard"><div class="cl-glass"></div><div class="cl-body" id="clBody"></div>'
     +'<div class="cl-head"><div class="cl-bar"><div class="cl-tt"><span class="cl-title">更新日志</span><span class="cl-cur" id="clCur"></span></div><button type="button" class="cl-x" aria-label="关闭">✕</button></div>'
     +'<div class="cl-hint"><span>点选下方要修改的版本</span><button type="button" id="clPickCancel">取消</button></div></div>'
     +'<div class="cl-foot"><button type="button" id="clMod">修改版本</button><button type="button" class="primary" id="clAdd">添加版本</button></div></div>';
