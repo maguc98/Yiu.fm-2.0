@@ -37,3 +37,9 @@
 #hub #cc-home button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 #hub #cc-home button:active{transform:scale(.985)}
 @media(max-height:620px){#hub #cc-home{gap:8px}#hub #cc-home .cc-engine{min-height:58px;padding:10px 13px}#hub #cc-home .cc-shortcut{min-height:56px}#hub #cc-home .cc-resolution{padding:10px 12px}}
+
+/* In the approved home view, remove legacy cover/grip chrome; restore it with legacy pages. */
+#hub:not(.cc-legacy-open) #hubCover,
+#hub:not(.cc-legacy-open) #hubGripHot,
+#hub:not(.cc-legacy-open) #hubGrip{display:none!important}
+#hub #cc-home{order:0;flex:none}
