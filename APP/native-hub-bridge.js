@@ -135,8 +135,11 @@
     if (el.tagName.toLowerCase() === 'svg') {
       item.svg = el.outerHTML.slice(0, 5000);
       var svgKey = item.nativeId;
-      if (svgImageCache.has(svgKey)) {
-        item.svgImage = svgImageCache.get(svgKey);
+      var svgSignature = el.outerHTML + "|" + style.color + "|" + style.fill + "|" +
+        style.stroke + "|" + rect.width + "x" + rect.height;
+      var cachedSVG = svgImageCache.get(svgKey);
+      if (cachedSVG && cachedSVG.signature === svgSignature) {
+        item.svgImage = cachedSVG.data;
       } else if (!svgImagePending.has(svgKey) && rect.width > 0 && rect.height > 0) {
         svgImagePending.add(svgKey);
         try {
@@ -170,7 +173,9 @@
               if (context) {
                 context.drawImage(image, 0, 0, canvas.width, canvas.height);
                 var dataURL = canvas.toDataURL('image/png');
-                if (dataURL.length < 180000) svgImageCache.set(svgKey, dataURL);
+                if (dataURL.length < 180000) {
+                  svgImageCache.set(svgKey, { signature: svgSignature, data: dataURL });
+                }
               }
             } catch (_) {}
             URL.revokeObjectURL(objectURL);
