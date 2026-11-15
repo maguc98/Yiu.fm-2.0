@@ -55,10 +55,11 @@ final class YiuNativeHubRenderer: UIView {
         layer.borderWidth = borderWidth
         layer.borderColor = cssColor(surfaceAppearance["borderColor"])?.cgColor
         glass.updateGlassTint(cssColor(surfaceAppearance["backgroundColor"]))
+        glass.setEffectEnabled(!((surfaceAppearance["hideGlass"] as? Bool) ?? false))
         glass.frame = bounds
         glass.layer.cornerRadius = surfaceRadius
         glass.clipsToBounds = true
-        glass.isHidden = (surfaceAppearance["hideGlass"] as? Bool) ?? false
+        glass.isHidden = false
 
         glass.foregroundView.subviews.forEach { $0.removeFromSuperview() }
         scrollViews.removeAll()
