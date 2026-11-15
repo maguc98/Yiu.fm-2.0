@@ -8,7 +8,9 @@ final class YiuNativeHubRenderer: UIView {
     private let glass = YiuLiquidGlassSurface(material: .regular, interactive: false)
     private var actionHandler: ((String, Any?) -> Void)?
     private var lastSnapshotKey = ""
+    private var presentationOpen = false
     private var scrollViews: [String: YiuNativeHubScrollView] = [:]
+    var onDidHide: (() -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -22,23 +24,31 @@ final class YiuNativeHubRenderer: UIView {
 
     func render(_ snapshot: [String: Any], action: @escaping (String, Any?) -> Void) {
         actionHandler = action
-        guard (snapshot["open"] as? Bool) == true,
-              let rawRect = snapshot["rect"] as? [String: Any],
+        let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
+        guard (snapshot["open"] as? Bool) == true else {
+            setPresentation(open: false, appearance: surfaceAppearance)
+            return
+        }
+        guard let rawRect = snapshot["rect"] as? [String: Any],
               let x = number(rawRect["x"]), let y = number(rawRect["y"]),
               let width = number(rawRect["width"]), let height = number(rawRect["height"]),
               width > 0, height > 0,
               let nodes = snapshot["nodes"] as? [[String: Any]], !nodes.isEmpty else {
+            presentationOpen = false
             isHidden = true
+            onDidHide?()
             return
         }
 
         let snapshotData = (try? JSONSerialization.data(withJSONObject: snapshot, options: [.sortedKeys])) ?? Data()
         let key = snapshotData.base64EncodedString()
-        if key == lastSnapshotKey { isHidden = false; return }
+        if key == lastSnapshotKey {
+            setPresentation(open: true, appearance: surfaceAppearance)
+            return
+        }
         lastSnapshotKey = key
 
         frame = CGRect(x: x, y: y, width: width, height: height)
-        let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
         applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: 28)
         glass.updateGlassTint(cssColor(surfaceAppearance["backgroundColor"]))
         glass.frame = bounds
