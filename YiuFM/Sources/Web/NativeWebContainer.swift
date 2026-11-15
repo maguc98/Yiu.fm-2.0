@@ -23,6 +23,10 @@ final class NativeWebContainer: UIView {
     private let nativePackageMenuRenderer = YiuNativeHubRenderer()
     private let nativeLogPanelRenderer = YiuNativeHubRenderer()
     private let nativeLogToastRenderer = YiuNativeHubRenderer()
+    private let nativeCommandConsoleRenderer = YiuNativeHubRenderer()
+    private let nativeChangelogRenderer = YiuNativeHubRenderer()
+    private let nativeSystemLogRenderer = YiuNativeHubRenderer()
+    private let nativeSystemLogToastRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -52,6 +56,10 @@ final class NativeWebContainer: UIView {
     // Runtime developer tools stay opt-in until log export, scrolling and close behavior pass device parity.
     private let nativeLogPanelRenderingEnabled = false
     private let nativeLogToastRenderingEnabled = false
+    private let nativeCommandConsoleRenderingEnabled = false
+    private let nativeChangelogRenderingEnabled = false
+    private let nativeSystemLogRenderingEnabled = false
+    private let nativeSystemLogToastRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -82,6 +90,10 @@ final class NativeWebContainer: UIView {
         addSubview(nativePackageMenuRenderer)
         addSubview(nativeLogPanelRenderer)
         addSubview(nativeLogToastRenderer)
+        addSubview(nativeCommandConsoleRenderer)
+        addSubview(nativeChangelogRenderer)
+        addSubview(nativeSystemLogRenderer)
+        addSubview(nativeSystemLogToastRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -111,6 +123,11 @@ final class NativeWebContainer: UIView {
         nativePackageMenuRenderer.isHidden = true
         nativeLogPanelRenderer.isHidden = true
         nativeLogToastRenderer.isHidden = true
+        nativeCommandConsoleRenderer.isHidden = true
+        nativeChangelogRenderer.isHidden = true
+        nativeSystemLogRenderer.isHidden = true
+        nativeSystemLogToastRenderer.isHidden = true
+        nativeSystemLogToastRenderer.isUserInteractionEnabled = false
         nativeLogToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
@@ -133,6 +150,10 @@ final class NativeWebContainer: UIView {
         nativePackageMenuRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "pkgMenu", active: false) }
         nativeLogPanelRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "logPanel", active: false) }
         nativeLogToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "logToast", active: false) }
+        nativeCommandConsoleRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "cmPanel", active: false) }
+        nativeChangelogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "clCard", active: false) }
+        nativeSystemLogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "slCard", active: false) }
+        nativeSystemLogToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "slToast", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -396,7 +417,64 @@ final class NativeWebContainer: UIView {
             nativeLogToastRenderer.isHidden = true
             setNativeMirrorPresentation(id: "logToast", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled)
+        if nativeCommandConsoleRenderingEnabled {
+            let panel = payload["commandConsole"] as? [String: Any] ?? ["open": false]
+            nativeCommandConsoleRenderer.render(panel) { [weak self] controlID, value in
+                guard let self else { return }
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            setNativeMirrorPresentation(id: "cmPanel", active: !nativeCommandConsoleRenderer.isHidden)
+        } else {
+            nativeCommandConsoleRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "cmPanel", active: false)
+        }
+        if nativeChangelogRenderingEnabled {
+            let panel = payload["changelog"] as? [String: Any] ?? ["open": false]
+            nativeChangelogRenderer.render(panel) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value { self.setHubControl(id: controlID, value: value) }
+                else { self.activateHubControl(id: controlID) }
+            }
+            setNativeMirrorPresentation(id: "clCard", active: !nativeChangelogRenderer.isHidden)
+        } else {
+            nativeChangelogRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "clCard", active: false)
+        }
+        if nativeSystemLogRenderingEnabled {
+            let panel = payload["systemLog"] as? [String: Any] ?? ["open": false]
+            nativeSystemLogRenderer.render(panel) { [weak self] controlID, value in
+                guard let self else { return }
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            setNativeMirrorPresentation(id: "slCard", active: !nativeSystemLogRenderer.isHidden)
+        } else {
+            nativeSystemLogRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "slCard", active: false)
+        }
+        if nativeSystemLogToastRenderingEnabled {
+            let toast = payload["systemLogToast"] as? [String: Any] ?? ["open": false]
+            nativeSystemLogToastRenderer.render(toast) { _, _ in }
+            nativeSystemLogToastRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "slToast", active: !nativeSystemLogToastRenderer.isHidden)
+        } else {
+            nativeSystemLogToastRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "slToast", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
