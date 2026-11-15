@@ -45,7 +45,7 @@ final class YiuLiquidGlassSurface: UIVisualEffectView {
         effect = Self.makeEffect(material: material, interactive: interactive, tintColor: glassTintColor)
     }
 
-    func setTintColor(_ tintColor: UIColor?) {
+    func updateGlassTint(_ tintColor: UIColor?) {
         guard glassTintColor != tintColor else { return }
         glassTintColor = tintColor
         effect = Self.makeEffect(material: material, interactive: glassInteractive, tintColor: tintColor)
