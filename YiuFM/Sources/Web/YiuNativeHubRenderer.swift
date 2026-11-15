@@ -29,7 +29,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
         } else if recognizer.state == .changed {
             let delta = recognizer.translation(in: area)
             recognizer.setTranslation(.zero, in: area)
-            canvas.transform = canvas.transform.translatedBy(x: delta.x, y: delta.y)
+            canvas.transform = CGAffineTransform(translationX: delta.x, y: delta.y).concatenating(canvas.transform)
             actionHandler?("cimg", ["nativeGesture": "cropPan", "phase": "change",
                                     "dx": Double(delta.x), "dy": Double(delta.y)])
         } else if recognizer.state == .ended || recognizer.state == .cancelled {
