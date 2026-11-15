@@ -8,12 +8,15 @@ final class NativeWebContainer: UIView {
     private let nativeHubRenderer = YiuNativeHubRenderer()
     private let nativeThemeMenuRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
+    private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
     private let nativeHubRenderingEnabled = false
     // Theme picker remains opt-in until long-press deletion and visual parity pass device testing.
     private let nativeThemeMenuRenderingEnabled = false
     // Keep the standalone toolbar surface off until its visual and hit-target parity is verified on device.
     private let nativeBackButtonRenderingEnabled = false
+    // Keep the standalone settings surface opt-in until device parity is verified.
+    private let nativeSettingsButtonRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -29,10 +32,12 @@ final class NativeWebContainer: UIView {
         addSubview(nativeHubRenderer)
         addSubview(nativeThemeMenuRenderer)
         addSubview(nativeBackButton)
+        addSubview(nativeSettingsButton)
         miniBar.isHidden = true
         nativeHubRenderer.isHidden = true
         nativeThemeMenuRenderer.isHidden = true
         nativeBackButton.isHidden = true
+        nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
             self?.setHubNativePresentation(false)
         }
@@ -41,6 +46,9 @@ final class NativeWebContainer: UIView {
         }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
+        }
+        nativeSettingsButton.onTap = { [weak self] in
+            self?.evaluate("document.getElementById('miSet')?.click()")
         }
         miniBar.onToggle = { [weak self] in
             self?.evaluate("document.getElementById('mini')?.click()")
@@ -85,6 +93,20 @@ final class NativeWebContainer: UIView {
             nativeBackButton.isHidden = true
             evaluate("window.YiuHubBridge?.setBackNativePresentation(false)")
         }
+        if let settings = payload["settingsButton"] as? [String: Any],
+           let rectData = settings["rect"] as? [String: Any],
+           let x = rectData["x"] as? CGFloat,
+           let y = rectData["y"] as? CGFloat,
+           let width = rectData["width"] as? CGFloat,
+           let height = rectData["height"] as? CGFloat {
+            let visible = nativeSettingsButtonRenderingEnabled && (settings["visible"] as? Bool ?? false)
+            let opacity = settings["opacity"] as? CGFloat ?? 1
+            let tint = (settings["backgroundColor"] as? String).flatMap { Self.cssColor($0) }
+            nativeSettingsButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
+                                        visible: visible, opacity: opacity, tint: tint)
+        } else {
+            nativeSettingsButton.isHidden = true
+        }
         setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
@@ -127,6 +149,32 @@ final class NativeWebContainer: UIView {
             setThemeMenuNativePresentation(false)
         }
         onHubStateChanged?(payload)
+    }
+
+    private static func cssColor(_ value: String) -> UIColor? {
+        if value.hasPrefix("#") {
+            let hex = String(value.dropFirst())
+            guard let number = UInt64(hex, radix: 16) else { return nil }
+            switch hex.count {
+            case 6:
+                return UIColor(red: CGFloat((number >> 16) & 255) / 255,
+                               green: CGFloat((number >> 8) & 255) / 255,
+                               blue: CGFloat(number & 255) / 255, alpha: 1)
+            case 8:
+                return UIColor(red: CGFloat((number >> 24) & 255) / 255,
+                               green: CGFloat((number >> 16) & 255) / 255,
+                               blue: CGFloat((number >> 8) & 255) / 255,
+                               alpha: CGFloat(number & 255) / 255)
+            default: return nil
+            }
+        }
+        guard value.hasPrefix("rgba(") || value.hasPrefix("rgb(") else { return nil }
+        let numbers = value.filter { $0.isNumber || $0 == "." || $0 == "," }
+            .split(separator: ",").compactMap { Double($0) }
+        guard numbers.count >= 3 else { return nil }
+        let alpha = numbers.count > 3 ? CGFloat(numbers[3]) : 1
+        return UIColor(red: CGFloat(numbers[0]) / 255, green: CGFloat(numbers[1]) / 255,
+                       blue: CGFloat(numbers[2]) / 255, alpha: alpha)
     }
 
     private func setHubBridgeEnabled(_ enabled: Bool) {
