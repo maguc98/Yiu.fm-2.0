@@ -52,6 +52,12 @@ final class NativeWebContainer: UIView {
         evaluate("window.YiuHubBridge?.activate(\(open ? "'open'" : "'close'"))")
     }
 
+    func activateHubControl(id: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.activateControl(\(json))")
+    }
+
     func setHubControl(id: String, value: Any) {
         guard let idData = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let valueData = try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]),
