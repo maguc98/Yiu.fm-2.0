@@ -385,6 +385,10 @@
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
     if (id === 'crop' || id === 'qpop' || id === 'ddPop' || id === 'zoomPop') open = open && root.classList.contains('show');
     if (id === 'npToast') open = open && root.classList.contains('on');
+    if (id === 'logPanel') open = open && root.classList.contains('show');
+    if (id === 'logExportModal') open = open && root.isConnected;
+    if (id === 'logToast') open = open && root.classList.contains('show');
+    if (id === 'fpsIndicator') open = open && root.style.display !== 'none' && root.getAttribute('aria-hidden') !== 'true';
 
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (id === 'npCard') { openDuration = 0.6; closeDuration = 0.35; }
@@ -392,7 +396,9 @@
     var openDuration = 0.22, closeDuration = 0.18;
     if (id === 'crop') { openDuration = 0.3; closeDuration = 0.3; }
     if (id === 'tlLens') { openDuration = 0.16; closeDuration = 0.14; }
-    if (id === 'npToast') { openDuration = 0.18; closeDuration = 0.16; }
+    if (id === 'npToast' || id === 'logToast') { openDuration = 0.18; closeDuration = 0.16; }
+    if (id === 'logPanel' || id === 'logExportModal') { openDuration = 0; closeDuration = 0; }
+    if (id === 'fpsIndicator') { openDuration = 0.12; closeDuration = 0.12; }
     if (id === 'cbar' || id === 'lg') { openDuration = 0; closeDuration = 0; }
     return {
       open: true,
@@ -503,6 +509,10 @@
       playbackCard: floatingSurfaceSnapshot('npCard'),
       packageDialog: floatingSurfaceSnapshot('pkgDialog'),
       packageMenu: floatingSurfaceSnapshot('pkgMenu'),
+      logPanel: floatingSurfaceSnapshot('logPanel'),
+      logExportModal: floatingSurfaceSnapshot('logExportModal'),
+      logToast: floatingSurfaceSnapshot('logToast'),
+      fpsPanel: floatingSurfaceSnapshot('fpsIndicator'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -724,7 +734,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('logExportModal')?.contains(el) || document.getElementById('fpsIndicator')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('logExportModal')?.contains(el) || document.getElementById('fpsIndicator')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('logExportModal')?.contains(el) || document.getElementById('fpsIndicator')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -829,7 +839,7 @@
   var observedMirrorRoots = {};
   var mirrorAttachObserver = null;
   function attachMirrorObservers() {
-    ['crop', 'tlLens', 'lg', 'cbar', 'qpop', 'ddPop', 'zoomPop', 'pkgDialog', 'pkgMenu'].forEach(function (id) {
+    ['crop', 'tlLens', 'lg', 'cbar', 'qpop', 'ddPop', 'zoomPop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logExportModal', 'logToast', 'fpsIndicator'].forEach(function (id) {
       var root = document.getElementById(id);
       if (!root || observedMirrorRoots[id] === root) return;
       observedMirrorRoots[id] = root;
@@ -855,14 +865,14 @@
         root.addEventListener('pointercancel', refreshCropCanvas, true);
       }
     });
-    if (['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
+    if (['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logExportModal', 'logToast', 'fpsIndicator'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
       mirrorAttachObserver.disconnect();
       mirrorAttachObserver = null;
     }
   }
   mirrorAttachObserver = new MutationObserver(attachMirrorObservers);
   attachMirrorObservers();
-  if (!['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu'].every(function (id) { return !!observedMirrorRoots[id]; })) {
+  if (!['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logExportModal', 'logToast', 'fpsIndicator'].every(function (id) { return !!observedMirrorRoots[id]; })) {
     mirrorAttachObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
   var observedThemeMenu = null;
