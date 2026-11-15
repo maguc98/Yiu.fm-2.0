@@ -11,6 +11,7 @@ final class NativeWebContainer: UIView {
     private let nativeCommandButtonRenderer = YiuNativeHubRenderer()
     private let nativeSplashWindowRenderer = YiuNativeHubRenderer()
     private let nativeTimelineLensRenderer = YiuNativeHubRenderer()
+    private let nativeCropRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -25,6 +26,7 @@ final class NativeWebContainer: UIView {
     private let nativeCommandButtonRenderingEnabled = false
     private let nativeSplashWindowRenderingEnabled = false
     private let nativeTimelineLensRenderingEnabled = false
+    private let nativeCropRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -43,6 +45,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeCommandButtonRenderer)
         addSubview(nativeSplashWindowRenderer)
         addSubview(nativeTimelineLensRenderer)
+        addSubview(nativeCropRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -53,6 +56,8 @@ final class NativeWebContainer: UIView {
         nativeSplashWindowRenderer.isHidden = true
         nativeTimelineLensRenderer.isHidden = true
         nativeTimelineLensRenderer.isUserInteractionEnabled = false
+        nativeCropRenderer.isHidden = true
+        nativeCropRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -174,12 +179,21 @@ final class NativeWebContainer: UIView {
             let lens = payload["timelineLens"] as? [String: Any] ?? ["open": false]
             nativeTimelineLensRenderer.render(lens) { _, _ in }
             nativeTimelineLensRenderer.isUserInteractionEnabled = false
-            setNativeFloatingPresentation(id: "tlLens", active: !nativeTimelineLensRenderer.isHidden)
+            setNativeMirrorPresentation(id: "tlLens", active: !nativeTimelineLensRenderer.isHidden)
         } else {
             nativeTimelineLensRenderer.isHidden = true
-            setNativeFloatingPresentation(id: "tlLens", active: false)
+            setNativeMirrorPresentation(id: "tlLens", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled)
+        if nativeCropRenderingEnabled {
+            let crop = payload["cropPanel"] as? [String: Any] ?? ["open": false]
+            nativeCropRenderer.render(crop) { _, _ in }
+            nativeCropRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "crop", active: !nativeCropRenderer.isHidden)
+        } else {
+            nativeCropRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "crop", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
@@ -267,6 +281,12 @@ final class NativeWebContainer: UIView {
         guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let json = String(data: data, encoding: .utf8) else { return }
         evaluate("window.YiuHubBridge?.setNativeFloatingPresentation(\(json), \(active ? "true" : "false"))")
+    }
+
+    private func setNativeMirrorPresentation(id: String, active: Bool) {
+        guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.setNativeMirrorPresentation(\(json), \(active ? "true" : "false"))")
     }
 
     private func setThemeMenuNativePresentation(_ active: Bool) {
