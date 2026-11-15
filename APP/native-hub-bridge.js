@@ -103,6 +103,16 @@
     }
   }
 
+  function activateControl(id) {
+    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
+    var el = document.getElementById(id);
+    if (!el || !hub.contains(el) || el.disabled) return false;
+    if (typeof el.click !== 'function') return false;
+    el.click();
+    scheduleNotify();
+    return true;
+  }
+
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id);
@@ -126,6 +136,7 @@
     version: 1,
     snapshot: snapshot,
     activate: activate,
+    activateControl: activateControl,
     setControl: setControl,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
