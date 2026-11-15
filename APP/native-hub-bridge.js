@@ -788,7 +788,17 @@
     }
   });
 
-  observer = new MutationObserver(scheduleNotify);
+  function handleObservedMutations(records) {
+    // Ignore per-frame crop transforms: rebuilding the UIKit tree would detach
+    // the active gesture recognizers while the user is dragging or pinching.
+    if (records && records.length && records.every(function (record) {
+      return record.type === 'attributes' &&
+        record.attributeName === 'style' &&
+        record.target && record.target.id === 'cimg';
+    })) return;
+    scheduleNotify();
+  }
+  observer = new MutationObserver(handleObservedMutations);
   observer.observe(hub, {
     subtree: true,
     childList: true,
