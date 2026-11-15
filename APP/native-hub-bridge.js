@@ -368,7 +368,20 @@
         boxShadow: style.boxShadow,
         borderRadius: style.borderTopLeftRadius
       },
-      nodes: readTree(root)
+      nodes: (function () {
+        var children = readTree(root);
+        if (id !== 'cmdFab') return children;
+        var buttonNode = readNode(root, '', root);
+        buttonNode.appearance = Object.assign({}, buttonNode.appearance || {}, {
+          backgroundColor: 'transparent',
+          backdropFilter: 'none',
+          boxShadow: 'none',
+          borderColor: 'transparent',
+          borderWidth: '0px'
+        });
+        elementsByNativeId.set(buttonNode.nativeId, root);
+        return [buttonNode].concat(children);
+      })()
     };
   }
 
