@@ -397,7 +397,10 @@
     if (id === 'crop') { openDuration = 0.3; closeDuration = 0.3; }
     if (id === 'tlLens') { openDuration = 0.16; closeDuration = 0.14; }
     if (id === 'npToast' || id === 'logToast') { openDuration = 0.18; closeDuration = 0.16; }
-    if (id === 'logPanel' || id === 'cmPanel' || id === 'clCard' || id === 'slCard') { openDuration = 0; closeDuration = 0; }
+    if (id === 'logPanel' || id === 'slCard') { openDuration = 0.35; closeDuration = 0.35; }
+    if (id === 'cmPanel') { openDuration = 0.38; closeDuration = 0.32; }
+    if (id === 'clCard') { openDuration = 0.5; closeDuration = 0.3; }
+    if (id === 'clEditCard') { openDuration = 0.55; closeDuration = 0.32; }
     if (id === 'slToast') { openDuration = 0.2; closeDuration = 0.2; }
     if (id === 'cbar' || id === 'lg') { openDuration = 0; closeDuration = 0; }
     return {
