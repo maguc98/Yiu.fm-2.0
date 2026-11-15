@@ -74,7 +74,7 @@ final class YiuNativeHubRenderer: UIView {
                 role == "button" || (node["id"] as? String == "miSet")
             let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let overflowX = (appearance["overflowX"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
-            let scrollable = ["auto", "scroll"].contains(overflowY) || ["auto", "scroll"].contains(overflowX)
+            let scrollable = tag != "textarea" && (["auto", "scroll"].contains(overflowY) || ["auto", "scroll"].contains(overflowX))
             let view: UIView
             if scrollable {
                 let scroll = YiuNativeHubScrollView()
