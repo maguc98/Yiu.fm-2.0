@@ -851,14 +851,14 @@
         root.addEventListener('pointercancel', refreshCropCanvas, true);
       }
     });
-    if (['crop', 'tlLens', 'cbar', 'qpop'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
+    if (['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
       mirrorAttachObserver.disconnect();
       mirrorAttachObserver = null;
     }
   }
   mirrorAttachObserver = new MutationObserver(attachMirrorObservers);
   attachMirrorObservers();
-  if (!['crop', 'tlLens', 'cbar', 'qpop'].every(function (id) { return !!observedMirrorRoots[id]; })) {
+  if (!['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu'].every(function (id) { return !!observedMirrorRoots[id]; })) {
     mirrorAttachObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
   var observedThemeMenu = null;
