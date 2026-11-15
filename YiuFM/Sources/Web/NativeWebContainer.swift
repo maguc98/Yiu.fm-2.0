@@ -34,7 +34,6 @@ final class NativeWebContainer: UIView {
     private let nativeAIReplyBubbleRenderer = YiuNativeHubRenderer()
     private let nativeAIHistoryRenderer = YiuNativeHubRenderer()
     private let nativeTextEntryBarRenderer = YiuNativeHubRenderer()
-    private let nativeFPSIndicatorRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -75,7 +74,6 @@ final class NativeWebContainer: UIView {
     private let nativeAIReplyBubbleRenderingEnabled = false
     private let nativeAIHistoryRenderingEnabled = false
     private let nativeTextEntryBarRenderingEnabled = false
-    private let nativeFPSIndicatorRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -117,7 +115,6 @@ final class NativeWebContainer: UIView {
         addSubview(nativeAIReplyBubbleRenderer)
         addSubview(nativeAIHistoryRenderer)
         addSubview(nativeTextEntryBarRenderer)
-        addSubview(nativeFPSIndicatorRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -158,7 +155,6 @@ final class NativeWebContainer: UIView {
         nativeAIReplyBubbleRenderer.isHidden = true
         nativeAIHistoryRenderer.isHidden = true
         nativeTextEntryBarRenderer.isHidden = true
-        nativeFPSIndicatorRenderer.isHidden = true
         nativeSystemLogToastRenderer.isUserInteractionEnabled = false
         nativeLogToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
@@ -193,7 +189,6 @@ final class NativeWebContainer: UIView {
         nativeAIReplyBubbleRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "aiuiBubble", active: false) }
         nativeAIHistoryRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "aiuiHist", active: false) }
         nativeTextEntryBarRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "textBar", active: false) }
-        nativeFPSIndicatorRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "fpsIndicator", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -601,19 +596,7 @@ final class NativeWebContainer: UIView {
             nativeTextEntryBarRenderer.isHidden = true
             setNativeMirrorPresentation(id: "textBar", active: false)
         }
-        if nativeFPSIndicatorRenderingEnabled {
-            let fps = payload["fpsPanel"] as? [String: Any] ?? ["open": false]
-            nativeFPSIndicatorRenderer.render(fps) { [weak self] controlID, value in
-                guard let self else { return }
-                if let value { self.setHubControl(id: controlID, value: value) }
-                else { self.activateHubControl(id: controlID) }
-            }
-            setNativeMirrorPresentation(id: "fpsIndicator", active: !nativeFPSIndicatorRenderer.isHidden)
-        } else {
-            nativeFPSIndicatorRenderer.isHidden = true
-            setNativeMirrorPresentation(id: "fpsIndicator", active: false)
-        }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeNavigationBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled || nativeChangelogEditorRenderingEnabled || nativeSongDialogRenderingEnabled || nativeSongProgressRenderingEnabled || nativeAIInputBarRenderingEnabled || nativeAIReplyBubbleRenderingEnabled || nativeAIHistoryRenderingEnabled || nativeTextEntryBarRenderingEnabled || nativeFPSIndicatorRenderingEnabled)
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeNavigationBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled || nativeChangelogEditorRenderingEnabled || nativeSongDialogRenderingEnabled || nativeSongProgressRenderingEnabled || nativeAIInputBarRenderingEnabled || nativeAIReplyBubbleRenderingEnabled || nativeAIHistoryRenderingEnabled || nativeTextEntryBarRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
