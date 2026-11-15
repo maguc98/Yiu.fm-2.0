@@ -342,6 +342,30 @@
     };
   }
 
+  function floatingSurfaceSnapshot(id) {
+    var root = document.getElementById(id);
+    if (!root || !nativeBridgeEnabled) return { open: false, nodes: [] };
+    var style = window.getComputedStyle(root);
+    var rect = layoutRect(root, root);
+    var open = rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
+      style.visibility !== 'hidden' && Number(style.opacity || 1) > 0.01 &&
+      style.pointerEvents !== 'none';
+    if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
+    if (id === 'cmdFab') open = open && root.classList.contains('vis');
+    if (!open) return { open: false, nodes: [] };
+    return {
+      open: true,
+      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      surfaceAppearance: {
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+        borderRadius: style.borderTopLeftRadius
+      },
+      nodes: readTree(root)
+    };
+  }
+
   function snapshot() {
     // Rebuild the ID map from both live roots each time; do not retain detached theme cards.
     elementsByNativeId.clear();
@@ -391,6 +415,8 @@
       controls: controls,
       nodes: nodes,
       themeMenu: themeMenuSnapshot(),
+      floatingTools: floatingSurfaceSnapshot('hbTools'),
+      commandButton: floatingSurfaceSnapshot('cmdFab'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -488,6 +514,25 @@
 
   var nativeThemePresentation = false;
   var savedThemeMenuState = null;
+  function setNativeFloatingPresentation(id, active) {
+    var root = document.getElementById(id);
+    if (!root) return false;
+    if (active) {
+      if (!root.hasAttribute('data-yiu-native-opacity')) root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
+      if (!root.hasAttribute('data-yiu-native-pointer')) root.setAttribute('data-yiu-native-pointer', root.style.pointerEvents || '');
+      root.style.opacity = '0';
+      root.style.pointerEvents = 'none';
+    } else if (root.hasAttribute('data-yiu-native-opacity')) {
+      var opacity = root.getAttribute('data-yiu-native-opacity');
+      var pointer = root.getAttribute('data-yiu-native-pointer');
+      if (opacity) root.style.opacity = opacity; else root.style.removeProperty('opacity');
+      if (pointer) root.style.pointerEvents = pointer; else root.style.removeProperty('pointer-events');
+      root.removeAttribute('data-yiu-native-opacity');
+      root.removeAttribute('data-yiu-native-pointer');
+    }
+    return true;
+  }
+
   function setNativeThemePresentation(active) {
     active = !!active;
     if (active === nativeThemePresentation) return true;
@@ -564,7 +609,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -625,6 +670,7 @@
     setNativePresentation: setNativePresentation,
     setBackNativePresentation: setBackNativePresentation,
     setNativeThemePresentation: setNativeThemePresentation,
+    setNativeFloatingPresentation: setNativeFloatingPresentation,
     setEnabled: setEnabled,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
