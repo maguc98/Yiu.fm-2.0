@@ -8,6 +8,7 @@ final class YiuNativeHubRenderer: UIView {
     private let glass = YiuLiquidGlassSurface(material: .regular, interactive: false)
     private var actionHandler: ((String, Any?) -> Void)?
     private var lastSnapshotKey = ""
+    private var scrollViews: [String: YiuNativeHubScrollView] = [:]
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -43,6 +44,7 @@ final class YiuNativeHubRenderer: UIView {
         glass.isHidden = false
 
         glass.foregroundView.subviews.forEach { $0.removeFromSuperview() }
+        scrollViews.removeAll()
         var views: [String: UIView] = [:]
 
         for node in nodes {
@@ -70,8 +72,24 @@ final class YiuNativeHubRenderer: UIView {
             let inputType = (node["type"] as? String ?? "").lowercased()
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
                 role == "button" || (node["id"] as? String == "miSet")
+            let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
+            let overflowX = (appearance["overflowX"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
+            let scrollable = ["auto", "scroll"].contains(overflowY) || ["auto", "scroll"].contains(overflowX)
             let view: UIView
-            if tag == "img" {
+            if scrollable {
+                let scroll = YiuNativeHubScrollView()
+                scroll.showsVerticalScrollIndicator = ["auto", "scroll"].contains(overflowY)
+                scroll.showsHorizontalScrollIndicator = ["auto", "scroll"].contains(overflowX)
+                scroll.alwaysBounceVertical = overflowY == "scroll"
+                scroll.alwaysBounceHorizontal = overflowX == "scroll"
+                scroll.contentOffset = CGPoint(x: number(node["scrollLeft"]) ?? 0,
+                                               y: number(node["scrollTop"]) ?? 0)
+                scroll.onScrollEnded = { [weak self] offset in
+                    self?.actionHandler?(id, ["scrollTop": offset.y, "scrollLeft": offset.x])
+                }
+                scrollViews[id] = scroll
+                view = scroll
+            } else if tag == "img" {
                 let imageView = UIImageView()
                 imageView.contentMode = ((node["objectFit"] as? String) == "cover") ? .scaleAspectFill : .scaleAspectFit
                 imageView.clipsToBounds = true
@@ -111,6 +129,7 @@ final class YiuNativeHubRenderer: UIView {
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             view.backgroundColor = cssColor(appearance["backgroundColor"])
             view.alpha = opacity
+            if ["hidden", "clip", "auto", "scroll"].contains(overflowY) || ["hidden", "clip", "auto", "scroll"].contains(overflowX) { view.clipsToBounds = true }
             if true {
                 let radius = CGFloat(number(appearance["borderRadius"]) ?? 0)
                 view.layer.cornerRadius = max(0, radius)
@@ -136,6 +155,14 @@ final class YiuNativeHubRenderer: UIView {
             }
             parent.addSubview(view)
             views[id] = view
+        }
+
+        for (id, scroll) in scrollViews {
+            let contentWidth = max(number((nodes.first { ($0["nativeId"] as? String) == id }?["scrollWidth"])) ?? 0,
+                                   scroll.subviews.map { Double($0.frame.maxX) }.max() ?? 0)
+            let contentHeight = max(number((nodes.first { ($0["nativeId"] as? String) == id }?["scrollHeight"])) ?? 0,
+                                    scroll.subviews.map { Double($0.frame.maxY) }.max() ?? 0)
+            scroll.contentSize = CGSize(width: contentWidth, height: contentHeight)
         }
         isHidden = false
     }
@@ -176,5 +203,29 @@ final class YiuNativeHubRenderer: UIView {
             }
         }
         return nil
+    }
+}
+
+
+@MainActor
+private final class YiuNativeHubScrollView: UIScrollView, UIScrollViewDelegate {
+    var onScrollEnded: ((CGPoint) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        delegate = self
+        backgroundColor = .clear
+        clipsToBounds = true
+        contentInsetAdjustmentBehavior = .never
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate { onScrollEnded?(contentOffset) }
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        onScrollEnded?(contentOffset)
     }
 }
