@@ -378,7 +378,7 @@
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
-    if (id === 'crop') open = open && root.classList.contains('show');
+    if (id === 'crop' || id === 'qpop') open = open && root.classList.contains('show');
 
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (!open) return { open: false, nodes: [] };
@@ -477,6 +477,8 @@
       splashWindow: floatingSurfaceSnapshot('saWinCard'),
       timelineLens: floatingSurfaceSnapshot('tlLens'),
       cropPanel: floatingSurfaceSnapshot('crop'),
+      controlBar: floatingSurfaceSnapshot('cbar'),
+      quickPopup: floatingSurfaceSnapshot('qpop'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -786,36 +788,27 @@
     attributes: true,
     attributeFilter: ['class']
   });
-  var observedCropPanel = null;
-  var observedTimelineLens = null;
+  var observedMirrorRoots = {};
   var mirrorAttachObserver = null;
   function attachMirrorObservers() {
-    var cropRoot = document.getElementById('crop');
-    if (cropRoot && cropRoot !== observedCropPanel) {
-      observedCropPanel = cropRoot;
-      observer.observe(cropRoot, {
+    ['crop', 'tlLens', 'cbar', 'qpop'].forEach(function (id) {
+      var root = document.getElementById(id);
+      if (!root || observedMirrorRoots[id] === root) return;
+      observedMirrorRoots[id] = root;
+      observer.observe(root, {
         subtree: true, childList: true, attributes: true,
-        attributeFilter: ['class', 'style', 'aria-hidden', 'value'],
+        attributeFilter: ['class', 'style', 'aria-hidden', 'value', 'checked'],
         characterData: true
       });
-    }
-    var lensRoot = document.getElementById('tlLens');
-    if (lensRoot && lensRoot !== observedTimelineLens) {
-      observedTimelineLens = lensRoot;
-      observer.observe(lensRoot, {
-        subtree: true, childList: true, attributes: true,
-        attributeFilter: ['class', 'style', 'aria-hidden'],
-        characterData: true
-      });
-    }
-    if (observedCropPanel && observedTimelineLens && mirrorAttachObserver) {
+    });
+    if (['crop', 'tlLens', 'cbar', 'qpop'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
       mirrorAttachObserver.disconnect();
       mirrorAttachObserver = null;
     }
   }
   mirrorAttachObserver = new MutationObserver(attachMirrorObservers);
   attachMirrorObservers();
-  if (!observedCropPanel || !observedTimelineLens) {
+  if (!['crop', 'tlLens', 'cbar', 'qpop'].every(function (id) { return !!observedMirrorRoots[id]; })) {
     mirrorAttachObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
   var observedThemeMenu = null;
