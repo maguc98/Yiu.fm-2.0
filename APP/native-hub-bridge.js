@@ -379,6 +379,7 @@
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
     if (id === 'crop' || id === 'qpop' || id === 'ddPop' || id === 'zoomPop') open = open && root.classList.contains('show');
+    if (id === 'npToast') open = open && root.classList.contains('on');
 
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (!open) return { open: false, nodes: [] };
@@ -481,6 +482,7 @@
       quickPopup: floatingSurfaceSnapshot('qpop'),
       dropdownPopup: floatingSurfaceSnapshot('ddPop'),
       zoomPopup: floatingSurfaceSnapshot('zoomPop'),
+      coverToast: floatingSurfaceSnapshot('npToast'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -766,6 +768,7 @@
     setNativeFloatingPresentation: setNativeFloatingPresentation,
     setNativeMirrorPresentation: setNativeMirrorPresentation,
     setEnabled: setEnabled,
+    refresh: scheduleNotify,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
       listeners.push(listener);
