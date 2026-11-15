@@ -28,11 +28,12 @@ final class YiuNativeSettingsButtonView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func update(rect: CGRect, visible: Bool, opacity: CGFloat, tint: UIColor?) {
+    func update(rect: CGRect, visible: Bool, opacity: CGFloat, tint: UIColor?, foreground: UIColor?) {
         frame = rect
         glass.frame = bounds
         glass.layer.cornerRadius = min(bounds.width, bounds.height) * 0.5
         glass.updateGlassTint(tint)
+        icon.strokeColor = (foreground ?? .white).cgColor
         alpha = min(1, max(0, opacity))
         isHidden = !visible
         setNeedsLayout()
