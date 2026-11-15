@@ -12,6 +12,7 @@ struct LegacyVisualStage: UIViewRepresentable {
             YiuMusicBridge.shared, contentWorld: .page, name: "yiuMusic"
         )
         configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuNativeMini")
+        configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuNativeHub")
 
         let hideDOMMini = WKUserScript(
             source: "(()=>{const s=document.createElement('style');s.textContent='#mini{opacity:0!important;pointer-events:none!important}';(document.documentElement||document).appendChild(s)})();",
@@ -53,6 +54,9 @@ struct LegacyVisualStage: UIViewRepresentable {
         uiView.webView.configuration.userContentController.removeScriptMessageHandler(
             forName: "yiuNativeMini", contentWorld: .page
         )
+        uiView.webView.configuration.userContentController.removeScriptMessageHandler(
+            forName: "yiuNativeHub", contentWorld: .page
+        )
         uiView.webView.configuration.userContentController.removeAllScriptMessageHandlers()
         coordinator.container = nil
         coordinator.webView = nil
@@ -63,10 +67,17 @@ struct LegacyVisualStage: UIViewRepresentable {
         weak var webView: WKWebView?
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard message.name == "yiuNativeMini",
-                  let payload = message.body as? [String: Any] else { return }
+            guard let payload = message.body as? [String: Any] else { return }
             DispatchQueue.main.async { [weak self] in
-                self?.container?.applyMiniPayload(payload)
+                guard let container = self?.container else { return }
+                switch message.name {
+                case "yiuNativeMini":
+                    container.applyMiniPayload(payload)
+                case "yiuNativeHub":
+                    container.applyHubPayload(payload)
+                default:
+                    break
+                }
             }
         }
     }
