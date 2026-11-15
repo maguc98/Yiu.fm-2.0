@@ -446,11 +446,11 @@ final class YiuNativeHubRenderer: UIView {
     }
 
     private func imageFromCSSBackground(_ value: String) -> UIImage? {
-        let source = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if source.lowercased().hasPrefix("linear-gradient("),
-           let open = source.firstIndex(of: "("),
-           let close = source.lastIndex(of: ")") {
-            let body = String(source[source.index(after: open)..<close])
+        let cssValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cssValue.lowercased().hasPrefix("linear-gradient("),
+           let open = cssValue.firstIndex(of: "("),
+           let close = cssValue.lastIndex(of: ")") {
+            let body = String(cssValue[cssValue.index(after: open)..<close])
             // Theme cards currently use a degree angle followed by four CSS colors.
             // Split only on top-level commas so rgba()/hsla() colors remain intact.
             var parts: [String] = []
