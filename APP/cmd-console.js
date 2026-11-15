@@ -2071,9 +2071,15 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
   /* 合并 index.html 在 sys-log.js 加载前保存的异常。之前这份队列只进系统日志，/err 看不到。 */
   (window.__YiuEarlyErrors || []).forEach(function (x) {
     var d = x.detail || {}, msg = d.message || ('启动早期异常：' + (x.kind || 'unknown'));
+    var active = d.activeScript || null;
+    var activeLabel = active && active.label ? active.label : '';
+    /* 关键诊断信息：早期捕获器原本保存了 activeScript，但 /err 合并时把它丢掉了。
+       对 file:// 下被 WebKit 脱敏成「Script error.」的异常，用当前执行脚本作为线索展示。 */
     var src = d.file ? d.file + ':' + (d.line || 0) + ':' + (d.column || 0) : (d.url || '');
-    var key = msg + '|' + src;
-    if (!errs.some(function (old) { return old.msg + '|' + (old.src || '') === key; })) errs.push({ t: x.time ? (Date.parse(x.time) || Date.now()) : Date.now(), msg: msg, src: src, file: d.file || d.url || '', line: d.line || 0, column: d.column || 0, stack: d.stack || '' });
+    if (!src && activeLabel) src = '执行位置线索：' + activeLabel + (active.startedAt != null ? '（启动 +' + Math.round(active.startedAt) + 'ms）' : '');
+    if (!src && d.tag) src = '事件类型：' + d.tag;
+    var key = msg + '|' + src + '|' + (x.kind || '');
+    if (!errs.some(function (old) { return old.msg + '|' + (old.src || '') + '|' + (old.kind || '') === key; })) errs.push({ t: x.time ? (Date.parse(x.time) || Date.now()) : Date.now(), msg: msg, src: src, file: d.file || d.url || '', line: d.line || 0, column: d.column || 0, stack: d.stack || '', kind: x.kind || '', activeScript: activeLabel });
   });
   errs.sort(function (a, b) { return a.t - b.t; }); if (errs.length > 100) errs = errs.slice(-100);
   if (window.__cmEarly) window.__cmEarly.errOn = false;
