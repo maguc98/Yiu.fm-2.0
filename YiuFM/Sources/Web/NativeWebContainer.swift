@@ -68,6 +68,10 @@ final class NativeWebContainer: UIView {
 
     /// Native controls send commands back to the existing page runtime.
     /// The web DOM remains the single source of truth for settings and actions.
+    private func setHubNativePresentation(_ active: Bool) {
+        evaluate("window.YiuHubBridge?.setNativePresentation(\\(active ? "true" : "false"))")
+    }
+
     func setHubOpen(_ open: Bool) {
         evaluate("window.YiuHubBridge?.activate(\(open ? "'open'" : "'close'"))")
     }
