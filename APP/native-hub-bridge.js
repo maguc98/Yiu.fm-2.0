@@ -114,6 +114,11 @@
       }
     };
     if (el.getAttribute('role')) item.role = el.getAttribute('role');
+    if (el.tagName.toLowerCase() === 'select') {
+      item.options = Array.prototype.map.call(el.options || [], function (option) {
+        return { label: (option.textContent || '').trim(), value: option.value, disabled: !!option.disabled };
+      }).slice(0, 100);
+    }
     if (el.tagName.toLowerCase() === 'svg') item.svg = el.outerHTML.slice(0, 5000);
     if (el.tagName.toLowerCase() === 'img') {
       item.src = el.currentSrc || el.src || '';
@@ -121,6 +126,7 @@
       item.objectFit = style.objectFit || 'contain';
     }
     if ('value' in el) item.value = el.value;
+    if (el.getAttribute('placeholder')) item.placeholder = el.getAttribute('placeholder');
     if ('checked' in el) item.checked = !!el.checked;
     if (el.disabled !== undefined) item.disabled = !!el.disabled;
     return item;
