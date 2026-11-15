@@ -32,7 +32,8 @@ final class YiuNativeHubRenderer: UIView {
             return
         }
 
-        let key = "\(x):\(y):\(width):\(height):\(nodes.count):\(nodes.last?["nativeId"] ?? "")"
+        let snapshotData = (try? JSONSerialization.data(withJSONObject: snapshot, options: [.sortedKeys])) ?? Data()
+        let key = snapshotData.base64EncodedString()
         if key == lastSnapshotKey { isHidden = false; return }
         lastSnapshotKey = key
 
@@ -60,12 +61,26 @@ final class YiuNativeHubRenderer: UIView {
             let localFrame = CGRect(x: nx - x - parentOrigin.x,
                                     y: ny - y - parentOrigin.y,
                                     width: nw, height: nh)
+            let appearance = node["appearance"] as? [String: Any] ?? [:]
+            let display = (appearance["display"] as? String ?? "block")
+            let visibility = (appearance["visibility"] as? String ?? "visible")
+            let opacity = CGFloat(number(appearance["opacity"]) ?? 1)
+            guard display != "none", visibility != "hidden", opacity > 0.01 else { continue }
             let tag = (node["tag"] as? String ?? "div").lowercased()
             let role = (node["role"] as? String ?? "").lowercased()
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
                 role == "button" || (node["id"] as? String == "miSet")
             let view: UIView
-            if isControl {
+            if tag == "img" {
+                let imageView = UIImageView()
+                imageView.contentMode = ((node["objectFit"] as? String) == "cover") ? .scaleAspectFill : .scaleAspectFit
+                imageView.clipsToBounds = true
+                if let source = node["src"] as? String, let url = URL(string: source),
+                   url.isFileURL {
+                    imageView.image = UIImage(contentsOfFile: url.path)
+                }
+                view = imageView
+            } else if isControl {
                 let button = UIButton(type: .custom)
                 button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id) }, for: .touchUpInside)
                 button.accessibilityLabel = (node["text"] as? String).flatMap { $0.isEmpty ? nil : $0 }
@@ -74,8 +89,9 @@ final class YiuNativeHubRenderer: UIView {
                 view = UIView()
             }
             view.frame = localFrame
-            view.backgroundColor = cssColor((node["appearance"] as? [String: Any])?["backgroundColor"])
-            if let appearance = node["appearance"] as? [String: Any] {
+            view.backgroundColor = cssColor(appearance["backgroundColor"])
+            view.alpha = opacity
+            if true {
                 let radius = CGFloat(number(appearance["borderRadius"]) ?? 0)
                 view.layer.cornerRadius = max(0, radius)
                 view.layer.borderWidth = CGFloat(number(appearance["borderWidth"]) ?? 0)
@@ -86,8 +102,8 @@ final class YiuNativeHubRenderer: UIView {
                 label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
                 label.text = text
                 label.numberOfLines = 0
-                label.textColor = cssColor((node["appearance"] as? [String: Any])?["color"]) ?? .label
-                if let appearance = node["appearance"] as? [String: Any] {
+                label.textColor = cssColor(appearance["color"]) ?? .label
+                if true {
                     let size = CGFloat(number(appearance["fontSize"]) ?? 14)
                     let weight = (appearance["fontWeight"] as? String).flatMap(Double.init) ?? 400
                     label.font = .systemFont(ofSize: max(8, min(48, size)),
