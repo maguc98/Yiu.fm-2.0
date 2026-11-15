@@ -347,6 +347,20 @@
       },
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
+      backButton: (function () {
+        var button = document.getElementById('hback');
+        if (!button) return { visible: false };
+        var style = window.getComputedStyle(button);
+        var rect = button.getBoundingClientRect();
+        var visible = isOpen && style.display !== 'none' && style.visibility !== 'hidden' &&
+          Number(style.opacity || 1) > 0.01 && rect.width > 0 && rect.height > 0;
+        return {
+          visible: visible,
+          rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+          opacity: Number(style.opacity || 1),
+          label: button.getAttribute('aria-label') || '展开部分工具栏'
+        };
+      })(),
       controls: controls,
       nodes: nodes
     };
