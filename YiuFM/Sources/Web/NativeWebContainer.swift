@@ -12,6 +12,8 @@ final class NativeWebContainer: UIView {
     private let nativeSplashWindowRenderer = YiuNativeHubRenderer()
     private let nativeTimelineLensRenderer = YiuNativeHubRenderer()
     private let nativeCropRenderer = YiuNativeHubRenderer()
+    private let nativeControlBarRenderer = YiuNativeHubRenderer()
+    private let nativeQuickPopupRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -27,6 +29,8 @@ final class NativeWebContainer: UIView {
     private let nativeSplashWindowRenderingEnabled = false
     private let nativeTimelineLensRenderingEnabled = false
     private let nativeCropRenderingEnabled = false
+    private let nativeControlBarRenderingEnabled = false
+    private let nativeQuickPopupRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -46,6 +50,8 @@ final class NativeWebContainer: UIView {
         addSubview(nativeSplashWindowRenderer)
         addSubview(nativeTimelineLensRenderer)
         addSubview(nativeCropRenderer)
+        addSubview(nativeControlBarRenderer)
+        addSubview(nativeQuickPopupRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -58,6 +64,10 @@ final class NativeWebContainer: UIView {
         nativeTimelineLensRenderer.isUserInteractionEnabled = false
         nativeCropRenderer.isHidden = true
         nativeCropRenderer.isUserInteractionEnabled = false
+        nativeControlBarRenderer.isHidden = true
+        nativeControlBarRenderer.isUserInteractionEnabled = false
+        nativeQuickPopupRenderer.isHidden = true
+        nativeQuickPopupRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -193,7 +203,25 @@ final class NativeWebContainer: UIView {
             nativeCropRenderer.isHidden = true
             setNativeMirrorPresentation(id: "crop", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled)
+        if nativeControlBarRenderingEnabled {
+            let bar = payload["controlBar"] as? [String: Any] ?? ["open": false]
+            nativeControlBarRenderer.render(bar) { _, _ in }
+            nativeControlBarRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "cbar", active: !nativeControlBarRenderer.isHidden)
+        } else {
+            nativeControlBarRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "cbar", active: false)
+        }
+        if nativeQuickPopupRenderingEnabled {
+            let popup = payload["quickPopup"] as? [String: Any] ?? ["open": false]
+            nativeQuickPopupRenderer.render(popup) { _, _ in }
+            nativeQuickPopupRenderer.isUserInteractionEnabled = false
+            setNativeMirrorPresentation(id: "qpop", active: !nativeQuickPopupRenderer.isHidden)
+        } else {
+            nativeQuickPopupRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "qpop", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
