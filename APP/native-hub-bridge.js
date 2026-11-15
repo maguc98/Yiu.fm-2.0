@@ -812,6 +812,22 @@
         attributeFilter: ['class', 'style', 'aria-hidden', 'value', 'checked'],
         characterData: true
       });
+      if (id === 'crop') {
+        // Keep the UIKit canvas snapshot fresh while the user drags or pinches.
+        // The bridge coalesces these events to a maximum of roughly 10 snapshots/sec.
+        var cropCanvas = root.querySelector('#cimg');
+        function refreshCropCanvas(event) {
+          if (event && event.type === 'pointermove' &&
+              !(event.target === cropCanvas || (event.target.closest && event.target.closest('#carea')))) return;
+          if (cropCanvas) cropCanvas.__yiuNativeCropVersion = (cropCanvas.__yiuNativeCropVersion || 0) + 1;
+          scheduleNotify();
+        }
+        root.addEventListener('input', refreshCropCanvas, true);
+        root.addEventListener('change', refreshCropCanvas, true);
+        root.addEventListener('pointermove', refreshCropCanvas, { passive: true, capture: true });
+        root.addEventListener('pointerup', refreshCropCanvas, true);
+        root.addEventListener('pointercancel', refreshCropCanvas, true);
+      }
     });
     if (['crop', 'tlLens', 'cbar', 'qpop'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
       mirrorAttachObserver.disconnect();
