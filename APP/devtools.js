@@ -507,6 +507,8 @@
   function lsSet(k, v) {
     try { localStorage.setItem(k, v); } catch (_) {}
   }
+  // 逐回调 RAF 溯源默认关闭；仅通过 yiuRafTrace 显式开启。
+  window.__rafTraceEnabled = lsGet('yiuRafTrace') === '1';
   // 全局帧率上限在启动阶段即生效，不必等用户打开开发者选项面板。
   var bootFrameLimit = parseInt(lsGet('yiu.frameLimitFps'), 10);
   window.__rafLimitFps = (bootFrameLimit >= 24 && bootFrameLimit <= 60) ? bootFrameLimit : 30;
@@ -752,7 +754,7 @@
 
   // 可选的逐回调 rAF 溯源。FPS 采样和视觉异常检测使用原生 rAF，不需要全局包装。
   // 只有显式设置 localStorage.yiuRafTrace='1' 或启用帧率门控时才接管全局回调。
-  var rafTraceEnabled = lsGet('yiuRafTrace') === '1';
+  var rafTraceEnabled = !!window.__rafTraceEnabled;
   var rafSeq = 1e9, rafMap = Object.create(null);
   var wrappedRAF = function(cb) {
     if (!rafTraceEnabled && !window.__rafCapActive) return origRAF.call(window, cb);
