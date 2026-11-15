@@ -118,6 +118,7 @@
       appearance: {
         color: style.color,
         backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
         backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
         backgroundImage: style.backgroundImage,
         backgroundSize: style.backgroundSize,
@@ -294,9 +295,14 @@
       }
     ).filter(Boolean) : [];
 
+    var surfaceStyle = hubGlass ? window.getComputedStyle(hubGlass) : null;
     return {
       version: 1,
       open: isOpen,
+      surfaceAppearance: {
+        boxShadow: surfaceStyle ? surfaceStyle.boxShadow : 'none',
+        borderRadius: surfaceStyle ? surfaceStyle.borderTopLeftRadius : '28px'
+      },
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
       controls: controls,
