@@ -27,6 +27,15 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        if nativeClipMode == "aiuiHistory",
+           let mask = glass.layer.mask as? CAShapeLayer,
+           let path = mask.presentation()?.path ?? mask.path {
+            return UIBezierPath(cgPath: path).contains(point)
+        }
+        return super.point(inside: point, with: event)
+    }
+
     @objc private func handleCropPan(_ recognizer: UIPanGestureRecognizer) {
         guard let canvas = recognizer.view, let area = canvas.superview else { return }
         if recognizer.state == .began {
