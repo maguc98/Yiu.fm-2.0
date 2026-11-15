@@ -13,6 +13,7 @@ struct LegacyVisualStage: UIViewRepresentable {
         )
         configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuNativeMini")
         configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuNativeHub")
+        configuration.userContentController.add(context.coordinator, contentWorld: .page, name: "yiuLiquidGlass")
 
         let hideDOMMini = WKUserScript(
             source: "(()=>{const s=document.createElement('style');s.textContent='#mini{opacity:0!important;pointer-events:none!important}';(document.documentElement||document).appendChild(s)})();",
@@ -20,6 +21,11 @@ struct LegacyVisualStage: UIViewRepresentable {
             forMainFrameOnly: true
         )
         configuration.userContentController.addUserScript(hideDOMMini)
+        configuration.userContentController.addUserScript(WKUserScript(
+            source: NativeLiquidGlassOverlay.webScript,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        ))
         configuration.userContentController.addUserScript(WKUserScript(
             source: Self.miniBridgeScript,
             injectionTime: .atDocumentEnd,
@@ -57,6 +63,9 @@ struct LegacyVisualStage: UIViewRepresentable {
         uiView.webView.configuration.userContentController.removeScriptMessageHandler(
             forName: "yiuNativeHub", contentWorld: .page
         )
+        uiView.webView.configuration.userContentController.removeScriptMessageHandler(
+            forName: "yiuLiquidGlass", contentWorld: .page
+        )
         uiView.webView.configuration.userContentController.removeAllScriptMessageHandlers()
         coordinator.container = nil
         coordinator.webView = nil
@@ -75,6 +84,8 @@ struct LegacyVisualStage: UIViewRepresentable {
                     container.applyMiniPayload(payload)
                 case "yiuNativeHub":
                     container.applyHubPayload(payload)
+                case "yiuLiquidGlass":
+                    container.applyNativeLiquidGlassPayload(payload)
                 default:
                     break
                 }
