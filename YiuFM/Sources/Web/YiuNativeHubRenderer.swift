@@ -446,10 +446,56 @@ final class YiuNativeHubRenderer: UIView {
     }
 
     private func imageFromCSSBackground(_ value: String) -> UIImage? {
+        let source = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if source.lowercased().hasPrefix("linear-gradient("),
+           let open = source.firstIndex(of: "("),
+           let close = source.lastIndex(of: ")") {
+            let body = String(source[source.index(after: open)..<close])
+            // Theme cards currently use a degree angle followed by four CSS colors.
+            // Split only on top-level commas so rgba()/hsla() colors remain intact.
+            var parts: [String] = []
+            var depth = 0
+            var token = ""
+            for character in body {
+                if character == "(" { depth += 1 }
+                if character == ")" { depth = max(0, depth - 1) }
+                if character == "," && depth == 0 {
+                    parts.append(token.trimmingCharacters(in: .whitespacesAndNewlines))
+                    token = ""
+                } else {
+                    token.append(character)
+                }
+            }
+            if !token.isEmpty { parts.append(token.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            var angle = 180.0
+            if let first = parts.first, first.lowercased().hasSuffix("deg"),
+               let parsed = Double(first.dropLast(3)) {
+                angle = parsed
+                parts.removeFirst()
+            }
+            let colors = parts.compactMap { cssColor($0) }
+            guard colors.count >= 2 else { return nil }
+            let size = CGSize(width: 256, height: 256)
+            let renderer = UIGraphicsImageRenderer(size: size)
+            return renderer.image { context in
+                let radians = (angle - 90) * .pi / 180
+                let dx = CGFloat(cos(radians))
+                let dy = CGFloat(sin(radians))
+                let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                let extent = (abs(dx) * size.width + abs(dy) * size.height) / 2
+                let start = CGPoint(x: center.x - dx * extent, y: center.y - dy * extent)
+                let end = CGPoint(x: center.x + dx * extent, y: center.y + dy * extent)
+                let cgColors = colors.map { $0.cgColor } as CFArray
+                guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                                colors: cgColors,
+                                                locations: nil) else { return }
+                context.cgContext.drawLinearGradient(gradient, start: start, end: end, options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            }
+        }
         guard let start = value.range(of: "url("),
               let end = value[start.upperBound...].firstIndex(of: ")") else { return nil }
         let source = value[start.upperBound..<end]
-            .trimmingCharacters(in: CharacterSet(charactersIn: " \"'"))
+            .trimmingCharacters(in: CharacterSet(charactersIn: " \\"'"))
         if source.hasPrefix("data:image/"),
            let comma = source.firstIndex(of: ",") {
             let encoded = String(source[source.index(after: comma)...])
@@ -460,7 +506,6 @@ final class YiuNativeHubRenderer: UIView {
         }
         return nil
     }
-
     private func edgeInsets(_ value: Any?) -> UIEdgeInsets {
         guard let raw = value as? String else { return .zero }
         let parts = raw.split(whereSeparator: { $0 == " " }).compactMap { Double(String($0).replacingOccurrences(of: "px", with: "")) }
