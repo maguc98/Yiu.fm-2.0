@@ -295,6 +295,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 textView.font = .systemFont(ofSize: CGFloat(number(appearance["fontSize"]) ?? 14))
                 textView.textColor = cssColor(appearance["color"]) ?? .label
                 textView.onTextChanged = { [weak self] text in self?.actionHandler?(id, text) }
+                textView.onFocusChanged = { [weak self] focused in self?.actionHandler?(id, ["nativeFocus": focused]) }
                 view = textView
             } else if tag == "input" && ["text", "search", "email", "url", "number"].contains(inputType) {
                 let field = UITextField()
@@ -687,6 +688,7 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
         didSet { placeholderLabel.text = placeholderText; updatePlaceholder() }
     }
     var onTextChanged: ((String) -> Void)?
+    var onFocusChanged: ((Bool) -> Void)?
     private let placeholderLabel = UILabel()
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
@@ -713,8 +715,12 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
         updatePlaceholder()
         onTextChanged?(textView.text)
     }
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        onFocusChanged?(true)
+    }
     func textViewDidEndEditing(_ textView: UITextView) {
         updatePlaceholder()
+        onFocusChanged?(false)
     }
 
     private func updatePlaceholder() {
