@@ -27,6 +27,7 @@ final class NativeWebContainer: UIView {
     private let nativeChangelogRenderer = YiuNativeHubRenderer()
     private let nativeSystemLogRenderer = YiuNativeHubRenderer()
     private let nativeSystemLogToastRenderer = YiuNativeHubRenderer()
+    private let nativeChangelogEditorRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -60,6 +61,7 @@ final class NativeWebContainer: UIView {
     private let nativeChangelogRenderingEnabled = false
     private let nativeSystemLogRenderingEnabled = false
     private let nativeSystemLogToastRenderingEnabled = false
+    private let nativeChangelogEditorRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -94,6 +96,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeChangelogRenderer)
         addSubview(nativeSystemLogRenderer)
         addSubview(nativeSystemLogToastRenderer)
+        addSubview(nativeChangelogEditorRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -127,6 +130,7 @@ final class NativeWebContainer: UIView {
         nativeChangelogRenderer.isHidden = true
         nativeSystemLogRenderer.isHidden = true
         nativeSystemLogToastRenderer.isHidden = true
+        nativeChangelogEditorRenderer.isHidden = true
         nativeSystemLogToastRenderer.isUserInteractionEnabled = false
         nativeLogToastRenderer.isUserInteractionEnabled = false
         nativeBackButton.isHidden = true
@@ -154,6 +158,7 @@ final class NativeWebContainer: UIView {
         nativeChangelogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "clCard", active: false) }
         nativeSystemLogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "slCard", active: false) }
         nativeSystemLogToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "slToast", active: false) }
+        nativeChangelogEditorRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "clEditCard", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -474,7 +479,19 @@ final class NativeWebContainer: UIView {
             nativeSystemLogToastRenderer.isHidden = true
             setNativeMirrorPresentation(id: "slToast", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled)
+        if nativeChangelogEditorRenderingEnabled {
+            let editor = payload["changelogEditor"] as? [String: Any] ?? ["open": false]
+            nativeChangelogEditorRenderer.render(editor) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value { self.setHubControl(id: controlID, value: value) }
+                else { self.activateHubControl(id: controlID) }
+            }
+            setNativeMirrorPresentation(id: "clEditCard", active: !nativeChangelogEditorRenderer.isHidden)
+        } else {
+            nativeChangelogEditorRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "clEditCard", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled || nativeLogPanelRenderingEnabled || nativeLogToastRenderingEnabled || nativeCommandConsoleRenderingEnabled || nativeChangelogRenderingEnabled || nativeSystemLogRenderingEnabled || nativeSystemLogToastRenderingEnabled || nativeChangelogEditorRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
