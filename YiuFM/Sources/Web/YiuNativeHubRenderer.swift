@@ -135,20 +135,33 @@ final class YiuNativeHubRenderer: UIView {
                 view.layer.borderColor = cssColor(appearance["borderColor"])?.cgColor
             }
             if let text = node["text"] as? String, !text.isEmpty {
-                let label = UILabel(frame: view.bounds.insetBy(dx: 1, dy: 0))
+                let padding = edgeInsets(appearance["padding"])
+                let label = UILabel(frame: view.bounds.inset(by: padding))
                 label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                label.text = text
                 label.numberOfLines = 0
-                label.textColor = cssColor(appearance["color"]) ?? .label
-                if true {
-                    let size = CGFloat(number(appearance["fontSize"]) ?? 14)
-                    let weight = (appearance["fontWeight"] as? String).flatMap(Double.init) ?? 400
-                    label.font = .systemFont(ofSize: max(8, min(48, size)),
-                                             weight: weight >= 650 ? .bold : (weight >= 550 ? .semibold : .regular))
-                    if let align = appearance["textAlign"] as? String {
-                        label.textAlignment = align == "center" ? .center : (align == "right" ? .right : .left)
-                    }
+                let textColor = cssColor(appearance["color"]) ?? .label
+                label.textColor = textColor
+                let size = CGFloat(number(appearance["fontSize"]) ?? 14)
+                let weight = (appearance["fontWeight"] as? String).flatMap(Double.init) ?? 400
+                let fallbackFont = UIFont.systemFont(ofSize: max(8, min(48, size)),
+                                                     weight: weight >= 750 ? .heavy : (weight >= 650 ? .bold : (weight >= 550 ? .semibold : .regular)))
+                let family = (appearance["fontFamily"] as? String)?
+                    .split(separator: ",").first.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\"", with: "") }
+                label.font = family.flatMap { UIFont(name: $0, size: max(8, min(48, size))) } ?? fallbackFont
+                let paragraph = NSMutableParagraphStyle()
+                if let align = appearance["textAlign"] as? String {
+                    paragraph.alignment = align == "center" ? .center : (align == "right" ? .right : .left)
+                    label.textAlignment = paragraph.alignment
                 }
+                if let lineHeight = number(appearance["lineHeight"]), lineHeight > 0 {
+                    paragraph.minimumLineHeight = CGFloat(lineHeight)
+                    paragraph.maximumLineHeight = CGFloat(lineHeight)
+                }
+                let kern = CGFloat(number(appearance["letterSpacing"]) ?? 0)
+                label.attributedText = NSAttributedString(string: text, attributes: [
+                    .font: label.font as Any, .foregroundColor: textColor,
+                    .kern: kern, .paragraphStyle: paragraph
+                ])
                 view.addSubview(label)
             }
             parent.addSubview(view)
@@ -166,6 +179,17 @@ final class YiuNativeHubRenderer: UIView {
                                            y: number(source?["scrollTop"]) ?? 0)
         }
         isHidden = false
+    }
+
+    private func edgeInsets(_ value: Any?) -> UIEdgeInsets {
+        guard let raw = value as? String else { return .zero }
+        let parts = raw.split(whereSeparator: { $0 == " " }).compactMap { Double($0.replacingOccurrences(of: "px", with: "")) }
+        guard !parts.isEmpty else { return .zero }
+        let top = parts[0]
+        let right = parts.count > 1 ? parts[1] : top
+        let bottom = parts.count > 2 ? parts[2] : top
+        let left = parts.count > 3 ? parts[3] : right
+        return UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
     }
 
     private func number(_ value: Any?) -> Double? {
