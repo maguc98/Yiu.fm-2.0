@@ -8,6 +8,7 @@
   if (window.YiuHubBridge) return;
 
   var hub = document.getElementById('hub');
+  var hubGlass = document.getElementById('hubGlass');
   if (!hub) return;
 
   var listeners = [];
@@ -23,6 +24,9 @@
   var nativeBridgeEnabled = false;
   var savedHubOpacity = null;
   var savedHubPointerEvents = null;
+  var savedGlassVisibility = null;
+  var savedGlassOpacity = null;
+  var savedGlassPointerEvents = null;
 
   function nativeId(el) {
     if (el.id) return el.id;
@@ -291,15 +295,32 @@
     if (active) {
       savedHubOpacity = hub.style.opacity;
       savedHubPointerEvents = hub.style.pointerEvents;
-      // Hide only the original DOM paint. Computed child styles and geometry
-      // remain readable so UIKit can mirror the exact foreground hierarchy.
+      // Remove both legacy DOM paint layers while UIKit owns this surface:
+      // otherwise the old CSS backdrop blur would be sampled underneath
+      // UIGlassEffect, producing a double-blurred "glass over blur" result.
       hub.style.opacity = '0';
       hub.style.pointerEvents = 'none';
+      if (hubGlass) {
+        savedGlassVisibility = hubGlass.style.visibility;
+        savedGlassOpacity = hubGlass.style.opacity;
+        savedGlassPointerEvents = hubGlass.style.pointerEvents;
+        hubGlass.style.visibility = 'hidden';
+        hubGlass.style.opacity = '0';
+        hubGlass.style.pointerEvents = 'none';
+      }
     } else {
       hub.style.opacity = savedHubOpacity === null ? '' : savedHubOpacity;
       hub.style.pointerEvents = savedHubPointerEvents === null ? '' : savedHubPointerEvents;
       savedHubOpacity = null;
       savedHubPointerEvents = null;
+      if (hubGlass) {
+        hubGlass.style.visibility = savedGlassVisibility === null ? '' : savedGlassVisibility;
+        hubGlass.style.opacity = savedGlassOpacity === null ? '' : savedGlassOpacity;
+        hubGlass.style.pointerEvents = savedGlassPointerEvents === null ? '' : savedGlassPointerEvents;
+        savedGlassVisibility = null;
+        savedGlassOpacity = null;
+        savedGlassPointerEvents = null;
+      }
     }
     return true;
   }
