@@ -615,6 +615,18 @@
     attributes: true,
     attributeFilter: ['class']
   });
+  var themeMenuRoot = document.getElementById('mediaMenu');
+  if (themeMenuRoot) {
+    observer.observe(themeMenuRoot, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'aria-expanded', 'aria-selected', 'aria-pressed', 'aria-label', 'disabled', 'hidden', 'value', 'checked', 'selected', 'src', 'alt', 'role'],
+      characterData: true
+    });
+    themeMenuRoot.addEventListener('input', scheduleNotify, true);
+    themeMenuRoot.addEventListener('change', scheduleNotify, true);
+  }
   window.addEventListener('resize', scheduleNotify, { passive: true });
   window.addEventListener('scroll', scheduleNotify, { passive: true, capture: true });
   hub.addEventListener('input', scheduleNotify, true);
