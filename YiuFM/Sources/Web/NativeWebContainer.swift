@@ -102,8 +102,9 @@ final class NativeWebContainer: UIView {
             let visible = nativeSettingsButtonRenderingEnabled && (settings["visible"] as? Bool ?? false)
             let opacity = settings["opacity"] as? CGFloat ?? 1
             let tint = (settings["backgroundColor"] as? String).flatMap { Self.cssColor($0) }
+            let foreground = (settings["color"] as? String).flatMap { Self.cssColor($0) }
             nativeSettingsButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
-                                        visible: visible, opacity: opacity, tint: tint)
+                                        visible: visible, opacity: opacity, tint: tint, foreground: foreground)
         } else {
             nativeSettingsButton.isHidden = true
         }
