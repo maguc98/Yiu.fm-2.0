@@ -3202,8 +3202,9 @@ html body.cc-home #hub#hub.cc-home::before{
 */
 #hub.cc-home :is(.cc-engine,.cc-resolution,.cc-other,.cc-shortcut),
 #hub.cc-home .cc-action-sheet .cc-action-head,
-#hub.cc-home .cc-action-sheet .cc-action-item,
-#hub.cc-home .cc-action-sheet .cc-action-control,
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item,
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-item:not(:first-child),
+#hub.cc-home .cc-action-sheet .cc-action-control:not(.cc-action-unavailable),
 #hub.cc-home .cc-action-sheet .cc-action-segment-option{
   background:
     linear-gradient(145deg,
@@ -3216,7 +3217,8 @@ html body.cc-home #hub#hub.cc-home::before{
     inset 0 0 0 1px rgba(255,255,255,.20),
     0 5px 16px rgba(35,45,60,.075) !important;
 }
-#hub.cc-home .cc-action-sheet .cc-action-item:active,
+#hub.cc-home .cc-action-sheet[data-view="categories"] .cc-action-item:active,
+#hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-item:not(:first-child):active,
 #hub.cc-home .cc-action-sheet .cc-action-segment-option:active{
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.72),
