@@ -17,6 +17,9 @@
   var generatedIds = new WeakMap();
   var elementsByNativeId = new Map();
   var nextGeneratedId = 1;
+  var nativePresentation = false;
+  var savedHubOpacity = null;
+  var savedHubPointerEvents = null;
 
   function nativeId(el) {
     if (el.id) return el.id;
@@ -201,6 +204,26 @@
       notifyTimer = 0;
       requestAnimationFrame(notify);
     }, 100);
+  }
+
+  function setNativePresentation(active) {
+    active = !!active;
+    if (active === nativePresentation) return true;
+    nativePresentation = active;
+    if (active) {
+      savedHubOpacity = hub.style.opacity;
+      savedHubPointerEvents = hub.style.pointerEvents;
+      // Hide only the original DOM paint. Computed child styles and geometry
+      // remain readable so UIKit can mirror the exact foreground hierarchy.
+      hub.style.opacity = '0';
+      hub.style.pointerEvents = 'none';
+    } else {
+      hub.style.opacity = savedHubOpacity === null ? '' : savedHubOpacity;
+      hub.style.pointerEvents = savedHubPointerEvents === null ? '' : savedHubPointerEvents;
+      savedHubOpacity = null;
+      savedHubPointerEvents = null;
+    }
+    return true;
   }
 
   function setOpen(open) {
