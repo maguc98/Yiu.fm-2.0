@@ -38,9 +38,40 @@
     return value;
   }
 
+
+  // Convert transformed WebKit rectangles back to the hub's stable layout
+  // coordinate space. The original #hub animates with scale/translate; feeding
+  // those transient visual rects to UIKit would scale the native mirror twice.
+  function layoutRect(el) {
+    var visual = el.getBoundingClientRect();
+    var left = hub.offsetLeft || 0;
+    var top = hub.offsetTop || 0;
+    var style = window.getComputedStyle(hub);
+    var matrix;
+    try {
+      matrix = style.transform && style.transform !== 'none' ?
+        new DOMMatrix(style.transform) : new DOMMatrix();
+    } catch (_) {
+      matrix = new DOMMatrix();
+    }
+    var scaleX = Math.hypot(matrix.a, matrix.b) || 1;
+    var scaleY = Math.hypot(matrix.c, matrix.d) || 1;
+    var origin = (style.transformOrigin || '0px 0px').split(' ');
+    var originX = parseFloat(origin[0]) || 0;
+    var originY = parseFloat(origin[1]) || 0;
+    var visualOriginX = left + originX - (matrix.a * originX + matrix.c * originY) + matrix.e;
+    var visualOriginY = top + originY - (matrix.b * originX + matrix.d * originY) + matrix.f;
+    return {
+      x: left + (visual.x - visualOriginX) / scaleX,
+      y: top + (visual.y - visualOriginY) / scaleY,
+      width: visual.width / scaleX,
+      height: visual.height / scaleY
+    };
+  }
+
   function readControl(el) {
     if (!el) return null;
-    var rect = el.getBoundingClientRect();
+    var rect = layoutRect(el);
     var style = window.getComputedStyle(el);
     var item = {
       id: el.id || '',
@@ -285,7 +316,7 @@
   }
 
   function snapshot() {
-    var rect = hub.getBoundingClientRect();
+    var rect = layoutRect(hub);
     var isOpen = document.body.classList.contains('open');
     // The native control center is irrelevant while closed. Avoid walking up to
     // 1,800 DOM nodes during background player/visualizer activity.
