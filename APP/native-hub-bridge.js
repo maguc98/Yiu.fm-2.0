@@ -286,6 +286,8 @@
     activate: activate,
     activateControl: activateControl,
     setControl: setControl,
+    setScroll: setScroll,
+    setNativePresentation: setNativePresentation,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
       listeners.push(listener);
