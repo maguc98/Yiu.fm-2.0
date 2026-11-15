@@ -6,9 +6,12 @@ final class NativeWebContainer: UIView {
     let webView: WKWebView
     private let miniBar = YiuNativeMiniPlayerView()
     private let nativeHubRenderer = YiuNativeHubRenderer()
+    private let nativeThemeMenuRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
     private let nativeHubRenderingEnabled = false
+    // Theme picker remains opt-in until long-press deletion and visual parity pass device testing.
+    private let nativeThemeMenuRenderingEnabled = false
     // Keep the standalone toolbar surface off until its visual and hit-target parity is verified on device.
     private let nativeBackButtonRenderingEnabled = false
     private var miniFrame = CGRect.zero
@@ -24,12 +27,17 @@ final class NativeWebContainer: UIView {
         addSubview(webView)
         addSubview(miniBar)
         addSubview(nativeHubRenderer)
+        addSubview(nativeThemeMenuRenderer)
         addSubview(nativeBackButton)
         miniBar.isHidden = true
         nativeHubRenderer.isHidden = true
+        nativeThemeMenuRenderer.isHidden = true
         nativeBackButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
             self?.setHubNativePresentation(false)
+        }
+        nativeThemeMenuRenderer.onDidHide = { [weak self] in
+            self?.setThemeMenuNativePresentation(false)
         }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
@@ -77,7 +85,7 @@ final class NativeWebContainer: UIView {
             nativeBackButton.isHidden = true
             evaluate("window.YiuHubBridge?.setBackNativePresentation(false)")
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled)
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
@@ -97,6 +105,24 @@ final class NativeWebContainer: UIView {
             nativeHubRenderer.isHidden = true
             setHubNativePresentation(false)
         }
+        let themeMenu = payload["themeMenu"] as? [String: Any] ?? ["open": false]
+        if nativeThemeMenuRenderingEnabled {
+            nativeThemeMenuRenderer.render(themeMenu) { [weak self] controlID, value in
+                guard let self else { return }
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            setThemeMenuNativePresentation(!nativeThemeMenuRenderer.isHidden)
+        } else {
+            nativeThemeMenuRenderer.isHidden = true
+            setThemeMenuNativePresentation(false)
+        }
         onHubStateChanged?(payload)
     }
 
@@ -112,6 +138,10 @@ final class NativeWebContainer: UIView {
         guard nativeHubPresentationState != active else { return }
         nativeHubPresentationState = active
         evaluate("window.YiuHubBridge?.setNativePresentation(\(active ? "true" : "false"))")
+    }
+
+    private func setThemeMenuNativePresentation(_ active: Bool) {
+        evaluate("window.YiuHubBridge?.setNativeThemePresentation(\\(active ? "true" : "false"))")
     }
 
     func setHubOpen(_ open: Bool) {
