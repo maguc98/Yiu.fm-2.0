@@ -8,6 +8,7 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
     private let glass = YiuLiquidGlassSurface(material: .regular, interactive: false)
     private var actionHandler: ((String, Any?) -> Void)?
     private var lastSnapshotKey = ""
+    private var lastSurfaceAppearance: [String: Any] = [:]
     private var presentationOpen = false
     private var scrollViews: [String: YiuNativeHubScrollView] = [:]
     private var nativeClipMode: String?
@@ -108,11 +109,15 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
 
     func render(_ snapshot: [String: Any], action: @escaping (String, Any?) -> Void) {
         actionHandler = action
-        let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
-        guard (snapshot["open"] as? Bool) == true else {
+        let incomingAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
+        let isOpen = (snapshot["open"] as? Bool) == true
+        let surfaceAppearance = isOpen ? incomingAppearance :
+            (lastSurfaceAppearance.isEmpty ? incomingAppearance : lastSurfaceAppearance)
+        guard isOpen else {
             setPresentation(open: false, appearance: surfaceAppearance)
             return
         }
+        lastSurfaceAppearance = surfaceAppearance
         guard let rawRect = snapshot["rect"] as? [String: Any],
               let x = number(rawRect["x"]), let y = number(rawRect["y"]),
               let width = number(rawRect["width"]), let height = number(rawRect["height"]),
