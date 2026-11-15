@@ -24,7 +24,7 @@ final class NativeWebContainer: UIView {
             self?.evaluate("document.querySelector('#mini .nxb')?.click()")
         }
         miniBar.onSwipeUp = { [weak self] in
-            self?.evaluate("if(typeof npOpen==='function')npOpen()")
+            self?.evaluate("window.__yiuOpenMiniPlayerCard?.()")
         }
         miniBar.onHorizontalSwipe = { [weak self] expanded in
             self?.evaluate("document.body.classList.toggle('mx', \(expanded ? "true" : "false"))")

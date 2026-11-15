@@ -330,6 +330,9 @@
     npCard.setAttribute("aria-hidden","true");
     if(B.classList.contains("np-open"))B.classList.remove("np-open"); // 恢复底部小白条（先判断再删：无条件 remove 也会触发 class 变动，被下面的 MutationObserver 反复调用 npClose 造成死循环）
   }
+  // Native UIKit bridge: keep the established drawer implementation as the single source of truth.
+  window.__yiuOpenMiniPlayerCard = npOpen;
+  window.__yiuCloseMiniPlayerCard = npClose;
   window.addEventListener("performance-mode-change",function(){
     if(!npCard.classList.contains("show"))return;
     clearInterval(npTimer);
