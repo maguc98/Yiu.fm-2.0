@@ -99,7 +99,8 @@ final class YiuNativeHubRenderer: UIView {
             let tabIndex = number(node["tabIndex"]) ?? -1
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
                 (tag == "a" && !href.isEmpty) || tabIndex >= 0 ||
-                role == "button" || (node["id"] as? String == "miSet")
+                ["button", "link", "checkbox", "switch", "slider", "menuitem"].contains(role) ||
+                (node["id"] as? String == "miSet")
             let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let overflowX = (appearance["overflowX"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let scrollable = tag != "textarea" && (["auto", "scroll"].contains(overflowY) || ["auto", "scroll"].contains(overflowX))
@@ -141,18 +142,31 @@ final class YiuNativeHubRenderer: UIView {
                     }
                 }
                 view = imageView
-            } else if tag == "input" && inputType == "checkbox" {
+            } else if (tag == "input" && inputType == "checkbox") || role == "switch" || role == "checkbox" {
                 let toggle = UISwitch()
-                toggle.isOn = node["checked"] as? Bool ?? false
+                toggle.isOn = (node["checked"] as? Bool) ??
+                    ((node["ariaChecked"] as? String) == "true")
                 toggle.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, toggle.isOn) }, for: .valueChanged)
                 view = toggle
-            } else if tag == "input" && inputType == "range" {
+            } else if (tag == "input" && inputType == "range") || role == "slider" {
                 let slider = UISlider()
-                slider.minimumValue = Float(number(node["min"]) ?? 0)
-                slider.maximumValue = Float(number(node["max"]) ?? 100)
-                slider.value = Float(number(node["value"]) ?? Double(slider.minimumValue))
-                slider.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, slider.value) }, for: .valueChanged)
+                let minimum = number(node["min"]) ?? number(node["ariaValueMin"]) ?? 0
+                let maximum = number(node["max"]) ?? number(node["ariaValueMax"]) ?? 100
+                let step = number(node["step"]) ?? 0
+                slider.minimumValue = Float(minimum)
+                slider.maximumValue = Float(maximum > minimum ? maximum : minimum + 1)
+                slider.value = Float(number(node["value"]) ?? number(node["ariaValueNow"]) ?? minimum)
+                slider.addAction(UIAction { [weak self] _ in
+                    let raw = Double(slider.value)
+                    let stepped = step > 0 ? minimum + ((raw - minimum) / step).rounded() * step : raw
+                    self?.actionHandler?(id, min(maximum, max(minimum, stepped)))
+                }, for: .valueChanged)
                 view = slider
+            } else if tag == "input" && inputType == "color" {
+                let colorButton = YiuNativeColorPickerButton()
+                colorButton.backgroundColor = cssColor(node["value"]) ?? .white
+                colorButton.onColorChange = { [weak self] hex in self?.actionHandler?(id, hex) }
+                view = colorButton
             } else if tag == "select" {
                 let button = UIButton(type: .system)
                 let options = node["options"] as? [[String: Any]] ?? []
@@ -367,3 +381,41 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
         placeholderLabel.isHidden = !text.isEmpty
     }
 }
+
+@MainActor
+private final class YiuNativeColorPickerButton: UIButton, UIColorPickerViewControllerDelegate {
+    var onColorChange: ((String) -> Void)?
+
+    override init(frame: CGRect = .zero) {
+        super.init(frame: frame)
+        layer.cornerRadius = 8
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        addAction(UIAction { [weak self] _ in self?.presentPicker() }, for: .touchUpInside)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private func presentPicker() {
+        var responder: UIResponder? = self
+        while let current = responder {
+            if let controller = current as? UIViewController {
+                let picker = UIColorPickerViewController()
+                picker.selectedColor = backgroundColor ?? .white
+                picker.delegate = self
+                controller.present(picker, animated: true)
+                return
+            }
+            responder = current.next
+        }
+    }
+
+    func colorPickerViewControllerDidSelectColor(_ viewController: UIColorPickerViewController) {
+        backgroundColor = viewController.selectedColor
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 1
+        viewController.selectedColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        let hex = String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
+        onColorChange?(hex)
+    }
+}
+
