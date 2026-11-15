@@ -81,7 +81,7 @@ final class NativeWebContainer: UIView {
     func setHubScroll(id: String, top: Double, left: Double) {
         guard let idData = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let idJSON = String(data: idData, encoding: .utf8) else { return }
-        evaluate("window.YiuHubBridge?.setScroll(\\(idJSON), \\(top), \\(left))")
+        evaluate("window.YiuHubBridge?.setScroll(\(idJSON), \(top), \(left))")
     }
 
     func setHubControl(id: String, value: Any) {
