@@ -390,7 +390,25 @@
       })(),
       controls: controls,
       nodes: nodes,
-      themeMenu: themeMenuSnapshot()
+      themeMenu: themeMenuSnapshot(),
+      settingsButton: (function () {
+        var button = document.getElementById('miSet');
+        if (!button) return { visible: false };
+        var style = window.getComputedStyle(button);
+        var rect = button.getBoundingClientRect();
+        var visible = rect.width > 0 && rect.height > 0 &&
+          style.display !== 'none' && style.visibility !== 'hidden' &&
+          Number(style.opacity || 1) > 0.01 && style.pointerEvents !== 'none';
+        return {
+          visible: visible,
+          rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+          opacity: Number(style.opacity || 1),
+          backgroundColor: style.backgroundColor,
+          borderRadius: style.borderTopLeftRadius,
+          color: style.color,
+          pressed: button.classList.contains('ia')
+        };
+      })()
     };
   }
 
