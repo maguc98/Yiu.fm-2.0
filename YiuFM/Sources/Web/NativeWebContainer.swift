@@ -224,8 +224,15 @@ final class NativeWebContainer: UIView {
         }
         if nativeCropRenderingEnabled {
             let crop = payload["cropPanel"] as? [String: Any] ?? ["open": false]
-            nativeCropRenderer.render(crop) { _, _ in }
-            nativeCropRenderer.isUserInteractionEnabled = false
+            nativeCropRenderer.render(crop) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            nativeCropRenderer.isUserInteractionEnabled = true
             setNativeMirrorPresentation(id: "crop", active: !nativeCropRenderer.isHidden)
         } else {
             nativeCropRenderer.isHidden = true
