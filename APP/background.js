@@ -143,7 +143,7 @@ var openCrop=(function(){
         paint();
       };
     });
-    done=cb;cv.width=src.width;cv.height=src.height;cv.getContext("2d").drawImage(src,0,0);
+    done=cb;cv.width=src.width;cv.height=src.height;cv.getContext("2d").drawImage(src,0,0);cv.__yiuNativeCropVersion=(cv.__yiuNativeCropVersion||0)+1;
     S.w=src.width;S.h=src.height;ptrs.clear();
     ov.classList.add("show");ov.setAttribute("aria-hidden","false");
     layoutFrame();S.kmin=Math.max(S.FW/S.w,S.FH/S.h);S.k=S.kmin;
