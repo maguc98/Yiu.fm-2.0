@@ -133,4 +133,6 @@
     if (observer) observer.disconnect();
     listeners = [];
   }, { once: true });
+  // Publish the first state immediately so UIKit does not wait for a later mutation.
+  notify();
 })();
