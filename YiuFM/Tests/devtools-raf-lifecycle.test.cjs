@@ -47,7 +47,7 @@ function createHarness(traceEnabled = false) {
     Error,
     console: { warn() {} }
   });
-  vm.runInContext('var lastWarnTime = 0;\\n' + rafSource, context);
+  vm.runInContext('var lastWarnTime = 0;\n' + rafSource, context);
   return { context, window, origRAF, origCancel, pending, cancelled };
 }
 
