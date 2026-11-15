@@ -84,7 +84,7 @@
           var cs = getComputedStyle(hub);
           ['--p-bg', '--g-blur', '--cover'].forEach(function(k){ var v = cs.getPropertyValue(k); if(v && v.trim()) mask.style.setProperty(k, v.trim()); });
         }
-        card.className = 'yd-card'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true');
+        card.className = 'yd-card'; card.id = 'ydDialogCard'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true');
         card.innerHTML = (o.title ? '<div class="yd-t">' + eh(o.title) + '</div>' : '') +
           ((o.msg || o.html) ? '<div class="yd-body">' + (o.msg ? '<div class="yd-m">' + eh(o.msg).replace(/\n/g, '<br>') + '</div>' : '') + (o.html || '') + '</div>' : '') +
           '<div class="yd-b">' + (o.cancel ? '<button type="button" class="yd-btn" data-r="0">' + eh(o.cancel) + '</button>' : '') +
@@ -115,7 +115,7 @@
       mask.className = 'yd-mask';
       var hub = document.getElementById('hub');
       if(hub){ var cs = getComputedStyle(hub); ['--p-bg', '--g-blur', '--cover'].forEach(function(k){ var v = cs.getPropertyValue(k); if(v && v.trim()) mask.style.setProperty(k, v.trim()); }); }
-      card.className = 'yd-card'; card.setAttribute('role', 'progressbar');
+      card.className = 'yd-card'; card.id = 'ydProgressCard'; card.setAttribute('role', 'progressbar');
       card.innerHTML = '<div class="yd-t">' + eh(o.title || '处理中') + '</div><div class="yd-bar ind"><div class="yd-fill"></div></div>' +
         '<div class="yd-pr"><span class="yd-pc">' + eh(o.text || '正在整理文件…') + '</span><b class="yd-pp"></b></div><div class="yd-pn"></div>';
       mask.appendChild(card); document.body.appendChild(mask);
