@@ -347,9 +347,14 @@
     if (!root || !nativeBridgeEnabled) return { open: false, nodes: [] };
     var style = window.getComputedStyle(root);
     var rect = layoutRect(root, root);
+    var nativeHidden = root.hasAttribute('data-yiu-native-opacity');
+    var savedOpacity = root.getAttribute('data-yiu-native-opacity');
+    var savedPointer = root.getAttribute('data-yiu-native-pointer');
+    var sourceOpacity = nativeHidden ? (savedOpacity ? Number(savedOpacity) : 1) : Number(style.opacity || 1);
+    var sourcePointer = nativeHidden ? savedPointer : style.pointerEvents;
     var open = rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
-      style.visibility !== 'hidden' && Number(style.opacity || 1) > 0.01 &&
-      style.pointerEvents !== 'none';
+      style.visibility !== 'hidden' && sourceOpacity > 0.01 &&
+      sourcePointer !== 'none';
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (!open) return { open: false, nodes: [] };
