@@ -170,7 +170,7 @@
   var head=sheet.querySelector(".cl-head"),bodyEl=sheet.querySelector("#clBody"),curEl=sheet.querySelector("#clCur");
 
   var ed=mk("div","cl-layer");ed.id="clEdit";ed.setAttribute("aria-hidden","true");
-  ed.innerHTML='<div class="cl-box" role="dialog" aria-label="编辑版本"><div class="cl-bt" id="clEdTitle">添加版本</div>'
+  ed.innerHTML='<div class="cl-box" id="clEditCard" role="dialog" aria-label="编辑版本"><div class="cl-bt" id="clEdTitle">添加版本</div>'
     +'<label for="clEv">版本号</label><div class="cl-input" contenteditable="true" id="clEv" role="textbox" enterkeyhint="done" placeholder="例如 v0.1.2 Beta 4"></div>'
     +'<label for="clEd">日期（可留空）</label><div class="cl-input" contenteditable="true" id="clEd" role="textbox" enterkeyhint="done" placeholder="例如 2026-10-22"></div>'
     +'<label for="clEn">更新内容（「# 」开头的行是分类标题，其余每行一条）</label>'
