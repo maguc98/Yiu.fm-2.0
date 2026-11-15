@@ -57,11 +57,12 @@ final class YiuNativeHubRenderer: UIView {
 
             let parent = parentID.isEmpty ? glass.foregroundView : views[parentID]
             guard let parent else { continue }
-            // DOM frames are viewport-relative; convert them into the actual
-            // native parent coordinate space. This also handles nested nodes.
-            let parentOrigin = parent.convert(.zero, to: self)
-            let localFrame = CGRect(x: nx - parentOrigin.x,
-                                    y: ny - parentOrigin.y,
+            // DOM frames are viewport-relative. Root nodes are relative to
+            // the glass surface; nested nodes are relative to their native parent.
+            let parentOrigin = parentID.isEmpty ? CGPoint.zero :
+                (views[parentID]?.convert(.zero, to: self) ?? .zero)
+            let localFrame = CGRect(x: nx - x - parentOrigin.x,
+                                    y: ny - y - parentOrigin.y,
                                     width: nw, height: nh)
             let appearance = node["appearance"] as? [String: Any] ?? [:]
             let display = (appearance["display"] as? String ?? "block")
