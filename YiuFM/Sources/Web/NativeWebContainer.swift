@@ -38,7 +38,7 @@ final class NativeWebContainer: UIView {
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
-    private let nativeHubRenderingEnabled = false
+    private let nativeHubRenderingEnabled = true
     // Theme picker remains opt-in until long-press deletion and visual parity pass device testing.
     private let nativeThemeMenuRenderingEnabled = false
     // Keep the standalone toolbar surface off until its visual and hit-target parity is verified on device.
