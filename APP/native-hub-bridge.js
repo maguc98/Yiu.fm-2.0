@@ -605,16 +605,14 @@
   function setNativeMirrorPresentation(id, active) {
     var root = document.getElementById(id);
     if (!root) return false;
-    if (active) {
-      if (!root.hasAttribute('data-yiu-native-opacity')) {
-        root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
-        root.setAttribute('data-yiu-native-backdrop', root.style.getPropertyValue('backdrop-filter'));
-        root.setAttribute('data-yiu-native-webkit-backdrop', root.style.getPropertyValue('-webkit-backdrop-filter'));
-      }
+    if (active && !root.hasAttribute('data-yiu-native-opacity')) {
+      root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
+      root.setAttribute('data-yiu-native-backdrop', root.style.getPropertyValue('backdrop-filter'));
+      root.setAttribute('data-yiu-native-webkit-backdrop', root.style.getPropertyValue('-webkit-backdrop-filter'));
       root.style.opacity = '0';
       root.style.setProperty('backdrop-filter', 'none', 'important');
       root.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
-    } else if (root.hasAttribute('data-yiu-native-opacity')) {
+    } else if (!active && root.hasAttribute('data-yiu-native-opacity')) {
       var opacity = root.getAttribute('data-yiu-native-opacity');
       var backdrop = root.getAttribute('data-yiu-native-backdrop');
       var webkitBackdrop = root.getAttribute('data-yiu-native-webkit-backdrop');
