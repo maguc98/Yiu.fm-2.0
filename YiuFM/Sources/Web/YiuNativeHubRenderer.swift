@@ -24,7 +24,9 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
 
     @objc private func handleCropPan(_ recognizer: UIPanGestureRecognizer) {
         guard let canvas = recognizer.view, let area = canvas.superview else { return }
-        if recognizer.state == .changed {
+        if recognizer.state == .began {
+            actionHandler?("cimg", ["nativeGesture": "cropPan", "phase": "begin"])
+        } else if recognizer.state == .changed {
             let delta = recognizer.translation(in: area)
             recognizer.setTranslation(.zero, in: area)
             canvas.transform = canvas.transform.translatedBy(x: delta.x, y: delta.y)
@@ -37,7 +39,9 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
 
     @objc private func handleCropPinch(_ recognizer: UIPinchGestureRecognizer) {
         guard let canvas = recognizer.view, let area = canvas.superview else { return }
-        if recognizer.state == .changed {
+        if recognizer.state == .began {
+            actionHandler?("cimg", ["nativeGesture": "cropPinch", "phase": "begin"])
+        } else if recognizer.state == .changed {
             let center = recognizer.location(in: area)
             let localCenter = recognizer.location(in: canvas)
             let scale = recognizer.scale
