@@ -13,6 +13,8 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
     private let subtitleLabel = UILabel()
     private let playButton = UIButton(type: .system)
     private let nextButton = UIButton(type: .system)
+    private var rowStack: UIStackView!
+    private var textStack: UIStackView!
     private var playWidth: NSLayoutConstraint!
     private var nextWidth: NSLayoutConstraint!
     private var isExpanded = false
@@ -48,6 +50,7 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         glass.clipsToBounds = true
 
         let row = UIStackView()
+        rowStack = row
         row.axis = .horizontal
         row.alignment = .center
         row.spacing = 10
@@ -98,6 +101,7 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         row.addArrangedSubview(artwork)
 
         let textStack = UIStackView(arrangedSubviews: [statusLabel, titleLabel, subtitleLabel])
+        self.textStack = textStack
         textStack.axis = .vertical
         textStack.alignment = .leading
         textStack.spacing = 1
@@ -108,7 +112,7 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         statusLabel.text = "正在播放"
         statusLabel.font = .systemFont(ofSize: 11, weight: .regular)
         statusLabel.textColor = UIColor.white.withAlphaComponent(0.62)
-        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 16, weight: .heavy)
         titleLabel.textColor = .white
         titleLabel.lineBreakMode = .byTruncatingTail
         subtitleLabel.font = .systemFont(ofSize: 12, weight: .regular)
@@ -121,6 +125,8 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         nextButton.accessibilityLabel = "下一句"
         row.addArrangedSubview(playButton)
         row.addArrangedSubview(nextButton)
+        row.setCustomSpacing(0, after: textStack)
+        row.setCustomSpacing(0, after: playButton)
         playWidth = playButton.widthAnchor.constraint(equalToConstant: 0)
         nextWidth = nextButton.widthAnchor.constraint(equalToConstant: 0)
         NSLayoutConstraint.activate([
@@ -162,6 +168,8 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
             isExpanded = value
             playWidth.constant = value ? 42 : 0
             nextWidth.constant = value ? 42 : 0
+            rowStack.setCustomSpacing(value ? 10 : 0, after: textStack)
+            rowStack.setCustomSpacing(value ? 10 : 0, after: playButton)
             UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0.2) {
                 self.layoutIfNeeded()
                 self.playButton.alpha = value ? 1 : 0
