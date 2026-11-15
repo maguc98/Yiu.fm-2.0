@@ -12,6 +12,7 @@ on:
       - fix/system-settings-readability-search
       - restart/build-226-baseline
       - feature/global-native-liquid-glass
+      - preview/native-liquid-glass-acceptance
     paths:
       - "APP/**"
       - "index.html"
