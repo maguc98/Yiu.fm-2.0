@@ -343,6 +343,8 @@
   }
 
   function snapshot() {
+    // Rebuild the ID map from both live roots each time; do not retain detached theme cards.
+    elementsByNativeId.clear();
     var rect = layoutRect(hub, hub);
     var isOpen = document.body.classList.contains('open');
     // The native control center is irrelevant while closed. Avoid walking up to
