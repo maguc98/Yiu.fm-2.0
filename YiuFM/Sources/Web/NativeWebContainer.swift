@@ -9,6 +9,7 @@ final class NativeWebContainer: UIView {
     private let nativeThemeMenuRenderer = YiuNativeHubRenderer()
     private let nativeFloatingToolsRenderer = YiuNativeHubRenderer()
     private let nativeCommandButtonRenderer = YiuNativeHubRenderer()
+    private let nativeSplashWindowRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -21,6 +22,7 @@ final class NativeWebContainer: UIView {
     private let nativeSettingsButtonRenderingEnabled = false
     private let nativeFloatingToolsRenderingEnabled = false
     private let nativeCommandButtonRenderingEnabled = false
+    private let nativeSplashWindowRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -37,6 +39,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeThemeMenuRenderer)
         addSubview(nativeFloatingToolsRenderer)
         addSubview(nativeCommandButtonRenderer)
+        addSubview(nativeSplashWindowRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -44,6 +47,7 @@ final class NativeWebContainer: UIView {
         nativeThemeMenuRenderer.isHidden = true
         nativeFloatingToolsRenderer.isHidden = true
         nativeCommandButtonRenderer.isHidden = true
+        nativeSplashWindowRenderer.isHidden = true
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -138,7 +142,25 @@ final class NativeWebContainer: UIView {
             nativeCommandButtonRenderer.isHidden = true
             setNativeFloatingPresentation(id: "cmdFab", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled)
+        if nativeSplashWindowRenderingEnabled {
+            let splash = payload["splashWindow"] as? [String: Any] ?? ["open": false]
+            nativeSplashWindowRenderer.render(splash) { [weak self] controlID, value in
+                guard let self else { return }
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            setNativeFloatingPresentation(id: "saWinCard", active: !nativeSplashWindowRenderer.isHidden)
+        } else {
+            nativeSplashWindowRenderer.isHidden = true
+            setNativeFloatingPresentation(id: "saWinCard", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
