@@ -227,7 +227,11 @@
     var t=document.getElementById("npToast");
     if(!t){t=document.createElement("div");t.id="npToast";npCov.appendChild(t)}
     t.textContent=msg;t.classList.add("on");
-    clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("on")},1500);
+    if(window.YiuHubBridge&&window.YiuHubBridge.refresh)window.YiuHubBridge.refresh();
+    clearTimeout(toastT);toastT=setTimeout(function(){
+      t.classList.remove("on");
+      if(window.YiuHubBridge&&window.YiuHubBridge.refresh)window.YiuHubBridge.refresh();
+    },1500);
   }
   var lastReset=0;
   function npResetCover(){
