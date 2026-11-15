@@ -376,7 +376,7 @@
     var sourcePointer = nativeHidden ? savedPointer : style.pointerEvents;
     var open = rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
       style.visibility !== 'hidden' && sourceOpacity > 0.01 &&
-      sourcePointer !== 'none';
+      (sourcePointer !== 'none' || id === 'logToast');
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'npCard') open = open && root.classList.contains('show');
     if (id === 'pkgDialog') open = open && !!root.parentElement?.classList.contains('show');
