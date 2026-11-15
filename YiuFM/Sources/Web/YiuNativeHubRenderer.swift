@@ -244,7 +244,7 @@ final class YiuNativeHubRenderer: UIView {
                 field.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, field.text ?? "") }, for: .editingChanged)
                 view = field
             } else if isControl {
-                let button = isThemeCard ? YiuNativeThemeCardButton(type: .custom) : UIButton(type: .custom)
+                let button: UIButton = isThemeCard ? YiuNativeThemeCardButton(frame: .zero) : UIButton(type: .custom)
                 button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, nil) }, for: .touchUpInside)
                 if let themeButton = button as? YiuNativeThemeCardButton {
                     themeButton.onLongPress = { [weak self] in
@@ -692,15 +692,6 @@ private final class YiuNativeThemeCardButton: UIButton {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         installLongPress()
-    }
-
-    convenience init(type: UIButton.ButtonType) {
-        self.init(frame: .zero)
-        self.buttonTypeSetup(type)
-    }
-
-    private func buttonTypeSetup(_ type: UIButton.ButtonType) {
-        // Custom button visuals are supplied by the mirrored DOM content.
     }
 
     private func installLongPress() {
