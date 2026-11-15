@@ -183,7 +183,7 @@ final class YiuNativeHubRenderer: UIView {
 
     private func edgeInsets(_ value: Any?) -> UIEdgeInsets {
         guard let raw = value as? String else { return .zero }
-        let parts = raw.split(whereSeparator: { $0 == " " }).compactMap { Double($0.replacingOccurrences(of: "px", with: "")) }
+        let parts = raw.split(whereSeparator: { $0 == " " }).compactMap { Double(String($0).replacingOccurrences(of: "px", with: "")) }
         guard !parts.isEmpty else { return .zero }
         let top = parts[0]
         let right = parts.count > 1 ? parts[1] : top
