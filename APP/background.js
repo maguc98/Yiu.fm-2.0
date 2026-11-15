@@ -92,6 +92,20 @@ var openCrop=(function(){
     nk=Math.min(S.kmin*4,Math.max(S.kmin,nk));var r=nk/S.k;
     S.X=cx-(cx-S.X)*r;S.Y=cy-(cy-S.Y)*r;S.k=nk;paint();
   }
+  /* Native mirror gestures feed the same crop transform state as DOM pointer input. */
+  window.YiuCropNativeGesture=function(g){
+    if(!g||!ov.classList.contains("show"))return false;
+    if(g.nativeGesture==="cropPan"){
+      var dx=Number(g.dx)||0,dy=Number(g.dy)||0;
+      S.X+=dx;S.Y+=dy;paint();return true;
+    }
+    if(g.nativeGesture==="cropPinch"){
+      var scale=Number(g.scale),cx=Number(g.x),cy=Number(g.y);
+      if(!isFinite(scale)||scale<=0||!isFinite(cx)||!isFinite(cy))return false;
+      zoomAt(S.k*scale,cx,cy);return true;
+    }
+    return false;
+  };
   function close(){ov.classList.remove("show");ov.setAttribute("aria-hidden","true");ptrs.clear();done=null}
   area.addEventListener("pointerdown",function(e){try{area.setPointerCapture(e.pointerId)}catch(_){}ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY})});
   area.addEventListener("pointermove",function(e){
