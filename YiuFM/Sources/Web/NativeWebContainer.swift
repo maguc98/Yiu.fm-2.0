@@ -23,6 +23,9 @@ final class NativeWebContainer: UIView {
         addSubview(nativeHubRenderer)
         miniBar.isHidden = true
         nativeHubRenderer.isHidden = true
+        nativeHubRenderer.onDidHide = { [weak self] in
+            self?.setHubNativePresentation(false)
+        }
         miniBar.onToggle = { [weak self] in
             self?.evaluate("document.getElementById('mini')?.click()")
         }
@@ -63,7 +66,9 @@ final class NativeWebContainer: UIView {
                     self.activateHubControl(id: controlID)
                 }
             }
-            setHubNativePresentation((payload["open"] as? Bool == true) && !nativeHubRenderer.isHidden)
+            // Keep the DOM foreground hidden until the native close animation
+            // has actually completed; onDidHide restores it afterward.
+            setHubNativePresentation(!nativeHubRenderer.isHidden)
         } else {
             nativeHubRenderer.isHidden = true
             setHubNativePresentation(false)
