@@ -613,6 +613,23 @@
   fpsCap.addEventListener('pointerup', endFpsDrag);
   fpsCap.addEventListener('pointercancel', endFpsDrag);
 
+  // Native mirror bridge: preserve the same drag/tap semantics for the FPS capsule.
+  window.YiuFPSNativeGesture = function(detail) {
+    if (!detail || detail.nativeGesture !== 'fpsPan') return;
+    var dx = Number(detail.dx) || 0, dy = Number(detail.dy) || 0;
+    if (!detail.moved) {
+      setPanel(!panelOpen);
+      return;
+    }
+    var rect = fpsUI.getBoundingClientRect();
+    var newLeft = Math.max(0, Math.min(window.innerWidth - fpsUI.offsetWidth, rect.left + dx));
+    var newTop = Math.max(0, Math.min(window.innerHeight - fpsUI.offsetHeight, rect.top + dy));
+    fpsUI.style.right = 'auto';
+    fpsUI.style.left = newLeft + 'px';
+    fpsUI.style.top = newTop + 'px';
+    if (panelOpen) placePanel();
+  };
+
   // 滑块：拖动时立刻更新数值，并清掉旧定时器、按新间隔重建（restartFpsTimer 在下方第 3 节定义）
   fpsRange.addEventListener('input', function() {
     refreshRate = parseInt(this.value, 10) || 500;
