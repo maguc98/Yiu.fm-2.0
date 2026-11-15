@@ -49,8 +49,13 @@ final class NativeWebContainer: UIView {
     func applyHubPayload(_ payload: [String: Any]) {
         latestHubState = payload
         if nativeHubRenderingEnabled {
-            nativeHubRenderer.render(payload) { [weak self] controlID in
-                self?.activateHubControl(id: controlID)
+            nativeHubRenderer.render(payload) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
             }
         } else {
             nativeHubRenderer.isHidden = true
