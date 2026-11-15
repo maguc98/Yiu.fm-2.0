@@ -343,7 +343,7 @@
   }
 
   function floatingSurfaceSnapshot(id) {
-    var root = document.getElementById(id);
+    var root = id === 'saWinCard' ? document.querySelector('#saWin.on:not(.yield) .sw-card') : document.getElementById(id);
     if (!root || !nativeBridgeEnabled) return { open: false, nodes: [] };
     var style = window.getComputedStyle(root);
     var rect = layoutRect(root, root);
@@ -357,6 +357,7 @@
       sourcePointer !== 'none';
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
+    if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
     if (!open) return { open: false, nodes: [] };
     return {
       open: true,
@@ -422,6 +423,7 @@
       themeMenu: themeMenuSnapshot(),
       floatingTools: floatingSurfaceSnapshot('hbTools'),
       commandButton: floatingSurfaceSnapshot('cmdFab'),
+      splashWindow: floatingSurfaceSnapshot('saWinCard'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -520,7 +522,7 @@
   var nativeThemePresentation = false;
   var savedThemeMenuState = null;
   function setNativeFloatingPresentation(id, active) {
-    var root = document.getElementById(id);
+    var root = id === 'saWinCard' ? document.querySelector('#saWin .sw-card') : document.getElementById(id);
     if (!root) return false;
     if (active) {
       if (!root.hasAttribute('data-yiu-native-opacity')) root.setAttribute('data-yiu-native-opacity', root.style.opacity || '');
@@ -614,7 +616,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -638,7 +640,7 @@
   function setScroll(id, top, left) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el))) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el))) return false;
     el.scrollTop = Math.max(0, Number(top) || 0);
     el.scrollLeft = Math.max(0, Number(left) || 0);
     scheduleNotify();
