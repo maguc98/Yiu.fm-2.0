@@ -783,7 +783,10 @@
     var el = document.getElementById(id) || elementsByNativeId.get(id);
     if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('aiuiBarIn')?.contains(el) || document.getElementById('aiuiBubble')?.contains(el) || document.getElementById('slCard')?.contains(el)) || el.disabled) return false;
 
-    if (el.type === 'checkbox' || el.type === 'radio') {
+    if (value && typeof value === 'object' && typeof value.nativeFocus === 'boolean') {
+      el.dispatchEvent(new Event(value.nativeFocus ? 'focus' : 'blur'));
+      return true;
+    } else if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
     } else if (el.isContentEditable) {
       el.textContent = String(value);
