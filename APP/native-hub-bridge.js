@@ -466,6 +466,44 @@
     return true;
   }
 
+  var nativeThemePresentation = false;
+  var savedThemeMenuState = null;
+  function setNativeThemePresentation(active) {
+    active = !!active;
+    if (active === nativeThemePresentation) return true;
+    var menu = document.getElementById('mediaMenu');
+    var glass = document.getElementById('tpGlass');
+    if (!menu) return false;
+    nativeThemePresentation = active;
+    if (active) {
+      savedThemeMenuState = {
+        menuVisibility: menu.style.visibility,
+        menuOpacity: menu.style.opacity,
+        menuPointerEvents: menu.style.pointerEvents,
+        glassVisibility: glass ? glass.style.visibility : null,
+        glassOpacity: glass ? glass.style.opacity : null
+      };
+      menu.style.visibility = 'hidden';
+      menu.style.opacity = '0';
+      menu.style.pointerEvents = 'none';
+      if (glass) {
+        glass.style.visibility = 'hidden';
+        glass.style.opacity = '0';
+      }
+    } else {
+      var saved = savedThemeMenuState || {};
+      menu.style.visibility = saved.menuVisibility || '';
+      menu.style.opacity = saved.menuOpacity || '';
+      menu.style.pointerEvents = saved.menuPointerEvents || '';
+      if (glass) {
+        glass.style.visibility = saved.glassVisibility || '';
+        glass.style.opacity = saved.glassOpacity || '';
+      }
+      savedThemeMenuState = null;
+    }
+    return true;
+  }
+
   function setBackNativePresentation(active) {
     active = !!active;
     if (active === nativeBackPresentation) return true;
@@ -553,6 +591,7 @@
     setScroll: setScroll,
     setNativePresentation: setNativePresentation,
     setBackNativePresentation: setBackNativePresentation,
+    setNativeThemePresentation: setNativeThemePresentation,
     setEnabled: setEnabled,
     subscribe: function (listener) {
       if (typeof listener !== 'function') return function () {};
