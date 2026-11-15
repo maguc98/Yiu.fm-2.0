@@ -46,6 +46,7 @@ final class YiuNativeHubRenderer: UIView {
         glass.foregroundView.subviews.forEach { $0.removeFromSuperview() }
         scrollViews.removeAll()
         var views: [String: UIView] = [:]
+        var contentHosts: [String: UIView] = [:]
         let nodesByParent = Dictionary(grouping: nodes) {
             ($0["parentNativeId"] as? String) ?? ""
         }
@@ -72,8 +73,8 @@ final class YiuNativeHubRenderer: UIView {
                   let nw = number(frameData["width"]), let nh = number(frameData["height"]),
                   nw > 0, nh > 0 else { continue }
 
-            let parent = parentID.isEmpty ? glass.foregroundView : views[parentID]
-            guard let parent else { continue }
+            let parentHost = parentID.isEmpty ? glass.foregroundView : contentHosts[parentID]
+            guard let parentHost else { continue }
             // DOM frames are viewport-relative. Root nodes are relative to
             // the glass surface; nested nodes are relative to their native parent.
             let parentOrigin = parentID.isEmpty ? CGPoint.zero :
@@ -104,6 +105,8 @@ final class YiuNativeHubRenderer: UIView {
             let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let overflowX = (appearance["overflowX"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let scrollable = tag != "textarea" && (["auto", "scroll"].contains(overflowY) || ["auto", "scroll"].contains(overflowX))
+            let backdropFilter = (appearance["backdropFilter"] as? String ?? "none").lowercased()
+            let usesGlass = !backdropFilter.isEmpty && backdropFilter != "none"
             let view: UIView
             if scrollable {
                 let scroll = YiuNativeHubScrollView()
@@ -111,11 +114,16 @@ final class YiuNativeHubRenderer: UIView {
                 scroll.showsHorizontalScrollIndicator = ["auto", "scroll"].contains(overflowX)
                 scroll.alwaysBounceVertical = overflowY == "scroll"
                 scroll.alwaysBounceHorizontal = overflowX == "scroll"
+                if usesGlass {
+                    scroll.setGlassBackground(YiuLiquidGlassSurface(material: .regular, interactive: false))
+                }
                 scroll.onScrollEnded = { [weak self] offset in
                     self?.actionHandler?(id, ["scrollTop": offset.y, "scrollLeft": offset.x])
                 }
                 scrollViews[id] = scroll
                 view = scroll
+            } else if usesGlass {
+                view = YiuLiquidGlassSurface(material: .regular, interactive: false)
             } else if tag == "svg" {
                 let imageView = UIImageView()
                 imageView.contentMode = .scaleAspectFit
@@ -223,6 +231,7 @@ final class YiuNativeHubRenderer: UIView {
             view.frame = localFrame
             if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             view.backgroundColor = cssColor(appearance["backgroundColor"])
+            let contentHost = (view as? YiuLiquidGlassSurface)?.foregroundView ?? view
             if let cssBackground = appearance["backgroundImage"] as? String,
                let image = imageFromCSSBackground(cssBackground) {
                 let imageView = UIImageView(frame: view.bounds)
@@ -231,7 +240,7 @@ final class YiuNativeHubRenderer: UIView {
                 imageView.contentMode = size.contains("contain") ? .scaleAspectFit : .scaleAspectFill
                 imageView.image = image
                 imageView.clipsToBounds = true
-                view.insertSubview(imageView, at: 0)
+                contentHost.insertSubview(imageView, at: 0)
             }
             view.alpha = opacity
             if ["hidden", "clip", "auto", "scroll"].contains(overflowY) || ["hidden", "clip", "auto", "scroll"].contains(overflowX) { view.clipsToBounds = true }
@@ -269,10 +278,11 @@ final class YiuNativeHubRenderer: UIView {
                     .font: label.font as Any, .foregroundColor: textColor,
                     .kern: kern, .paragraphStyle: paragraph
                 ])
-                view.addSubview(label)
+                contentHost.addSubview(label)
             }
-            parent.addSubview(view)
+            parentHost.addSubview(view)
             views[id] = view
+            contentHosts[id] = contentHost
         }
 
         for (id, scroll) in scrollViews {
@@ -383,6 +393,18 @@ final class YiuNativeHubRenderer: UIView {
 @MainActor
 private final class YiuNativeHubScrollView: UIScrollView, UIScrollViewDelegate {
     var onScrollEnded: ((CGPoint) -> Void)?
+    private var glassBackground: YiuLiquidGlassSurface?
+
+    func setGlassBackground(_ surface: YiuLiquidGlassSurface) {
+        glassBackground = surface
+        insertSubview(surface, at: 0)
+        setNeedsLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        glassBackground?.frame = CGRect(origin: contentOffset, size: bounds.size)
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
