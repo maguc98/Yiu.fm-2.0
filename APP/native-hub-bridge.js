@@ -407,6 +407,7 @@
     if (id === 'aiuiBarIn') { openDuration = 0.55; closeDuration = 0.5; }
     if (id === 'aiuiBubble') { openDuration = 0.4; closeDuration = 0.25; }
     if (id === 'aiuiHist') { openDuration = 0.66; closeDuration = 0.46; }
+    if (id === 'fpsIndicator') { openDuration = 0.3; closeDuration = 0.3; }
     if (id === 'slToast') { openDuration = 0.2; closeDuration = 0.2; }
     if (id === 'cbar' || id === 'lg') { openDuration = 0; closeDuration = 0; }
     return {
