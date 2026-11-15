@@ -348,10 +348,8 @@ final class YiuNativeHubRenderer: UIView {
                 self.alpha = 1
             }
         } else {
-            guard presentationOpen else {
-                isHidden = true
-                return
-            }
+            // Repeated closed snapshots must not cancel an in-flight close animation.
+            guard presentationOpen else { return }
             presentationOpen = false
             let translateX = CGFloat(number(appearance["closeTranslateX"]) ?? 0)
             let translateY = CGFloat(number(appearance["closeTranslateY"]) ?? 0)
