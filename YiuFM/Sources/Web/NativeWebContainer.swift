@@ -18,6 +18,7 @@ final class NativeWebContainer: UIView {
     private let nativeDropdownPopupRenderer = YiuNativeHubRenderer()
     private let nativeZoomPopupRenderer = YiuNativeHubRenderer()
     private let nativeCoverToastRenderer = YiuNativeHubRenderer()
+    private let nativePlaybackCardRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -39,6 +40,8 @@ final class NativeWebContainer: UIView {
     private let nativeDropdownPopupRenderingEnabled = false
     private let nativeZoomPopupRenderingEnabled = false
     private let nativeCoverToastRenderingEnabled = false
+    // Playback card is wired to the native glass renderer but stays opt-in until swipe, artwork and controls pass device parity.
+    private let nativePlaybackCardRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -64,6 +67,7 @@ final class NativeWebContainer: UIView {
         addSubview(nativeDropdownPopupRenderer)
         addSubview(nativeZoomPopupRenderer)
         addSubview(nativeCoverToastRenderer)
+        addSubview(nativePlaybackCardRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -88,6 +92,7 @@ final class NativeWebContainer: UIView {
         nativeZoomPopupRenderer.isUserInteractionEnabled = false
         nativeCoverToastRenderer.isHidden = true
         nativeCoverToastRenderer.isUserInteractionEnabled = false
+        nativePlaybackCardRenderer.isHidden = true
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -104,6 +109,7 @@ final class NativeWebContainer: UIView {
         nativeDropdownPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "ddPop", active: false) }
         nativeZoomPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "zoomPop", active: false) }
         nativeCoverToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "npToast", active: false) }
+        nativePlaybackCardRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "npCard", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -298,7 +304,25 @@ final class NativeWebContainer: UIView {
             nativeCoverToastRenderer.isHidden = true
             setNativeMirrorPresentation(id: "npToast", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled)
+        if nativePlaybackCardRenderingEnabled {
+            let card = payload["playbackCard"] as? [String: Any] ?? ["open": false]
+            nativePlaybackCardRenderer.render(card) { [weak self] controlID, value in
+                guard let self else { return }
+                if let values = value as? [String: Double],
+                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                    self.setHubScroll(id: controlID, top: top, left: left)
+                } else if let value {
+                    self.setHubControl(id: controlID, value: value)
+                } else {
+                    self.activateHubControl(id: controlID)
+                }
+            }
+            setNativeMirrorPresentation(id: "npCard", active: !nativePlaybackCardRenderer.isHidden)
+        } else {
+            nativePlaybackCardRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "npCard", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
