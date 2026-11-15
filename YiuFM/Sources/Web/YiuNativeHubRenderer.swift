@@ -159,6 +159,18 @@ final class YiuNativeHubRenderer: UIView {
                     }
                 }
                 view = imageView
+            } else if tag == "canvas" {
+                let imageView = UIImageView()
+                imageView.contentMode = .scaleAspectFit
+                imageView.clipsToBounds = true
+                if let dataURL = node["imageData"] as? String,
+                   let comma = dataURL.firstIndex(of: ",") {
+                    let encoded = String(dataURL[dataURL.index(after: comma)...])
+                    if let data = Data(base64Encoded: encoded) {
+                        imageView.image = UIImage(data: data)
+                    }
+                }
+                view = imageView
             } else if tag == "img" {
                 let imageView = UIImageView()
                 imageView.contentMode = ((node["objectFit"] as? String) == "cover") ? .scaleAspectFill : .scaleAspectFit
