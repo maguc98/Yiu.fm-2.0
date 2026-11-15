@@ -60,7 +60,7 @@ final class NativeWebContainer: UIView {
                     self.activateHubControl(id: controlID)
                 }
             }
-            setHubNativePresentation(payload["open"] as? Bool == true)
+            setHubNativePresentation((payload["open"] as? Bool == true) && !nativeHubRenderer.isHidden)
         } else {
             nativeHubRenderer.isHidden = true
             setHubNativePresentation(false)
