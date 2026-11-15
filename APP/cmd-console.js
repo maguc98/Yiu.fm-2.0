@@ -2082,6 +2082,8 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
     errs.push(e); if (errs.length > 100) errs.shift();
     if (errLive) print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : '') + (e.stack ? '\n' + e.stack : ''), 'err');
   }
+  /* 供 index.html 的可选回调追踪器使用，确保运行期捕获的堆栈进入 /err。 */
+  window.__yiuPushRuntimeError = function(msg, src, extra) { errPush(msg, src, extra); };
   window.addEventListener('error', function (e) {
     var t = e.target;
     if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), '', { file: t.src || t.href, tag: t.nodeName || '' }); return; }
@@ -2103,6 +2105,26 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
       if (!errs.length) return c.print('没有记录到报错', 'ok');
       c.print('共 ' + errs.length + ' 条，显示最近 ' + Math.min(n, errs.length) + ' 条', 'info');
       errs.slice(-n).forEach(function (e) { c.print(timeStr(e.t) + '  ' + e.msg + (e.src ? '\n   ' + e.src : '') + (e.stack ? '\n' + e.stack : ''), 'err'); });
+    }
+  });
+
+  register('trace', {
+    group: '开发者',
+    desc: '临时开启或关闭回调异常深度追踪（刷新后生效）',
+    usage: '/trace [on|off|status]',
+    complete: function () { return ['on', 'off', 'status']; },
+    run: function (a, c) {
+      var mode = (a[0] || 'status').toLowerCase();
+      var enabled = false;
+      try { enabled = localStorage.getItem('yiuDebugTrace') === '1'; } catch (_) {}
+      if (mode === 'on' || mode === 'off') {
+        enabled = mode === 'on';
+        try { localStorage.setItem('yiuDebugTrace', enabled ? '1' : '0'); }
+        catch (e) { return c.print('无法写入诊断设置：' + e.message, 'err'); }
+        return c.print('回调异常深度追踪已' + (enabled ? '开启' : '关闭') + '。请重新加载页面后生效。', 'ok');
+      }
+      if (mode !== 'status') throw new Error('用法：/trace [on|off|status]');
+      return c.print('回调异常深度追踪：' + (enabled ? '开启' : '关闭') + '（刷新后生效）', 'info');
     }
   });
 
