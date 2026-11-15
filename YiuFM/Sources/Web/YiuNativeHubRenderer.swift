@@ -57,10 +57,11 @@ final class YiuNativeHubRenderer: UIView {
 
             let parent = parentID.isEmpty ? glass.foregroundView : views[parentID]
             guard let parent else { continue }
-            let parentOrigin = parentID.isEmpty ? CGPoint(x: x, y: y) :
-                (views[parentID]?.convert(.zero, to: self) ?? .zero)
-            let localFrame = CGRect(x: nx - x - parentOrigin.x,
-                                    y: ny - y - parentOrigin.y,
+            // DOM frames are viewport-relative; convert them into the actual
+            // native parent coordinate space. This also handles nested nodes.
+            let parentOrigin = parent.convert(.zero, to: self)
+            let localFrame = CGRect(x: nx - parentOrigin.x,
+                                    y: ny - parentOrigin.y,
                                     width: nw, height: nh)
             let appearance = node["appearance"] as? [String: Any] ?? [:]
             let display = (appearance["display"] as? String ?? "block")
@@ -108,6 +109,14 @@ final class YiuNativeHubRenderer: UIView {
                 slider.value = Float(number(node["value"]) ?? Double(slider.minimumValue))
                 slider.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, slider.value) }, for: .valueChanged)
                 view = slider
+            } else if tag == "textarea" {
+                let textView = YiuNativeHubTextView()
+                textView.text = node["value"] as? String ?? ""
+                textView.placeholderText = node["placeholder"] as? String
+                textView.font = .systemFont(ofSize: CGFloat(number(appearance["fontSize"]) ?? 14))
+                textView.textColor = cssColor(appearance["color"]) ?? .label
+                textView.onEditingEnded = { [weak self] text in self?.actionHandler?(id, text) }
+                view = textView
             } else if tag == "input" && ["text", "search", "email", "url", "number"].contains(inputType) {
                 let field = UITextField()
                 field.borderStyle = .none
