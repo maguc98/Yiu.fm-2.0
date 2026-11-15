@@ -775,6 +775,8 @@
 
     if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
+    } else if (el.isContentEditable) {
+      el.textContent = String(value);
     } else if ('value' in el) {
       el.value = String(value);
     } else {
