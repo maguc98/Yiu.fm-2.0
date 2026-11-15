@@ -401,6 +401,7 @@
     if (id === 'cmPanel') { openDuration = 0.38; closeDuration = 0.32; }
     if (id === 'clCard') { openDuration = 0.5; closeDuration = 0.3; }
     if (id === 'clEditCard') { openDuration = 0.55; closeDuration = 0.32; }
+    if (id === 'aiuiBarIn') { openDuration = 0.55; closeDuration = 0.5; }
     if (id === 'slToast') { openDuration = 0.2; closeDuration = 0.2; }
     if (id === 'cbar' || id === 'lg') { openDuration = 0; closeDuration = 0; }
     return {
@@ -521,6 +522,7 @@
       changelogEditor: floatingSurfaceSnapshot('clEditCard'),
       songDialog: floatingSurfaceSnapshot('ydDialogCard'),
       songProgress: floatingSurfaceSnapshot('ydProgressCard'),
+      aiInputBar: floatingSurfaceSnapshot('aiuiBarIn'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
@@ -742,7 +744,7 @@
   function activateControl(id) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('slCard')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('hbTools')?.contains(el) || document.getElementById('cmdFab')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('aiuiBarIn')?.contains(el) || document.getElementById('slCard')?.contains(el)) || el.disabled) return false;
     if (typeof el.click !== 'function') return false;
     el.click();
     scheduleNotify();
@@ -766,7 +768,7 @@
   function setScroll(id, top, left) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('slCard')?.contains(el))) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('aiuiBarIn')?.contains(el) || document.getElementById('slCard')?.contains(el))) return false;
     el.scrollTop = Math.max(0, Number(top) || 0);
     el.scrollLeft = Math.max(0, Number(left) || 0);
     scheduleNotify();
@@ -776,7 +778,7 @@
   function setControl(id, value) {
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,80}$/.test(id)) return false;
     var el = document.getElementById(id) || elementsByNativeId.get(id);
-    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('slCard')?.contains(el)) || el.disabled) return false;
+    if (!el || !(hub.contains(el) || document.getElementById('mediaMenu')?.contains(el) || document.getElementById('saWin')?.contains(el) || document.getElementById('crop')?.contains(el) || document.getElementById('npCard')?.contains(el) || document.getElementById('pkgDialog')?.contains(el) || document.getElementById('pkgMenu')?.contains(el) || document.getElementById('logPanel')?.contains(el) || document.getElementById('cmPanel')?.contains(el) || document.getElementById('clCard')?.contains(el) || document.getElementById('clEditCard')?.contains(el) || document.getElementById('ydDialogCard')?.contains(el) || document.getElementById('ydProgressCard')?.contains(el) || document.getElementById('aiuiBarIn')?.contains(el) || document.getElementById('slCard')?.contains(el)) || el.disabled) return false;
 
     if (el.type === 'checkbox' || el.type === 'radio') {
       el.checked = !!value;
@@ -875,14 +877,14 @@
         root.addEventListener('pointercancel', refreshCropCanvas, true);
       }
     });
-    if (['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logToast', 'cmPanel', 'clCard', 'slCard', 'slToast', 'clEditCard', 'ydDialogCard', 'ydProgressCard'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
+    if (['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logToast', 'cmPanel', 'clCard', 'slCard', 'slToast', 'clEditCard', 'ydDialogCard', 'ydProgressCard', 'aiuiBarIn'].every(function (id) { return !!observedMirrorRoots[id]; }) && mirrorAttachObserver) {
       mirrorAttachObserver.disconnect();
       mirrorAttachObserver = null;
     }
   }
   mirrorAttachObserver = new MutationObserver(attachMirrorObservers);
   attachMirrorObservers();
-  if (!['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logToast', 'cmPanel', 'clCard', 'slCard', 'slToast', 'clEditCard', 'ydDialogCard', 'ydProgressCard'].every(function (id) { return !!observedMirrorRoots[id]; })) {
+  if (!['crop', 'tlLens', 'cbar', 'qpop', 'pkgDialog', 'pkgMenu', 'logPanel', 'logToast', 'cmPanel', 'clCard', 'slCard', 'slToast', 'clEditCard', 'ydDialogCard', 'ydProgressCard', 'aiuiBarIn'].every(function (id) { return !!observedMirrorRoots[id]; })) {
     mirrorAttachObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
   var observedThemeMenu = null;
