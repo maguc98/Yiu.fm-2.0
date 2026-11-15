@@ -20,6 +20,7 @@
   var nextGeneratedId = 1;
   var svgImageCache = new Map();
   var svgImagePending = new Set();
+  var canvasImageCache = new WeakMap();
   var nativePresentation = false;
   var nativeBackPresentation = false;
   var savedBackVisibility = null;
@@ -254,6 +255,20 @@
         }
       }
     }
+    if (el.tagName.toLowerCase() === 'canvas' && el.id === 'cimg') {
+      var cropVersion = el.__yiuNativeCropVersion || 0;
+      var cropCache = canvasImageCache.get(el);
+      if (!cropCache || cropCache.version !== cropVersion) {
+        try {
+          var cropData = el.toDataURL('image/jpeg', 0.82);
+          if (cropData.length < 1800000) {
+            cropCache = { version: cropVersion, data: cropData };
+            canvasImageCache.set(el, cropCache);
+          }
+        } catch (_) {}
+      }
+      if (cropCache) item.imageData = cropCache.data;
+    }
     if (el.tagName.toLowerCase() === 'img') {
       item.src = el.currentSrc || el.src || '';
       item.alt = el.alt || '';
@@ -358,6 +373,8 @@
     if (id === 'hbTools') open = open && document.body.classList.contains('open') && root.classList.contains('is-on');
     if (id === 'cmdFab') open = open && root.classList.contains('vis');
     if (id === 'saWinCard') open = open && !!document.getElementById('saWin')?.classList.contains('on') && !document.getElementById('saWin')?.classList.contains('yield');
+    if (id === 'crop') open = open && root.classList.contains('show');
+
     if (id === 'tlLens') open = open && root.classList.contains('show');
     if (!open) return { open: false, nodes: [] };
     return {
@@ -442,6 +459,7 @@
       commandButton: floatingSurfaceSnapshot('cmdFab'),
       splashWindow: floatingSurfaceSnapshot('saWinCard'),
       timelineLens: floatingSurfaceSnapshot('tlLens'),
+      cropPanel: floatingSurfaceSnapshot('crop'),
       settingsButton: (function () {
         var button = document.getElementById('miSet');
         if (!button) return { visible: false };
