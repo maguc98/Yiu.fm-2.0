@@ -98,8 +98,11 @@ final class NativeWebContainer: UIView {
             let visible = nativeBackButtonRenderingEnabled && (back["visible"] as? Bool ?? false)
             let opacity = back["opacity"] as? CGFloat ?? 1
             let label = back["label"] as? String ?? "展开部分工具栏"
+            let tint = (back["backgroundColor"] as? String).flatMap { Self.cssColor($0) }
+            let foreground = (back["color"] as? String).flatMap { Self.cssColor($0) }
             nativeBackButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
-                                    visible: visible, opacity: opacity, label: label)
+                                    visible: visible, opacity: opacity, label: label,
+                                    tint: tint, foreground: foreground)
             evaluate("window.YiuHubBridge?.setBackNativePresentation(\(visible ? "true" : "false"))")
         } else {
             nativeBackButton.isHidden = true
