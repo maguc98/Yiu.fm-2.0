@@ -10,6 +10,11 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
     private var lastSnapshotKey = ""
     private var presentationOpen = false
     private var scrollViews: [String: YiuNativeHubScrollView] = [:]
+    private var nativeClipMode: String?
+    private var aiHistoryCollapsedPath: CGPath?
+    private var aiHistoryExpandedPath: CGPath?
+    private var aiHistoryCloseTranslation: CGPoint = .zero
+    private var aiHistoryCloseDuration: TimeInterval = 0.46
     var onDidHide: (() -> Void)?
 
     override init(frame: CGRect) {
@@ -100,6 +105,31 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
         glass.frame = bounds
         glass.layer.cornerRadius = surfaceRadius
         glass.clipsToBounds = true
+        if (surfaceAppearance["nativeClipMode"] as? String) == "aiuiHistory" {
+            nativeClipMode = "aiuiHistory"
+            let insetLeft = CGFloat(number(surfaceAppearance["clipInsetLeft"]) ?? 0)
+            let collapsedRect = CGRect(x: insetLeft, y: 0,
+                                       width: max(1, min(64, bounds.width - insetLeft)),
+                                       height: max(1, min(34, bounds.height)))
+            let collapsed = UIBezierPath(roundedRect: collapsedRect, cornerRadius: 17).cgPath
+            let expanded = UIBezierPath(roundedRect: glass.bounds, cornerRadius: 26).cgPath
+            aiHistoryCollapsedPath = collapsed
+            aiHistoryExpandedPath = expanded
+            aiHistoryCloseTranslation = CGPoint(
+                x: CGFloat(number(surfaceAppearance["closeTranslateX"]) ?? 0),
+                y: CGFloat(number(surfaceAppearance["closeTranslateY"]) ?? 0)
+            )
+            aiHistoryCloseDuration = number(surfaceAppearance["closeDuration"]) ?? 0.46
+            let mask = (glass.layer.mask as? CAShapeLayer) ?? CAShapeLayer()
+            mask.frame = glass.bounds
+            mask.path = presentationOpen ? expanded : collapsed
+            glass.layer.mask = mask
+        } else {
+            nativeClipMode = nil
+            aiHistoryCollapsedPath = nil
+            aiHistoryExpandedPath = nil
+            glass.layer.mask = nil
+        }
         glass.isHidden = false
 
         glass.foregroundView.subviews.forEach { $0.removeFromSuperview() }
@@ -432,6 +462,18 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
             presentationOpen = true
             isHidden = false
             let duration = max(0, number(appearance["openDuration"]) ?? 0.7)
+            if nativeClipMode == "aiuiHistory",
+               let mask = glass.layer.mask as? CAShapeLayer,
+               let collapsed = aiHistoryCollapsedPath,
+               let expanded = aiHistoryExpandedPath {
+                let clip = CABasicAnimation(keyPath: "path")
+                clip.fromValue = mask.presentation()?.path ?? collapsed
+                clip.toValue = expanded
+                clip.duration = duration
+                clip.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                mask.path = expanded
+                mask.add(clip, forKey: "aiuiHistoryClip")
+            }
             guard duration > 0 else {
                 transform = .identity
                 alpha = 1
@@ -457,11 +499,22 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
             // Repeated closed snapshots must not cancel an in-flight close animation.
             guard presentationOpen else { return }
             presentationOpen = false
-            let translateX = CGFloat(number(appearance["closeTranslateX"]) ?? 0)
-            let translateY = CGFloat(number(appearance["closeTranslateY"]) ?? 0)
+            let translateX = nativeClipMode == "aiuiHistory" ? aiHistoryCloseTranslation.x : CGFloat(number(appearance["closeTranslateX"]) ?? 0)
+            let translateY = nativeClipMode == "aiuiHistory" ? aiHistoryCloseTranslation.y : CGFloat(number(appearance["closeTranslateY"]) ?? 0)
             let closeTransform = CGAffineTransform(translationX: translateX, y: translateY)
                 .scaledBy(x: 0.12, y: 0.12)
-            let duration = max(0, number(appearance["closeDuration"]) ?? 0.65)
+            let duration = max(0, nativeClipMode == "aiuiHistory" ? aiHistoryCloseDuration : (number(appearance["closeDuration"]) ?? 0.65))
+            if nativeClipMode == "aiuiHistory",
+               let mask = glass.layer.mask as? CAShapeLayer,
+               let collapsed = aiHistoryCollapsedPath {
+                let clip = CABasicAnimation(keyPath: "path")
+                clip.fromValue = mask.presentation()?.path ?? aiHistoryExpandedPath
+                clip.toValue = collapsed
+                clip.duration = duration
+                clip.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                mask.path = collapsed
+                mask.add(clip, forKey: "aiuiHistoryClip")
+            }
             guard duration > 0 else {
                 isHidden = true
                 transform = .identity
@@ -479,6 +532,12 @@ final class YiuNativeHubRenderer: UIView, UIGestureRecognizerDelegate {
                 self.isHidden = true
                 self.transform = .identity
                 self.alpha = 1
+                if self.nativeClipMode == "aiuiHistory" {
+                    self.glass.layer.mask = nil
+                    self.nativeClipMode = nil
+                    self.aiHistoryCollapsedPath = nil
+                    self.aiHistoryExpandedPath = nil
+                }
                 self.onDidHide?()
             }
         }
