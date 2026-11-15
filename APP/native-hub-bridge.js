@@ -109,6 +109,11 @@
     };
     if (el.getAttribute('role')) item.role = el.getAttribute('role');
     if (el.tagName.toLowerCase() === 'svg') item.svg = el.outerHTML.slice(0, 5000);
+    if (el.tagName.toLowerCase() === 'img') {
+      item.src = el.currentSrc || el.src || '';
+      item.alt = el.alt || '';
+      item.objectFit = style.objectFit || 'contain';
+    }
     if ('value' in el) item.value = el.value;
     if ('checked' in el) item.checked = !!el.checked;
     if (el.disabled !== undefined) item.disabled = !!el.disabled;
