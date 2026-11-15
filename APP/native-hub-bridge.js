@@ -351,7 +351,9 @@
       surfaceAppearance: {
         backgroundColor: glassStyle ? glassStyle.backgroundColor : 'rgba(255,255,255,.14)',
         boxShadow: glassStyle ? glassStyle.boxShadow : 'none',
-        borderRadius: glassStyle ? glassStyle.borderTopLeftRadius : '20px'
+        borderRadius: glassStyle ? glassStyle.borderTopLeftRadius : '20px',
+        borderWidth: glassStyle ? glassStyle.borderTopWidth : '0px',
+        borderColor: glassStyle ? glassStyle.borderTopColor : 'transparent'
       },
       nodes: nodes
     };
@@ -458,6 +460,8 @@
         backgroundColor: surfaceStyle ? surfaceStyle.backgroundColor : 'transparent',
         boxShadow: surfaceStyle ? surfaceStyle.boxShadow : 'none',
         borderRadius: surfaceStyle ? surfaceStyle.borderTopLeftRadius : '28px',
+        borderWidth: surfaceStyle ? surfaceStyle.borderTopWidth : '0px',
+        borderColor: surfaceStyle ? surfaceStyle.borderTopColor : 'transparent',
         openOriginX: hub.style.getPropertyValue('--hx'),
         openOriginY: hub.style.getPropertyValue('--hy'),
         closeTranslateX: hub.style.getPropertyValue('--tx'),
