@@ -70,7 +70,7 @@ final class NativeWebContainer: UIView {
             let label = back["label"] as? String ?? "展开部分工具栏"
             nativeBackButton.update(rect: CGRect(x: x, y: y, width: width, height: height),
                                     visible: visible, opacity: opacity, label: label)
-            evaluate("window.YiuHubBridge?.setBackNativePresentation(\u0024{visible ? "true" : "false"})")
+            evaluate("window.YiuHubBridge?.setBackNativePresentation(\\(visible ? "true" : "false"))")
         } else {
             nativeBackButton.isHidden = true
             evaluate("window.YiuHubBridge?.setBackNativePresentation(false)")
