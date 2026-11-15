@@ -46,8 +46,25 @@ final class YiuNativeHubRenderer: UIView {
         glass.foregroundView.subviews.forEach { $0.removeFromSuperview() }
         scrollViews.removeAll()
         var views: [String: UIView] = [:]
+        let nodesByParent = Dictionary(grouping: nodes) {
+            ($0["parentNativeId"] as? String) ?? ""
+        }
+        func orderedChildren(_ parentID: String) -> [[String: Any]] {
+            let siblings = (nodesByParent[parentID] ?? []).enumerated().sorted { lhs, rhs in
+                let leftAppearance = lhs.element["appearance"] as? [String: Any] ?? [:]
+                let rightAppearance = rhs.element["appearance"] as? [String: Any] ?? [:]
+                let leftZ = self.number(leftAppearance["zIndex"]) ?? 0
+                let rightZ = self.number(rightAppearance["zIndex"]) ?? 0
+                return leftZ == rightZ ? lhs.offset < rhs.offset : leftZ < rightZ
+            }
+            return siblings.flatMap { pair -> [[String: Any]] in
+                guard let id = pair.element["nativeId"] as? String else { return [pair.element] }
+                return [pair.element] + orderedChildren(id)
+            }
+        }
+        let renderNodes = orderedChildren("")
 
-        for node in nodes {
+        for node in renderNodes {
             guard let id = node["nativeId"] as? String,
                   let parentID = node["parentNativeId"] as? String,
                   let frameData = node["frame"] as? [String: Any],
