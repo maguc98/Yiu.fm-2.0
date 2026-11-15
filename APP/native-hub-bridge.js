@@ -300,6 +300,7 @@
       version: 1,
       open: isOpen,
       surfaceAppearance: {
+        backgroundColor: surfaceStyle ? surfaceStyle.backgroundColor : 'transparent',
         boxShadow: surfaceStyle ? surfaceStyle.boxShadow : 'none',
         borderRadius: surfaceStyle ? surfaceStyle.borderTopLeftRadius : '28px'
       },
