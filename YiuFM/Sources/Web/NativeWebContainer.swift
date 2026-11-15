@@ -225,7 +225,7 @@ final class NativeWebContainer: UIView {
     private func setNativeFloatingPresentation(id: String, active: Bool) {
         guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let json = String(data: data, encoding: .utf8) else { return }
-        evaluate("window.YiuHubBridge?.setNativeFloatingPresentation(\\(json), \\(active ? \"true\" : \"false\"))")
+        evaluate("window.YiuHubBridge?.setNativeFloatingPresentation(\(json), \(active ? "true" : "false"))")
     }
 
     private func setThemeMenuNativePresentation(_ active: Bool) {
