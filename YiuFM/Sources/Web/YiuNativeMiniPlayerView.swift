@@ -64,6 +64,15 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         artwork.layer.cornerRadius = 14
         artwork.clipsToBounds = true
         artwork.backgroundColor = UIColor(red: 0.48, green: 0.58, blue: 0.88, alpha: 0.72)
+        let gradient = CAGradientLayer()
+        gradient.colors = [
+            UIColor(red: 143/255, green: 176/255, blue: 1, alpha: 0.60).cgColor,
+            UIColor.white.withAlphaComponent(0.12).cgColor
+        ]
+        gradient.startPoint = CGPoint(x: 0, y: 0)
+        gradient.endPoint = CGPoint(x: 1, y: 1)
+        gradient.frame = CGRect(x: 0, y: 0, width: 46, height: 46)
+        artwork.layer.insertSublayer(gradient, at: 0)
         artworkImage.translatesAutoresizingMaskIntoConstraints = false
         artworkImage.contentMode = .scaleAspectFill
         artworkImage.clipsToBounds = true
@@ -143,6 +152,9 @@ final class YiuNativeMiniPlayerView: UIView, UIGestureRecognizerDelegate {
         if let value = payload["title"] as? String { titleLabel.text = value.isEmpty ? "—" : value }
         if let value = payload["subtitle"] as? String { subtitleLabel.text = value }
         if let value = payload["status"] as? String { statusLabel.text = value }
+        if let value = payload["coverText"] as? String, artworkImage.image == nil {
+            artworkFallback.text = value.isEmpty ? "文" : value
+        }
         if let value = payload["playing"] as? Bool {
             playButton.setImage(UIImage(systemName: value ? "pause.fill" : "play.fill"), for: .normal)
         }

@@ -99,6 +99,7 @@ struct LegacyVisualStage: UIViewRepresentable {
               title: title ? title.textContent : '—',
               subtitle: subtitle ? subtitle.textContent : '',
               status: status ? status.textContent : '正在播放',
+              coverText: tile ? tile.textContent : '文',
               playing: (typeof playing !== 'undefined') ? !!playing : false
             };
             if (artwork && artwork !== lastArtwork) {
