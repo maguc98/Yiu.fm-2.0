@@ -19,6 +19,8 @@ final class NativeWebContainer: UIView {
     private let nativeZoomPopupRenderer = YiuNativeHubRenderer()
     private let nativeCoverToastRenderer = YiuNativeHubRenderer()
     private let nativePlaybackCardRenderer = YiuNativeHubRenderer()
+    private let nativePackageDialogRenderer = YiuNativeHubRenderer()
+    private let nativePackageMenuRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -42,6 +44,9 @@ final class NativeWebContainer: UIView {
     private let nativeCoverToastRenderingEnabled = false
     // Playback card is wired to the native glass renderer but stays opt-in until swipe, artwork and controls pass device parity.
     private let nativePlaybackCardRenderingEnabled = false
+    // Package dialogs and context menus are wired for native material mirroring, pending interaction-parity tests.
+    private let nativePackageDialogRenderingEnabled = false
+    private let nativePackageMenuRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -68,6 +73,8 @@ final class NativeWebContainer: UIView {
         addSubview(nativeZoomPopupRenderer)
         addSubview(nativeCoverToastRenderer)
         addSubview(nativePlaybackCardRenderer)
+        addSubview(nativePackageDialogRenderer)
+        addSubview(nativePackageMenuRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
@@ -93,6 +100,8 @@ final class NativeWebContainer: UIView {
         nativeCoverToastRenderer.isHidden = true
         nativeCoverToastRenderer.isUserInteractionEnabled = false
         nativePlaybackCardRenderer.isHidden = true
+        nativePackageDialogRenderer.isHidden = true
+        nativePackageMenuRenderer.isHidden = true
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -110,6 +119,8 @@ final class NativeWebContainer: UIView {
         nativeZoomPopupRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "zoomPop", active: false) }
         nativeCoverToastRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "npToast", active: false) }
         nativePlaybackCardRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "npCard", active: false) }
+        nativePackageDialogRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "pkgDialog", active: false) }
+        nativePackageMenuRenderer.onDidHide = { [weak self] in self?.setNativeMirrorPresentation(id: "pkgMenu", active: false) }
         nativeBackButton.onTap = { [weak self] in
             self?.evaluate("document.getElementById('hback')?.click()")
         }
@@ -322,7 +333,31 @@ final class NativeWebContainer: UIView {
             nativePlaybackCardRenderer.isHidden = true
             setNativeMirrorPresentation(id: "npCard", active: false)
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled)
+        if nativePackageDialogRenderingEnabled {
+            let dialog = payload["packageDialog"] as? [String: Any] ?? ["open": false]
+            nativePackageDialogRenderer.render(dialog) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value { self.setHubControl(id: controlID, value: value) }
+                else { self.activateHubControl(id: controlID) }
+            }
+            setNativeMirrorPresentation(id: "pkgDialog", active: !nativePackageDialogRenderer.isHidden)
+        } else {
+            nativePackageDialogRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "pkgDialog", active: false)
+        }
+        if nativePackageMenuRenderingEnabled {
+            let menu = payload["packageMenu"] as? [String: Any] ?? ["open": false]
+            nativePackageMenuRenderer.render(menu) { [weak self] controlID, value in
+                guard let self else { return }
+                if let value { self.setHubControl(id: controlID, value: value) }
+                else { self.activateHubControl(id: controlID) }
+            }
+            setNativeMirrorPresentation(id: "pkgMenu", active: !nativePackageMenuRenderer.isHidden)
+        } else {
+            nativePackageMenuRenderer.isHidden = true
+            setNativeMirrorPresentation(id: "pkgMenu", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeBackButtonRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled || nativeSplashWindowRenderingEnabled || nativeTimelineLensRenderingEnabled || nativeCropRenderingEnabled || nativeControlBarRenderingEnabled || nativeQuickPopupRenderingEnabled || nativeDropdownPopupRenderingEnabled || nativeZoomPopupRenderingEnabled || nativeCoverToastRenderingEnabled || nativePlaybackCardRenderingEnabled || nativePackageDialogRenderingEnabled || nativePackageMenuRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
