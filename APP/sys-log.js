@@ -310,7 +310,7 @@
       mount.setAttribute('aria-hidden', 'true');
       mount.innerHTML =
         '<div class="sl-mask"></div>' +
-        '<div class="sl-card" role="dialog" aria-label="系统日志">' +
+        '<div class="sl-card" id="slCard" role="dialog" aria-label="系统日志">' +
           '<div class="sl-head">' +
             '<div class="sl-title">系统日志 <em id="slCount">0</em></div>' +
             '<div class="sl-spacer"></div>' +
@@ -555,12 +555,16 @@
       if (!t) {
         t = document.createElement('div');
         t.id = 'slToast';
+        var toastText = document.createElement('span');
+        toastText.className = 'sl-toast-text';
+        t.appendChild(toastText);
+        t.__yiuToastText = toastText;
         t.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);'
           + 'z-index:100001;background:rgba(30,32,40,.95);color:#fff;padding:9px 16px;border-radius:12px;'
           + 'font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:opacity .2s;pointer-events:none;';
         document.body.appendChild(t);
       }
-      t.textContent = msg;
+      if (t.__yiuToastText) t.__yiuToastText.textContent = msg;
       requestAnimationFrame(function () { t.style.opacity = '1'; });
       clearTimeout(toast._t);
       toast._t = setTimeout(function () { t.style.opacity = '0'; }, 1500);
