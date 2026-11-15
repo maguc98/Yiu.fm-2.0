@@ -224,6 +224,45 @@
         var item = readNode(el, parentId);
         nodes.push(item);
         elementsByNativeId.set(item.nativeId, el);
+
+        // The segmented-control thumb is a CSS pseudo-element, not a DOM
+        // child. Mirror its actual computed box so the selected capsule is
+        // not lost when the foreground is rendered by UIKit.
+        if (el.classList && el.classList.contains('glide')) {
+          var pseudo = window.getComputedStyle(el, '::before');
+          var pseudoContent = pseudo.content;
+          var pseudoWidth = parseFloat(pseudo.width) || parseFloat(pseudo.getPropertyValue('--tw')) || 0;
+          var pseudoTop = parseFloat(pseudo.top) || 0;
+          var pseudoBottom = parseFloat(pseudo.bottom) || 0;
+          var translateX = parseFloat(pseudo.translate) || parseFloat(window.getComputedStyle(el).getPropertyValue('--tx')) || 0;
+          if (pseudoContent !== 'none' && pseudo.display !== 'none' &&
+              pseudo.visibility !== 'hidden' && pseudoWidth > 0 && rect.height > pseudoTop + pseudoBottom) {
+            nodes.push({
+              nativeId: item.nativeId + '-before',
+              parentNativeId: item.nativeId,
+              tag: 'div',
+              text: '',
+              frame: {
+                x: rect.x + translateX,
+                y: rect.y + pseudoTop,
+                width: pseudoWidth,
+                height: rect.height - pseudoTop - pseudoBottom
+              },
+              appearance: {
+                color: pseudo.color,
+                backgroundColor: pseudo.backgroundColor,
+                borderRadius: pseudo.borderRadius,
+                borderWidth: pseudo.borderWidth,
+                borderColor: pseudo.borderColor,
+                opacity: pseudo.opacity,
+                display: pseudo.display,
+                visibility: pseudo.visibility,
+                zIndex: pseudo.zIndex,
+                overflow: pseudo.overflow
+              }
+            });
+          }
+        }
         visit(el);
       });
     }
