@@ -85,6 +85,10 @@
       className: typeof el.className === 'string' ? el.className : '',
       text: el.children.length ? '' : (el.textContent || '').trim().slice(0, 320),
       frame: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      scrollTop: el.scrollTop || 0,
+      scrollLeft: el.scrollLeft || 0,
+      scrollWidth: el.scrollWidth || 0,
+      scrollHeight: el.scrollHeight || 0,
       appearance: {
         color: style.color,
         backgroundColor: style.backgroundColor,
@@ -104,6 +108,8 @@
         padding: style.padding,
         margin: style.margin,
         overflow: style.overflow,
+        overflowX: style.overflowX,
+        overflowY: style.overflowY,
         whiteSpace: style.whiteSpace
       }
     };
