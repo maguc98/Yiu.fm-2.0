@@ -111,7 +111,7 @@ final class YiuNativeHubRenderer: UIView {
                 slider.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, slider.value) }, for: .valueChanged)
                 view = slider
             } else if tag == "textarea" {
-                let textView = YiuNativeHubTextView()
+                let textView = YiuNativeHubTextView(frame: .zero, textContainer: nil)
                 textView.text = node["value"] as? String ?? ""
                 textView.placeholderText = node["placeholder"] as? String
                 textView.font = .systemFont(ofSize: CGFloat(number(appearance["fontSize"]) ?? 14))
