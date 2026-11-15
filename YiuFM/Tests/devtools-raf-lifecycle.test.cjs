@@ -13,13 +13,14 @@ const end = source.indexOf('  // 4. 悬浮窗日志', start);
 assert.ok(start >= 0 && end > start, 'RAF wrapper block must remain identifiable');
 const rafSource = source.slice(start, end);
 
-function createHarness() {
+function createHarness(traceEnabled = false) {
   let nextId = 0;
   const pending = new Map();
   const cancelled = [];
   const window = {
     __rafCapActive: false,
-    __rafLimitFps: 30, // cap must stay inactive when only jank tracing is enabled
+    __rafTraceEnabled: traceEnabled,
+    __rafLimitFps: 30,
     __lowPower: false
   };
   const origRAF = callback => {
@@ -46,19 +47,30 @@ function createHarness() {
     Error,
     console: { warn() {} }
   });
-  vm.runInContext('var lastWarnTime = 0;\n' + rafSource, context);
+  vm.runInContext('var lastWarnTime = 0;\\n' + rafSource, context);
   return { context, window, origRAF, origCancel, pending, cancelled };
 }
 
-test('RAF wrapper restores native cancel only after pending wrapped IDs are cleared', () => {
-  const h = createHarness();
+test('jank monitoring leaves native RAF and cancelAnimationFrame untouched', () => {
+  const h = createHarness(false);
   h.context.state.jank = true;
+  h.context.syncRafWrapper();
+  assert.equal(h.window.requestAnimationFrame, h.origRAF);
+  assert.equal(h.window.cancelAnimationFrame, h.origCancel);
+  const id = h.window.requestAnimationFrame(() => {});
+  assert.equal(id, 1);
+  assert.equal(h.pending.size, 1);
+  assert.equal(h.window.__rafWrapped, false);
+});
+
+test('opt-in RAF tracing restores native cancel after pending wrapped IDs are cleared', () => {
+  const h = createHarness(true);
   h.context.syncRafWrapper();
   const wrappedId = h.window.requestAnimationFrame(() => {});
   assert.notEqual(h.window.requestAnimationFrame, h.origRAF);
   assert.notEqual(h.window.cancelAnimationFrame, h.origCancel);
 
-  h.context.state.jank = false;
+  h.context.rafTraceEnabled = false;
   h.context.syncRafWrapper();
   assert.equal(h.window.requestAnimationFrame, h.origRAF);
   assert.notEqual(h.window.cancelAnimationFrame, h.origCancel);
@@ -71,17 +83,16 @@ test('RAF wrapper restores native cancel only after pending wrapped IDs are clea
   assert.equal(h.window.__rafWrapped, false);
 });
 
-test('RAF wrapper restores native cancel after the final pending callback completes', () => {
-  const h = createHarness();
+test('opt-in RAF tracing restores native APIs after the final pending callback completes', () => {
+  const h = createHarness(true);
   let called = false;
-  h.context.state.jank = true;
   h.context.syncRafWrapper();
   h.window.requestAnimationFrame(() => { called = true; });
 
-  h.context.state.jank = false;
+  h.context.rafTraceEnabled = false;
   h.context.syncRafWrapper();
   const [nativeId, callback] = h.pending.entries().next().value;
-  h.pending.delete(nativeId); // Native RAF consumes its request before invoking the callback.
+  h.pending.delete(nativeId);
   callback(16);
 
   assert.equal(called, true);
