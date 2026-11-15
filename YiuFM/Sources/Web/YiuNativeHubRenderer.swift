@@ -98,6 +98,17 @@ final class YiuNativeHubRenderer: UIView {
                 }
                 scrollViews[id] = scroll
                 view = scroll
+            } else if tag == "svg" {
+                let imageView = UIImageView()
+                imageView.contentMode = .scaleAspectFit
+                if let dataURL = node["svgImage"] as? String,
+                   let comma = dataURL.firstIndex(of: ",") {
+                    let encoded = String(dataURL[dataURL.index(after: comma)...])
+                    if let data = Data(base64Encoded: encoded) {
+                        imageView.image = UIImage(data: data)
+                    }
+                }
+                view = imageView
             } else if tag == "img" {
                 let imageView = UIImageView()
                 imageView.contentMode = ((node["objectFit"] as? String) == "cover") ? .scaleAspectFill : .scaleAspectFit
