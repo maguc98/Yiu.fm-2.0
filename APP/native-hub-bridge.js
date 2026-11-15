@@ -118,6 +118,7 @@
       appearance: {
         color: style.color,
         backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
         backgroundImage: style.backgroundImage,
         backgroundSize: style.backgroundSize,
         backgroundPosition: style.backgroundPosition,
