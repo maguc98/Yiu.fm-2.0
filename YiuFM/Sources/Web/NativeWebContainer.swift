@@ -109,8 +109,11 @@ final class NativeWebContainer: UIView {
         if nativeThemeMenuRenderingEnabled {
             nativeThemeMenuRenderer.render(themeMenu) { [weak self] controlID, value in
                 guard let self else { return }
-                if let values = value as? [String: Double],
-                   let top = values["scrollTop"], let left = values["scrollLeft"] {
+                if let gesture = value as? [String: String],
+                   gesture["nativeGesture"] == "longPress" {
+                    self.longPressHubControl(id: controlID)
+                } else if let values = value as? [String: Double],
+                          let top = values["scrollTop"], let left = values["scrollLeft"] {
                     self.setHubScroll(id: controlID, top: top, left: left)
                 } else if let value {
                     self.setHubControl(id: controlID, value: value)
@@ -152,6 +155,12 @@ final class NativeWebContainer: UIView {
         guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
               let json = String(data: data, encoding: .utf8) else { return }
         evaluate("window.YiuHubBridge?.activateControl(\(json))")
+    }
+
+    private func longPressHubControl(id: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.longPressControl(\\(json))")
     }
 
     func setHubScroll(id: String, top: Double, left: Double) {
