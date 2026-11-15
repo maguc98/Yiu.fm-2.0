@@ -3092,3 +3092,30 @@ body.open #lg{ }
 #hub.cc-home .cc-action-sheet[data-view="category"] .cc-action-segment-option:focus-visible{
   outline:2px solid #9ab6d5;outline-offset:2px;
 }
+
+
+/* ===== Yiu.fm · Control Center glass isolation (Mini bar reference) =====
+   Keep #hub as the stable backdrop sampling surface. Do not fade the parent:
+   opacity on the transformed panel creates a backdrop root in WebKit and can
+   make the backdrop-filter sample its own empty layer during the entrance.
+   Fade only the isolated glass pseudo-element; leave all content/layout intact.
+*/
+#hub{
+  opacity:1 !important;
+  transition:
+    transform calc(.8s/var(--ui-spd,1)/var(--hub-spd,1)) var(--spring),
+    visibility 0s linear calc(.25s/var(--ui-spd,1)/var(--hub-spd,1)) !important;
+}
+body.open #hub{
+  opacity:1 !important;
+  transition:transform calc(.8s/var(--ui-spd,1)/var(--hub-spd,1)) var(--spring),visibility 0s !important;
+}
+#hub::before{
+  background:var(--ui-glass-fill) !important;
+  -webkit-backdrop-filter:var(--g-blur) !important;
+  backdrop-filter:var(--g-blur) !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.16) !important;
+  opacity:0;
+  transition:opacity calc(.22s/var(--ui-spd,1)) ease !important;
+}
+body.open #hub::before{opacity:1}
