@@ -3119,3 +3119,19 @@ body.open #hub{
   transition:opacity calc(.22s/var(--ui-spd,1)) ease !important;
 }
 body.open #hub::before{opacity:1}
+
+/* ===== Control Center: override legacy opaque cc-home skin =====
+   setHome() adds body.cc-home and #hub.cc-home. The legacy skin otherwise
+   paints an almost-opaque panel and explicitly disables the glass pseudo-layer.
+   Keep the panel itself transparent so the isolated pseudo-element can sample
+   the page backdrop, without changing the control-center content or geometry.
+*/
+html body.cc-home #hub#hub.cc-home{
+  background:transparent !important;
+}
+html body.cc-home #hub#hub.cc-home::before{
+  background:var(--ui-glass-fill) !important;
+  -webkit-backdrop-filter:var(--g-blur) !important;
+  backdrop-filter:var(--g-blur) !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.16) !important;
+}
