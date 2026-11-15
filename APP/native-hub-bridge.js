@@ -302,7 +302,11 @@
       surfaceAppearance: {
         backgroundColor: surfaceStyle ? surfaceStyle.backgroundColor : 'transparent',
         boxShadow: surfaceStyle ? surfaceStyle.boxShadow : 'none',
-        borderRadius: surfaceStyle ? surfaceStyle.borderTopLeftRadius : '28px'
+        borderRadius: surfaceStyle ? surfaceStyle.borderTopLeftRadius : '28px',
+        openOriginX: hub.style.getPropertyValue('--hx'),
+        openOriginY: hub.style.getPropertyValue('--hy'),
+        closeTranslateX: hub.style.getPropertyValue('--tx'),
+        closeTranslateY: hub.style.getPropertyValue('--ty')
       },
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
