@@ -392,7 +392,8 @@
         boxShadow: style.boxShadow,
         borderRadius: style.borderTopLeftRadius,
         borderWidth: style.borderTopWidth,
-        borderColor: style.borderTopColor
+        borderColor: style.borderTopColor,
+        hideGlass: id === 'lg'
       },
       nodes: (function () {
         var children = readTree(root);
