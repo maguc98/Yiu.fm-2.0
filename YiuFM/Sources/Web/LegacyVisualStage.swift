@@ -110,7 +110,12 @@ struct LegacyVisualStage: UIViewRepresentable {
               subtitle: subtitle ? subtitle.textContent : '',
               status: status ? status.textContent : '正在播放',
               coverText: tile ? tile.textContent : '文',
-              playing: (typeof playing !== 'undefined') ? !!playing : false
+              // Read the media element itself instead of relying on a page-level
+              // lexical variable that may not be visible to an injected WKUserScript.
+              playing: (() => {
+                const audio = document.getElementById('audio');
+                return audio ? (!audio.paused && !audio.ended) : false;
+              })()
             };
             if (artwork && artwork !== lastArtwork) {
               lastArtwork = artwork;
