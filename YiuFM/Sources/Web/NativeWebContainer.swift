@@ -4,6 +4,7 @@ import WebKit
 @MainActor
 final class NativeWebContainer: UIView {
     let webView: WKWebView
+    private let nativeLiquidGlassOverlay = NativeLiquidGlassOverlay()
     private let miniBar = YiuNativeMiniPlayerView()
     private let nativeHubRenderer = YiuNativeHubRenderer()
     private let nativeThemeMenuRenderer = YiuNativeHubRenderer()
@@ -87,6 +88,7 @@ final class NativeWebContainer: UIView {
         super.init(frame: .zero)
         backgroundColor = .black
         addSubview(webView)
+        addSubview(nativeLiquidGlassOverlay)
         addSubview(miniBar)
         addSubview(nativeHubRenderer)
         addSubview(nativeThemeMenuRenderer)
@@ -222,6 +224,7 @@ final class NativeWebContainer: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         webView.frame = bounds
+        nativeLiquidGlassOverlay.frame = bounds
         if !miniFrame.isEmpty { miniBar.frame = miniFrame }
     }
 
@@ -744,6 +747,10 @@ final class NativeWebContainer: UIView {
               let idJSON = String(data: idData, encoding: .utf8),
               let valueJSON = String(data: valueData, encoding: .utf8) else { return }
         evaluate("window.YiuHubBridge?.setControl(\(idJSON), \(valueJSON))")
+    }
+
+    func applyNativeLiquidGlassPayload(_ payload: [String: Any]) {
+        nativeLiquidGlassOverlay.apply(payload)
     }
 
     func applyMiniPayload(_ payload: [String: Any]) {
