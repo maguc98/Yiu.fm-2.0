@@ -70,7 +70,7 @@ final class NativeWebContainer: UIView {
     }
 
     private func setHubBridgeEnabled(_ enabled: Bool) {
-        evaluate("window.YiuHubBridge?.setEnabled(\\(enabled ? \"true\" : \"false\"))")
+        evaluate("window.YiuHubBridge?.setEnabled(\(enabled ? \"true" : \"false"))")
     }
 
     /// Native controls send commands back to the existing page runtime.
