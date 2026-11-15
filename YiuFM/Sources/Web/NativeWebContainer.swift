@@ -226,7 +226,13 @@ final class NativeWebContainer: UIView {
             let crop = payload["cropPanel"] as? [String: Any] ?? ["open": false]
             nativeCropRenderer.render(crop) { [weak self] controlID, value in
                 guard let self else { return }
-                if let value {
+                if let gesture = value as? [String: Any],
+                   let kind = gesture["nativeGesture"] as? String,
+                   kind == "cropPan" || kind == "cropPinch",
+                   let data = try? JSONSerialization.data(withJSONObject: gesture, options: [.fragmentsAllowed]),
+                   let json = String(data: data, encoding: .utf8) {
+                    self.evaluate("window.YiuCropNativeGesture?.(\(json))")
+                } else if let value {
                     self.setHubControl(id: controlID, value: value)
                 } else {
                     self.activateHubControl(id: controlID)
