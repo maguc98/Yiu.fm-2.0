@@ -73,9 +73,67 @@
     return item;
   }
 
+  function readNode(el, parentId) {
+    var rect = el.getBoundingClientRect();
+    var style = window.getComputedStyle(el);
+    var item = {
+      nativeId: nativeId(el),
+      parentNativeId: parentId || '',
+      tag: el.tagName.toLowerCase(),
+      id: el.id || '',
+      className: typeof el.className === 'string' ? el.className : '',
+      text: el.children.length ? '' : (el.textContent || '').trim().slice(0, 320),
+      frame: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      appearance: {
+        color: style.color,
+        backgroundColor: style.backgroundColor,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        lineHeight: style.lineHeight,
+        textAlign: style.textAlign,
+        letterSpacing: style.letterSpacing,
+        borderRadius: style.borderRadius,
+        borderWidth: style.borderWidth,
+        borderColor: style.borderColor,
+        borderStyle: style.borderStyle,
+        opacity: style.opacity,
+        display: style.display,
+        visibility: style.visibility,
+        padding: style.padding,
+        margin: style.margin,
+        overflow: style.overflow,
+        whiteSpace: style.whiteSpace
+      }
+    };
+    if (el.getAttribute('role')) item.role = el.getAttribute('role');
+    if (el.tagName.toLowerCase() === 'svg') item.svg = el.outerHTML.slice(0, 5000);
+    if ('value' in el) item.value = el.value;
+    if ('checked' in el) item.checked = !!el.checked;
+    if (el.disabled !== undefined) item.disabled = !!el.disabled;
+    return item;
+  }
+
+  function readTree() {
+    var nodes = [];
+    elementsByNativeId.clear();
+    function visit(parent) {
+      Array.prototype.forEach.call(parent.children || [], function (el) {
+        if (nodes.length >= 1800) return;
+        var parentId = parent === hub ? '' : nativeId(parent);
+        var item = readNode(el, parentId);
+        nodes.push(item);
+        elementsByNativeId.set(item.nativeId, el);
+        visit(el);
+      });
+    }
+    visit(hub);
+    return nodes;
+  }
+
   function snapshot() {
     var rect = hub.getBoundingClientRect();
-    elementsByNativeId.clear();
+    var nodes = readTree();
     var controls = Array.prototype.map.call(
       hub.querySelectorAll('input,select,textarea,button,[role="button"],a[href],[tabindex]:not([tabindex="-1"])'),
       function (el) {
@@ -90,7 +148,8 @@
       open: document.body.classList.contains('open'),
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      controls: controls
+      controls: controls,
+      nodes: nodes
     };
   }
 
