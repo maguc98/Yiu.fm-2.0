@@ -428,6 +428,9 @@
           visible: visible,
           rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
           opacity: nativeBackPresentation ? 1 : Number(style.opacity || 1),
+          color: style.color,
+          backgroundColor: style.backgroundColor,
+          borderRadius: style.borderTopLeftRadius,
           label: button.getAttribute('aria-label') || '展开部分工具栏'
         };
       })(),
