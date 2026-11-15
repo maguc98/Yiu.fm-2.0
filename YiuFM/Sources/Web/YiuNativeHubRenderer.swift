@@ -230,3 +230,43 @@ private final class YiuNativeHubScrollView: UIScrollView, UIScrollViewDelegate {
         onScrollEnded?(contentOffset)
     }
 }
+
+
+@MainActor
+private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
+    var placeholderText: String? {
+        didSet { placeholderLabel.text = placeholderText; updatePlaceholder() }
+    }
+    var onEditingEnded: ((String) -> Void)?
+    private let placeholderLabel = UILabel()
+
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        delegate = self
+        backgroundColor = .clear
+        textContainerInset = UIEdgeInsets(top: 6, left: 4, bottom: 6, right: 4)
+        placeholderLabel.font = .systemFont(ofSize: 14)
+        placeholderLabel.textColor = .secondaryLabel
+        addSubview(placeholderLabel)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        placeholderLabel.frame = CGRect(x: textContainerInset.left + 4,
+                                        y: textContainerInset.top,
+                                        width: max(0, bounds.width - textContainerInset.left - textContainerInset.right - 8),
+                                        height: 22)
+    }
+
+    func textViewDidChange(_ textView: UITextView) { updatePlaceholder() }
+    func textViewDidEndEditing(_ textView: UITextView) {
+        updatePlaceholder()
+        onEditingEnded?(text)
+    }
+
+    private func updatePlaceholder() {
+        placeholderLabel.isHidden = !text.isEmpty
+    }
+}
