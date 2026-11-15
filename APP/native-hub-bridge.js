@@ -86,7 +86,9 @@
       tag: el.tagName.toLowerCase(),
       id: el.id || '',
       className: typeof el.className === 'string' ? el.className : '',
-      text: el.children.length ? '' : (el.textContent || '').trim().slice(0, 320),
+      text: Array.prototype.map.call(el.childNodes || [], function (node) {
+        return node.nodeType === 3 ? (node.nodeValue || '') : '';
+      }).join(' ').replace(/\\s+/g, ' ').trim().slice(0, 320) || (el.getAttribute('aria-label') || ''),
       frame: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       scrollTop: el.scrollTop || 0,
       scrollLeft: el.scrollLeft || 0,
