@@ -72,7 +72,10 @@ final class YiuNativeHubRenderer: UIView {
             let tag = (node["tag"] as? String ?? "div").lowercased()
             let role = (node["role"] as? String ?? "").lowercased()
             let inputType = (node["type"] as? String ?? "").lowercased()
+            let href = (node["href"] as? String) ?? ""
+            let tabIndex = number(node["tabIndex"]) ?? -1
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
+                (tag == "a" && !href.isEmpty) || tabIndex >= 0 ||
                 role == "button" || (node["id"] as? String == "miSet")
             let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
             let overflowX = (appearance["overflowX"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
@@ -148,6 +151,7 @@ final class YiuNativeHubRenderer: UIView {
                 let button = UIButton(type: .custom)
                 button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, nil) }, for: .touchUpInside)
                 button.accessibilityLabel = (node["text"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+                if !href.isEmpty { button.accessibilityHint = "打开链接" }
                 view = button
             } else {
                 view = UIView()
