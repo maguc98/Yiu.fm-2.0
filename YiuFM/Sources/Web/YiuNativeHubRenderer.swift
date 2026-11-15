@@ -405,10 +405,12 @@ private final class YiuNativeHubTextView: UITextView, UITextViewDelegate {
                                         height: 22)
     }
 
-    func textViewDidChange(_ textView: UITextView) { updatePlaceholder() }
+    func textViewDidChange(_ textView: UITextView) {
+        updatePlaceholder()
+        onTextChanged?(textView.text)
+    }
     func textViewDidEndEditing(_ textView: UITextView) {
         updatePlaceholder()
-        onEditingEnded?(text)
     }
 
     private func updatePlaceholder() {
