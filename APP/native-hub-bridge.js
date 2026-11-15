@@ -88,7 +88,7 @@
       className: typeof el.className === 'string' ? el.className : '',
       text: Array.prototype.map.call(el.childNodes || [], function (node) {
         return node.nodeType === 3 ? (node.nodeValue || '') : '';
-      }).join(' ').replace(/\\s+/g, ' ').trim().slice(0, 320) || (el.getAttribute('aria-label') || ''),
+      }).join(' ').replace(/\s+/g, ' ').trim().slice(0, 320) || (el.getAttribute('aria-label') || ''),
       frame: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
       scrollTop: el.scrollTop || 0,
       scrollLeft: el.scrollLeft || 0,
@@ -305,7 +305,7 @@
     subtree: true,
     childList: true,
     attributes: true,
-    attributeFilter: ['class', 'aria-expanded', 'aria-selected', 'aria-pressed', 'disabled', 'hidden'],
+    attributeFilter: ['class', 'style', 'aria-expanded', 'aria-selected', 'aria-pressed', 'aria-label', 'disabled', 'hidden', 'value', 'checked', 'selected', 'src', 'alt', 'role'],
     characterData: true
   });
   observer.observe(document.body, {
@@ -313,6 +313,9 @@
     attributeFilter: ['class']
   });
   window.addEventListener('resize', scheduleNotify, { passive: true });
+  window.addEventListener('scroll', scheduleNotify, { passive: true, capture: true });
+  hub.addEventListener('input', scheduleNotify, true);
+  hub.addEventListener('change', scheduleNotify, true);
   window.addEventListener('pagehide', function () {
     if (observer) observer.disconnect();
     if (notifyTimer) window.clearTimeout(notifyTimer);
