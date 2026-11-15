@@ -3194,3 +3194,32 @@ html body.cc-home #hub#hub.cc-home::before{
     inset 0 0 0 1px rgba(255,255,255,.07),
     0 12px 34px rgba(0,0,0,.28) !important;
 }
+
+/* ===== 2026-11-15 · Control Center translucent surface refinement =====
+   Preserve every control's geometry, text, icon, and interaction.
+   Reduce the opaque white fill so the already-blurred backdrop can read through;
+   use surface highlights and a restrained rim instead of adding another blur root.
+*/
+#hub.cc-home :is(.cc-engine,.cc-resolution,.cc-other,.cc-shortcut),
+#hub.cc-home .cc-action-sheet .cc-action-head,
+#hub.cc-home .cc-action-sheet .cc-action-item,
+#hub.cc-home .cc-action-sheet .cc-action-control,
+#hub.cc-home .cc-action-sheet .cc-action-segment-option{
+  background:
+    linear-gradient(145deg,
+      rgba(255,255,255,.88) 0%,
+      rgba(255,255,255,.76) 46%,
+      rgba(255,255,255,.66) 100%) !important;
+  border-color:rgba(255,255,255,.62) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.78),
+    inset 0 0 0 1px rgba(255,255,255,.20),
+    0 5px 16px rgba(35,45,60,.075) !important;
+}
+#hub.cc-home .cc-action-sheet .cc-action-item:active,
+#hub.cc-home .cc-action-sheet .cc-action-segment-option:active{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.72),
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    0 2px 8px rgba(35,45,60,.07) !important;
+}
