@@ -38,6 +38,8 @@ final class YiuNativeHubRenderer: UIView {
         lastSnapshotKey = key
 
         frame = CGRect(x: x, y: y, width: width, height: height)
+        let surfaceAppearance = snapshot["surfaceAppearance"] as? [String: Any] ?? [:]
+        applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: 28)
         glass.frame = bounds
         glass.layer.cornerRadius = 28
         glass.clipsToBounds = true
@@ -299,6 +301,34 @@ final class YiuNativeHubRenderer: UIView {
     }
 
 
+
+
+    private func applyCSSShadow(_ value: Any?, to target: CALayer, cornerRadius: CGFloat) {
+        guard let raw = value as? String, raw != "none" else {
+            target.shadowOpacity = 0
+            target.shadowPath = nil
+            return
+        }
+        let colorString: String
+        if let range = raw.range(of: "rgba?\\([^)]*\\)", options: .regularExpression) {
+            colorString = String(raw[range])
+        } else {
+            colorString = "rgba(0,0,0,0.32)"
+        }
+        let numericSource = raw.replacingOccurrences(of: colorString, with: "")
+            .replacingOccurrences(of: "inset", with: "")
+        let values = numericSource.split(whereSeparator: { $0 == " " || $0 == "\\t" })
+            .compactMap { Double(String($0).replacingOccurrences(of: "px", with: "")) }
+        guard values.count >= 3 else { return }
+        let color = cssColor(colorString) ?? .black
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 1
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        target.shadowColor = UIColor(red: red, green: green, blue: blue, alpha: 1).cgColor
+        target.shadowOpacity = Float(alpha)
+        target.shadowOffset = CGSize(width: values[0], height: values[1])
+        target.shadowRadius = max(0, values[2] * 0.5)
+        target.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+    }
 
     private func sliderTrackImage(color: UIColor) -> UIImage {
         let size = CGSize(width: 12, height: 6)
