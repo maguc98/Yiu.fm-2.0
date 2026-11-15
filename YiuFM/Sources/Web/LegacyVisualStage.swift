@@ -87,9 +87,7 @@ struct LegacyVisualStage: UIViewRepresentable {
             const rect = mini.getBoundingClientRect();
             const style = getComputedStyle(mini);
             const body = document.body;
-            const hidden = body.classList.contains('open') ||
-              body.classList.contains('np-open') ||
-              body.classList.contains('immerse') ||
+            const hidden = body.classList.contains('immerse') ||
               style.display === 'none' || style.visibility === 'hidden' ||
               rect.width < 1 || rect.height < 1;
             const artwork = tile ? getComputedStyle(tile).backgroundImage : '';
