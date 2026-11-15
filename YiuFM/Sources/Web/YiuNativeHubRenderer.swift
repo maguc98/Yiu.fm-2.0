@@ -112,8 +112,10 @@ final class YiuNativeHubRenderer: UIView {
             let inputType = (node["type"] as? String ?? "").lowercased()
             let href = (node["href"] as? String) ?? ""
             let tabIndex = number(node["tabIndex"]) ?? -1
+            let classNames = Set(((node["className"] as? String) ?? "").split(whereSeparator: { $0 == " " }).map(String.init))
+            let isThemeCard = classNames.contains("tp-card")
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
-                (tag == "a" && !href.isEmpty) || tabIndex >= 0 ||
+                (tag == "a" && !href.isEmpty) || tabIndex >= 0 || isThemeCard ||
                 ["button", "link", "checkbox", "switch", "slider", "menuitem"].contains(role) ||
                 (node["id"] as? String == "miSet")
             let overflowY = (appearance["overflowY"] as? String) ?? (appearance["overflow"] as? String ?? "visible")
@@ -242,8 +244,13 @@ final class YiuNativeHubRenderer: UIView {
                 field.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, field.text ?? "") }, for: .editingChanged)
                 view = field
             } else if isControl {
-                let button = UIButton(type: .custom)
+                let button = isThemeCard ? YiuNativeThemeCardButton(type: .custom) : UIButton(type: .custom)
                 button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, nil) }, for: .touchUpInside)
+                if let themeButton = button as? YiuNativeThemeCardButton {
+                    themeButton.onLongPress = { [weak self] in
+                        self?.actionHandler?(id, ["nativeGesture": "longPress"])
+                    }
+                }
                 button.accessibilityLabel = (node["text"] as? String).flatMap { $0.isEmpty ? nil : $0 }
                 if !href.isEmpty { button.accessibilityHint = "打开链接" }
                 view = button
@@ -671,3 +678,40 @@ private final class YiuNativeColorPickerButton: UIButton, UIColorPickerViewContr
     }
 }
 
+
+
+@MainActor
+private final class YiuNativeThemeCardButton: UIButton {
+    var onLongPress: (() -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        installLongPress()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        installLongPress()
+    }
+
+    convenience init(type: UIButton.ButtonType) {
+        self.init(frame: .zero)
+        self.buttonTypeSetup(type)
+    }
+
+    private func buttonTypeSetup(_ type: UIButton.ButtonType) {
+        // Custom button visuals are supplied by the mirrored DOM content.
+    }
+
+    private func installLongPress() {
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        gesture.minimumPressDuration = 0.55
+        gesture.cancelsTouchesInView = true
+        addGestureRecognizer(gesture)
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        onLongPress?()
+    }
+}
