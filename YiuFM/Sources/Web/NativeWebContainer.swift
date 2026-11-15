@@ -108,7 +108,7 @@ final class NativeWebContainer: UIView {
         } else {
             nativeSettingsButton.isHidden = true
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled)
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
