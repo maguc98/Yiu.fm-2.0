@@ -750,10 +750,12 @@
     return rafCapLastOk;
   };
 
-  // perf: 拦截 rAF 抓取卡顿溯源；统一帧率限制与卡顿检测共用同一层包装
+  // 可选的逐回调 rAF 溯源。FPS 采样和视觉异常检测使用原生 rAF，不需要全局包装。
+  // 只有显式设置 localStorage.yiuRafTrace='1' 或启用帧率门控时才接管全局回调。
+  var rafTraceEnabled = lsGet('yiuRafTrace') === '1';
   var rafSeq = 1e9, rafMap = Object.create(null);
   var wrappedRAF = function(cb) {
-    if (!state.jank && !window.__rafCapActive) return origRAF.call(window, cb);
+    if (!rafTraceEnabled && !window.__rafCapActive) return origRAF.call(window, cb);
     var id = ++rafSeq;
     (function go() {
       rafMap[id] = origRAF.call(window, function(ts) {
@@ -763,7 +765,7 @@
         delete rafMap[id];
         syncRafWrapper(); // 关闭诊断后，最后一个包装回调结束时再恢复原生 cancelAnimationFrame
         // Native requestAnimationFrame invokes callbacks with Window as `this`; preserve that contract.
-        if (!state.jank) { if (typeof cb === 'function') cb.call(window, ts); return; }
+        if (!rafTraceEnabled) { if (typeof cb === 'function') cb.call(window, ts); return; }
         var t0 = performance.now();
         try {
           if (typeof cb === 'function') cb.call(window, ts);
@@ -803,7 +805,7 @@
   }
   /* 常态下不替换 WebKit 的 RAF；停用诊断后，保留 cancel 包装直到旧编号全部结束/取消。 */
   function syncRafWrapper() {
-    var needed = !!state.jank || !!window.__rafCapActive;
+    var needed = !!rafTraceEnabled || !!window.__rafCapActive;
     if (needed) {
       if (window.requestAnimationFrame !== wrappedRAF) window.requestAnimationFrame = wrappedRAF;
       if (window.cancelAnimationFrame !== wrappedCancelRAF) window.cancelAnimationFrame = wrappedCancelRAF;
