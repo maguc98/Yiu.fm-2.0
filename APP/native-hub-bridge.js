@@ -478,6 +478,7 @@
       splashWindow: floatingSurfaceSnapshot('saWinCard'),
       timelineLens: floatingSurfaceSnapshot('tlLens'),
       cropPanel: floatingSurfaceSnapshot('crop'),
+      navigationBar: floatingSurfaceSnapshot('lg'),
       controlBar: floatingSurfaceSnapshot('cbar'),
       quickPopup: floatingSurfaceSnapshot('qpop'),
       dropdownPopup: floatingSurfaceSnapshot('ddPop'),
@@ -794,7 +795,7 @@
   var observedMirrorRoots = {};
   var mirrorAttachObserver = null;
   function attachMirrorObservers() {
-    ['crop', 'tlLens', 'cbar', 'qpop', 'ddPop', 'zoomPop'].forEach(function (id) {
+    ['crop', 'tlLens', 'lg', 'cbar', 'qpop', 'ddPop', 'zoomPop'].forEach(function (id) {
       var root = document.getElementById(id);
       if (!root || observedMirrorRoots[id] === root) return;
       observedMirrorRoots[id] = root;
