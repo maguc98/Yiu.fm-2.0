@@ -51,6 +51,9 @@ final class YiuNativeHubRenderer: UIView {
         frame = CGRect(x: x, y: y, width: width, height: height)
         let surfaceRadius = CGFloat(number(surfaceAppearance["borderRadius"]) ?? 28)
         applyCSSShadow(surfaceAppearance["boxShadow"], to: layer, cornerRadius: surfaceRadius)
+        let borderWidth = CGFloat(number(surfaceAppearance["borderWidth"]) ?? 0)
+        layer.borderWidth = borderWidth
+        layer.borderColor = cssColor(surfaceAppearance["borderColor"])?.cgColor
         glass.updateGlassTint(cssColor(surfaceAppearance["backgroundColor"]))
         glass.frame = bounds
         glass.layer.cornerRadius = surfaceRadius
