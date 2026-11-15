@@ -5,6 +5,9 @@ import WebKit
 final class NativeWebContainer: UIView {
     let webView: WKWebView
     private let miniBar = YiuNativeMiniPlayerView()
+    private let nativeHubRenderer = YiuNativeHubRenderer()
+    // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
+    private let nativeHubRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private(set) var latestHubState: [String: Any] = [:]
     var onHubStateChanged: (([String: Any]) -> Void)?
@@ -15,7 +18,9 @@ final class NativeWebContainer: UIView {
         backgroundColor = .black
         addSubview(webView)
         addSubview(miniBar)
+        addSubview(nativeHubRenderer)
         miniBar.isHidden = true
+        nativeHubRenderer.isHidden = true
         miniBar.onToggle = { [weak self] in
             self?.evaluate("document.getElementById('mini')?.click()")
         }
@@ -43,6 +48,13 @@ final class NativeWebContainer: UIView {
 
     func applyHubPayload(_ payload: [String: Any]) {
         latestHubState = payload
+        if nativeHubRenderingEnabled {
+            nativeHubRenderer.render(payload) { [weak self] controlID in
+                self?.activateHubControl(id: controlID)
+            }
+        } else {
+            nativeHubRenderer.isHidden = true
+        }
         onHubStateChanged?(payload)
     }
 
