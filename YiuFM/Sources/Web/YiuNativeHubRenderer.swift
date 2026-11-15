@@ -82,8 +82,6 @@ final class YiuNativeHubRenderer: UIView {
                 scroll.showsHorizontalScrollIndicator = ["auto", "scroll"].contains(overflowX)
                 scroll.alwaysBounceVertical = overflowY == "scroll"
                 scroll.alwaysBounceHorizontal = overflowX == "scroll"
-                scroll.contentOffset = CGPoint(x: number(node["scrollLeft"]) ?? 0,
-                                               y: number(node["scrollTop"]) ?? 0)
                 scroll.onScrollEnded = { [weak self] offset in
                     self?.actionHandler?(id, ["scrollTop": offset.y, "scrollLeft": offset.x])
                 }
@@ -163,6 +161,9 @@ final class YiuNativeHubRenderer: UIView {
             let contentHeight = max(number((nodes.first { ($0["nativeId"] as? String) == id }?["scrollHeight"])) ?? 0,
                                     scroll.subviews.map { Double($0.frame.maxY) }.max() ?? 0)
             scroll.contentSize = CGSize(width: contentWidth, height: contentHeight)
+            let source = nodes.first { ($0["nativeId"] as? String) == id }
+            scroll.contentOffset = CGPoint(x: number(source?["scrollLeft"]) ?? 0,
+                                           y: number(source?["scrollTop"]) ?? 0)
         }
         isHidden = false
     }
