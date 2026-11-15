@@ -156,6 +156,9 @@ final class YiuNativeHubRenderer: UIView {
                 slider.minimumValue = Float(minimum)
                 slider.maximumValue = Float(maximum > minimum ? maximum : minimum + 1)
                 slider.value = Float(number(node["value"]) ?? number(node["ariaValueNow"]) ?? minimum)
+                slider.setMinimumTrackImage(sliderTrackImage(color: UIColor.white.withAlphaComponent(0.62)), for: .normal)
+                slider.setMaximumTrackImage(sliderTrackImage(color: UIColor.white.withAlphaComponent(0.14)), for: .normal)
+                slider.setThumbImage(sliderThumbImage(), for: .normal)
                 slider.addAction(UIAction { [weak self] _ in
                     let raw = Double(slider.value)
                     let stepped = step > 0 ? minimum + ((raw - minimum) / step).rounded() * step : raw
@@ -285,6 +288,30 @@ final class YiuNativeHubRenderer: UIView {
         isHidden = false
     }
 
+
+
+    private func sliderTrackImage(color: UIColor) -> UIImage {
+        let size = CGSize(width: 12, height: 6)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { _ in
+            color.setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 3).fill()
+        }
+        return image.resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 3, bottom: 0, right: 3))
+    }
+
+    private func sliderThumbImage() -> UIImage {
+        let size = CGSize(width: 42, height: 30)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            context.cgContext.setShadow(offset: CGSize(width: 0, height: 2),
+                                       blur: 6,
+                                       color: UIColor.black.withAlphaComponent(0.35).cgColor)
+            UIColor.white.setFill()
+            UIBezierPath(roundedRect: CGRect(x: 4, y: 4, width: 34, height: 22),
+                         cornerRadius: 11).fill()
+        }
+    }
 
     private func imageFromCSSBackground(_ value: String) -> UIImage? {
         guard let start = value.range(of: "url("),
