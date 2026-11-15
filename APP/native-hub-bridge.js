@@ -16,11 +16,31 @@
 
   function readControl(el) {
     if (!el || !el.id) return null;
+    var rect = el.getBoundingClientRect();
+    var style = window.getComputedStyle(el);
     var item = {
       id: el.id,
       tag: el.tagName.toLowerCase(),
       type: el.type || '',
-      disabled: !!el.disabled
+      disabled: !!el.disabled,
+      text: (el.innerText || el.getAttribute('aria-label') || '').trim().slice(0, 240),
+      frame: {
+        x: rect.x, y: rect.y, width: rect.width, height: rect.height
+      },
+      appearance: {
+        color: style.color,
+        backgroundColor: style.backgroundColor,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        textAlign: style.textAlign,
+        borderRadius: style.borderRadius,
+        borderWidth: style.borderWidth,
+        borderColor: style.borderColor,
+        opacity: style.opacity,
+        display: style.display,
+        visibility: style.visibility
+      }
     };
     if ('value' in el) item.value = el.value;
     if ('checked' in el) item.checked = !!el.checked;
