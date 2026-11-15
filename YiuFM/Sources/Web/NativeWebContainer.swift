@@ -7,6 +7,8 @@ final class NativeWebContainer: UIView {
     private let miniBar = YiuNativeMiniPlayerView()
     private let nativeHubRenderer = YiuNativeHubRenderer()
     private let nativeThemeMenuRenderer = YiuNativeHubRenderer()
+    private let nativeFloatingToolsRenderer = YiuNativeHubRenderer()
+    private let nativeCommandButtonRenderer = YiuNativeHubRenderer()
     private let nativeBackButton = YiuNativeBackButtonView()
     private let nativeSettingsButton = YiuNativeSettingsButtonView()
     // Keep native rendering opt-in until the complete control set has passed visual and interaction parity checks.
@@ -17,6 +19,8 @@ final class NativeWebContainer: UIView {
     private let nativeBackButtonRenderingEnabled = false
     // Keep the standalone settings surface opt-in until device parity is verified.
     private let nativeSettingsButtonRenderingEnabled = false
+    private let nativeFloatingToolsRenderingEnabled = false
+    private let nativeCommandButtonRenderingEnabled = false
     private var miniFrame = CGRect.zero
     private var nativeHubBridgeEnabledState: Bool?
     private var nativeHubPresentationState: Bool?
@@ -31,11 +35,15 @@ final class NativeWebContainer: UIView {
         addSubview(miniBar)
         addSubview(nativeHubRenderer)
         addSubview(nativeThemeMenuRenderer)
+        addSubview(nativeFloatingToolsRenderer)
+        addSubview(nativeCommandButtonRenderer)
         addSubview(nativeBackButton)
         addSubview(nativeSettingsButton)
         miniBar.isHidden = true
         nativeHubRenderer.isHidden = true
         nativeThemeMenuRenderer.isHidden = true
+        nativeFloatingToolsRenderer.isHidden = true
+        nativeCommandButtonRenderer.isHidden = true
         nativeBackButton.isHidden = true
         nativeSettingsButton.isHidden = true
         nativeHubRenderer.onDidHide = { [weak self] in
@@ -108,7 +116,29 @@ final class NativeWebContainer: UIView {
         } else {
             nativeSettingsButton.isHidden = true
         }
-        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled)
+        if nativeFloatingToolsRenderingEnabled {
+            let tools = payload["floatingTools"] as? [String: Any] ?? ["open": false]
+            nativeFloatingToolsRenderer.render(tools) { [weak self] controlID, value in
+                guard let self else { return }
+                self.activateHubControl(id: controlID)
+            }
+            setNativeFloatingPresentation(id: "hbTools", active: !nativeFloatingToolsRenderer.isHidden)
+        } else {
+            nativeFloatingToolsRenderer.isHidden = true
+            setNativeFloatingPresentation(id: "hbTools", active: false)
+        }
+        if nativeCommandButtonRenderingEnabled {
+            let command = payload["commandButton"] as? [String: Any] ?? ["open": false]
+            nativeCommandButtonRenderer.render(command) { [weak self] controlID, value in
+                guard let self else { return }
+                self.activateHubControl(id: controlID)
+            }
+            setNativeFloatingPresentation(id: "cmdFab", active: !nativeCommandButtonRenderer.isHidden)
+        } else {
+            nativeCommandButtonRenderer.isHidden = true
+            setNativeFloatingPresentation(id: "cmdFab", active: false)
+        }
+        setHubBridgeEnabled(nativeHubRenderingEnabled || nativeThemeMenuRenderingEnabled || nativeSettingsButtonRenderingEnabled || nativeFloatingToolsRenderingEnabled || nativeCommandButtonRenderingEnabled)
         if nativeHubRenderingEnabled {
             nativeHubRenderer.render(payload) { [weak self] controlID, value in
                 guard let self else { return }
@@ -190,6 +220,12 @@ final class NativeWebContainer: UIView {
         guard nativeHubPresentationState != active else { return }
         nativeHubPresentationState = active
         evaluate("window.YiuHubBridge?.setNativePresentation(\(active ? "true" : "false"))")
+    }
+
+    private func setNativeFloatingPresentation(id: String, active: Bool) {
+        guard let data = try? JSONSerialization.data(withJSONObject: id, options: [.fragmentsAllowed]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        evaluate("window.YiuHubBridge?.setNativeFloatingPresentation(\\(json), \\(active ? \"true\" : \"false\"))")
     }
 
     private func setThemeMenuNativePresentation(_ active: Bool) {
