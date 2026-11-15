@@ -290,6 +290,9 @@ final class NativeWebContainer: UIView {
             nativeThemeMenuRenderer.isHidden = true
             setThemeMenuNativePresentation(false)
         }
+        // The crop modal has the highest independent surface priority and must
+        // remain above the dock, toolbar and floating controls when it is open.
+        if !nativeCropRenderer.isHidden { bringSubviewToFront(nativeCropRenderer) }
         onHubStateChanged?(payload)
     }
 
