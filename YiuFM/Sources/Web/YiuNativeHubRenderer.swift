@@ -6,8 +6,7 @@ import UIKit
 @MainActor
 final class YiuNativeHubRenderer: UIView {
     private let glass = YiuLiquidGlassSurface(material: .regular, interactive: false)
-    private var renderedIDs = Set<String>()
-    private var actionHandler: ((String) -> Void)?
+    private var actionHandler: ((String, Any?) -> Void)?
     private var lastSnapshotKey = ""
 
     override init(frame: CGRect) {
@@ -20,7 +19,7 @@ final class YiuNativeHubRenderer: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func render(_ snapshot: [String: Any], action: @escaping (String) -> Void) {
+    func render(_ snapshot: [String: Any], action: @escaping (String, Any?) -> Void) {
         actionHandler = action
         guard (snapshot["open"] as? Bool) == true,
               let rawRect = snapshot["rect"] as? [String: Any],
@@ -68,6 +67,7 @@ final class YiuNativeHubRenderer: UIView {
             guard display != "none", visibility != "hidden", opacity > 0.01 else { continue }
             let tag = (node["tag"] as? String ?? "div").lowercased()
             let role = (node["role"] as? String ?? "").lowercased()
+            let inputType = (node["type"] as? String ?? "").lowercased()
             let isControl = ["button", "input", "select", "textarea"].contains(tag) ||
                 role == "button" || (node["id"] as? String == "miSet")
             let view: UIView
@@ -80,15 +80,36 @@ final class YiuNativeHubRenderer: UIView {
                     imageView.image = UIImage(contentsOfFile: url.path)
                 }
                 view = imageView
+            } else if tag == "input" && inputType == "checkbox" {
+                let toggle = UISwitch()
+                toggle.isOn = node["checked"] as? Bool ?? false
+                toggle.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, toggle.isOn) }, for: .valueChanged)
+                view = toggle
+            } else if tag == "input" && inputType == "range" {
+                let slider = UISlider()
+                slider.minimumValue = Float(number(node["min"]) ?? 0)
+                slider.maximumValue = Float(number(node["max"]) ?? 100)
+                slider.value = Float(number(node["value"]) ?? Double(slider.minimumValue))
+                slider.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, slider.value) }, for: .valueChanged)
+                view = slider
+            } else if tag == "input" && ["text", "search", "email", "url", "number"].contains(inputType) {
+                let field = UITextField()
+                field.borderStyle = .none
+                field.text = node["value"] as? String
+                field.placeholder = node["placeholder"] as? String
+                field.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, field.text ?? "") }, for: .editingDidEnd)
+                view = field
             } else if isControl {
                 let button = UIButton(type: .custom)
-                button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id) }, for: .touchUpInside)
+                button.addAction(UIAction { [weak self] _ in self?.actionHandler?(id, nil) }, for: .touchUpInside)
                 button.accessibilityLabel = (node["text"] as? String).flatMap { $0.isEmpty ? nil : $0 }
                 view = button
             } else {
                 view = UIView()
             }
             view.frame = localFrame
+            view.isUserInteractionEnabled = isControl || tag == "img"
+            if node["disabled"] as? Bool == true { view.isUserInteractionEnabled = false }
             view.backgroundColor = cssColor(appearance["backgroundColor"])
             view.alpha = opacity
             if true {
