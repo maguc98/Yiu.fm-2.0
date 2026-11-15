@@ -379,6 +379,12 @@ final class YiuNativeHubRenderer: UIView {
             }
             presentationOpen = true
             isHidden = false
+            let duration = max(0, number(appearance["openDuration"]) ?? 0.7)
+            guard duration > 0 else {
+                transform = .identity
+                alpha = 1
+                return
+            }
             let scale: CGFloat = 0.12
             let originX = CGFloat(number(appearance["openOriginX"]) ?? Double(bounds.width))
             let originY = CGFloat(number(appearance["openOriginY"]) ?? Double(bounds.height))
@@ -387,7 +393,7 @@ final class YiuNativeHubRenderer: UIView {
             transform = CGAffineTransform(translationX: offsetX, y: offsetY)
                 .scaledBy(x: scale, y: scale)
             alpha = 0
-            UIView.animate(withDuration: 0.7,
+            UIView.animate(withDuration: duration,
                            delay: 0,
                            usingSpringWithDamping: 0.84,
                            initialSpringVelocity: 0.15,
@@ -403,7 +409,15 @@ final class YiuNativeHubRenderer: UIView {
             let translateY = CGFloat(number(appearance["closeTranslateY"]) ?? 0)
             let closeTransform = CGAffineTransform(translationX: translateX, y: translateY)
                 .scaledBy(x: 0.12, y: 0.12)
-            UIView.animate(withDuration: 0.65,
+            let duration = max(0, number(appearance["closeDuration"]) ?? 0.65)
+            guard duration > 0 else {
+                isHidden = true
+                transform = .identity
+                alpha = 1
+                onDidHide?()
+                return
+            }
+            UIView.animate(withDuration: duration,
                            delay: 0,
                            options: [.beginFromCurrentState, .allowUserInteraction]) {
                 self.transform = closeTransform
