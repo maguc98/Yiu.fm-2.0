@@ -432,6 +432,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
+      - name: Verify native-only app bundle
+        if: github.ref == 'refs/heads/native-swiftui-rebuild'
+        run: |
+          APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP_PATH"
+          test -s "$APP_PATH/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_PATH/Info.plist")"
+          if find "$APP_PATH" -type d -name Web -print -quit | grep -q .; then
+            echo "Unexpected Web resource directory in native app bundle."
+            exit 1
+          fi
+          if find "$APP_PATH" -type f \( -iname '*.html' -o -iname '*.htm' -o -iname '*.js' -o -iname '*.mjs' -o -iname '*.css' \) -print -quit | grep -q .; then
+            echo "Unexpected web runtime asset in native app bundle."
+            exit 1
+          fi
+          echo "Verified the app bundle contains no HTML, JavaScript, CSS, or Web resource directory."
+
       - name: Bundle and verify legacy visual engines
         if: github.ref != 'refs/heads/native-swiftui-rebuild'
         run: |
@@ -529,6 +545,13 @@ jobs:
           cp -R YiuFM/build/Build/Products/Release-iphoneos/*.app YiuFM/output/Payload/Yiu.fm.app
           cd YiuFM/output
           /usr/bin/zip -qry YiuFM-2.0-unsigned.ipa Payload
+          if [ "$GITHUB_REF" = "refs/heads/native-swiftui-rebuild" ]; then
+            if /usr/bin/unzip -Z1 YiuFM-2.0-unsigned.ipa | grep -Eiq '\\.(html|htm|js|mjs|css)$|/Web/'; then
+              echo "Unexpected web runtime files found in native IPA."
+              exit 1
+            fi
+            echo "Verified native IPA contains no web runtime files."
+          fi
           rm -rf Payload
 
       - name: Upload artifact
