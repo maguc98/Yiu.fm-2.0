@@ -79,6 +79,7 @@ final class YiuAudioPlayer: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var currentTime: Double = 0
     @Published private(set) var duration: Double = 0
+    @Published private(set) var audioLevel: Double = 0
     @Published private(set) var lyrics: [YiuLyricLine] = []
     @Published private(set) var currentLyricIndex = 0
     @Published private(set) var errorMessage: String?
@@ -351,6 +352,7 @@ final class YiuAudioPlayer: ObservableObject {
         guard fileManager.fileExists(atPath: fileURL.path) else { throw YiuMusicError.missingAudio }
 
         let next = try AVAudioPlayer(contentsOf: fileURL)
+        next.isMeteringEnabled = true
         next.prepareToPlay()
         audioPlayer?.stop()
         audioPlayer = next
@@ -386,6 +388,11 @@ final class YiuAudioPlayer: ObservableObject {
     private func refreshClock() {
         guard let audioPlayer else { return }
         currentTime = audioPlayer.currentTime
+        audioPlayer.updateMeters()
+        let decibels = Double(audioPlayer.averagePower(forChannel: 0))
+        let normalized = decibels.isFinite ? pow(10, decibels / 20) : 0
+        let targetLevel = isPlaying ? min(1, max(0, normalized * 2.2)) : 0
+        audioLevel = audioLevel * 0.58 + targetLevel * 0.42
         if isPlaying && !audioPlayer.isPlaying {
             let completed = duration > 0 && currentTime >= duration - 0.25
             isPlaying = false
