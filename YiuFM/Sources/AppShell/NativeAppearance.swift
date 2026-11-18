@@ -267,16 +267,7 @@ struct NativeAppBackground: View {
             case .solid:
                 Color(nativeHex: appearance.solidColorHex)
             case .gradient:
-                LinearGradient(
-                    colors: [
-                        Color(nativeHex: appearance.gradientStartHex),
-                        Color(nativeHex: appearance.gradientMid1Hex),
-                        Color(nativeHex: appearance.gradientMid2Hex),
-                        Color(nativeHex: appearance.gradientEndHex)
-                    ],
-                    startPoint: gradientStart,
-                    endPoint: gradientEnd
-                )
+                gradientLayer
             case .image:
                 if let image = appearance.backgroundImage {
                     Image(uiImage: image)
@@ -285,11 +276,7 @@ struct NativeAppBackground: View {
                         .blur(radius: appearance.backgroundBlur)
                         .clipped()
                 } else {
-                    LinearGradient(
-                        colors: [Color(nativeHex: appearance.gradientStartHex), Color(nativeHex: appearance.gradientMid1Hex), Color(nativeHex: appearance.gradientMid2Hex), Color(nativeHex: appearance.gradientEndHex)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+                    gradient(angle: appearance.gradientAngle)
                 }
             }
 
@@ -300,15 +287,40 @@ struct NativeAppBackground: View {
         .ignoresSafeArea()
     }
 
-    private var gradientStart: UnitPoint {
-        let normalized = appearance.gradientAngle.truncatingRemainder(dividingBy: 360) / 360
+    @ViewBuilder
+    private var gradientLayer: some View {
+        if appearance.gradientFlowEnabled {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                let cycle = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 14) / 14
+                gradient(angle: appearance.gradientAngle + cycle * 360)
+            }
+        } else {
+            gradient(angle: appearance.gradientAngle)
+        }
+    }
+
+    private func gradient(angle: Double) -> LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(nativeHex: appearance.gradientStartHex),
+                Color(nativeHex: appearance.gradientMid1Hex),
+                Color(nativeHex: appearance.gradientMid2Hex),
+                Color(nativeHex: appearance.gradientEndHex)
+            ],
+            startPoint: gradientStart(for: angle),
+            endPoint: gradientEnd(for: angle)
+        )
+    }
+
+    private func gradientStart(for angle: Double) -> UnitPoint {
+        let normalized = angle.truncatingRemainder(dividingBy: 360) / 360
         let x = 0.5 - 0.5 * cos(normalized * 2 * .pi)
         let y = 0.5 - 0.5 * sin(normalized * 2 * .pi)
         return UnitPoint(x: CGFloat(x), y: CGFloat(y))
     }
 
-    private var gradientEnd: UnitPoint {
-        let start = gradientStart
+    private func gradientEnd(for angle: Double) -> UnitPoint {
+        let start = gradientStart(for: angle)
         return UnitPoint(x: 1 - start.x, y: 1 - start.y)
     }
 }
