@@ -17,13 +17,15 @@ enum NativeTextDeckError: LocalizedError {
 enum NativeTextProjectCodec {
     static func encode(
         packages: [NativeTextPackage],
-        activePackageID: String?
+        activePackageID: String?,
+        layout: NativeTextLayoutSettings = .defaults
     ) throws -> Data {
         let payload = NativeTextProjectBackup(
             version: 1,
             exportedAt: Date(),
             packages: packages,
-            activePackageID: activePackageID
+            activePackageID: activePackageID,
+            layout: layout
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -42,7 +44,8 @@ enum NativeTextProjectCodec {
                 version: 1,
                 exportedAt: payload.exportedAt,
                 packages: safePackages,
-                activePackageID: safeActiveID
+                activePackageID: safeActiveID,
+                layout: payload.layout
             )
         }
 
@@ -124,11 +127,31 @@ enum NativeTextProjectCodec {
         let requestedIndex = (root["ACTIVE_PKG"] as? NSNumber)?.intValue ?? 0
         let safePackages = sanitize(imported)
         let selectedIndex = min(max(0, requestedIndex), safePackages.count - 1)
+
+        let legacyLayout = root["LY"] as? [String: Any] ?? [:]
+        let extra = root["X"] as? [String: Any] ?? [:]
+        let ui = extra["ui"] as? [String: Any] ?? [:]
+        let alignment = (legacyLayout["a"] as? String).flatMap { ["left", "center", "right"].contains($0) ? $0 : nil } ?? NativeTextLayoutSettings.defaults.horizontalAlignment
+        let vertical = (legacyLayout["v"] as? String).flatMap { ["top", "center", "bottom"].contains($0) ? $0 : nil } ?? NativeTextLayoutSettings.defaults.verticalPosition
+        let wrap = (legacyLayout["w"] as? String).flatMap { ["fill", "word", "balance"].contains($0) ? $0 : nil } ?? NativeTextLayoutSettings.defaults.wrapMode
+        let padding = (ui["lyPad"] as? NSNumber)?.doubleValue ?? NativeTextLayoutSettings.defaults.sidePadding
+        let oldWeight = (ui["lyFw"] as? NSNumber)?.doubleValue ?? 8
+        let lineHeight = (ui["lyLh"] as? NSNumber)?.doubleValue ?? 135
+        let layout = NativeTextLayoutSettings(
+            horizontalAlignment: alignment,
+            verticalPosition: vertical,
+            wrapMode: wrap,
+            sidePadding: min(80, max(0, padding)),
+            fontWeight: min(1, max(0.4, oldWeight / 10)),
+            lineSpacing: min(2.2, max(1, lineHeight / 100))
+        )
+
         return NativeTextProjectBackup(
             version: 1,
             exportedAt: Date(),
             packages: safePackages,
-            activePackageID: safePackages[selectedIndex].id
+            activePackageID: safePackages[selectedIndex].id,
+            layout: layout
         )
     }
 
