@@ -27,6 +27,8 @@ struct YiuRootView: View {
                                 path.append(.background)
                             } else if category.title == "文字与排版" {
                                 path.append(.typography)
+                            } else if category.title == "系统与性能" {
+                                path.append(.system)
                             } else {
                                 path.append(.feature(category))
                             }
@@ -43,6 +45,8 @@ struct YiuRootView: View {
                     NativeBackgroundSettingsView(appearance: appearance)
                 case .typography:
                     NativeTypographySettingsView()
+                case .system:
+                    NativeSystemSettingsView()
                 case .feature(let category):
                     NativeFeatureDetailView(category: category)
                 }
@@ -59,5 +63,6 @@ private enum NativeRoute: Hashable {
     case visualizer
     case background
     case typography
+    case system
     case feature(FeatureCategory)
 }
