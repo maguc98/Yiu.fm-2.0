@@ -3,6 +3,10 @@ import UniformTypeIdentifiers
 
 struct NativeMusicView: View {
     @ObservedObject var player: YiuAudioPlayer
+    @AppStorage("yiufm.native.typography.family") private var lyricFamilyID = NativeFontFamily.serif.rawValue
+    @AppStorage("yiufm.native.typography.scale") private var lyricScale = 1.0
+    @AppStorage("yiufm.native.typography.weight") private var lyricWeightValue = 0.78
+    @AppStorage("yiufm.native.typography.color") private var lyricColorHex = "#FFFFFF"
     @State private var showingAudioImporter = false
     @State private var showingLyricsImporter = false
     @State private var activeAlert: MusicAlert?
@@ -299,16 +303,16 @@ struct NativeMusicView: View {
             HStack(spacing: 0) {
                 ForEach(Array(line.text.enumerated()), id: \.offset) { index, character in
                     Text(String(character))
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(wordTimes[index] <= player.currentTime - player.currentLyricsOffset ? ink : ink.opacity(0.28))
+                        .font(.system(size: 18 * lyricScale, weight: lyricFontWeight, design: lyricFontFamily.design))
+                        .foregroundStyle(wordTimes[index] <= player.currentTime - player.currentLyricsOffset ? lyricColor : lyricColor.opacity(0.28))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 2)
         } else {
             Text(line.text)
-                .font(.system(size: active ? 18 : 15, weight: active ? .bold : .medium))
-                .foregroundStyle(active ? ink : ink.opacity(0.42))
+                .font(.system(size: (active ? 18 : 15) * lyricScale, weight: active ? lyricFontWeight : .medium, design: lyricFontFamily.design))
+                .foregroundStyle(active ? lyricColor : lyricColor.opacity(0.42))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.vertical, 2)
@@ -353,6 +357,18 @@ struct NativeMusicView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+    }
+
+    private var lyricFontFamily: NativeFontFamily { NativeFontFamily(rawValue: lyricFamilyID) ?? .serif }
+    private var lyricColor: Color { Color(nativeHex: lyricColorHex) }
+    private var lyricFontWeight: Font.Weight {
+        switch lyricWeightValue {
+        case ..<0.48: return .medium
+        case ..<0.62: return .semibold
+        case ..<0.78: return .bold
+        case ..<0.91: return .heavy
+        default: return .black
         }
     }
 
