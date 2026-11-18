@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct NativeMusicView: View {
     @ObservedObject var player: YiuAudioPlayer
+    @ObservedObject var appearance: NativeAppearanceStore
     @AppStorage("yiufm.native.typography.family") private var lyricFamilyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var lyricScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var lyricWeightValue = 0.78
@@ -15,16 +16,7 @@ struct NativeMusicView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.94, green: 0.96, blue: 0.99),
-                    Color(red: 0.97, green: 0.94, blue: 0.98),
-                    Color(red: 0.94, green: 0.97, blue: 0.96)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            NativeAppBackground(appearance: appearance)
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 22) {
@@ -45,7 +37,7 @@ struct NativeMusicView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
-                    NativeLibraryView(player: player)
+                    NativeLibraryView(player: player, appearance: appearance)
                 } label: {
                     Image(systemName: "list.bullet")
                         .font(.system(size: 16, weight: .semibold))
