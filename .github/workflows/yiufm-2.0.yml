@@ -1,5 +1,8 @@
 # Build the legacy web experience on legacy branches and the native SwiftUI app on native-swiftui-rebuild.
 name: Build Yiu.fm 2.0
+concurrency:
+  group: yiufm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
