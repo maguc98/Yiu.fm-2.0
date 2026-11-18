@@ -31,13 +31,29 @@ final class NativeTextDeckStore: ObservableObject {
     }
 
     func exportProjectData() throws -> Data {
-        try NativeTextProjectCodec.encode(packages: packages, activePackageID: activePackageID)
+        let layout = NativeTextLayoutSettings(
+            horizontalAlignment: defaults.string(forKey: "yiufm.native.typography.alignment") ?? NativeTextLayoutSettings.defaults.horizontalAlignment,
+            verticalPosition: defaults.string(forKey: "yiufm.native.typography.position") ?? NativeTextLayoutSettings.defaults.verticalPosition,
+            wrapMode: defaults.string(forKey: "yiufm.native.typography.wrap") ?? NativeTextLayoutSettings.defaults.wrapMode,
+            sidePadding: defaults.object(forKey: "yiufm.native.typography.padding") as? Double ?? NativeTextLayoutSettings.defaults.sidePadding,
+            fontWeight: defaults.object(forKey: "yiufm.native.typography.weight") as? Double ?? NativeTextLayoutSettings.defaults.fontWeight,
+            lineSpacing: defaults.object(forKey: "yiufm.native.typography.lineSpacing") as? Double ?? NativeTextLayoutSettings.defaults.lineSpacing
+        )
+        return try NativeTextProjectCodec.encode(packages: packages, activePackageID: activePackageID, layout: layout)
     }
 
     func importProjectData(_ data: Data) throws {
         let payload = try NativeTextProjectCodec.decode(data)
         packages = payload.packages
         activePackageID = payload.activePackageID
+        if let layout = payload.layout {
+            defaults.set(layout.horizontalAlignment, forKey: "yiufm.native.typography.alignment")
+            defaults.set(layout.verticalPosition, forKey: "yiufm.native.typography.position")
+            defaults.set(layout.wrapMode, forKey: "yiufm.native.typography.wrap")
+            defaults.set(layout.sidePadding, forKey: "yiufm.native.typography.padding")
+            defaults.set(layout.fontWeight, forKey: "yiufm.native.typography.weight")
+            defaults.set(layout.lineSpacing, forKey: "yiufm.native.typography.lineSpacing")
+        }
         persist()
     }
 
