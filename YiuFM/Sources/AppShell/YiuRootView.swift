@@ -6,6 +6,7 @@ struct YiuRootView: View {
     @State private var path: [NativeRoute] = []
     @StateObject private var player = YiuAudioPlayer()
     @StateObject private var appearance = NativeAppearanceStore()
+    @StateObject private var textDeck = NativeTextDeckStore()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -48,7 +49,7 @@ struct YiuRootView: View {
                 case .background:
                     NativeBackgroundSettingsView(appearance: appearance)
                 case .typography:
-                    NativeTypographySettingsView()
+                    NativeTypographySettingsView(textDeck: textDeck)
                 case .system:
                     NativeSystemSettingsView()
                 case .backup:
