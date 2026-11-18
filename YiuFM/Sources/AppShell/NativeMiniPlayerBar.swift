@@ -14,11 +14,11 @@ struct NativeMiniPlayerBar: View {
                 HStack(spacing: 10) {
                     artwork
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(player.currentTrack?.title ?? "正在播放")
+                        Text(player.currentTrack?.title ?? "Yiu.fm · 音乐播放器")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color(red: 0.16, green: 0.20, blue: 0.29))
                             .lineLimit(1)
-                        Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "打开音乐播放器")
+                        Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "选择一首本地歌曲")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
