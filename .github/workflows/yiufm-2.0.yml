@@ -1,4 +1,4 @@
-# Verify the startup diagnostic scripts are copied and cache-busted in the packaged IPA.
+# Build the legacy web experience on legacy branches and the native SwiftUI app on native-swiftui-rebuild.
 name: Build Yiu.fm 2.0
 
 on:
@@ -8,6 +8,7 @@ on:
       - development-2.0
       - refactor/yiu-2.0-layered-architecture
       - fix/global-liquid-glass-layering
+      - native-swiftui-rebuild
     paths:
       - "APP/**"
       - "YiuFM/**"
@@ -36,6 +37,7 @@ jobs:
         run: brew install xcodegen
 
       - name: Build pinned Folia Fume browser bundle
+        if: github.ref != 'refs/heads/native-swiftui-rebuild'
         run: |
           FOLIA_SHA="38f100a3728c23ca71c0d9c58bbede304d97e3b9"
           FOLIA_DIR="$RUNNER_TEMP/folia-fume-source"
@@ -49,6 +51,7 @@ jobs:
           test -s "$GITHUB_WORKSPACE/YiuFM/Resources/Web/APP/fume-folia/fume-folia.js"
 
       - name: Restore Run #13 legacy UI baseline
+        if: github.ref != 'refs/heads/native-swiftui-rebuild'
         run: |
           mkdir -p YiuFM/Resources/Web
           git fetch --no-tags --depth=1 origin b070ae110b9cc143e71c8607466f6c1e85467367
@@ -378,6 +381,16 @@ jobs:
           node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs YiuFM/Tests/devtools-raf-lifecycle.test.cjs YiuFM/Tests/cmd-early-error-context.test.cjs
           du -sh YiuFM/Resources/Web
 
+      - name: Validate native-only app target
+        if: github.ref == 'refs/heads/native-swiftui-rebuild'
+        run: |
+          ! grep -R -nE 'WKWebView|import WebKit|LegacyVisualStage' YiuFM/Sources/AppShell YiuFM/Sources/Playback YiuFM/Sources/YiuFMApp.swift
+          grep -q 'NativeHomeView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeMusicView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeFeatureCategoriesView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'Web/\*\*' YiuFM/project.yml
+          grep -q 'NativeBridge/\*\*' YiuFM/project.yml
+
       - name: Generate project
         run: xcodegen generate --spec YiuFM/project.yml
 
@@ -393,6 +406,7 @@ jobs:
             build
 
       - name: Bundle and verify legacy visual engines
+        if: github.ref != 'refs/heads/native-swiftui-rebuild'
         run: |
           APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
           test -n "$APP_PATH"
