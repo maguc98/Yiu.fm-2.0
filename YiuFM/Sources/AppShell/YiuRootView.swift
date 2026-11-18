@@ -53,7 +53,7 @@ struct YiuRootView: View {
                 case .system:
                     NativeSystemSettingsView()
                 case .backup:
-                    NativeBackupSettingsView(player: player)
+                    NativeBackupSettingsView(player: player, textDeck: textDeck)
                 case .developer:
                     NativeDeveloperToolsView(player: player)
                 case .feature(let category):
