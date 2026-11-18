@@ -201,11 +201,11 @@ struct NativeTypographySettingsView: View {
             Section("预览") {
                 VStack(spacing: 10) {
                     Text("让音乐，成为画面。")
-                        .font(.system(size: 26 * fontScale, weight: weight, design: family.design))
+                        .font(.system(size: CGFloat(26 * fontScale), weight: weight, design: family.design))
                         .foregroundStyle(Color(nativeHex: textColorHex))
                         .multilineTextAlignment(.center)
                     Text("The moment becomes a memory.")
-                        .font(.system(size: 14 * fontScale, weight: .medium, design: family.design))
+                        .font(.system(size: CGFloat(14 * fontScale), weight: .medium, design: family.design))
                         .foregroundStyle(Color(nativeHex: textColorHex).opacity(0.65))
                 }
                 .frame(maxWidth: .infinity)
