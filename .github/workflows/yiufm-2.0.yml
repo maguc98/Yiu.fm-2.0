@@ -1,3 +1,4 @@
+# Verify the startup diagnostic scripts are copied and cache-busted in the packaged IPA.
 name: Build Yiu.fm 2.0
 
 on:
