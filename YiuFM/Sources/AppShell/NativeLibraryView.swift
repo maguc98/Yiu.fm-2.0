@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NativeLibraryView: View {
     @ObservedObject var player: YiuAudioPlayer
+    @ObservedObject var appearance: NativeAppearanceStore
 
     var body: some View {
         List {
@@ -80,13 +81,7 @@ struct NativeLibraryView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(
-            LinearGradient(
-                colors: [Color(red: 0.94, green: 0.96, blue: 0.99), Color(red: 0.97, green: 0.94, blue: 0.98)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(NativeAppBackground(appearance: appearance))
         .navigationTitle("播放队列")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
