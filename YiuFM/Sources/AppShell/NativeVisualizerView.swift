@@ -475,6 +475,38 @@ private struct NativeVisualBackdrop: View {
             }
         }
     }
+    private func drawFume(in context: inout GraphicsContext, size: CGSize, time: TimeInterval, pulse: Double) {
+        let origin = CGPoint(x: size.width * 0.5, y: size.height * 0.46)
+        let ink = Color(red: 0.80, green: 0.72, blue: 0.58)
+        for index in 0..<5 {
+            let phase = time * 0.20 + Double(index) * 1.27
+            let offsetX = CGFloat(sin(phase)) * size.width * 0.12
+            let offsetY = CGFloat(cos(phase * 0.73)) * size.height * 0.08
+            let radius = size.width * (0.12 + CGFloat(index) * 0.065 + CGFloat(pulse) * 0.045)
+            let center = CGPoint(x: origin.x + offsetX, y: origin.y + offsetY)
+            let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+            let gradient = Gradient(colors: [
+                ink.opacity(0.17 + Double(pulse) * 0.12),
+                Color(red: 0.43, green: 0.56, blue: 0.52).opacity(0.07),
+                .clear
+            ])
+            context.fill(Path(ellipseIn: rect), with: .radialGradient(
+                gradient,
+                center: center,
+                startRadius: 0,
+                endRadius: radius
+            ))
+        }
+        for index in 0..<18 {
+            let phase = time * 0.12 + Double(index) * 2.4
+            let radius = size.width * (0.12 + Double(index % 6) * 0.045)
+            let x = origin.x + CGFloat(cos(phase)) * radius
+            let y = origin.y + CGFloat(sin(phase * 0.82)) * radius * 0.58
+            let dotSize = CGFloat(1.5 + pulse * Double(index % 4 + 1))
+            let dot = CGRect(x: x, y: y, width: dotSize, height: dotSize)
+            context.fill(Path(ellipseIn: dot), with: .color(ink.opacity(0.20 + pulse * 0.25)))
+        }
+    }
 }
 
 
@@ -530,37 +562,6 @@ private struct NativeVisualizerSettingsSheet: View {
             }
         }
     }
-    private func drawFume(in context: inout GraphicsContext, size: CGSize, time: TimeInterval, pulse: Double) {
-        let origin = CGPoint(x: size.width * 0.5, y: size.height * 0.46)
-        let ink = Color(red: 0.80, green: 0.72, blue: 0.58)
-        for index in 0..<5 {
-            let phase = time * 0.20 + Double(index) * 1.27
-            let offsetX = CGFloat(sin(phase)) * size.width * 0.12
-            let offsetY = CGFloat(cos(phase * 0.73)) * size.height * 0.08
-            let radius = size.width * (0.12 + CGFloat(index) * 0.065 + CGFloat(pulse) * 0.045)
-            let center = CGPoint(x: origin.x + offsetX, y: origin.y + offsetY)
-            let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
-            let gradient = Gradient(colors: [
-                ink.opacity(0.17 + Double(pulse) * 0.12),
-                Color(red: 0.43, green: 0.56, blue: 0.52).opacity(0.07),
-                .clear
-            ])
-            context.fill(Path(ellipseIn: rect), with: .radialGradient(
-                gradient,
-                center: center,
-                startRadius: 0,
-                endRadius: radius
-            ))
-        }
-        for index in 0..<18 {
-            let phase = time * 0.12 + Double(index) * 2.4
-            let radius = size.width * (0.12 + Double(index % 6) * 0.045)
-            let x = origin.x + CGFloat(cos(phase)) * radius
-            let y = origin.y + CGFloat(sin(phase * 0.82)) * radius * 0.58
-            let dotSize = CGFloat(1.5 + pulse * Double(index % 4 + 1))
-            let dot = CGRect(x: x, y: y, width: dotSize, height: dotSize)
-            context.fill(Path(ellipseIn: dot), with: .color(ink.opacity(0.20 + pulse * 0.25)))
-        }
-    }
+
 
 }
