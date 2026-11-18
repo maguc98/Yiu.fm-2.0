@@ -67,7 +67,7 @@ struct YiuRootView: View {
         .preferredColorScheme(.light)
         .environmentObject(presentation)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if player.hasTrack && !presentation.hideMiniPlayer {
+            if !presentation.hideMiniPlayer {
                 NativeMiniPlayerBar(
                     player: player,
                     appearance: appearance,
