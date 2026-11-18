@@ -11,6 +11,7 @@ struct YiuRootView: View {
             NativeHomeView(
                 player: player,
                 openMusic: { path.append(.music) },
+                openVisualizer: { path.append(.visualizer) },
                 openCategories: { path.append(.categories) }
             )
             .navigationDestination(for: NativeRoute.self) { route in
@@ -30,6 +31,8 @@ struct YiuRootView: View {
                     )
                 case .music:
                     NativeMusicView(player: player)
+                case .visualizer:
+                    NativeVisualizerView(player: player)
                 case .feature(let category):
                     NativeFeatureDetailView(category: category)
                 }
@@ -43,5 +46,6 @@ struct YiuRootView: View {
 private enum NativeRoute: Hashable {
     case categories
     case music
+    case visualizer
     case feature(FeatureCategory)
 }
