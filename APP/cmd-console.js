@@ -2123,7 +2123,7 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
     var r = e.reason, stack = r && r.stack ? String(r.stack) : '', ctx = activeErrorContext();
-    var src = stack ? (stack.split('\\n')[1] || '') : ctx.hint;
+    var src = stack ? (stack.split('\n')[1] || '') : ctx.hint;
     errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : fmt(r)), src, { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0, activeScript: ctx.label, kind: 'unhandled-rejection' });
   });
   register('err', {
