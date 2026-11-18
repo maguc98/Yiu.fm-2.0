@@ -26,19 +26,40 @@
   }
   E.brief = brief;
 
-  /* ---- 报错 ---- */
-  function errPush(msg, src, extra) { if (!E.errOn) return; var item = Object.assign({ t: Date.now(), msg: msg, src: src || '', file: '', line: 0, column: 0, stack: '' }, extra || {}); E.errs.push(item); if (E.errs.length > 100) E.errs.shift(); }
+  /* ---- 报错 ----
+     file:// / WKWebView 可能把跨脚本异常脱敏成「Script error.」，filename/line/stack 为空。
+     记录捕获瞬间的活动脚本标记，供 /err 还原启动阶段的来源线索。 */
+  function activeScript() {
+    var a = window.__YIU_ACTIVE_SCRIPT;
+    return a && typeof a === 'object' ? { index: a.index, label: a.label || '', startedAt: a.startedAt } : null;
+  }
+  function scriptHint(a) {
+    if (!a || !a.label) return '';
+    var elapsed = typeof a.startedAt === 'number' ? Math.max(0, Math.round(performance.now() - a.startedAt)) : null;
+    return '执行脚本线索：' + a.label + (elapsed == null ? '' : '（脚本标记已 ' + elapsed + 'ms）');
+  }
+  function errPush(msg, src, extra) {
+    if (!E.errOn) return;
+    var item = Object.assign({ t: Date.now(), msg: msg, src: src || '', file: '', line: 0, column: 0, stack: '', activeScript: activeScript(), kind: '' }, extra || {});
+    E.errs.push(item);
+    if (E.errs.length > 100) E.errs.shift();
+  }
   window.addEventListener('error', function (e) {
-    var t = e.target;
-    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), '', { file: t.src || t.href, tag: t.nodeName || '' }); return; }
+    var t = e.target, active = activeScript();
+    if (t && t !== window && (t.src || t.href)) {
+      var url = t.src || t.href;
+      errPush('资源加载失败：' + url, url, { file: url, tag: t.nodeName || '', activeScript: active, kind: 'resource-load' });
+      return;
+    }
     var file = e.filename || '', line = e.lineno || 0, column = e.colno || 0, err = e.error;
-    errPush(e.message || brief(err), file ? file + ':' + line + ':' + column : '', { file: file, line: line, column: column, stack: err && err.stack ? String(err.stack) : '' });
+    var src = file ? file + ':' + line + ':' + column : scriptHint(active);
+    errPush(e.message || brief(err), src, { file: file, line: line, column: column, stack: err && err.stack ? String(err.stack) : '', activeScript: active, kind: 'runtime' });
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
-    var r = e.reason, stack = r && r.stack ? String(r.stack) : '';
-    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : brief(r)), stack ? (stack.split('\n')[1] || '') : '', { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0 });
+    var r = e.reason, stack = r && r.stack ? String(r.stack) : '', active = activeScript();
+    var src = stack ? (stack.split('\\n')[1] || '') : scriptHint(active);
+    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : brief(r)), src, { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0, activeScript: active, kind: 'unhandled-rejection' });
   });
-
   /* ---- console：只记到页面加载完 3 秒后，之后交给「同步 console」 ---- */
   var CON = ['log', 'info', 'warn', 'error', 'debug'], wrapped = {};
   CON.forEach(function (k) {
