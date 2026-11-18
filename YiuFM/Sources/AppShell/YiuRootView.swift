@@ -5,11 +5,13 @@ import SwiftUI
 struct YiuRootView: View {
     @State private var path: [NativeRoute] = []
     @StateObject private var player = YiuAudioPlayer()
+    @StateObject private var appearance = NativeAppearanceStore()
 
     var body: some View {
         NavigationStack(path: $path) {
             NativeHomeView(
                 player: player,
+                appearance: appearance,
                 openMusic: { path.append(.music) },
                 openVisualizer: { path.append(.visualizer) },
                 openCategories: { path.append(.categories) }
@@ -21,6 +23,10 @@ struct YiuRootView: View {
                         onSelect: { category in
                             if category.title == "音乐与播放" {
                                 path.append(.music)
+                            } else if category.title == "背景与封面" {
+                                path.append(.background)
+                            } else if category.title == "文字与排版" {
+                                path.append(.typography)
                             } else {
                                 path.append(.feature(category))
                             }
@@ -33,6 +39,10 @@ struct YiuRootView: View {
                     NativeMusicView(player: player)
                 case .visualizer:
                     NativeVisualizerView(player: player)
+                case .background:
+                    NativeBackgroundSettingsView(appearance: appearance)
+                case .typography:
+                    NativeTypographySettingsView()
                 case .feature(let category):
                     NativeFeatureDetailView(category: category)
                 }
@@ -47,5 +57,7 @@ private enum NativeRoute: Hashable {
     case categories
     case music
     case visualizer
+    case background
+    case typography
     case feature(FeatureCategory)
 }
