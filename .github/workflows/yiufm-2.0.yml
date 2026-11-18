@@ -557,7 +557,7 @@ jobs:
           cd YiuFM/output
           /usr/bin/zip -qry YiuFM-2.0-unsigned.ipa Payload
           if [ "$GITHUB_REF" = "refs/heads/native-swiftui-rebuild" ]; then
-            if /usr/bin/unzip -Z1 YiuFM-2.0-unsigned.ipa | grep -Eiq '\\.(html|htm|js|mjs|css)$|/Web/'; then
+            if /usr/bin/unzip -Z1 YiuFM-2.0-unsigned.ipa | grep -Eiq '(^|/)[^/]+[.](html|htm|js|mjs|css)$|/Web/'; then
               echo "Unexpected web runtime files found in native IPA."
               exit 1
             fi
