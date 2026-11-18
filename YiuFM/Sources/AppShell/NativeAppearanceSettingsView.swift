@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct NativeBackgroundSettingsView: View {
     @ObservedObject var appearance: NativeAppearanceStore
     @State private var showingImporter = false
+    @State private var showingCoverImporter = false
     @State private var importError: String?
     @State private var showingError = false
 
@@ -83,6 +84,35 @@ struct NativeBackgroundSettingsView: View {
                 }
             }
 
+            Section("封面") {
+                if let cover = appearance.coverImage {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 150)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                } else {
+                    Label("使用默认音乐封面", systemImage: "music.note")
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    showingCoverImporter = true
+                } label: {
+                    Label("导入自定义封面", systemImage: "photo.badge.plus")
+                }
+
+                if appearance.coverImage != nil {
+                    Button(role: .destructive) {
+                        appearance.removeCover()
+                    } label: {
+                        Label("恢复默认封面", systemImage: "arrow.uturn.backward")
+                    }
+                }
+            }
+
             Section("画面") {
                 HStack {
                     Text("暗色遮罩")
@@ -113,6 +143,19 @@ struct NativeBackgroundSettingsView: View {
             do {
                 guard let url = try result.get().first else { return }
                 try appearance.importBackground(from: url)
+            } catch {
+                importError = error.localizedDescription
+                showingError = true
+            }
+        }
+        .fileImporter(
+            isPresented: $showingCoverImporter,
+            allowedContentTypes: [imageType],
+            allowsMultipleSelection: false
+        ) { result in
+            do {
+                guard let url = try result.get().first else { return }
+                try appearance.importCover(from: url)
             } catch {
                 importError = error.localizedDescription
                 showingError = true
