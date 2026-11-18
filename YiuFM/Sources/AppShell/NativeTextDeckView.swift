@@ -91,7 +91,7 @@ struct NativeTextDeckView: View {
                     Label("删除当前文件包", systemImage: "trash")
                 }
                 NavigationLink {
-                    NativeTypographySettingsView(textDeck: store)
+                    NativeTypographySettingsView(textDeck: store, appearance: appearance)
                 } label: {
                     Label("全局字体与排版", systemImage: "textformat")
                 }
