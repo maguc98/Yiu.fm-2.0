@@ -25,7 +25,7 @@ enum NativeTextProjectCodec {
             exportedAt: Date(),
             packages: packages,
             activePackageID: activePackageID,
-            layout: layout
+            layout: sanitizeLayout(layout)
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -45,7 +45,7 @@ enum NativeTextProjectCodec {
                 exportedAt: payload.exportedAt,
                 packages: safePackages,
                 activePackageID: safeActiveID,
-                layout: payload.layout
+                layout: payload.layout.map(sanitizeLayout)
             )
         }
 
@@ -152,6 +152,23 @@ enum NativeTextProjectCodec {
             packages: safePackages,
             activePackageID: safePackages[selectedIndex].id,
             layout: layout
+        )
+    }
+
+    private static func sanitizeLayout(_ source: NativeTextLayoutSettings) -> NativeTextLayoutSettings {
+        NativeTextLayoutSettings(
+            horizontalAlignment: ["left", "center", "right"].contains(source.horizontalAlignment)
+                ? source.horizontalAlignment
+                : NativeTextLayoutSettings.defaults.horizontalAlignment,
+            verticalPosition: ["top", "center", "bottom"].contains(source.verticalPosition)
+                ? source.verticalPosition
+                : NativeTextLayoutSettings.defaults.verticalPosition,
+            wrapMode: ["fill", "word", "balance"].contains(source.wrapMode)
+                ? source.wrapMode
+                : NativeTextLayoutSettings.defaults.wrapMode,
+            sidePadding: min(80, max(0, source.sidePadding.isFinite ? source.sidePadding : 22)),
+            fontWeight: min(1, max(0.4, source.fontWeight.isFinite ? source.fontWeight : 0.8)),
+            lineSpacing: min(2.2, max(1, source.lineSpacing.isFinite ? source.lineSpacing : 1.35))
         )
     }
 
