@@ -90,6 +90,9 @@ final class NativeAppearanceStore: ObservableObject {
     @Published var backgroundDim: Double {
         didSet { defaults.set(backgroundDim, forKey: Keys.dim) }
     }
+    @Published var backgroundSquare: Bool {
+        didSet { defaults.set(backgroundSquare, forKey: Keys.square) }
+    }
     @Published private(set) var backgroundImageData: Data?
     @Published private(set) var coverImageData: Data?
 
@@ -107,6 +110,7 @@ final class NativeAppearanceStore: ObservableObject {
         static let angle = "yiufm.native.background.gradient.angle"
         static let blur = "yiufm.native.background.blur"
         static let dim = "yiufm.native.background.dim"
+        static let square = "yiufm.native.background.square"
     }
 
     private var imageDirectory: URL {
@@ -130,14 +134,15 @@ final class NativeAppearanceStore: ObservableObject {
     init() {
         backgroundMode = NativeBackgroundMode(rawValue: defaults.string(forKey: Keys.mode) ?? "") ?? .gradient
         solidColorHex = defaults.string(forKey: Keys.solid) ?? "#E8F4FA"
-        gradientStartHex = defaults.string(forKey: Keys.gradientStart) ?? "#E8F4FA"
-        gradientMid1Hex = defaults.string(forKey: Keys.gradientMid1) ?? "#D16BA5"
-        gradientMid2Hex = defaults.string(forKey: Keys.gradientMid2) ?? "#5FFBF1"
-        gradientEndHex = defaults.string(forKey: Keys.gradientEnd) ?? "#F1ECFA"
+        gradientStartHex = defaults.string(forKey: Keys.gradientStart) ?? "#2B1055"
+        gradientMid1Hex = defaults.string(forKey: Keys.gradientMid1) ?? "#7597DE"
+        gradientMid2Hex = defaults.string(forKey: Keys.gradientMid2) ?? "#D16BA5"
+        gradientEndHex = defaults.string(forKey: Keys.gradientEnd) ?? "#5FFBF1"
         gradientFlowEnabled = defaults.object(forKey: Keys.flow) as? Bool ?? false
-        gradientAngle = defaults.object(forKey: Keys.angle) as? Double ?? 135
-        backgroundBlur = defaults.object(forKey: Keys.blur) as? Double ?? 0
-        backgroundDim = defaults.object(forKey: Keys.dim) as? Double ?? 0
+        gradientAngle = defaults.object(forKey: Keys.angle) as? Double ?? 160
+        backgroundBlur = defaults.object(forKey: Keys.blur) as? Double ?? 8
+        backgroundDim = defaults.object(forKey: Keys.dim) as? Double ?? 0.30
+        backgroundSquare = defaults.object(forKey: Keys.square) as? Bool ?? false
 
         try? fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
         backgroundImageData = try? Data(contentsOf: imageURL)
@@ -241,7 +246,8 @@ final class NativeAppearanceStore: ObservableObject {
         gradientFlowEnabled = false
         gradientAngle = 135
         backgroundBlur = 0
-        backgroundDim = 0
+        backgroundDim = 0.30
+        backgroundSquare = false
         removeBackground()
     }
 }
@@ -270,11 +276,26 @@ struct NativeAppBackground: View {
                 gradientLayer
             case .image:
                 if let image = appearance.backgroundImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .blur(radius: appearance.backgroundBlur)
+                    if appearance.backgroundSquare {
+                        ZStack {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .blur(radius: max(18, appearance.backgroundBlur + 14))
+                                .clipped()
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .clipped()
+                    } else {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .blur(radius: appearance.backgroundBlur)
+                            .clipped()
+                    }
                 } else {
                     gradient(angle: appearance.gradientAngle)
                 }
