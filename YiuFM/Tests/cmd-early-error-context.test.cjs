@@ -86,7 +86,7 @@ test('early unhandled rejections retain their stack and the active script contex
   h.emit('unhandledrejection', {
     reason: {
       message: 'startup rejected',
-      stack: 'Error: startup rejected\\n    at boot (file:///app/APP/boot.js:8:3)'
+      stack: 'Error: startup rejected\n    at boot (file:///app/APP/boot.js:8:3)'
     }
   });
 
