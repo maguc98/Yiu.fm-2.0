@@ -51,8 +51,7 @@ struct NativeMusicView: View {
         }
         .fileImporter(isPresented: $showingAudioImporter, allowedContentTypes: [.audio], allowsMultipleSelection: true) { result in
             do {
-                let count = try player.importAudio(urls: result.get())
-                if count > 0 { player.libraryMessage = "已导入 \(count) 首歌曲" }
+                _ = try player.importAudio(urls: result.get())
             } catch {
                 activeAlert = MusicAlert(message: error.localizedDescription)
             }
