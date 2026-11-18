@@ -3,6 +3,7 @@ import SwiftUI
 struct NativeLibraryView: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
+    @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
 
     var body: some View {
         List {
@@ -17,6 +18,7 @@ struct NativeLibraryView: View {
                 Section {
                     ForEach(player.tracks) { track in
                         Button {
+                            NativeHaptics.impact(enabled: hapticsEnabled)
                             player.selectTrack(track.id, autoplay: true)
                         } label: {
                             HStack(spacing: 12) {
