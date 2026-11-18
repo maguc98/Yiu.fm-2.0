@@ -396,6 +396,16 @@ jobs:
           grep -q 'func importLyrics' YiuFM/Sources/Playback/YiuAudioPlayer.swift
           grep -q 'AVAudioPlayer' YiuFM/Sources/Playback/YiuAudioPlayer.swift
           grep -q 'enum YiuLRCParser' YiuFM/Sources/Playback/YiuLyrics.swift
+          grep -q 'struct NativeTextDeckView' YiuFM/Sources/AppShell/NativeTextDeckView.swift
+          grep -q 'struct NativeTextDisplayView' YiuFM/Sources/AppShell/NativeTextDisplayView.swift
+          grep -q 'enum NativeTextAnimation' YiuFM/Sources/Playback/NativeTextDeck.swift
+          grep -q 'func importProjectData' YiuFM/Sources/Playback/NativeTextDeck.swift
+          grep -q 'func createBackupData' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'func restoreBackupData' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'NativeVisualizerView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeSystemSettingsView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeDeveloperToolsView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeBackupSettingsView(player: player, textDeck: textDeck)' YiuFM/Sources/AppShell/YiuRootView.swift
 
       - name: Test native LRC parser
         if: github.ref == 'refs/heads/native-swiftui-rebuild'
