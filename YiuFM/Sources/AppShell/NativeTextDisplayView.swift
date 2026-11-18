@@ -241,7 +241,7 @@ struct NativeTextDisplayView: View {
         guard mode != "word", fontSize > 0, availableWidth > 0 else { return text }
         if mode == "fill" {
             return text.split(separator: "\n", omittingEmptySubsequences: false)
-                .map { paragraph in String(paragraph).map(String.init).joined(separator: "\u{200B}") }
+                .map { paragraph in String(paragraph).map { String($0) }.joined(separator: "\u{200B}") }
                 .joined(separator: "\n")
         }
         guard mode == "balance" else { return text }
