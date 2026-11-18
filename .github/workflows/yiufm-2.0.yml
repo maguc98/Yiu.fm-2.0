@@ -2,7 +2,7 @@
 name: Build Yiu.fm 2.0
 concurrency:
   group: yiufm-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
