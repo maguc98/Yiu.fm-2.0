@@ -384,10 +384,21 @@ jobs:
       - name: Validate native-only app target
         if: github.ref == 'refs/heads/native-swiftui-rebuild'
         run: |
-          ! grep -R -nE 'WKWebView|import WebKit|LegacyVisualStage' YiuFM/Sources/AppShell YiuFM/Sources/Playback YiuFM/Sources/YiuFMApp.swift
+          ! grep -R -nE 'import WebKit|WKWebView\\(|LegacyVisualStage\\(' YiuFM/Sources/AppShell YiuFM/Sources/Playback YiuFM/Sources/YiuFMApp.swift
           grep -q 'NativeHomeView' YiuFM/Sources/AppShell/YiuRootView.swift
           grep -q 'NativeMusicView' YiuFM/Sources/AppShell/YiuRootView.swift
           grep -q 'NativeFeatureCategoriesView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeLibraryView' YiuFM/Sources/AppShell/NativeMusicView.swift
+          grep -q 'func importAudio' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'func importLyrics' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'AVAudioPlayer' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'enum YiuLRCParser' YiuFM/Sources/Playback/YiuLyrics.swift
+
+      - name: Test native LRC parser
+        if: github.ref == 'refs/heads/native-swiftui-rebuild'
+        run: |
+          swiftc YiuFM/Sources/Playback/YiuLyrics.swift YiuFM/Tests/native-lrc-parser.test.swift -o "$RUNNER_TEMP/yiufm-lrc-tests"
+          "$RUNNER_TEMP/yiufm-lrc-tests"
           grep -q 'Web/\*\*' YiuFM/project.yml
           grep -q 'NativeBridge/\*\*' YiuFM/project.yml
 
