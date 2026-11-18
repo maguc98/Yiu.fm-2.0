@@ -244,8 +244,8 @@ final class NativeAppearanceStore: ObservableObject {
         gradientMid2Hex = "#D16BA5"
         gradientEndHex = "#5FFBF1"
         gradientFlowEnabled = false
-        gradientAngle = 135
-        backgroundBlur = 0
+        gradientAngle = 160
+        backgroundBlur = 8
         backgroundDim = 0.30
         backgroundSquare = false
         removeBackground()
