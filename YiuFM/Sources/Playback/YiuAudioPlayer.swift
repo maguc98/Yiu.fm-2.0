@@ -114,6 +114,8 @@ final class YiuAudioPlayer: ObservableObject {
     private var progressTimer: Timer?
     private var remoteCommandTargets: [Any] = []
     private var lastNowPlayingUpdate: TimeInterval = 0
+    private var audioSessionObservers: [NSObjectProtocol] = []
+    private var shouldResumeAfterInterruption = false
     private let fileManager = FileManager.default
 
     private var musicRoot: URL {
@@ -137,6 +139,7 @@ final class YiuAudioPlayer: ObservableObject {
 
     init() {
         configureRemoteCommands()
+        observeAudioSessionEvents()
         do {
             try ensureDirectories()
             restoreLibrary()
@@ -153,6 +156,7 @@ final class YiuAudioPlayer: ObservableObject {
 
     deinit {
         progressTimer?.invalidate()
+        audioSessionObservers.forEach(NotificationCenter.default.removeObserver)
     }
 
     func importAudio(urls: [URL]) throws -> Int {
@@ -535,6 +539,50 @@ final class YiuAudioPlayer: ObservableObject {
             try loadTrack(id: currentTrackID, autoplay: false, persistSelection: false)
         }
         libraryMessage = "已恢复 \(tracks.count) 首歌曲"
+    }
+
+    private func observeAudioSessionEvents() {
+        let center = NotificationCenter.default
+        let session = AVAudioSession.sharedInstance()
+
+        let interruption = center.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: session,
+            queue: .main
+        ) { [weak self] notification in
+            guard let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: rawType) else { return }
+            let rawOptions = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: rawOptions)
+
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                switch type {
+                case .began:
+                    self.shouldResumeAfterInterruption = self.isPlaying || self.audioPlayer?.isPlaying == true
+                    self.pausePlayback()
+                case .ended:
+                    let shouldResume = options.contains(.shouldResume) && self.shouldResumeAfterInterruption
+                    self.shouldResumeAfterInterruption = false
+                    if shouldResume { self.resumePlayback() }
+                @unknown default:
+                    self.shouldResumeAfterInterruption = false
+                }
+            }
+        }
+
+        let routeChange = center.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: session,
+            queue: .main
+        ) { [weak self] notification in
+            guard let rawReason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: rawReason) else { return }
+            guard reason == .oldDeviceUnavailable else { return }
+            Task { @MainActor [weak self] in self?.pausePlayback() }
+        }
+
+        audioSessionObservers = [interruption, routeChange]
     }
 
     private func configureRemoteCommands() {
