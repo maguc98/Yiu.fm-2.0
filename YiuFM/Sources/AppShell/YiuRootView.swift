@@ -31,6 +31,8 @@ struct YiuRootView: View {
                                 path.append(.system)
                             } else if category.title == "项目与备份" {
                                 path.append(.backup)
+                            } else if category.title == "开发者工具" {
+                                path.append(.developer)
                             } else {
                                 path.append(.feature(category))
                             }
@@ -51,6 +53,8 @@ struct YiuRootView: View {
                     NativeSystemSettingsView()
                 case .backup:
                     NativeBackupSettingsView(player: player)
+                case .developer:
+                    NativeDeveloperToolsView(player: player)
                 case .feature(let category):
                     NativeFeatureDetailView(category: category)
                 }
@@ -69,5 +73,6 @@ private enum NativeRoute: Hashable {
     case typography
     case system
     case backup
+    case developer
     case feature(FeatureCategory)
 }
