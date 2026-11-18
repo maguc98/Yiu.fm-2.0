@@ -71,7 +71,6 @@ struct NativeVisualizerView: View {
         ZStack {
             NativeAppBackground(appearance: appearance)
             NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, isPlaying: player.isPlaying, intensity: intensity, audioReactive: audioReactive, targetFPS: targetFPS, animationSpeed: animationSpeed, reduceMotion: reduceMotion)
-                .opacity(appearance.backgroundImage != nil || appearance.backgroundMode == .gradient ? 0.84 : 1)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -473,7 +472,7 @@ private struct NativeVisualBackdrop: View {
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate * animationSpeed
                 let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
-                drawBase(in: &context, size: size)
+                // The user-selected native app background is rendered underneath this transparent effect layer.
                 switch engine {
                 case .sonnet:
                     drawSonnet(in: &context, size: size, time: time, pulse: pulse)
