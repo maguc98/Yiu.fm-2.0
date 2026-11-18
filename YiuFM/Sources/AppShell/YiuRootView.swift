@@ -45,11 +45,11 @@ struct YiuRootView: View {
                 case .music:
                     NativeMusicView(player: player, appearance: appearance)
                 case .visualizer:
-                    NativeVisualizerView(player: player)
+                    NativeVisualizerView(player: player, appearance: appearance)
                 case .background:
                     NativeBackgroundSettingsView(appearance: appearance)
                 case .typography:
-                    NativeTypographySettingsView(textDeck: textDeck)
+                    NativeTypographySettingsView(textDeck: textDeck, appearance: appearance)
                 case .system:
                     NativeSystemSettingsView()
                 case .backup:
