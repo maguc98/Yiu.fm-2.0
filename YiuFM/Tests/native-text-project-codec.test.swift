@@ -15,13 +15,22 @@ enum NativeTextProjectCodecTests {
             NativeTextCard(text: "第二句", fontSize: 52, duration: 5, animation: .wave)
         ]
         let package = NativeTextPackage(name: "测试文件包", shuffle: true, cards: cards)
-        let data = try NativeTextProjectCodec.encode(packages: [package], activePackageID: package.id)
+        let layout = NativeTextLayoutSettings(
+            horizontalAlignment: "right",
+            verticalPosition: "top",
+            wrapMode: "balance",
+            sidePadding: 31,
+            fontWeight: 0.65,
+            lineSpacing: 1.7
+        )
+        let data = try NativeTextProjectCodec.encode(packages: [package], activePackageID: package.id, layout: layout)
         let decoded = try NativeTextProjectCodec.decode(data)
         precondition(decoded.packages.count == 1)
         precondition(decoded.packages[0].name == "测试文件包")
         precondition(decoded.packages[0].shuffle)
         precondition(decoded.packages[0].cards == cards)
         precondition(decoded.activePackageID == package.id)
+        precondition(decoded.layout == layout)
     }
 
     private static func testLegacyPackagesImport() throws {
