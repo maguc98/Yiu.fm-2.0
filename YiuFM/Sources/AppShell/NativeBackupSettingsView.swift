@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct NativeMusicBackupDocument: FileDocument {
-    static let contentType = UTType(exportedAs: "com.maguc98.yiufm.music-backup", conformingTo: .data)
+    static let contentType: UTType = .json
     static var readableContentTypes: [UTType] { [contentType] }
 
     let data: Data
@@ -80,7 +80,7 @@ struct NativeBackupSettingsView: View {
             } header: {
                 Text("备份与恢复")
             } footer: {
-                Text("备份包含曲库信息、音频文件、关联的 LRC 歌词和当前选中曲目。不会包含 iCloud 音乐、在线音乐账号或第三方平台缓存。")
+                Text("备份以 JSON 文件保存，包含曲库信息、音频文件、关联的 LRC 歌词和当前选中曲目。不会包含 iCloud 音乐、在线音乐账号或第三方平台缓存。")
             }
 
             if let lastBackupBytes {
