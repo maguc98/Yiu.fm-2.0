@@ -16,6 +16,22 @@ enum NativeBackgroundMode: String, CaseIterable, Identifiable {
     }
 }
 
+struct NativeBackgroundTheme: Identifiable, Hashable {
+    let name: String
+    let colors: [String]
+    let isSolid: Bool
+
+    var id: String { name }
+
+    static let presets: [NativeBackgroundTheme] = [
+        NativeBackgroundTheme(name: "紫夜", colors: ["#2B1055", "#7597DE", "#D16BA5", "#5FFBF1"], isSolid: false),
+        NativeBackgroundTheme(name: "落日", colors: ["#FF512F", "#DD2476", "#F9D423", "#6A11CB"], isSolid: false),
+        NativeBackgroundTheme(name: "深海", colors: ["#0F2027", "#2C5364", "#00C6FF", "#0072FF"], isSolid: false),
+        NativeBackgroundTheme(name: "墨绿", colors: ["#134E5E", "#71B280", "#C6FFDD", "#2C5364"], isSolid: false),
+        NativeBackgroundTheme(name: "纯黑", colors: ["#000000", "#0B0B12", "#1A1A2E", "#000000"], isSolid: true)
+    ]
+}
+
 enum NativeFontFamily: String, CaseIterable, Identifiable {
     case rounded
     case sans
@@ -53,8 +69,17 @@ final class NativeAppearanceStore: ObservableObject {
     @Published var gradientStartHex: String {
         didSet { defaults.set(gradientStartHex, forKey: Keys.gradientStart) }
     }
+    @Published var gradientMid1Hex: String {
+        didSet { defaults.set(gradientMid1Hex, forKey: Keys.gradientMid1) }
+    }
+    @Published var gradientMid2Hex: String {
+        didSet { defaults.set(gradientMid2Hex, forKey: Keys.gradientMid2) }
+    }
     @Published var gradientEndHex: String {
         didSet { defaults.set(gradientEndHex, forKey: Keys.gradientEnd) }
+    }
+    @Published var gradientFlowEnabled: Bool {
+        didSet { defaults.set(gradientFlowEnabled, forKey: Keys.flow) }
     }
     @Published var gradientAngle: Double {
         didSet { defaults.set(gradientAngle, forKey: Keys.angle) }
@@ -75,7 +100,10 @@ final class NativeAppearanceStore: ObservableObject {
         static let mode = "yiufm.native.background.mode"
         static let solid = "yiufm.native.background.solid"
         static let gradientStart = "yiufm.native.background.gradient.start"
+        static let gradientMid1 = "yiufm.native.background.gradient.mid1"
+        static let gradientMid2 = "yiufm.native.background.gradient.mid2"
         static let gradientEnd = "yiufm.native.background.gradient.end"
+        static let flow = "yiufm.native.background.gradient.flow"
         static let angle = "yiufm.native.background.gradient.angle"
         static let blur = "yiufm.native.background.blur"
         static let dim = "yiufm.native.background.dim"
@@ -103,7 +131,10 @@ final class NativeAppearanceStore: ObservableObject {
         backgroundMode = NativeBackgroundMode(rawValue: defaults.string(forKey: Keys.mode) ?? "") ?? .gradient
         solidColorHex = defaults.string(forKey: Keys.solid) ?? "#E8F4FA"
         gradientStartHex = defaults.string(forKey: Keys.gradientStart) ?? "#E8F4FA"
+        gradientMid1Hex = defaults.string(forKey: Keys.gradientMid1) ?? "#D16BA5"
+        gradientMid2Hex = defaults.string(forKey: Keys.gradientMid2) ?? "#5FFBF1"
         gradientEndHex = defaults.string(forKey: Keys.gradientEnd) ?? "#F1ECFA"
+        gradientFlowEnabled = defaults.object(forKey: Keys.flow) as? Bool ?? false
         gradientAngle = defaults.object(forKey: Keys.angle) as? Double ?? 135
         backgroundBlur = defaults.object(forKey: Keys.blur) as? Double ?? 0
         backgroundDim = defaults.object(forKey: Keys.dim) as? Double ?? 0
@@ -111,6 +142,19 @@ final class NativeAppearanceStore: ObservableObject {
         try? fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
         backgroundImageData = try? Data(contentsOf: imageURL)
         coverImageData = try? Data(contentsOf: coverURL)
+    }
+
+    func applyTheme(_ theme: NativeBackgroundTheme) {
+        if theme.isSolid {
+            backgroundMode = .solid
+            solidColorHex = theme.colors[0]
+        } else {
+            backgroundMode = .gradient
+            gradientStartHex = theme.colors[0]
+            gradientMid1Hex = theme.colors[1]
+            gradientMid2Hex = theme.colors[2]
+            gradientEndHex = theme.colors[3]
+        }
     }
 
     func importBackground(from url: URL) throws {
@@ -190,8 +234,11 @@ final class NativeAppearanceStore: ObservableObject {
     func reset() {
         backgroundMode = .gradient
         solidColorHex = "#E8F4FA"
-        gradientStartHex = "#E8F4FA"
-        gradientEndHex = "#F1ECFA"
+        gradientStartHex = "#2B1055"
+        gradientMid1Hex = "#7597DE"
+        gradientMid2Hex = "#D16BA5"
+        gradientEndHex = "#5FFBF1"
+        gradientFlowEnabled = false
         gradientAngle = 135
         backgroundBlur = 0
         backgroundDim = 0
@@ -223,6 +270,8 @@ struct NativeAppBackground: View {
                 LinearGradient(
                     colors: [
                         Color(nativeHex: appearance.gradientStartHex),
+                        Color(nativeHex: appearance.gradientMid1Hex),
+                        Color(nativeHex: appearance.gradientMid2Hex),
                         Color(nativeHex: appearance.gradientEndHex)
                     ],
                     startPoint: gradientStart,
@@ -237,7 +286,7 @@ struct NativeAppBackground: View {
                         .clipped()
                 } else {
                     LinearGradient(
-                        colors: [Color(nativeHex: appearance.gradientStartHex), Color(nativeHex: appearance.gradientEndHex)],
+                        colors: [Color(nativeHex: appearance.gradientStartHex), Color(nativeHex: appearance.gradientMid1Hex), Color(nativeHex: appearance.gradientMid2Hex), Color(nativeHex: appearance.gradientEndHex)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
