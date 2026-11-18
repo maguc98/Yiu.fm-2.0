@@ -64,7 +64,7 @@ struct NativeVisualizerView: View {
 
     var body: some View {
         ZStack {
-            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, intensity: intensity, audioReactive: audioReactive)
+            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, isPlaying: player.isPlaying, intensity: intensity, audioReactive: audioReactive)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -327,11 +327,12 @@ struct NativeVisualizerView: View {
 private struct NativeVisualBackdrop: View {
     let engine: NativeVisualEngine
     let audioLevel: Double
+    let isPlaying: Bool
     let intensity: Double
     let audioReactive: Bool
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: audioLevel < 0.015)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { timeline in
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate
                 let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
