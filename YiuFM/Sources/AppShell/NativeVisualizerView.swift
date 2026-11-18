@@ -39,6 +39,7 @@ enum NativeVisualEngine: String, CaseIterable, Identifiable {
 
 struct NativeVisualizerView: View {
     @ObservedObject var player: YiuAudioPlayer
+    @ObservedObject var appearance: NativeAppearanceStore
     @AppStorage("yiufm.native.visual.engine") private var engineID = NativeVisualEngine.sonnet.rawValue
     @AppStorage("yiufm.native.visual.lyricScale") private var lyricScale = 1.0
     @AppStorage("yiufm.native.visual.intensity") private var intensity = 0.85
@@ -68,7 +69,9 @@ struct NativeVisualizerView: View {
 
     var body: some View {
         ZStack {
+            NativeAppBackground(appearance: appearance)
             NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, isPlaying: player.isPlaying, intensity: intensity, audioReactive: audioReactive, targetFPS: targetFPS, animationSpeed: animationSpeed, reduceMotion: reduceMotion)
+                .opacity(appearance.backgroundImage != nil || appearance.backgroundMode == .gradient ? 0.84 : 1)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
