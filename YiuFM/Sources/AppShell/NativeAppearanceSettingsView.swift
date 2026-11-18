@@ -220,6 +220,7 @@ struct NativeBackgroundSettingsView: View {
 
 struct NativeTypographySettingsView: View {
     @ObservedObject var textDeck: NativeTextDeckStore
+    @ObservedObject var appearance: NativeAppearanceStore
     @AppStorage("yiufm.native.typography.family") private var familyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
@@ -282,7 +283,7 @@ struct NativeTypographySettingsView: View {
 
             Section("文字内容") {
                 NavigationLink {
-                    NativeTextDeckView(store: textDeck)
+                    NativeTextDeckView(store: textDeck, appearance: appearance)
                 } label: {
                     Label("逐句卡片与文字显示器", systemImage: "text.alignleft")
                 }
