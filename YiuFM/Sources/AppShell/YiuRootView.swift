@@ -36,7 +36,7 @@ struct YiuRootView: View {
                         }
                     )
                 case .music:
-                    NativeMusicView(player: player)
+                    NativeMusicView(player: player, appearance: appearance)
                 case .visualizer:
                     NativeVisualizerView(player: player)
                 case .background:
