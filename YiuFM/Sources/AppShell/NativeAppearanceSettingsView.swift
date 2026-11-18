@@ -227,6 +227,11 @@ struct NativeTypographySettingsView: View {
     @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
     @AppStorage("yiufm.native.typography.color") private var textColorHex = "#FFFFFF"
+    @AppStorage("yiufm.native.typography.alignment") private var horizontalAlignment = "center"
+    @AppStorage("yiufm.native.typography.position") private var verticalPosition = "center"
+    @AppStorage("yiufm.native.typography.wrap") private var wrapMode = "fill"
+    @AppStorage("yiufm.native.typography.padding") private var sidePadding = 22.0
+    @AppStorage("yiufm.native.typography.lineSpacing") private var lineSpacing = 1.35
 
     private var family: NativeFontFamily {
         NativeFontFamily(rawValue: familyID) ?? .serif
@@ -283,6 +288,44 @@ struct NativeTypographySettingsView: View {
                 )
             }
 
+            Section("版面") {
+                Picker("水平对齐", selection: $horizontalAlignment) {
+                    Text("靠左").tag("left")
+                    Text("居中").tag("center")
+                    Text("靠右").tag("right")
+                }
+                Picker("垂直位置", selection: $verticalPosition) {
+                    Text("靠上").tag("top")
+                    Text("居中").tag("center")
+                    Text("靠下").tag("bottom")
+                }
+                Picker("断行方式", selection: $wrapMode) {
+                    Text("挤满断行").tag("fill")
+                    Text("按词断行").tag("word")
+                    Text("均衡断行").tag("balance")
+                }
+
+                HStack {
+                    Text("左右边距")
+                    Spacer()
+                    Text("\(Int(sidePadding)) pt")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                Slider(value: $sidePadding, in: 0...80, step: 1)
+                    .tint(Color(red: 0.42, green: 0.57, blue: 0.78))
+
+                HStack {
+                    Text("行距")
+                    Spacer()
+                    Text(String(format: "%.2f×", lineSpacing))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                Slider(value: $lineSpacing, in: 1...2.2, step: 0.05)
+                    .tint(Color(red: 0.42, green: 0.57, blue: 0.78))
+            }
+
             Section("文字内容") {
                 NavigationLink {
                     NativeTextDeckView(store: textDeck, appearance: appearance)
@@ -323,6 +366,11 @@ struct NativeTypographySettingsView: View {
                     fontScale = 1
                     fontWeightValue = 0.78
                     textColorHex = "#FFFFFF"
+                    horizontalAlignment = "center"
+                    verticalPosition = "center"
+                    wrapMode = "fill"
+                    sidePadding = 22
+                    lineSpacing = 1.35
                 }
             } footer: {
                 Text("这些偏好由原生 SwiftUI 字体系统渲染，并保存在本机。")
