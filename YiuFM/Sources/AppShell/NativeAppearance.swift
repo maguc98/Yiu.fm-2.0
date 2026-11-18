@@ -266,6 +266,9 @@ enum NativeAppearanceError: LocalizedError {
 
 struct NativeAppBackground: View {
     @ObservedObject var appearance: NativeAppearanceStore
+    @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
+    @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
+    @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
 
     var body: some View {
         ZStack {
@@ -311,8 +314,9 @@ struct NativeAppBackground: View {
     @ViewBuilder
     private var gradientLayer: some View {
         if appearance.gradientFlowEnabled {
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
-                let cycle = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 14) / 14
+            TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: reduceMotion)) { timeline in
+                let elapsed = timeline.date.timeIntervalSinceReferenceDate * animationSpeed
+                let cycle = elapsed.truncatingRemainder(dividingBy: 14) / 14
                 gradient(angle: appearance.gradientAngle + cycle * 360)
             }
         } else {
