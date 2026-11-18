@@ -199,7 +199,7 @@ struct NativeTextDisplayView: View {
         }
     }
 
-    private func horizontalOffset(for mode: NativeTextAnimation, progress: Double, width: CGSize.Width) -> CGFloat {
+    private func horizontalOffset(for mode: NativeTextAnimation, progress: Double, width: CGFloat) -> CGFloat {
         switch mode {
         case .pan: return CGFloat((1 - progress) * 0.32) * width
         case .glitch: return CGFloat(sin(progress * 74) * (1 - progress) * 7)
