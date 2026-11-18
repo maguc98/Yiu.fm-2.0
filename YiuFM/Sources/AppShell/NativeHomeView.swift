@@ -165,11 +165,11 @@ struct NativeHomeView: View {
                 .frame(width: 72, height: 72)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(player.hasTrack ? player.title : "让我们开始播放")
+                    Text(player.currentTrack?.title ?? "让我们开始播放")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(ink)
                         .lineLimit(1)
-                    Text(player.hasTrack ? (player.artist.isEmpty ? "本地音乐" : player.artist) : "选择设备中的音频文件")
+                    Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "选择设备中的音频文件")
                         .font(.system(size: 12))
                         .foregroundStyle(secondaryInk)
                         .lineLimit(1)
