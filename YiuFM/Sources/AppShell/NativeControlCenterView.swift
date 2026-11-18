@@ -85,7 +85,7 @@ struct NativeControlCenterView: View {
             }
 
             HStack(spacing: 11) {
-                if let cover = appearance.coverImage {
+                if let cover = appearance.coverImage ?? player.currentArtwork {
                     Image(uiImage: cover)
                         .resizable()
                         .scaledToFill()
