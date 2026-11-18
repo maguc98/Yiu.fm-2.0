@@ -66,6 +66,7 @@ final class NativeAppearanceStore: ObservableObject {
         didSet { defaults.set(backgroundDim, forKey: Keys.dim) }
     }
     @Published private(set) var backgroundImageData: Data?
+    @Published private(set) var coverImageData: Data?
 
     private let defaults = UserDefaults.standard
     private let fileManager = FileManager.default
@@ -87,9 +88,15 @@ final class NativeAppearanceStore: ObservableObject {
     private var imageURL: URL {
         imageDirectory.appendingPathComponent("background.jpg")
     }
+    private var coverURL: URL {
+        imageDirectory.appendingPathComponent("cover.jpg")
+    }
 
     var backgroundImage: UIImage? {
         backgroundImageData.flatMap(UIImage.init(data:))
+    }
+    var coverImage: UIImage? {
+        coverImageData.flatMap(UIImage.init(data:))
     }
 
     init() {
@@ -103,6 +110,7 @@ final class NativeAppearanceStore: ObservableObject {
 
         try? fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
         backgroundImageData = try? Data(contentsOf: imageURL)
+        coverImageData = try? Data(contentsOf: coverURL)
     }
 
     func importBackground(from url: URL) throws {
@@ -135,6 +143,42 @@ final class NativeAppearanceStore: ObservableObject {
         try jpeg.write(to: imageURL, options: .atomic)
         backgroundImageData = jpeg
         backgroundMode = .image
+    }
+
+    func importCover(from url: URL) throws {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+
+        let data = try Data(contentsOf: url)
+        guard let sourceImage = UIImage(data: data) else {
+            throw NativeAppearanceError.invalidImage
+        }
+
+        let maxDimension: CGFloat = 1800
+        let largest = max(sourceImage.size.width, sourceImage.size.height)
+        let ratio = min(1, maxDimension / max(largest, 1))
+        let targetSize = CGSize(
+            width: max(1, sourceImage.size.width * ratio),
+            height: max(1, sourceImage.size.height * ratio)
+        )
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        let resized = renderer.image { _ in
+            sourceImage.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        guard let jpeg = resized.jpegData(compressionQuality: 0.88) else {
+            throw NativeAppearanceError.encodingFailed
+        }
+
+        try fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
+        try jpeg.write(to: coverURL, options: .atomic)
+        coverImageData = jpeg
+    }
+
+    func removeCover() {
+        try? fileManager.removeItem(at: coverURL)
+        coverImageData = nil
     }
 
     func removeBackground() {
