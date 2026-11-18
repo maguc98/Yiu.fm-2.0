@@ -247,29 +247,155 @@ struct NativeVisualizerView: View {
     @ViewBuilder
     private var activeLyric: some View {
         if let lyric = player.currentLyric {
-            let isWordTimed = lyric.wordTimes?.count == lyric.text.count
-            if isWordTimed, let times = lyric.wordTimes {
-                let elapsed = player.currentTime - player.currentLyricsOffset
-                HStack(spacing: 0) {
-                    ForEach(Array(lyric.text.enumerated()), id: \.offset) { index, character in
-                        Text(String(character))
-                            .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
-                            .foregroundStyle(times[index] <= elapsed ? lyricColor : lyricColor.opacity(0.38))
-                    }
-                }
-                .multilineTextAlignment(.center)
-                .shadow(color: engine == .lumiere ? activeColor.opacity(0.65) : .clear, radius: 15)
+            if let wordTimes = lyric.wordTimes, wordTimes.count == lyric.text.count {
+                wordTimedLyric(lyric.text, times: wordTimes)
             } else {
-                Text(lyric.text)
-                    .font(.system(size: activeFontSize, weight: .bold, design: engine == .sonnet ? .serif : .rounded))
-                    .foregroundStyle(lyricColor)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(engine == .partita ? 12 : 5)
-                    .shadow(color: engine == .lumiere ? activeColor.opacity(0.7) : .black.opacity(engine == .tempera ? 0.35 : 0.10), radius: engine == .lumiere ? 18 : 6, x: 0, y: 3)
+                engineStyledLyric(lyric.text)
             }
         } else {
             Text(" ")
-                .font(.system(size: activeFontSize, weight: .bold))
+                .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+        }
+    }
+
+    private func wordTimedLyric(_ text: String, times: [Double]) -> some View {
+        let elapsed = player.currentTime - player.currentLyricsOffset
+        return HStack(spacing: engine == .partita ? 1.5 : 0) {
+            ForEach(Array(text.enumerated()), id: \.offset) { index, character in
+                let reached = times[index] <= elapsed
+                Text(String(character))
+                    .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+                    .foregroundStyle(wordColor(reached: reached))
+                    .shadow(
+                        color: wordGlow(reached: reached),
+                        radius: engine == .lumiere ? 13 + CGFloat(player.audioLevel * 9) : (engine == .fume ? 7 : 0)
+                    )
+            }
+        }
+        .multilineTextAlignment(.center)
+        .scaleEffect(engine == .lumiere ? 1 + CGFloat(player.audioLevel * 0.035) : 1)
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func engineStyledLyric(_ text: String) -> some View {
+        switch engine {
+        case .sonnet:
+            Text(text)
+                .font(.system(size: activeFontSize, weight: lyricFontWeight, design: .serif))
+                .tracking(1.35)
+                .foregroundStyle(lyricColor)
+                .multilineTextAlignment(.center)
+                .lineSpacing(8)
+                .shadow(color: .black.opacity(0.16), radius: 5, x: 0, y: 2)
+
+        case .tempera:
+            ZStack {
+                Text(text)
+                    .font(.system(size: activeFontSize * 1.04, weight: lyricFontWeight, design: lyricFontFamily.design))
+                    .foregroundStyle(activeColor.opacity(0.38))
+                    .multilineTextAlignment(.center)
+                    .blur(radius: 15)
+                    .scaleEffect(1.045)
+
+                Text(text)
+                    .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [lyricColor, activeColor.opacity(0.88), lyricColor.opacity(0.82)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(7)
+                    .shadow(color: activeColor.opacity(0.26), radius: 13, x: 0, y: 3)
+            }
+
+        case .lumiere:
+            Text(text)
+                .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [lyricColor, activeColor, lyricColor],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .multilineTextAlignment(.center)
+                .lineSpacing(6)
+                .shadow(color: activeColor.opacity(0.78), radius: 12 + CGFloat(player.audioLevel * 14))
+                .shadow(color: activeColor.opacity(0.34), radius: 26 + CGFloat(player.audioLevel * 18))
+                .scaleEffect(1 + CGFloat(player.audioLevel * 0.035))
+
+        case .partita:
+            VStack(spacing: 13) {
+                HStack(spacing: 5) {
+                    ForEach(0..<5, id: \.self) { index in
+                        Capsule()
+                            .fill(lyricColor.opacity(index == 2 ? 0.88 : 0.24))
+                            .frame(width: index == 2 ? 24 : 9, height: 3)
+                    }
+                }
+
+                Text(text)
+                    .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+                    .foregroundStyle(lyricColor)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(15)
+                    .padding(.horizontal, 8)
+
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, activeColor.opacity(0.68), .clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 110, height: 1)
+            }
+
+        case .fume:
+            Text(text)
+                .font(.system(size: activeFontSize, weight: lyricFontWeight, design: .serif))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.98, green: 0.91, blue: 0.77),
+                            lyricColor,
+                            Color(red: 0.68, green: 0.83, blue: 0.75)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .multilineTextAlignment(.center)
+                .lineSpacing(8)
+                .shadow(color: Color(red: 0.77, green: 0.71, blue: 0.57).opacity(0.38), radius: 20, x: 0, y: 0)
+                .shadow(color: .black.opacity(0.34), radius: 8, x: 0, y: 4)
+        }
+    }
+
+    private func wordColor(reached: Bool) -> Color {
+        guard reached else { return lyricColor.opacity(engine == .tempera ? 0.25 : 0.34) }
+        switch engine {
+        case .sonnet: return lyricColor
+        case .tempera: return activeColor.opacity(0.98)
+        case .lumiere: return Color(red: 1.0, green: 0.88, blue: 0.69)
+        case .partita: return Color(red: 0.71, green: 0.96, blue: 0.84)
+        case .fume: return Color(red: 0.98, green: 0.89, blue: 0.72)
+        }
+    }
+
+    private func wordGlow(reached: Bool) -> Color {
+        guard reached else { return .clear }
+        switch engine {
+        case .sonnet: return .clear
+        case .tempera: return activeColor.opacity(0.28)
+        case .lumiere: return activeColor.opacity(0.74)
+        case .partita: return Color(red: 0.52, green: 0.91, blue: 0.78).opacity(0.34)
+        case .fume: return Color(red: 0.78, green: 0.72, blue: 0.59).opacity(0.38)
         }
     }
 
