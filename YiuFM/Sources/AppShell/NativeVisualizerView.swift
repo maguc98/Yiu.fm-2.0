@@ -47,6 +47,10 @@ struct NativeVisualizerView: View {
     @AppStorage("yiufm.native.typography.scale") private var typographyScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
     @AppStorage("yiufm.native.typography.color") private var textColorHex = "#FFFFFF"
+    @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
+    @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
+    @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
+    @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
     @State private var showingSettings = false
 
     private var engine: NativeVisualEngine { NativeVisualEngine(rawValue: engineID) ?? .sonnet }
@@ -64,7 +68,7 @@ struct NativeVisualizerView: View {
 
     var body: some View {
         ZStack {
-            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, isPlaying: player.isPlaying, intensity: intensity, audioReactive: audioReactive)
+            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, isPlaying: player.isPlaying, intensity: intensity, audioReactive: audioReactive, targetFPS: targetFPS, animationSpeed: animationSpeed, reduceMotion: reduceMotion)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -141,6 +145,7 @@ struct NativeVisualizerView: View {
         HStack(spacing: 8) {
             ForEach(NativeVisualEngine.allCases) { item in
                 Button {
+                    NativeHaptics.selection(enabled: hapticsEnabled)
                     withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
                         engineID = item.rawValue
                     }
@@ -330,11 +335,14 @@ private struct NativeVisualBackdrop: View {
     let isPlaying: Bool
     let intensity: Double
     let audioReactive: Bool
+    let targetFPS: Int
+    let animationSpeed: Double
+    let reduceMotion: Bool
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying || reduceMotion)) { timeline in
             Canvas { context, size in
-                let time = timeline.date.timeIntervalSinceReferenceDate
+                let time = timeline.date.timeIntervalSinceReferenceDate * animationSpeed
                 let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
                 drawBase(in: &context, size: size)
                 switch engine {
