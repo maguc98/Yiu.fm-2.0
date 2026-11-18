@@ -454,7 +454,12 @@ jobs:
           fi
           echo "Verified the app bundle contains no HTML, JavaScript, CSS, or Web resource directory."
 
-          /usr/libexec/PlistBuddy -c 'Print :UIBackgroundModes:0' "$APP_PATH/Info.plist" | grep -q '^audio
+          /usr/libexec/PlistBuddy -c 'Print :UIBackgroundModes:0' "$APP_PATH/Info.plist" | grep -qx audio
+          APP_EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_PATH/Info.plist")"
+          otool -L "$APP_PATH/$APP_EXECUTABLE" | grep -q 'MediaPlayer.framework'
+          echo "Verified background audio capability and MediaPlayer linkage."
+
+      - name: Bundle and verify legacy visual engines
         if: github.ref != 'refs/heads/native-swiftui-rebuild'
         run: |
           APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
