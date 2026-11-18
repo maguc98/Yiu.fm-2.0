@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NativeTextDisplayView: View {
     @ObservedObject var store: NativeTextDeckStore
+    @EnvironmentObject private var presentation: NativePresentationState
     @ObservedObject var appearance: NativeAppearanceStore
     @AppStorage("yiufm.native.typography.family") private var familyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var globalScale = 1.0
@@ -110,6 +111,7 @@ struct NativeTextDisplayView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
+            presentation.hideMiniPlayer = true
             refreshShuffleOrder()
             startDate = Date()
             isPlaying = true
@@ -127,6 +129,7 @@ struct NativeTextDisplayView: View {
         }
         .onDisappear {
             isPlaying = false
+            presentation.hideMiniPlayer = false
         }
     }
 
