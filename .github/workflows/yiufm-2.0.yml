@@ -395,6 +395,12 @@ jobs:
           grep -q 'func importAudio' YiuFM/Sources/Playback/YiuAudioPlayer.swift
           grep -q 'func importLyrics' YiuFM/Sources/Playback/YiuAudioPlayer.swift
           grep -q 'AVAudioPlayer' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'import MediaPlayer' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'MPRemoteCommandCenter' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'observeAudioSessionEvents' YiuFM/Sources/Playback/YiuAudioPlayer.swift
+          grep -q 'NativeMiniPlayerBar' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'NativeControlCenterView' YiuFM/Sources/AppShell/YiuRootView.swift
+          grep -q 'UIBackgroundModes' YiuFM/project.yml
           grep -q 'enum YiuLRCParser' YiuFM/Sources/Playback/YiuLyrics.swift
           grep -q 'struct NativeTextDeckView' YiuFM/Sources/AppShell/NativeTextDeckView.swift
           grep -q 'struct NativeTextDisplayView' YiuFM/Sources/AppShell/NativeTextDisplayView.swift
@@ -447,6 +453,122 @@ jobs:
             exit 1
           fi
           echo "Verified the app bundle contains no HTML, JavaScript, CSS, or Web resource directory."
+
+          /usr/libexec/PlistBuddy -c 'Print :UIBackgroundModes:0' "$APP_PATH/Info.plist" | grep -q '^audio      - name: Bundle and verify legacy visual engines
+        if: github.ref != 'refs/heads/native-swiftui-rebuild'
+        run: |
+          APP_PATH="$(find YiuFM/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP_PATH"
+          mkdir -p "$APP_PATH/Web"
+          cp -R YiuFM/Resources/Web/. "$APP_PATH/Web/"
+          WEB_ROOT="$APP_PATH/Web"
+          test -s "$WEB_ROOT/index.html"
+          test -s "$WEB_ROOT/style.css"
+          test -s "$WEB_ROOT/APP/sonnet/sonnet.js"
+          test -s "$WEB_ROOT/APP/theme-picker.js"
+          grep -q "window.YiuThemePicker" "$WEB_ROOT/APP/theme-picker.js"
+          test "$(grep -o 'id="fumeHost"' "$WEB_ROOT/index.html" | wc -l | tr -d ' ')" = "1"
+          test "$(grep -o 'id="fumeHostCSS"' "$WEB_ROOT/index.html" | wc -l | tr -d ' ')" = "1"
+          test -s "$WEB_ROOT/APP/tempera/tempera-pixi.js"
+          test -s "$WEB_ROOT/APP/lumiere/lumiere-pixi.js"
+          test -s "$WEB_ROOT/APP/partita-vendor.js"
+          test -s "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q "devFrameLimit" "$WEB_ROOT/APP/devtools.js"
+          grep -q "var cap = window.__rafCapActive && window.__rafCap;" "$WEB_ROOT/APP/devtools.js"
+          grep -q "window.__YiuEarlyErrors" "$WEB_ROOT/APP/cmd-console.js"
+          grep -q "stack" "$WEB_ROOT/APP/cmd-early.js"
+          grep -q "activeScript: activeScript()" "$WEB_ROOT/APP/cmd-early.js"
+          grep -q "activeScript: label" "$WEB_ROOT/APP/cmd-console.js"
+          grep -q '<script src="./APP/cmd-early.js?v=20261118a"></script>' "$WEB_ROOT/index.html"
+          grep -q '<script src="./APP/cmd-console.js?v=20261118b"></script>' "$WEB_ROOT/index.html"
+          grep -q 'function activeErrorContext()' "$WEB_ROOT/APP/cmd-console.js"
+          grep -q 'src="./APP/devtools.js?v=' "$WEB_ROOT/index.html"
+          grep -q "window.__lowPower=on;" "$WEB_ROOT/index.html"
+          grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
+          test -s "$WEB_ROOT/APP/fume/fume.js"
+          test -s "$WEB_ROOT/APP/fume-folia/fume-folia.js"
+          grep -q "fume-folia.js?v=20261109c" "$WEB_ROOT/index.html"
+          grep -q "FumeFoliaBundle" "$WEB_ROOT/APP/fume-folia/fume-folia.js"
+          test -s "$WEB_ROOT/APP/fume-adapter.js"
+          test -s "$WEB_ROOT/APP/fume-audio.js"
+          grep -q "fume-audio.js?v=20261109b" "$WEB_ROOT/index.html"
+          grep -q "fume.js?v=20261109c" "$WEB_ROOT/index.html"
+          test -s "$WEB_ROOT/APP/tempera-adapter.js"
+          test -s "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "tempera.js?v=20261108i" "$WEB_ROOT/index.html"
+          grep -q "window.__TEMPERA_PROFILE__===true" "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "shotsAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "filtersAvg:" "$WEB_ROOT/APP/tempera/tempera.js"
+          grep -q "tempera-adapter.js?v=20261114a" "$WEB_ROOT/index.html"
+          test -s "$WEB_ROOT/APP/partita-adapter.js"
+          test -s "$WEB_ROOT/APP/runtime/audio-clock.js"
+          test -s "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
+          test -s "$WEB_ROOT/APP/runtime/frame-scheduler.js"
+          test -s "$WEB_ROOT/APP/runtime/render-coordinator.js"
+          grep -q "YiuRenderCoordinator" "$WEB_ROOT/APP/runtime/render-coordinator.js"
+          grep -q "YiuFrameScheduler.start" "$WEB_ROOT/APP/player.js"
+          test -s "$WEB_ROOT/APP/yiu-runtime.js"
+          grep -q 'runtime.sample(ct, i)' "$WEB_ROOT/APP/player.js"
+          grep -q 'resolveLineIndex:resolveLineIndex' "$WEB_ROOT/APP/yiu-runtime.js"
+          grep -q 'getLineIndex: getLineIndex' "$WEB_ROOT/APP/runtime/timeline-scheduler.js"
+          grep -q 'lineIndexMode' "$WEB_ROOT/APP/yiu-runtime.js"
+          grep -q "adapter-v10-word-clock-suspend" "$WEB_ROOT/APP/partita-adapter.js"
+          grep -q 'wordAnimationEnd=' "$WEB_ROOT/APP/P1.js"
+          grep -q 'g>=t.startTime&&g<=h' "$WEB_ROOT/APP/P1.js"
+          grep -q 'y>=b&&y<=h' "$WEB_ROOT/APP/P1.js"
+          grep -q 'resolution: options.tuning.textureResolution,' "$WEB_ROOT/APP/sonnet/sonnet.js"
+          ! grep -q 'resolution: snapResolutionToTexturePool(width, height, options.tuning.textureResolution)' "$WEB_ROOT/APP/sonnet/sonnet.js"
+          grep -q 'sonnet.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'sonnet-adapter.js?v=20261102c' "$WEB_ROOT/index.html"
+          grep -q 'P1.js?v=20261107c' "$WEB_ROOT/index.html"
+          test -s "$WEB_ROOT/APP/playback-service.js"
+          test -s "$WEB_ROOT/APP/lyrics-service.js"
+          test -s "$WEB_ROOT/APP/library-service.js"
+          grep -q 'APP/playback-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'APP/lyrics-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'APP/library-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'APP/playback-preferences-service.js?v=1' "$WEB_ROOT/index.html"
+          grep -q 'var playbackPreferences = window.YiuPlaybackPreferences;' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'playbackPreferences ? playbackPreferences.getPlayMode() : 0' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'playbackPreferences.setPlayMode(window.playMode)' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'localStorage.setItem("playModeV1"' "$WEB_ROOT/APP/mini-player.js"
+          grep -q "YiuPlayback.notify('lyricschange')" "$WEB_ROOT/APP/renderer.js"
+          grep -q 'window.YiuLibrary || window.SongLibrary' "$WEB_ROOT/APP/ios-music.js"
+          ! grep -q 'npTimer\|setInterval(npRefresh' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'window.YiuPlayback.*subscribe' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'window.YiuLibrary.*subscribe' "$WEB_ROOT/APP/mini-player.js"
+          grep -q 'var SL = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
+          grep -q 'var library = window.YiuLibrary || window.SongLibrary;' "$WEB_ROOT/APP/player.js"
+          grep -q "warn('drive ' + name, e)" "$WEB_ROOT/APP/visualizer-manager.js"
+          grep -q 'if (!active || suspended || !currentTimeObj)' "$WEB_ROOT/APP/partita-adapter.js" && ! grep -q 'setSuspended: function (v) { this.hide(); }' "$WEB_ROOT/APP/partita-adapter.js"
+          grep -q 'driveFaults' "$WEB_ROOT/APP/visualizer-manager.js"
+          echo "Verified Run #13 UI, event-driven mini-player, service facades, migrated iOS import consumer, and all four engine payloads in $WEB_ROOT"
+          du -sh "$WEB_ROOT"
+
+      - name: Package IPA
+        run: |
+          mkdir -p YiuFM/output/Payload
+          cp -R YiuFM/build/Build/Products/Release-iphoneos/*.app YiuFM/output/Payload/Yiu.fm.app
+          cd YiuFM/output
+          /usr/bin/zip -qry YiuFM-2.0-unsigned.ipa Payload
+          if [ "$GITHUB_REF" = "refs/heads/native-swiftui-rebuild" ]; then
+            if /usr/bin/unzip -Z1 YiuFM-2.0-unsigned.ipa | grep -Eiq '\\.(html|htm|js|mjs|css)$|/Web/'; then
+              echo "Unexpected web runtime files found in native IPA."
+              exit 1
+            fi
+            echo "Verified native IPA contains no web runtime files."
+          fi
+          rm -rf Payload
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YiuFM-2.0-unsigned-ipa
+          path: YiuFM/output/YiuFM-2.0-unsigned.ipa
+
+          APP_EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_PATH/Info.plist")"
+          otool -L "$APP_PATH/$APP_EXECUTABLE" | grep -q 'MediaPlayer.framework'
+          echo "Verified background audio capability and MediaPlayer linkage."
 
       - name: Bundle and verify legacy visual engines
         if: github.ref != 'refs/heads/native-swiftui-rebuild'
