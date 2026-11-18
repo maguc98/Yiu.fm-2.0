@@ -4,6 +4,9 @@ struct NativeTextDeckView: View {
     @ObservedObject var store: NativeTextDeckStore
     @State private var showingNewPackage = false
     @State private var newPackageName = ""
+    @State private var renamePackageName = ""
+    @State private var showingRenamePackage = false
+    @State private var showingDeletePackage = false
 
     var body: some View {
         List {
@@ -73,6 +76,19 @@ struct NativeTextDeckView: View {
                     Label("新建文件包", systemImage: "folder.badge.plus")
                 }
 
+
+                Button {
+                    renamePackageName = store.activePackage?.name ?? ""
+                    showingRenamePackage = true
+                } label: {
+                    Label("重命名当前文件包", systemImage: "pencil")
+                }
+
+                Button(role: .destructive) {
+                    showingDeletePackage = true
+                } label: {
+                    Label("删除当前文件包", systemImage: "trash")
+                }
                 NavigationLink {
                     NativeTypographySettingsView()
                 } label: {
@@ -114,6 +130,19 @@ struct NativeTextDeckView: View {
             Button("取消", role: .cancel) {}
         } message: {
             Text("新的文件包会单独保存自己的文字卡片。")
+        }
+        .alert("重命名文件包", isPresented: $showingRenamePackage) {
+            TextField("文件包名称", text: $renamePackageName)
+            Button("保存") { store.renameActivePackage(renamePackageName) }
+            Button("取消", role: .cancel) {}
+        }
+        .confirmationDialog("删除当前文件包？", isPresented: $showingDeletePackage, titleVisibility: .visible) {
+            Button("删除文件包", role: .destructive) {
+                store.removeActivePackage()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("删除只影响这个文件包，不会删除你的音乐曲库。")
         }
     }
 }
