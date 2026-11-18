@@ -3,6 +3,11 @@ import AVFoundation
 import Foundation
 import CoreFoundation
 import MediaPlayer
+import UIKit
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+}
 
 struct YiuTrack: Identifiable, Codable, Hashable {
     var id: String
@@ -14,6 +19,7 @@ struct YiuTrack: Identifiable, Codable, Hashable {
     var fileSize: Int64
     var duration: Double
     var lyricsFileName: String?
+    var artworkData: Data? = nil
     var lyricsOffset: Double
     var addedAt: Date
 
@@ -103,6 +109,7 @@ final class YiuAudioPlayer: ObservableObject {
     @Published private(set) var currentTime: Double = 0
     @Published private(set) var duration: Double = 0
     @Published private(set) var audioLevel: Double = 0
+    @Published private(set) var currentArtwork: UIImage?
     @Published private(set) var lyrics: [YiuLyricLine] = []
     @Published private(set) var currentLyricIndex = 0
     @Published private(set) var errorMessage: String?
@@ -186,17 +193,19 @@ final class YiuAudioPlayer: ObservableObject {
             do {
                 try fileManager.copyItem(at: source, to: destination)
                 let probe = try AVAudioPlayer(contentsOf: destination)
-                let title = source.deletingPathExtension().lastPathComponent
+                let metadata = readAudioMetadata(from: destination)
+                let fallbackTitle = source.deletingPathExtension().lastPathComponent
                 let track = YiuTrack(
                     id: id,
                     sourceName: sourceName,
                     fileName: storedName,
-                    title: title,
-                    artist: "",
-                    album: "",
+                    title: metadata.title ?? fallbackTitle,
+                    artist: metadata.artist ?? "",
+                    album: metadata.album ?? "",
                     fileSize: size,
                     duration: probe.duration,
                     lyricsFileName: nil,
+                    artworkData: metadata.artworkData,
                     lyricsOffset: 0,
                     addedAt: Date()
                 )
@@ -399,6 +408,7 @@ final class YiuAudioPlayer: ObservableObject {
             let attributes = try fileManager.attributesOfItem(atPath: url.path)
             estimatedAudioBytes += (attributes[.size] as? NSNumber)?.int64Value ?? 0
         }
+        estimatedAudioBytes += Int64(tracks.reduce(0) { $0 + ($1.artworkData?.count ?? 0) })
         guard estimatedAudioBytes <= 650_000_000 else { throw YiuMusicError.backupTooLarge }
 
         let entries = try tracks.map { track -> YiuMusicBackupTrack in
@@ -651,6 +661,9 @@ final class YiuAudioPlayer: ObservableObject {
         ]
         if !track.artist.isEmpty { info[MPMediaItemPropertyArtist] = track.artist }
         if !track.album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = track.album }
+        if let data = track.artworkData, let image = UIImage(data: data) {
+            info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+        }
         if duration.isFinite, duration > 0 {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
@@ -660,6 +673,55 @@ final class YiuAudioPlayer: ObservableObject {
         center.nextTrackCommand.isEnabled = tracks.count > 1
         center.previousTrackCommand.isEnabled = tracks.count > 1
         center.changePlaybackPositionCommand.isEnabled = duration > 0
+    }
+
+    private struct AudioFileMetadata {
+        var title: String?
+        var artist: String?
+        var album: String?
+        var artworkData: Data?
+    }
+
+    private func readAudioMetadata(from url: URL) -> AudioFileMetadata {
+        let asset = AVURLAsset(url: url)
+        let metadata = asset.commonMetadata
+
+        func stringValue(_ identifier: AVMetadataIdentifier) -> String? {
+            AVMetadataItem.metadataItems(from: metadata, filteredByIdentifier: identifier)
+                .first?.stringValue?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .nilIfEmpty
+        }
+
+        let artwork = AVMetadataItem.metadataItems(
+            from: metadata,
+            filteredByIdentifier: .commonIdentifierArtwork
+        ).first?.dataValue
+
+        return AudioFileMetadata(
+            title: stringValue(.commonIdentifierTitle),
+            artist: stringValue(.commonIdentifierArtist),
+            album: stringValue(.commonIdentifierAlbumName),
+            artworkData: compressedArtwork(artwork)
+        )
+    }
+
+    private func compressedArtwork(_ data: Data?) -> Data? {
+        guard let data, let image = UIImage(data: data) else { return nil }
+        let maximumDimension: CGFloat = 560
+        let largest = max(image.size.width, image.size.height)
+        let ratio = min(1, maximumDimension / max(largest, 1))
+        let targetSize = CGSize(
+            width: max(1, image.size.width * ratio),
+            height: max(1, image.size.height * ratio)
+        )
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        let thumbnail = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        return thumbnail.jpegData(compressionQuality: 0.82)
     }
 
     private func loadTrack(id: String, autoplay: Bool, persistSelection: Bool = true) throws {
@@ -673,6 +735,7 @@ final class YiuAudioPlayer: ObservableObject {
         audioPlayer?.stop()
         audioPlayer = next
         currentTrackID = id
+        currentArtwork = track.artworkData.flatMap(UIImage.init(data:))
         duration = next.duration
         currentTime = 0
         isPlaying = false
