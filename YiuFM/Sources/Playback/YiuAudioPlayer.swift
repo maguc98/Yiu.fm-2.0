@@ -687,10 +687,11 @@ final class YiuAudioPlayer: ObservableObject {
         let metadata = asset.commonMetadata
 
         func stringValue(_ identifier: AVMetadataIdentifier) -> String? {
-            AVMetadataItem.metadataItems(from: metadata, filteredByIdentifier: identifier)
-                .first?.stringValue?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .nilIfEmpty
+            guard let value = AVMetadataItem.metadataItems(from: metadata, filteredByIdentifier: identifier)
+                .first?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                return nil
+            }
+            return value.nilIfEmpty
         }
 
         let artwork = AVMetadataItem.metadataItems(
