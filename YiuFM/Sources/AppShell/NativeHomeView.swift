@@ -2,22 +2,14 @@ import SwiftUI
 
 struct NativeHomeView: View {
     @ObservedObject var player: YiuAudioPlayer
+    @ObservedObject var appearance: NativeAppearanceStore
     let openMusic: () -> Void
     let openVisualizer: () -> Void
     let openCategories: () -> Void
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.94, green: 0.96, blue: 0.99),
-                    Color(red: 0.97, green: 0.94, blue: 0.98),
-                    Color(red: 0.93, green: 0.97, blue: 0.96)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            NativeAppBackground(appearance: appearance)
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
