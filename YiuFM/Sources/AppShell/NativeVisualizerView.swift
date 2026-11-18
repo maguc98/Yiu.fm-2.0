@@ -39,9 +39,24 @@ struct NativeVisualizerView: View {
     @AppStorage("yiufm.native.visual.lyricScale") private var lyricScale = 1.0
     @AppStorage("yiufm.native.visual.intensity") private var intensity = 0.85
     @AppStorage("yiufm.native.visual.audioReactive") private var audioReactive = true
+    @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
+    @AppStorage("yiufm.native.typography.scale") private var typographyScale = 1.0
+    @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
+    @AppStorage("yiufm.native.typography.color") private var textColorHex = "#FFFFFF"
     @State private var showingSettings = false
 
     private var engine: NativeVisualEngine { NativeVisualEngine(rawValue: engineID) ?? .sonnet }
+    private var lyricFontFamily: NativeFontFamily { NativeFontFamily(rawValue: fontFamilyID) ?? .serif }
+    private var lyricColor: Color { Color(nativeHex: textColorHex) }
+    private var lyricFontWeight: Font.Weight {
+        switch fontWeightValue {
+        case ..<0.48: return .medium
+        case ..<0.62: return .semibold
+        case ..<0.78: return .bold
+        case ..<0.91: return .heavy
+        default: return .black
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -226,8 +241,8 @@ struct NativeVisualizerView: View {
                 HStack(spacing: 0) {
                     ForEach(Array(lyric.text.enumerated()), id: \.offset) { index, character in
                         Text(String(character))
-                            .font(.system(size: activeFontSize, weight: .bold, design: engine == .sonnet ? .serif : .rounded))
-                            .foregroundStyle(times[index] <= elapsed ? activeColor : .white.opacity(0.38))
+                            .font(.system(size: activeFontSize, weight: lyricFontWeight, design: lyricFontFamily.design))
+                            .foregroundStyle(times[index] <= elapsed ? lyricColor : lyricColor.opacity(0.38))
                     }
                 }
                 .multilineTextAlignment(.center)
@@ -235,7 +250,7 @@ struct NativeVisualizerView: View {
             } else {
                 Text(lyric.text)
                     .font(.system(size: activeFontSize, weight: .bold, design: engine == .sonnet ? .serif : .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(lyricColor)
                     .multilineTextAlignment(.center)
                     .lineSpacing(engine == .partita ? 12 : 5)
                     .shadow(color: engine == .lumiere ? activeColor.opacity(0.7) : .black.opacity(engine == .tempera ? 0.35 : 0.10), radius: engine == .lumiere ? 18 : 6, x: 0, y: 3)
@@ -286,10 +301,10 @@ struct NativeVisualizerView: View {
 
     private var activeFontSize: CGFloat {
         switch engine {
-        case .sonnet: return 29 * lyricScale
-        case .tempera: return 27 * lyricScale
-        case .lumiere: return 28 * lyricScale
-        case .partita: return 26 * lyricScale
+        case .sonnet: return 29 * lyricScale * typographyScale
+        case .tempera: return 27 * lyricScale * typographyScale
+        case .lumiere: return 28 * lyricScale * typographyScale
+        case .partita: return 26 * lyricScale * typographyScale
         }
     }
 
