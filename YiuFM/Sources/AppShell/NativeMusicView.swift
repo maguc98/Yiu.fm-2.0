@@ -73,7 +73,7 @@ struct NativeMusicView: View {
 
     private var artwork: some View {
         Group {
-            if let cover = appearance.coverImage {
+            if let cover = appearance.coverImage ?? player.currentArtwork {
                 Image(uiImage: cover)
                     .resizable()
                     .scaledToFill()
