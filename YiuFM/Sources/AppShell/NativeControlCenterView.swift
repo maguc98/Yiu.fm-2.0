@@ -158,7 +158,7 @@ struct NativeControlCenterView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("运行中")
+                Text(player.isPlaying ? "运行中" : "已就绪")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(Color(red: 0.26, green: 0.56, blue: 0.47))
                     .padding(.horizontal, 9)
