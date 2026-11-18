@@ -23,6 +23,40 @@ struct NativeBackgroundSettingsView: View {
                 Text("背景")
             }
 
+            Section("内置主题") {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(NativeBackgroundTheme.presets) { theme in
+                            Button {
+                                appearance.applyTheme(theme)
+                            } label: {
+                                VStack(spacing: 7) {
+                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: theme.colors.map { Color(nativeHex: $0) },
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .frame(width: 76, height: 52)
+                                        .overlay {
+                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                                .strokeBorder(.white.opacity(0.82), lineWidth: 1)
+                                        }
+                                    Text(theme.name)
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            }
+
             switch appearance.backgroundMode {
             case .solid:
                 Section("纯色") {
@@ -30,8 +64,12 @@ struct NativeBackgroundSettingsView: View {
                 }
             case .gradient:
                 Section("渐变颜色") {
-                    colorPicker("起始颜色", hex: $appearance.gradientStartHex)
-                    colorPicker("结束颜色", hex: $appearance.gradientEndHex)
+                    colorPicker("颜色 1", hex: $appearance.gradientStartHex)
+                    colorPicker("颜色 2", hex: $appearance.gradientMid1Hex)
+                    colorPicker("颜色 3", hex: $appearance.gradientMid2Hex)
+                    colorPicker("颜色 4", hex: $appearance.gradientEndHex)
+                    Toggle("渐变流动", isOn: $appearance.gradientFlowEnabled)
+                        .tint(Color(red: 0.42, green: 0.60, blue: 0.72))
                     HStack {
                         Text("渐变角度")
                         Spacer()
