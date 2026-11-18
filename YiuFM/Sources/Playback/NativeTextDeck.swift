@@ -153,6 +153,20 @@ final class NativeTextDeckStore: ObservableObject {
         persist()
     }
 
+    func removeActivePackage() {
+        guard let activePackageID,
+              let index = packages.firstIndex(where: { $0.id == activePackageID }) else { return }
+        if packages.count <= 1 {
+            packages[index].name = "默认文件包"
+            packages[index].shuffle = false
+            packages[index].cards = [NativeTextCard()]
+        } else {
+            packages.remove(at: index)
+            self.activePackageID = packages.first?.id
+        }
+        persist()
+    }
+
     func setShuffle(_ enabled: Bool) {
         updateActive { $0.shuffle = enabled }
     }
