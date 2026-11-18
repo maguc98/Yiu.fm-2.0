@@ -3,6 +3,7 @@ import SwiftUI
 struct NativeHomeView: View {
     @ObservedObject var player: YiuAudioPlayer
     let openMusic: () -> Void
+    let openVisualizer: () -> Void
     let openCategories: () -> Void
 
     var body: some View {
@@ -34,6 +35,8 @@ struct NativeHomeView: View {
                     .padding(.top, 10)
 
                     musicCard
+
+                    visualizerCard
 
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
@@ -137,6 +140,51 @@ struct NativeHomeView: View {
                 .background(.regularMaterial, in: Circle())
                 .accessibilityHidden(true)
         }
+    }
+
+    private var visualizerCard: some View {
+        Button(action: openVisualizer) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.34, green: 0.43, blue: 0.68), Color(red: 0.55, green: 0.39, blue: 0.63)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 21, weight: .medium))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 58, height: 58)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("原生视觉引擎")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(ink)
+                    Text("商籁 · 凝彩 · 绘光 · 云阶")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(secondaryInk)
+                    Text("SwiftUI Canvas · 音频驱动")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(secondaryInk.opacity(0.78))
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(secondaryInk)
+            }
+            .padding(16)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 23, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 23, style: .continuous)
+                    .strokeBorder(.white.opacity(0.84), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.04), radius: 14, x: 0, y: 6)
+        }
+        .buttonStyle(.plain)
     }
 
     private var musicCard: some View {
