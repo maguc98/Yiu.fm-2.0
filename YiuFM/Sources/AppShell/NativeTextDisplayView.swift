@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NativeTextDisplayView: View {
     @ObservedObject var store: NativeTextDeckStore
+    @ObservedObject var appearance: NativeAppearanceStore
     @AppStorage("yiufm.native.typography.family") private var familyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var globalScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var globalWeight = 0.78
@@ -31,16 +32,8 @@ struct NativeTextDisplayView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.05, green: 0.08, blue: 0.14),
-                        Color(red: 0.10, green: 0.13, blue: 0.22),
-                        Color(red: 0.16, green: 0.10, blue: 0.20)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                NativeAppBackground(appearance: appearance)
+                Color.black.opacity(0.28).ignoresSafeArea()
 
                 TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying)) { timeline in
                     let elapsed = elapsedTime(at: timeline.date)
