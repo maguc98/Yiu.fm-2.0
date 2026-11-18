@@ -35,11 +35,17 @@ enum NativeVisualEngine: String, CaseIterable, Identifiable {
 
 struct NativeVisualizerView: View {
     @ObservedObject var player: YiuAudioPlayer
-    @State private var engine: NativeVisualEngine = .sonnet
+    @AppStorage("yiufm.native.visual.engine") private var engineID = NativeVisualEngine.sonnet.rawValue
+    @AppStorage("yiufm.native.visual.lyricScale") private var lyricScale = 1.0
+    @AppStorage("yiufm.native.visual.intensity") private var intensity = 0.85
+    @AppStorage("yiufm.native.visual.audioReactive") private var audioReactive = true
+    @State private var showingSettings = false
+
+    private var engine: NativeVisualEngine { NativeVisualEngine(rawValue: engineID) ?? .sonnet }
 
     var body: some View {
         ZStack {
-            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel)
+            NativeVisualBackdrop(engine: engine, audioLevel: player.audioLevel, intensity: intensity, audioReactive: audioReactive)
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -58,6 +64,27 @@ struct NativeVisualizerView: View {
         }
         .navigationTitle("视觉引擎")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showingSettings = true } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .accessibilityLabel("视觉设置")
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            NativeVisualizerSettingsSheet(
+                lyricScale: $lyricScale,
+                intensity: $intensity,
+                audioReactive: $audioReactive
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
     }
 
     private var engineHeader: some View {
@@ -96,7 +123,7 @@ struct NativeVisualizerView: View {
             ForEach(NativeVisualEngine.allCases) { item in
                 Button {
                     withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                        engine = item
+                        engineID = item.rawValue
                     }
                 } label: {
                     VStack(spacing: 7) {
@@ -259,10 +286,10 @@ struct NativeVisualizerView: View {
 
     private var activeFontSize: CGFloat {
         switch engine {
-        case .sonnet: return 29
-        case .tempera: return 27
-        case .lumiere: return 28
-        case .partita: return 26
+        case .sonnet: return 29 * lyricScale
+        case .tempera: return 27 * lyricScale
+        case .lumiere: return 28 * lyricScale
+        case .partita: return 26 * lyricScale
         }
     }
 
@@ -279,12 +306,14 @@ struct NativeVisualizerView: View {
 private struct NativeVisualBackdrop: View {
     let engine: NativeVisualEngine
     let audioLevel: Double
+    let intensity: Double
+    let audioReactive: Bool
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: audioLevel < 0.015)) { timeline in
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate
-                let pulse = min(1, max(0, audioLevel))
+                let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
                 drawBase(in: &context, size: size)
                 switch engine {
                 case .sonnet:
@@ -418,6 +447,61 @@ private struct NativeVisualBackdrop: View {
                     Path(roundedRect: rect, cornerRadius: cellHeight * 0.5),
                     with: .color(Color(red: 0.60, green: 0.88, blue: 0.77).opacity(alpha))
                 )
+            }
+        }
+    }
+}
+
+
+private struct NativeVisualizerSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var lyricScale: Double
+    @Binding var intensity: Double
+    @Binding var audioReactive: Bool
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("文字") {
+                    HStack {
+                        Text("歌词字号")
+                        Spacer()
+                        Text(String(format: "%.0f%%", lyricScale * 100))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: $lyricScale, in: 0.75...1.45, step: 0.05)
+                        .tint(Color(red: 0.46, green: 0.56, blue: 0.78))
+                }
+
+                Section("动态效果") {
+                    HStack {
+                        Text("音频响应强度")
+                        Spacer()
+                        Text(String(format: "%.0f%%", intensity * 100))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: $intensity, in: 0.15...1.5, step: 0.05)
+                        .tint(Color(red: 0.46, green: 0.56, blue: 0.78))
+                    Toggle("跟随音乐律动", isOn: $audioReactive)
+                        .tint(Color(red: 0.42, green: 0.60, blue: 0.72))
+                }
+
+                Section {
+                    Button("恢复默认设置", role: .destructive) {
+                        lyricScale = 1
+                        intensity = 0.85
+                        audioReactive = true
+                    }
+                }
+            }
+            .navigationTitle("视觉设置")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("完成") { dismiss() }
+                }
             }
         }
     }
