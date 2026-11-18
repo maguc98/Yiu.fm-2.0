@@ -295,7 +295,7 @@ struct NativeMusicView: View {
             HStack(spacing: 0) {
                 ForEach(Array(line.text.enumerated()), id: \.offset) { index, character in
                     Text(String(character))
-                        .font(.system(size: 18 * lyricScale, weight: lyricFontWeight, design: lyricFontFamily.design))
+                        .font(.system(size: CGFloat(18 * lyricScale), weight: lyricFontWeight, design: lyricFontFamily.design))
                         .foregroundStyle(wordTimes[index] <= player.currentTime - player.currentLyricsOffset ? lyricColor : lyricColor.opacity(0.28))
                 }
             }
@@ -303,7 +303,7 @@ struct NativeMusicView: View {
             .padding(.vertical, 2)
         } else {
             Text(line.text)
-                .font(.system(size: (active ? 18 : 15) * lyricScale, weight: active ? lyricFontWeight : .medium, design: lyricFontFamily.design))
+                .font(.system(size: CGFloat((active ? 18 : 15) * lyricScale), weight: active ? lyricFontWeight : .medium, design: lyricFontFamily.design))
                 .foregroundStyle(active ? lyricColor : lyricColor.opacity(0.42))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
