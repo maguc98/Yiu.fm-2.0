@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import Foundation
+import CoreFoundation
 
 struct YiuTrack: Identifiable, Codable, Hashable {
     var id: String
@@ -445,6 +446,8 @@ final class YiuAudioPlayer: ObservableObject {
         tracks.insert(contentsOf: moving, at: adjusted)
         try? saveLibrary()
     }
+
+    func clearError() { errorMessage = nil }
 
     func formattedTime(_ value: Double) -> String {
         guard value.isFinite, value >= 0 else { return "0:00" }
