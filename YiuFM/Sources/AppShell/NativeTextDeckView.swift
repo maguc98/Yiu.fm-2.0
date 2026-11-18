@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NativeTextDeckView: View {
     @ObservedObject var store: NativeTextDeckStore
+    @ObservedObject var appearance: NativeAppearanceStore
     @State private var showingNewPackage = false
     @State private var newPackageName = ""
     @State private var renamePackageName = ""
@@ -100,7 +101,7 @@ struct NativeTextDeckView: View {
 
             Section {
                 NavigationLink {
-                    NativeTextDisplayView(store: store)
+                    NativeTextDisplayView(store: store, appearance: appearance)
                         .toolbar(.hidden, for: .tabBar)
                 } label: {
                     HStack {
