@@ -41,8 +41,8 @@ struct NativeTextDeckView: View {
             }
 
             Section {
-                ForEach(Array(store.cards.enumerated()), id: \.element.id) { index, card in
-                    NativeTextCardEditor(card: card, index: index, store: store)
+                ForEach(store.cards.indices, id: \.self) { index in
+                    NativeTextCardEditor(card: store.cards[index], index: index, store: store)
                         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                 }
                 .onMove(perform: store.moveCards)
