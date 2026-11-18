@@ -23,7 +23,6 @@ enum YiuLRCParser {
 
     static func parse(_ source: String) -> YiuParsedLyrics {
         let text = source.replacingOccurrences(of: "\u{FEFF}", with: "")
-        let nsText = text as NSString
         let rawLines = text.components(separatedBy: .newlines)
         var metadata: [String: String] = [:]
         var parsed: [(time: Double, text: String, words: [Double]?)] = []
