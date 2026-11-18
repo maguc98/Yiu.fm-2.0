@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct NativeMusicBackupDocument: FileDocument {
+struct NativeJSONBackupDocument: FileDocument {
     static let contentType: UTType = .json
     static var readableContentTypes: [UTType] { [contentType] }
 
@@ -25,14 +25,18 @@ struct NativeMusicBackupDocument: FileDocument {
 
 struct NativeBackupSettingsView: View {
     @ObservedObject var player: YiuAudioPlayer
-    @State private var document: NativeMusicBackupDocument?
+    @ObservedObject var textDeck: NativeTextDeckStore
+    @State private var document: NativeJSONBackupDocument?
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var showingRestoreConfirmation = false
+    @State private var showingTextRestoreConfirmation = false
     @State private var pendingRestoreData: Data?
+    @State private var pendingTextRestoreData: Data?
     @State private var alertMessage: String?
     @State private var showingAlert = false
     @State private var lastBackupBytes: Int?
+    @State private var defaultFilename = "Yiu.fm-Music-Backup"
 
     var body: some View {
         Form {
@@ -41,6 +45,14 @@ struct NativeBackupSettingsView: View {
                     Label("曲库歌曲", systemImage: "music.note.list")
                     Spacer()
                     Text("\(player.tracks.count) 首")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+
+                HStack {
+                    Label("文字文件包", systemImage: "text.alignleft")
+                    Spacer()
+                    Text("\\(textDeck.packages.count) 个 · \\(textDeck.cards.count) 句")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
@@ -68,19 +80,25 @@ struct NativeBackupSettingsView: View {
                 Button {
                     createBackup()
                 } label: {
-                    Label("导出完整备份", systemImage: "square.and.arrow.up")
+                    Label("导出音乐曲库备份", systemImage: "music.note.list")
                 }
                 .disabled(player.tracks.isEmpty)
 
                 Button {
+                    createTextBackup()
+                } label: {
+                    Label("导出文字项目备份", systemImage: "text.alignleft")
+                }
+
+                Button {
                     showingImporter = true
                 } label: {
-                    Label("从备份恢复", systemImage: "square.and.arrow.down")
+                    Label("导入备份或旧版项目 JSON", systemImage: "square.and.arrow.down")
                 }
             } header: {
                 Text("备份与恢复")
             } footer: {
-                Text("备份以 JSON 文件保存，包含曲库信息、音频文件、关联的 LRC 歌词和当前选中曲目。不会包含 iCloud 音乐、在线音乐账号或第三方平台缓存。")
+                Text("音乐备份包含音频、LRC 和曲库数据；文字项目备份包含所有文件包及每句的样式。也支持导入旧版导出的 PACKAGES/LN/CF JSON。")
             }
 
             if let lastBackupBytes {
@@ -101,7 +119,7 @@ struct NativeBackupSettingsView: View {
             isPresented: $showingExporter,
             document: document,
             contentType: NativeMusicBackupDocument.contentType,
-            defaultFilename: "Yiu.fm-Music-Backup"
+            defaultFilename: defaultFilename
         ) { result in
             switch result {
             case .success:
@@ -125,8 +143,16 @@ struct NativeBackupSettingsView: View {
                 guard data.count <= 900_000_000 else {
                     throw YiuMusicError.backupTooLarge
                 }
-                pendingRestoreData = data
-                showingRestoreConfirmation = true
+                let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                if object?["tracks"] != nil {
+                    pendingRestoreData = data
+                    showingRestoreConfirmation = true
+                } else if object?["packages"] != nil || object?["PACKAGES"] != nil || object?["LN"] != nil {
+                    pendingTextRestoreData = data
+                    showingTextRestoreConfirmation = true
+                } else {
+                    throw NativeTextDeckError.invalidProjectFile
+                }
             } catch {
                 alertMessage = error.localizedDescription
                 showingAlert = true
@@ -146,6 +172,18 @@ struct NativeBackupSettingsView: View {
         } message: {
             Text("当前应用内的歌曲和歌词将被备份内容替换。原始文件 App 中的文件不会受到影响。")
         }
+        .confirmationDialog(
+            "替换当前文字项目？",
+            isPresented: $showingTextRestoreConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("覆盖并恢复文字项目", role: .destructive) {
+                restoreTextBackup()
+            }
+            Button("取消", role: .cancel) { pendingTextRestoreData = nil }
+        } message: {
+            Text("当前原生文字文件包会被备份内容替换。音乐曲库不会受到影响。")
+        }
         .alert("备份与恢复", isPresented: $showingAlert) {
             Button("好", role: .cancel) {}
         } message: {
@@ -157,12 +195,38 @@ struct NativeBackupSettingsView: View {
         do {
             let data = try player.createBackupData()
             lastBackupBytes = data.count
-            document = NativeMusicBackupDocument(data: data)
+            document = NativeJSONBackupDocument(data: data)
+            defaultFilename = "Yiu.fm-Music-Backup"
             showingExporter = true
         } catch {
             alertMessage = error.localizedDescription
             showingAlert = true
         }
+    }
+
+    private func createTextBackup() {
+        do {
+            let data = try textDeck.exportProjectData()
+            lastBackupBytes = data.count
+            document = NativeJSONBackupDocument(data: data)
+            defaultFilename = "Yiu.fm-Text-Project"
+            showingExporter = true
+        } catch {
+            alertMessage = error.localizedDescription
+            showingAlert = true
+        }
+    }
+
+    private func restoreTextBackup() {
+        guard let data = pendingTextRestoreData else { return }
+        do {
+            try textDeck.importProjectData(data)
+            alertMessage = "文字项目恢复完成，已恢复 \\(textDeck.packages.count) 个文件包。"
+        } catch {
+            alertMessage = error.localizedDescription
+        }
+        pendingTextRestoreData = nil
+        showingAlert = true
     }
 
     private func restoreBackup() {
