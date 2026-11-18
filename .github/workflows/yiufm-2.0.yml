@@ -374,7 +374,7 @@ jobs:
                   raise SystemExit(check.returncode)
           print(f"Verified {len(parser.items)} executable inline scripts")
           PY
-          node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs YiuFM/Tests/devtools-raf-lifecycle.test.cjs
+          node --test YiuFM/Tests/fume-folia-lyrics-adapter.test.cjs YiuFM/Tests/fume-audio.test.cjs YiuFM/Tests/fume-engine.test.cjs YiuFM/Tests/compatibility-services.test.cjs YiuFM/Tests/sonnet-perf-governor.test.cjs YiuFM/Tests/sonnet-adapter.test.cjs YiuFM/Tests/sonnet-resolution-runtime.test.cjs YiuFM/Tests/partita-adapter.test.cjs YiuFM/Tests/partita-word-clock.test.cjs YiuFM/Tests/runtime-scheduler.test.cjs YiuFM/Tests/frame-scheduler.test.cjs YiuFM/Tests/render-coordinator.test.cjs YiuFM/Tests/devtools-raf-lifecycle.test.cjs YiuFM/Tests/cmd-early-error-context.test.cjs
           du -sh YiuFM/Resources/Web
 
       - name: Generate project
@@ -413,6 +413,10 @@ jobs:
           grep -q "var cap = window.__rafCapActive && window.__rafCap;" "$WEB_ROOT/APP/devtools.js"
           grep -q "window.__YiuEarlyErrors" "$WEB_ROOT/APP/cmd-console.js"
           grep -q "stack" "$WEB_ROOT/APP/cmd-early.js"
+          grep -q "activeScript: activeScript()" "$WEB_ROOT/APP/cmd-early.js"
+          grep -q "activeScript: label" "$WEB_ROOT/APP/cmd-console.js"
+          grep -q 'cmd-early.js?v=20261118a' "$WEB_ROOT/index.html"
+          grep -q 'cmd-console.js?v=20261118a' "$WEB_ROOT/index.html"
           grep -q 'src="./APP/devtools.js?v=' "$WEB_ROOT/index.html"
           grep -q "window.__lowPower=on;" "$WEB_ROOT/index.html"
           grep -q "FumeAdapter" "$WEB_ROOT/APP/visualizer-manager.js"
