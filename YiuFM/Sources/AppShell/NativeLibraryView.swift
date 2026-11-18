@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct NativeLibraryView: View {
     @ObservedObject var player: YiuAudioPlayer
@@ -22,14 +23,23 @@ struct NativeLibraryView: View {
                             player.selectTrack(track.id, autoplay: true)
                         } label: {
                             HStack(spacing: 12) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(Color(red: 0.87, green: 0.91, blue: 0.97))
-                                    Image(systemName: track.id == player.currentTrackID ? "waveform" : "music.note")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(Color(red: 0.38, green: 0.51, blue: 0.71))
+                                Group {
+                                    if let data = track.artworkData, let image = UIImage(data: data) {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFill()
+                                    } else {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .fill(Color(red: 0.87, green: 0.91, blue: 0.97))
+                                            Image(systemName: track.id == player.currentTrackID ? "waveform" : "music.note")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundStyle(Color(red: 0.38, green: 0.51, blue: 0.71))
+                                        }
+                                    }
                                 }
                                 .frame(width: 42, height: 42)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(track.title)
                                         .font(.system(size: 14, weight: .semibold))
