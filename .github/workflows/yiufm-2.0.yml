@@ -398,7 +398,8 @@ jobs:
           grep -q 'enum YiuLRCParser' YiuFM/Sources/Playback/YiuLyrics.swift
           grep -q 'struct NativeTextDeckView' YiuFM/Sources/AppShell/NativeTextDeckView.swift
           grep -q 'struct NativeTextDisplayView' YiuFM/Sources/AppShell/NativeTextDisplayView.swift
-          grep -q 'enum NativeTextAnimation' YiuFM/Sources/Playback/NativeTextDeck.swift
+          grep -q 'enum NativeTextAnimation' YiuFM/Sources/Playback/NativeTextModels.swift
+          grep -q 'enum NativeTextProjectCodec' YiuFM/Sources/Playback/NativeTextProjectCodec.swift
           grep -q 'func importProjectData' YiuFM/Sources/Playback/NativeTextDeck.swift
           grep -q 'func createBackupData' YiuFM/Sources/Playback/YiuAudioPlayer.swift
           grep -q 'func restoreBackupData' YiuFM/Sources/Playback/YiuAudioPlayer.swift
@@ -412,6 +413,8 @@ jobs:
         run: |
           swiftc YiuFM/Sources/Playback/YiuLyrics.swift YiuFM/Tests/native-lrc-parser.test.swift -o "$RUNNER_TEMP/yiufm-lrc-tests"
           "$RUNNER_TEMP/yiufm-lrc-tests"
+          swiftc YiuFM/Sources/Playback/NativeTextModels.swift YiuFM/Sources/Playback/NativeTextProjectCodec.swift YiuFM/Tests/native-text-project-codec.test.swift -o "$RUNNER_TEMP/yiufm-text-project-tests"
+          "$RUNNER_TEMP/yiufm-text-project-tests"
           grep -q 'Web/\*\*' YiuFM/project.yml
           grep -q 'NativeBridge/\*\*' YiuFM/project.yml
 
