@@ -64,7 +64,9 @@ enum NativeTextProjectCodecTests {
             { "size": 28, "color": "#FFFFFF", "mode": "fade", "dur": 1.5 },
             { "size": 44, "dur": 4 }
           ],
-          "G": { "style": "poster" }
+          "G": { "style": "poster" },
+          "LY": { "a": "left", "v": "bottom", "w": "word" },
+          "X": { "ui": { "lyPad": 34, "lyFw": 6, "lyLh": 155 } }
         }
         """
         let decoded = try NativeTextProjectCodec.decode(Data(source.utf8))
@@ -76,5 +78,11 @@ enum NativeTextProjectCodecTests {
         precondition(abs(cards[0].duration - 1.5) < 0.0001)
         precondition(cards[1].animation == .poster)
         precondition(cards[1].fontSize == 44)
+        precondition(decoded.layout?.horizontalAlignment == "left")
+        precondition(decoded.layout?.verticalPosition == "bottom")
+        precondition(decoded.layout?.wrapMode == "word")
+        precondition(abs((decoded.layout?.sidePadding ?? 0) - 34) < 0.0001)
+        precondition(abs((decoded.layout?.fontWeight ?? 0) - 0.6) < 0.0001)
+        precondition(abs((decoded.layout?.lineSpacing ?? 0) - 1.55) < 0.0001)
     }
 }
