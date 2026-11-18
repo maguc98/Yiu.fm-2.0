@@ -370,6 +370,14 @@ final class YiuAudioPlayer: ObservableObject {
 
     func createBackupData() throws -> Data {
         try ensureDirectories()
+        var estimatedAudioBytes: Int64 = 0
+        for track in tracks {
+            let url = audioDirectory.appendingPathComponent(track.fileName)
+            let attributes = try fileManager.attributesOfItem(atPath: url.path)
+            estimatedAudioBytes += (attributes[.size] as? NSNumber)?.int64Value ?? 0
+        }
+        guard estimatedAudioBytes <= 650_000_000 else { throw YiuMusicError.backupTooLarge }
+
         let entries = try tracks.map { track -> YiuMusicBackupTrack in
             let audioURL = audioDirectory.appendingPathComponent(track.fileName)
             guard fileManager.fileExists(atPath: audioURL.path) else {
@@ -379,7 +387,7 @@ final class YiuAudioPlayer: ObservableObject {
             let lyricsData: Data?
             if let lyricsFileName = track.lyricsFileName {
                 let lyricsURL = lyricsDirectory.appendingPathComponent(lyricsFileName)
-                lyricsData = try? Data(contentsOf: lyricsURL)
+                lyricsData = try Data(contentsOf: lyricsURL)
             } else {
                 lyricsData = nil
             }
