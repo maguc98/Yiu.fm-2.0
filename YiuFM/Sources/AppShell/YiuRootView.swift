@@ -29,6 +29,8 @@ struct YiuRootView: View {
                                 path.append(.typography)
                             } else if category.title == "系统与性能" {
                                 path.append(.system)
+                            } else if category.title == "项目与备份" {
+                                path.append(.backup)
                             } else {
                                 path.append(.feature(category))
                             }
@@ -47,6 +49,8 @@ struct YiuRootView: View {
                     NativeTypographySettingsView()
                 case .system:
                     NativeSystemSettingsView()
+                case .backup:
+                    NativeBackupSettingsView(player: player)
                 case .feature(let category):
                     NativeFeatureDetailView(category: category)
                 }
@@ -64,5 +68,6 @@ private enum NativeRoute: Hashable {
     case background
     case typography
     case system
+    case backup
     case feature(FeatureCategory)
 }
