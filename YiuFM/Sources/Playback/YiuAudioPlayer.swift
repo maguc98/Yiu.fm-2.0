@@ -170,8 +170,13 @@ final class YiuAudioPlayer: ObservableObject {
                     addedAt: Date()
                 )
                 tracks.insert(track, at: 0)
-                added += 1
-                try saveLibrary()
+                do {
+                    try saveLibrary()
+                    added += 1
+                } catch {
+                    tracks.removeAll { $0.id == id }
+                    throw error
+                }
             } catch {
                 try? fileManager.removeItem(at: destination)
                 failures.append(sourceName + ": " + error.localizedDescription)
@@ -212,7 +217,11 @@ final class YiuAudioPlayer: ObservableObject {
 
             let storedName = UUID().uuidString + ".lrc"
             try data.write(to: lyricsDirectory.appendingPathComponent(storedName), options: .atomic)
+            let previousLyricsFile = tracks[trackIndex].lyricsFileName
             tracks[trackIndex].lyricsFileName = storedName
+            if let previousLyricsFile {
+                try? fileManager.removeItem(at: lyricsDirectory.appendingPathComponent(previousLyricsFile))
+            }
             if let title = parsed.metadata["ti"], !title.isEmpty { tracks[trackIndex].title = title }
             if let artist = parsed.metadata["ar"], !artist.isEmpty { tracks[trackIndex].artist = artist }
             if let rawOffset = parsed.metadata["offset"], let milliseconds = Double(rawOffset) {
@@ -455,7 +464,8 @@ final class YiuAudioPlayer: ObservableObject {
     private func restoreLibrary() {
         guard let data = try? Data(contentsOf: libraryURL),
               let library = try? JSONDecoder().decode(PersistedLibrary.self, from: data) else { return }
-        tracks = library.tracks.sorted { $0.addedAt > $1.addedAt }
+        // The stored array order is the user's manually arranged playback queue.
+        tracks = library.tracks
         currentTrackID = library.currentTrackID
     }
 
