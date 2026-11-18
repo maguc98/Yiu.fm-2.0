@@ -72,9 +72,28 @@ struct NativeTextPackage: Identifiable, Codable, Hashable {
     }
 }
 
+struct NativeTextLayoutSettings: Codable, Equatable {
+    var horizontalAlignment: String
+    var verticalPosition: String
+    var wrapMode: String
+    var sidePadding: Double
+    var fontWeight: Double
+    var lineSpacing: Double
+
+    static let defaults = NativeTextLayoutSettings(
+        horizontalAlignment: "center",
+        verticalPosition: "center",
+        wrapMode: "fill",
+        sidePadding: 22,
+        fontWeight: 0.8,
+        lineSpacing: 1.35
+    )
+}
+
 struct NativeTextProjectBackup: Codable {
     let version: Int
     let exportedAt: Date
     let packages: [NativeTextPackage]
     let activePackageID: String?
+    let layout: NativeTextLayoutSettings?
 }
