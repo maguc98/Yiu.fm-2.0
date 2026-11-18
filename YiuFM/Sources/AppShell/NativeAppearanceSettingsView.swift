@@ -110,6 +110,8 @@ struct NativeBackgroundSettingsView: View {
                 }
 
                 Section("图片效果") {
+                    Toggle("1:1 完整显示图片", isOn: $appearance.backgroundSquare)
+                        .tint(Color(red: 0.42, green: 0.60, blue: 0.72))
                     HStack {
                         Text("模糊")
                         Spacer()
