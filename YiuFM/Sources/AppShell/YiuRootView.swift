@@ -4,9 +4,11 @@ import SwiftUI
 /// The legacy WKWebView host is deliberately not used by this navigation tree.
 struct YiuRootView: View {
     @State private var path: [NativeRoute] = []
+    @State private var showingControlCenter = false
     @StateObject private var player = YiuAudioPlayer()
     @StateObject private var appearance = NativeAppearanceStore()
     @StateObject private var textDeck = NativeTextDeckStore()
+    @StateObject private var presentation = NativePresentationState()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -63,6 +65,41 @@ struct YiuRootView: View {
         }
         .tint(Color(red: 0.38, green: 0.51, blue: 0.71))
         .preferredColorScheme(.light)
+        .environmentObject(presentation)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if player.hasTrack && !presentation.hideMiniPlayer {
+                NativeMiniPlayerBar(
+                    player: player,
+                    appearance: appearance,
+                    onOpenPlayer: { path.append(.music) },
+                    onOpenControlCenter: { showingControlCenter = true }
+                )
+                .padding(.horizontal, 14)
+                .padding(.top, 6)
+                .padding(.bottom, 8)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .sheet(isPresented: $showingControlCenter) {
+            NativeControlCenterView(
+                player: player,
+                appearance: appearance,
+                onOpenMusic: { openControlDestination(.music) },
+                onOpenVisualizer: { openControlDestination(.visualizer) },
+                onOpenBackground: { openControlDestination(.background) },
+                onOpenSystem: { openControlDestination(.system) },
+                onOpenText: { openControlDestination(.typography) }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
+    }
+
+    private func openControlDestination(_ route: NativeRoute) {
+        showingControlCenter = false
+        DispatchQueue.main.async {
+            path.append(route)
+        }
     }
 }
 
