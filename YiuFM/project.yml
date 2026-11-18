@@ -12,6 +12,10 @@ targets:
         excludes:
           - Web/**
           - NativeBridge/**
+    info:
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.yiufm.placeholder
