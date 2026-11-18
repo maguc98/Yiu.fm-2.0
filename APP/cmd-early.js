@@ -57,7 +57,7 @@
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
     var r = e.reason, stack = r && r.stack ? String(r.stack) : '', active = activeScript();
-    var src = stack ? (stack.split('\\n')[1] || '') : scriptHint(active);
+    var src = stack ? (stack.split('\n')[1] || '') : scriptHint(active);
     errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : brief(r)), src, { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0, activeScript: active, kind: 'unhandled-rejection' });
   });
   /* ---- console：只记到页面加载完 3 秒后，之后交给「同步 console」 ---- */
