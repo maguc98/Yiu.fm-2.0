@@ -52,7 +52,7 @@ struct NativeBackupSettingsView: View {
                 HStack {
                     Label("文字文件包", systemImage: "text.alignleft")
                     Spacer()
-                    Text("\\(textDeck.packages.count) 个 · \\(textDeck.cards.count) 句")
+                    Text("\(textDeck.packages.count) 个 · \(textDeck.cards.count) 句")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
@@ -118,7 +118,7 @@ struct NativeBackupSettingsView: View {
         .fileExporter(
             isPresented: $showingExporter,
             document: document,
-            contentType: NativeMusicBackupDocument.contentType,
+            contentType: NativeJSONBackupDocument.contentType,
             defaultFilename: defaultFilename
         ) { result in
             switch result {
@@ -132,7 +132,7 @@ struct NativeBackupSettingsView: View {
         }
         .fileImporter(
             isPresented: $showingImporter,
-            allowedContentTypes: [NativeMusicBackupDocument.contentType],
+            allowedContentTypes: [NativeJSONBackupDocument.contentType],
             allowsMultipleSelection: false
         ) { result in
             do {
@@ -221,7 +221,7 @@ struct NativeBackupSettingsView: View {
         guard let data = pendingTextRestoreData else { return }
         do {
             try textDeck.importProjectData(data)
-            alertMessage = "文字项目恢复完成，已恢复 \\(textDeck.packages.count) 个文件包。"
+            alertMessage = "文字项目恢复完成，已恢复 \(textDeck.packages.count) 个文件包。"
         } catch {
             alertMessage = error.localizedDescription
         }
