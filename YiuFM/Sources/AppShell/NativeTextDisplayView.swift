@@ -13,6 +13,7 @@ struct NativeTextDisplayView: View {
     @State private var isPlaying = true
     @State private var startDate = Date()
     @State private var accumulatedTime: Double = 0
+    @State private var shuffleOrder: [String] = []
 
     private var family: NativeFontFamily {
         NativeFontFamily(rawValue: familyID) ?? .serif
@@ -115,11 +116,42 @@ struct NativeTextDisplayView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
+            refreshShuffleOrder()
             startDate = Date()
             isPlaying = true
         }
+        .onChange(of: store.activePackageID) { _, _ in
+            refreshShuffleOrder()
+            restart()
+        }
+        .onChange(of: store.cards.map(\\.id)) { _, _ in
+            refreshShuffleOrder()
+        }
+        .onChange(of: store.activePackage?.shuffle ?? false) { _, _ in
+            refreshShuffleOrder()
+            restart()
+        }
         .onDisappear {
             isPlaying = false
+        }
+    }
+
+    private var playbackCards: [NativeTextCard] {
+        let usable = store.cards.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard store.activePackage?.shuffle == true else { return usable }
+        let lookup = Dictionary(uniqueKeysWithValues: usable.map { ($0.id, $0) })
+        let ordered = shuffleOrder.compactMap { lookup[$0] }
+        return ordered.count == usable.count ? ordered : usable
+    }
+
+    private func refreshShuffleOrder() {
+        let ids = store.cards
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map(\\.id)
+        if store.activePackage?.shuffle == true {
+            shuffleOrder = ids.shuffled()
+        } else {
+            shuffleOrder = ids
         }
     }
 
@@ -128,7 +160,7 @@ struct NativeTextDisplayView: View {
     }
 
     private func currentFrame(at elapsed: Double) -> (card: NativeTextCard, progress: Double, start: Double)? {
-        let usable = store.cards.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let usable = playbackCards
         guard !usable.isEmpty else { return nil }
 
         let total = usable.reduce(0.0) { $0 + max(0.5, $1.duration) }
@@ -251,7 +283,8 @@ struct NativeTextDisplayView: View {
     private func advanceToNextCard() {
         let elapsed = elapsedTime(at: Date())
         guard let current = currentFrame(at: elapsed) else { restart(); return }
-        let usable = store.cards.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let usable = playbackCards
+        guard !usable.isEmpty else { restart(); return }
         let index = usable.firstIndex(where: { $0.id == current.card.id }) ?? 0
         let nextIndex = (index + 1) % usable.count
         let elapsedBefore = usable.prefix(nextIndex).reduce(0.0) { $0 + max(0.5, $1.duration) }
