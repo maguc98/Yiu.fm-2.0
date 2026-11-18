@@ -181,6 +181,7 @@ struct NativeBackgroundSettingsView: View {
 }
 
 struct NativeTypographySettingsView: View {
+    @ObservedObject var textDeck: NativeTextDeckStore
     @AppStorage("yiufm.native.typography.family") private var familyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
@@ -239,6 +240,17 @@ struct NativeTypographySettingsView: View {
                     ),
                     supportsOpacity: false
                 )
+            }
+
+            Section("文字内容") {
+                NavigationLink {
+                    NativeTextDeckView(store: textDeck)
+                } label: {
+                    Label("逐句卡片与文字显示器", systemImage: "text.alignleft")
+                }
+                Text("编辑文字卡片、文件包、每句动画和停留时间，并打开原生文字显示舞台。")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Section("预览") {
