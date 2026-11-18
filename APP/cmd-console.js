@@ -2099,15 +2099,32 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
   }
   /* 供 index.html 的可选回调追踪器使用，确保运行期捕获的堆栈进入 /err。 */
   window.__yiuPushRuntimeError = function(msg, src, extra) { errPush(msg, src, extra); };
+  function activeErrorContext() {
+    var a = window.__YIU_ACTIVE_SCRIPT || null;
+    if (!a || typeof a !== 'object') return { label: '', hint: '' };
+    var label = a.label || '';
+    var elapsed = typeof a.startedAt === 'number' && window.performance && typeof performance.now === 'function'
+      ? Math.max(0, Math.round(performance.now() - a.startedAt)) : null;
+    return {
+      label: label,
+      hint: label ? '执行脚本线索：' + label + (elapsed == null ? '' : '（脚本标记已 ' + elapsed + 'ms）') : ''
+    };
+  }
   window.addEventListener('error', function (e) {
-    var t = e.target;
-    if (t && t !== window && (t.src || t.href)) { errPush('资源加载失败：' + (t.src || t.href), '', { file: t.src || t.href, tag: t.nodeName || '' }); return; }
+    var t = e.target, ctx = activeErrorContext();
+    if (t && t !== window && (t.src || t.href)) {
+      var url = t.src || t.href;
+      errPush('资源加载失败：' + url, url, { file: url, tag: t.nodeName || '', activeScript: ctx.label, kind: 'resource-load' });
+      return;
+    }
     var file = e.filename || '', line = e.lineno || 0, column = e.colno || 0, stack = e.error && e.error.stack ? String(e.error.stack) : '';
-    errPush(e.message || fmt(e.error), file ? file + ':' + line + ':' + column : '', { file: file, line: line, column: column, stack: stack });
+    var src = file ? file + ':' + line + ':' + column : ctx.hint;
+    errPush(e.message || fmt(e.error), src, { file: file, line: line, column: column, stack: stack, activeScript: ctx.label, kind: 'runtime' });
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
-    var r = e.reason, stack = r && r.stack ? String(r.stack) : '';
-    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : fmt(r)), stack ? (stack.split('\n')[1] || '') : '', { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0 });
+    var r = e.reason, stack = r && r.stack ? String(r.stack) : '', ctx = activeErrorContext();
+    var src = stack ? (stack.split('\\n')[1] || '') : ctx.hint;
+    errPush('未处理的 Promise 拒绝：' + (r && r.message ? r.message : fmt(r)), src, { stack: stack, file: r && r.fileName || '', line: r && r.lineNumber || 0, column: r && r.columnNumber || 0, activeScript: ctx.label, kind: 'unhandled-rejection' });
   });
   register('err', {
     group: '开发者', desc: '页面里的报错和未捕获的 Promise 拒绝（不用开 /console 也会一直记）', usage: '/err [条数|clear|live [on|off]]',
