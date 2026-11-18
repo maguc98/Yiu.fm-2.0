@@ -121,7 +121,9 @@ final class NativeAppearanceStore: ObservableObject {
             width: max(1, sourceImage.size.width * ratio),
             height: max(1, sourceImage.size.height * ratio)
         )
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         let resized = renderer.image { _ in
             sourceImage.draw(in: CGRect(origin: .zero, size: targetSize))
         }
