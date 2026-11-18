@@ -2,6 +2,7 @@ import SwiftUI
 import AVFoundation
 import Foundation
 import CoreFoundation
+import MediaPlayer
 
 struct YiuTrack: Identifiable, Codable, Hashable {
     var id: String
@@ -111,6 +112,8 @@ final class YiuAudioPlayer: ObservableObject {
 
     private var audioPlayer: AVAudioPlayer?
     private var progressTimer: Timer?
+    private var remoteCommandTargets: [Any] = []
+    private var lastNowPlayingUpdate: TimeInterval = 0
     private let fileManager = FileManager.default
 
     private var musicRoot: URL {
@@ -133,6 +136,7 @@ final class YiuAudioPlayer: ObservableObject {
     var currentLyricsOffset: Double { currentTrack?.lyricsOffset ?? 0 }
 
     init() {
+        configureRemoteCommands()
         do {
             try ensureDirectories()
             restoreLibrary()
@@ -268,20 +272,32 @@ final class YiuAudioPlayer: ObservableObject {
     }
 
     func togglePlayback() {
+        if isPlaying || audioPlayer?.isPlaying == true {
+            pausePlayback()
+        } else {
+            resumePlayback()
+        }
+    }
+
+    func resumePlayback() {
         guard let audioPlayer else { return }
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default)
+            try session.setCategory(.playback, mode: .default, options: [])
             try session.setActive(true)
-            if audioPlayer.isPlaying {
-                audioPlayer.pause()
-                isPlaying = false
-            } else if audioPlayer.play() {
+            if !audioPlayer.isPlaying, audioPlayer.play() {
                 isPlaying = true
             }
+            updateNowPlaying(force: true)
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func pausePlayback() {
+        audioPlayer?.pause()
+        isPlaying = false
+        updateNowPlaying(force: true)
     }
 
     func seek(to value: Double) {
@@ -290,6 +306,7 @@ final class YiuAudioPlayer: ObservableObject {
         audioPlayer.currentTime = target
         currentTime = target
         refreshLyricIndex()
+        updateNowPlaying(force: true)
     }
 
     func seekToLyric(_ line: YiuLyricLine) {
@@ -348,6 +365,8 @@ final class YiuAudioPlayer: ObservableObject {
         try? saveLibrary()
         if wasCurrent, let nextCandidate, tracks.contains(where: { $0.id == nextCandidate.id }) {
             try? loadTrack(id: nextCandidate.id, autoplay: false)
+        } else if currentTrack == nil {
+            updateNowPlaying(force: true)
         }
         libraryMessage = "已从曲库移除歌曲"
     }
@@ -518,6 +537,83 @@ final class YiuAudioPlayer: ObservableObject {
         libraryMessage = "已恢复 \(tracks.count) 首歌曲"
     }
 
+    private func configureRemoteCommands() {
+        let center = MPRemoteCommandCenter.shared()
+        center.playCommand.isEnabled = true
+        center.pauseCommand.isEnabled = true
+        center.togglePlayPauseCommand.isEnabled = true
+        center.nextTrackCommand.isEnabled = false
+        center.previousTrackCommand.isEnabled = false
+        center.changePlaybackPositionCommand.isEnabled = true
+
+        let playTarget = center.playCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.resumePlayback() }
+            return .success
+        }
+        let pauseTarget = center.pauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.pausePlayback() }
+            return .success
+        }
+        let toggleTarget = center.togglePlayPauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.togglePlayback() }
+            return .success
+        }
+        let nextTarget = center.nextTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.nextTrack() }
+            return .success
+        }
+        let previousTarget = center.previousTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.previousTrack() }
+            return .success
+        }
+        let positionTarget = center.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            let position = event.positionTime
+            Task { @MainActor [weak self] in self?.seek(to: position) }
+            return .success
+        }
+
+        remoteCommandTargets = [
+            playTarget, pauseTarget, toggleTarget,
+            nextTarget, previousTarget, positionTarget
+        ]
+    }
+
+    private func updateNowPlaying(force: Bool = false) {
+        let now = Date.timeIntervalSinceReferenceDate
+        guard force || now - lastNowPlayingUpdate >= 0.5 else { return }
+        lastNowPlayingUpdate = now
+
+        guard let track = currentTrack else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            let center = MPRemoteCommandCenter.shared()
+            center.nextTrackCommand.isEnabled = false
+            center.previousTrackCommand.isEnabled = false
+            center.changePlaybackPositionCommand.isEnabled = false
+            return
+        }
+
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: track.title,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0
+        ]
+        if !track.artist.isEmpty { info[MPMediaItemPropertyArtist] = track.artist }
+        if !track.album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = track.album }
+        if duration.isFinite, duration > 0 {
+            info[MPMediaItemPropertyPlaybackDuration] = duration
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        let center = MPRemoteCommandCenter.shared()
+        center.nextTrackCommand.isEnabled = tracks.count > 1
+        center.previousTrackCommand.isEnabled = tracks.count > 1
+        center.changePlaybackPositionCommand.isEnabled = duration > 0
+    }
+
     private func loadTrack(id: String, autoplay: Bool, persistSelection: Bool = true) throws {
         guard let track = tracks.first(where: { $0.id == id }) else { throw YiuMusicError.invalidTrack }
         let fileURL = audioDirectory.appendingPathComponent(track.fileName)
@@ -535,7 +631,8 @@ final class YiuAudioPlayer: ObservableObject {
         errorMessage = nil
         loadLyrics(for: track)
         if persistSelection { try saveLibrary() }
-        if autoplay { togglePlayback() }
+        updateNowPlaying(force: true)
+        if autoplay { resumePlayback() }
     }
 
     private func loadLyrics(for track: YiuTrack) {
@@ -571,6 +668,7 @@ final class YiuAudioPlayer: ObservableObject {
             if completed { finishCurrentTrack() }
         }
         refreshLyricIndex()
+        updateNowPlaying()
     }
 
     private func refreshLyricIndex() {
