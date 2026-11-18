@@ -211,7 +211,7 @@ struct NativeAppBackground: View {
         let normalized = appearance.gradientAngle.truncatingRemainder(dividingBy: 360) / 360
         let x = 0.5 - 0.5 * cos(normalized * 2 * .pi)
         let y = 0.5 - 0.5 * sin(normalized * 2 * .pi)
-        return UnitPoint(x: x, y: y)
+        return UnitPoint(x: CGFloat(x), y: CGFloat(y))
     }
 
     private var gradientEnd: UnitPoint {
