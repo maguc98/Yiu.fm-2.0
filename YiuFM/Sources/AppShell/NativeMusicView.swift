@@ -71,29 +71,38 @@ struct NativeMusicView: View {
     }
 
     private var artwork: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.82, green: 0.88, blue: 0.96),
-                            Color(red: 0.89, green: 0.84, blue: 0.94),
-                            Color(red: 0.82, green: 0.92, blue: 0.89)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            Circle()
-                .fill(.white.opacity(0.4))
-                .frame(width: 190, height: 190)
-                .blur(radius: 2)
-            Image(systemName: "waveform")
-                .font(.system(size: 62, weight: .light))
-                .foregroundStyle(Color(red: 0.36, green: 0.48, blue: 0.67))
+        Group {
+            if let cover = appearance.coverImage {
+                Image(uiImage: cover)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.82, green: 0.88, blue: 0.96),
+                                    Color(red: 0.89, green: 0.84, blue: 0.94),
+                                    Color(red: 0.82, green: 0.92, blue: 0.89)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Circle()
+                        .fill(.white.opacity(0.4))
+                        .frame(width: 190, height: 190)
+                        .blur(radius: 2)
+                    Image(systemName: "waveform")
+                        .font(.system(size: 62, weight: .light))
+                        .foregroundStyle(Color(red: 0.36, green: 0.48, blue: 0.67))
+                }
+            }
         }
         .frame(maxWidth: 300)
         .frame(height: 250)
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 32, style: .continuous)
                 .strokeBorder(.white.opacity(0.9), lineWidth: 1)
