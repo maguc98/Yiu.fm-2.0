@@ -8,6 +8,7 @@ struct NativeMusicView: View {
     @AppStorage("yiufm.native.typography.scale") private var lyricScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var lyricWeightValue = 0.78
     @AppStorage("yiufm.native.typography.color") private var lyricColorHex = "#FFFFFF"
+    @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
     @State private var showingAudioImporter = false
     @State private var showingLyricsImporter = false
     @State private var activeAlert: MusicAlert?
@@ -147,7 +148,10 @@ struct NativeMusicView: View {
 
     private var transportControls: some View {
         HStack(spacing: 0) {
-            Button(action: player.toggleShuffle) {
+            Button {
+                NativeHaptics.selection(enabled: hapticsEnabled)
+                player.toggleShuffle()
+            } label: {
                 Image(systemName: "shuffle")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(player.shuffleEnabled ? accent : .secondary)
@@ -155,7 +159,10 @@ struct NativeMusicView: View {
             }
             .accessibilityLabel(player.shuffleEnabled ? "关闭随机播放" : "开启随机播放")
 
-            Button(action: player.previousTrack) {
+            Button {
+                NativeHaptics.selection(enabled: hapticsEnabled)
+                player.previousTrack()
+            } label: {
                 Image(systemName: "backward.end.fill")
                     .font(.system(size: 20))
                     .foregroundStyle(ink)
@@ -163,7 +170,10 @@ struct NativeMusicView: View {
             }
             .disabled(!player.hasTrack || player.tracks.count < 2)
 
-            Button(action: player.togglePlayback) {
+            Button {
+                NativeHaptics.impact(enabled: hapticsEnabled)
+                player.togglePlayback()
+            } label: {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.white)
@@ -182,7 +192,10 @@ struct NativeMusicView: View {
             .disabled(!player.hasTrack)
             .accessibilityLabel(player.isPlaying ? "暂停" : "播放")
 
-            Button(action: player.nextTrack) {
+            Button {
+                NativeHaptics.selection(enabled: hapticsEnabled)
+                player.nextTrack()
+            } label: {
                 Image(systemName: "forward.end.fill")
                     .font(.system(size: 20))
                     .foregroundStyle(ink)
@@ -190,7 +203,10 @@ struct NativeMusicView: View {
             }
             .disabled(!player.hasTrack || player.tracks.count < 2)
 
-            Button(action: player.cycleRepeatMode) {
+            Button {
+                NativeHaptics.selection(enabled: hapticsEnabled)
+                player.cycleRepeatMode()
+            } label: {
                 Image(systemName: player.repeatMode.symbol)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(player.repeatMode == .off ? .secondary : accent)
@@ -267,6 +283,7 @@ struct NativeMusicView: View {
                         LazyVStack(alignment: .leading, spacing: 14) {
                             ForEach(player.lyrics) { line in
                                 Button {
+                                    NativeHaptics.selection(enabled: hapticsEnabled)
                                     player.seekToLyric(line)
                                 } label: {
                                     lyricRow(line)
@@ -323,12 +340,12 @@ struct NativeMusicView: View {
     private var importActions: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                Button { showingAudioImporter = true } label: {
+                Button { NativeHaptics.selection(enabled: hapticsEnabled); showingAudioImporter = true } label: {
                     Label("导入音频", systemImage: "plus").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryNativeButtonStyle())
 
-                Button { showingLyricsImporter = true } label: {
+                Button { NativeHaptics.selection(enabled: hapticsEnabled); showingLyricsImporter = true } label: {
                     Label("导入 LRC", systemImage: "text.alignleft").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SecondaryNativeButtonStyle())
