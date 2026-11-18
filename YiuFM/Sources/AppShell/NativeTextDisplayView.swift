@@ -124,7 +124,7 @@ struct NativeTextDisplayView: View {
             refreshShuffleOrder()
             restart()
         }
-        .onChange(of: store.cards.map(\\.id)) { _, _ in
+        .onChange(of: store.cards.map(\.id)) { _, _ in
             refreshShuffleOrder()
         }
         .onChange(of: store.activePackage?.shuffle ?? false) { _, _ in
@@ -147,7 +147,7 @@ struct NativeTextDisplayView: View {
     private func refreshShuffleOrder() {
         let ids = store.cards
             .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .map(\\.id)
+            .map(\.id)
         if store.activePackage?.shuffle == true {
             shuffleOrder = ids.shuffled()
         } else {
