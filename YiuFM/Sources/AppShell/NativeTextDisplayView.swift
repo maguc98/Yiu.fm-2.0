@@ -180,7 +180,8 @@ struct NativeTextDisplayView: View {
     private func textCard(frame: (card: NativeTextCard, progress: Double, start: Double), elapsed: Double, size: CGSize) -> some View {
         let card = frame.card
         let progress = frame.progress
-        let text = visibleText(for: card, progress: progress)
+        let animationProgress = reduceMotion ? 1.0 : progress
+        let text = visibleText(for: card, progress: animationProgress)
         let color = Color(nativeHex: card.colorHex ?? globalColorHex)
         let fontSize = CGFloat(card.fontSize * globalScale)
 
@@ -189,16 +190,16 @@ struct NativeTextDisplayView: View {
             .foregroundStyle(color)
             .multilineTextAlignment(.center)
             .lineSpacing(card.animation == .poster ? 12 : 5)
-            .opacity(opacity(for: card.animation, progress: progress))
-            .scaleEffect(scale(for: card.animation, progress: progress))
-            .offset(x: horizontalOffset(for: card.animation, progress: progress, width: size.width))
-            .offset(y: verticalOffset(for: card.animation, progress: progress))
-            .blur(radius: blurRadius(for: card.animation, progress: progress))
+             .opacity(opacity(for: card.animation, progress: animationProgress))
+            .scaleEffect(scale(for: card.animation, progress: animationProgress))
+            .offset(x: horizontalOffset(for: card.animation, progress: animationProgress, width: size.width))
+            .offset(y: verticalOffset(for: card.animation, progress: animationProgress))
+            .blur(radius: blurRadius(for: card.animation, progress: animationProgress))
             .rotation3DEffect(
-                .degrees(card.animation == .flip ? (1 - progress) * 76 : 0),
+                .degrees(card.animation == .flip ? (1 - animationProgress) * 76 : 0),
                 axis: (x: 1, y: 0, z: 0)
             )
-            .rotationEffect(.degrees(rotation(for: card.animation, elapsed: elapsed)))
+            .rotationEffect(.degrees(reduceMotion ? 0 : rotation(for: card.animation, elapsed: elapsed)))
             .shadow(color: color.opacity(card.animation == .star ? 0.55 : 0.14), radius: card.animation == .star ? 18 : 7, x: 0, y: 3)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
