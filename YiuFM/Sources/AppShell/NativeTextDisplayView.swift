@@ -8,6 +8,11 @@ struct NativeTextDisplayView: View {
     @AppStorage("yiufm.native.typography.scale") private var globalScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var globalWeight = 0.78
     @AppStorage("yiufm.native.typography.color") private var globalColorHex = "#FFFFFF"
+    @AppStorage("yiufm.native.typography.alignment") private var horizontalAlignment = "center"
+    @AppStorage("yiufm.native.typography.position") private var verticalPosition = "center"
+    @AppStorage("yiufm.native.typography.wrap") private var wrapMode = "fill"
+    @AppStorage("yiufm.native.typography.padding") private var sidePadding = 22.0
+    @AppStorage("yiufm.native.typography.lineSpacing") private var lineSpacingMultiplier = 1.35
     @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
     @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
@@ -20,6 +25,31 @@ struct NativeTextDisplayView: View {
     private var family: NativeFontFamily {
         NativeFontFamily(rawValue: familyID) ?? .serif
     }
+    private var textAlignment: TextAlignment {
+        switch horizontalAlignment {
+        case "left": return .leading
+        case "right": return .trailing
+        default: return .center
+        }
+    }
+
+    private var contentAlignment: Alignment {
+        let horizontal: HorizontalAlignment
+        switch horizontalAlignment {
+        case "left": horizontal = .leading
+        case "right": horizontal = .trailing
+        default: horizontal = .center
+        }
+        switch verticalPosition {
+        case "top":
+            return Alignment(horizontal: horizontal, vertical: .top)
+        case "bottom":
+            return Alignment(horizontal: horizontal, vertical: .bottom)
+        default:
+            return Alignment(horizontal: horizontal, vertical: .center)
+        }
+    }
+
     private var fontWeight: Font.Weight {
         switch globalWeight {
         case ..<0.48: return .medium
@@ -181,16 +211,18 @@ struct NativeTextDisplayView: View {
         let card = frame.card
         let progress = frame.progress
         let animationProgress = reduceMotion ? 1.0 : progress
-        let text = visibleText(for: card, progress: animationProgress)
+        let sourceText = visibleText(for: card, progress: animationProgress)
+        let text = layoutText(sourceText, mode: wrapMode, availableWidth: max(120, Double(size.width) - sidePadding * 2), fontSize: Double(card.fontSize * globalScale))
         let color = Color(nativeHex: card.colorHex ?? globalColorHex)
         let fontSize = CGFloat(card.fontSize * globalScale)
+        let spacing = CGFloat(max(0, lineSpacingMultiplier - 1) * 20 + (card.animation == .poster ? 5 : 0))
 
         Text(text.isEmpty ? " " : text)
             .font(.system(size: fontSize, weight: fontWeight, design: family.design))
             .foregroundStyle(color)
-            .multilineTextAlignment(.center)
-            .lineSpacing(card.animation == .poster ? 12 : 5)
-             .opacity(opacity(for: card.animation, progress: animationProgress))
+            .multilineTextAlignment(textAlignment)
+            .lineSpacing(spacing)
+            .opacity(opacity(for: card.animation, progress: animationProgress))
             .scaleEffect(scale(for: card.animation, progress: animationProgress))
             .offset(x: horizontalOffset(for: card.animation, progress: animationProgress, width: size.width))
             .offset(y: verticalOffset(for: card.animation, progress: animationProgress))
@@ -201,7 +233,77 @@ struct NativeTextDisplayView: View {
             )
             .rotationEffect(.degrees(reduceMotion ? 0 : rotation(for: card.animation, elapsed: elapsed)))
             .shadow(color: color.opacity(card.animation == .star ? 0.55 : 0.14), radius: card.animation == .star ? 18 : 7, x: 0, y: 3)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, CGFloat(sidePadding))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: contentAlignment)
+    }
+
+    private func layoutText(_ text: String, mode: String, availableWidth: Double, fontSize: Double) -> String {
+        guard mode != "word", fontSize > 0, availableWidth > 0 else { return text }
+        if mode == "fill" {
+            return text.split(separator: "\n", omittingEmptySubsequences: false)
+                .map { paragraph in String(paragraph).map(String.init).joined(separator: "\u{200B}") }
+                .joined(separator: "\n")
+        }
+        guard mode == "balance" else { return text }
+
+        return text.split(separator: "\n", omittingEmptySubsequences: false)
+            .map { paragraph in
+                let tokens = balancedTokens(String(paragraph))
+                guard tokens.count > 1 else { return String(paragraph) }
+                let totalWidth = tokens.reduce(0.0) { $0 + $1.width(fontSize: fontSize) }
+                let lineCount = max(1, Int(ceil(totalWidth / availableWidth)))
+                let targetWidth = totalWidth / Double(lineCount)
+                var lines: [String] = []
+                var current = ""
+                var currentWidth = 0.0
+                var remainingWidth = totalWidth
+                var remainingLines = lineCount
+
+                for token in tokens {
+                    let tokenWidth = token.width(fontSize: fontSize)
+                    let shouldBreak = !current.isEmpty &&
+                        remainingLines > 1 &&
+                        currentWidth + tokenWidth > targetWidth &&
+                        abs((remainingWidth - currentWidth) - targetWidth * Double(remainingLines - 1)) < abs(remainingWidth - currentWidth - targetWidth * Double(remainingLines))
+                    if shouldBreak {
+                        lines.append(current)
+                        remainingWidth -= currentWidth
+                        remainingLines -= 1
+                        current = ""
+                        currentWidth = 0
+                    }
+                    current += token.text
+                    currentWidth += tokenWidth
+                }
+                if !current.isEmpty { lines.append(current) }
+                return lines.joined(separator: "\n")
+            }
+            .joined(separator: "\n")
+    }
+
+    private func balancedTokens(_ text: String) -> [NativeTextToken] {
+        var tokens: [NativeTextToken] = []
+        var word = ""
+        func flushWord() {
+            guard !word.isEmpty else { return }
+            tokens.append(NativeTextToken(text: word, isWide: false))
+            word = ""
+        }
+        for character in text {
+            let scalar = character.unicodeScalars.first?.value ?? 0
+            let isWide = (0x2E80...0x9FFF).contains(scalar) || (0xF900...0xFAFF).contains(scalar) || (0xFF01...0xFF60).contains(scalar)
+            if character.isWhitespace {
+                flushWord()
+                tokens.append(NativeTextToken(text: String(character), isWide: false))
+            } else if isWide {
+                flushWord()
+                tokens.append(NativeTextToken(text: String(character), isWide: true))
+            } else {
+                word.append(character)
+            }
+        }
+        flushWord()
+        return tokens
     }
 
     private func visibleText(for card: NativeTextCard, progress: Double) -> String {
@@ -288,5 +390,16 @@ struct NativeTextDisplayView: View {
         accumulatedTime = elapsedBefore
         startDate = Date()
         isPlaying = true
+    }
+}
+
+private struct NativeTextToken {
+    let text: String
+    let isWide: Bool
+
+    func width(fontSize: Double) -> Double {
+        if isWide { return fontSize }
+        if text.trimmingCharacters(in: .whitespaces).isEmpty { return fontSize * 0.28 }
+        return Double(text.count) * fontSize * 0.54
     }
 }
