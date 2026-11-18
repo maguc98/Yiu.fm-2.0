@@ -428,10 +428,10 @@ final class YiuAudioPlayer: ObservableObject {
                 ? rawExtension
                 : "audio"
             let newAudioName = newID + "." + safeExtension
-            try entry.audioData.write(
-                to: stageAudio.appendingPathComponent(newAudioName),
-                options: .atomic
-            )
+            let stagedAudioURL = stageAudio.appendingPathComponent(newAudioName)
+            try entry.audioData.write(to: stagedAudioURL, options: .atomic)
+            let validationPlayer = try AVAudioPlayer(contentsOf: stagedAudioURL)
+            guard validationPlayer.duration.isFinite else { throw YiuMusicError.unsupportedAudio(entry.track.sourceName) }
 
             var newLyricsName: String?
             if let lyricsData = entry.lyricsData {
@@ -483,8 +483,17 @@ final class YiuAudioPlayer: ObservableObject {
             currentTrackID = payload.currentTrackID.flatMap { identifierMap[$0] }
             try saveLibrary()
         } catch {
+            if fileManager.fileExists(atPath: oldAudio.path) {
+                try? fileManager.removeItem(at: audioDirectory)
+                try? fileManager.moveItem(at: oldAudio, to: audioDirectory)
+            }
+            if fileManager.fileExists(atPath: oldLyrics.path) {
+                try? fileManager.removeItem(at: lyricsDirectory)
+                try? fileManager.moveItem(at: oldLyrics, to: lyricsDirectory)
+            }
             tracks = previousTracks
             currentTrackID = previousCurrentID
+            try? saveLibrary()
             throw error
         }
 
