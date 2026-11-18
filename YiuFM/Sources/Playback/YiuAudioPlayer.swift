@@ -55,6 +55,9 @@ enum YiuMusicError: LocalizedError {
     case noMatchingTrack(String)
     case missingAudio
     case invalidTrack
+    case unsupportedBackup
+    case invalidBackup
+    case backupTooLarge
 
     var errorDescription: String? {
         switch self {
@@ -68,8 +71,27 @@ enum YiuMusicError: LocalizedError {
             return "歌曲文件不存在，请重新导入。"
         case .invalidTrack:
             return "找不到这首歌曲。"
+        case .unsupportedBackup:
+            return "这个备份版本不受支持，或备份中的曲目数量不正确。"
+        case .invalidBackup:
+            return "备份包含重复的曲目标识，无法安全恢复。"
+        case .backupTooLarge:
+            return "备份文件过大，当前版本无法安全地一次性恢复。"
         }
     }
+}
+
+private struct YiuMusicBackupPayload: Codable {
+    let version: Int
+    let createdAt: Date
+    let tracks: [YiuMusicBackupTrack]
+    let currentTrackID: String?
+}
+
+private struct YiuMusicBackupTrack: Codable {
+    let track: YiuTrack
+    let audioData: Data
+    let lyricsData: Data?
 }
 
 @MainActor
@@ -344,6 +366,139 @@ final class YiuAudioPlayer: ObservableObject {
         guard value.isFinite, value >= 0 else { return "0:00" }
         let total = Int(value)
         return "\(total / 60):" + String(format: "%02d", total % 60)
+    }
+
+    func createBackupData() throws -> Data {
+        try ensureDirectories()
+        let entries = try tracks.map { track -> YiuMusicBackupTrack in
+            let audioURL = audioDirectory.appendingPathComponent(track.fileName)
+            guard fileManager.fileExists(atPath: audioURL.path) else {
+                throw YiuMusicError.missingAudio
+            }
+            let audioData = try Data(contentsOf: audioURL)
+            let lyricsData: Data?
+            if let lyricsFileName = track.lyricsFileName {
+                let lyricsURL = lyricsDirectory.appendingPathComponent(lyricsFileName)
+                lyricsData = try? Data(contentsOf: lyricsURL)
+            } else {
+                lyricsData = nil
+            }
+            return YiuMusicBackupTrack(track: track, audioData: audioData, lyricsData: lyricsData)
+        }
+
+        let payload = YiuMusicBackupPayload(
+            version: 1,
+            createdAt: Date(),
+            tracks: entries,
+            currentTrackID: currentTrackID
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return try encoder.encode(payload)
+    }
+
+    func restoreBackupData(_ data: Data) throws {
+        guard data.count <= 900_000_000 else {
+            throw YiuMusicError.backupTooLarge
+        }
+        let payload = try JSONDecoder().decode(YiuMusicBackupPayload.self, from: data)
+        guard payload.version == 1, payload.tracks.count <= 1000 else {
+            throw YiuMusicError.unsupportedBackup
+        }
+
+        try ensureDirectories()
+        let restoreID = UUID().uuidString
+        let stageRoot = musicRoot.appendingPathComponent("Restore-\(restoreID)", isDirectory: true)
+        let stageAudio = stageRoot.appendingPathComponent("Audio", isDirectory: true)
+        let stageLyrics = stageRoot.appendingPathComponent("Lyrics", isDirectory: true)
+        let oldAudio = musicRoot.appendingPathComponent("Audio-old-\(restoreID)", isDirectory: true)
+        let oldLyrics = musicRoot.appendingPathComponent("Lyrics-old-\(restoreID)", isDirectory: true)
+        try fileManager.createDirectory(at: stageAudio, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: stageLyrics, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: stageRoot) }
+
+        var restoredTracks: [YiuTrack] = []
+        var identifierMap: [String: String] = [:]
+        var usedSourceIDs = Set<String>()
+
+        for entry in payload.tracks {
+            let newID = UUID().uuidString
+            let rawExtension = URL(fileURLWithPath: entry.track.fileName).pathExtension.lowercased()
+            let safeExtension = rawExtension.range(of: #"^[a-z0-9]{1,8}$"#, options: .regularExpression) != nil
+                ? rawExtension
+                : "audio"
+            let newAudioName = newID + "." + safeExtension
+            try entry.audioData.write(
+                to: stageAudio.appendingPathComponent(newAudioName),
+                options: .atomic
+            )
+
+            var newLyricsName: String?
+            if let lyricsData = entry.lyricsData {
+                let name = newID + ".lrc"
+                try lyricsData.write(to: stageLyrics.appendingPathComponent(name), options: .atomic)
+                newLyricsName = name
+            }
+
+            var track = entry.track
+            let oldID = track.id
+            if !usedSourceIDs.insert(oldID).inserted {
+                throw YiuMusicError.invalidBackup
+            }
+            identifierMap[oldID] = newID
+            track.id = newID
+            track.fileName = newAudioName
+            track.fileSize = Int64(entry.audioData.count)
+            track.lyricsFileName = newLyricsName
+            restoredTracks.append(track)
+        }
+
+        let previousTracks = tracks
+        let previousCurrentID = currentTrackID
+        audioPlayer?.stop()
+        audioPlayer = nil
+        isPlaying = false
+
+        do {
+            try fileManager.moveItem(at: audioDirectory, to: oldAudio)
+            do {
+                try fileManager.moveItem(at: lyricsDirectory, to: oldLyrics)
+            } catch {
+                try? fileManager.moveItem(at: oldAudio, to: audioDirectory)
+                throw error
+            }
+
+            do {
+                try fileManager.moveItem(at: stageAudio, to: audioDirectory)
+                try fileManager.moveItem(at: stageLyrics, to: lyricsDirectory)
+            } catch {
+                try? fileManager.removeItem(at: audioDirectory)
+                try? fileManager.removeItem(at: lyricsDirectory)
+                try? fileManager.moveItem(at: oldAudio, to: audioDirectory)
+                try? fileManager.moveItem(at: oldLyrics, to: lyricsDirectory)
+                throw error
+            }
+
+            tracks = restoredTracks
+            currentTrackID = payload.currentTrackID.flatMap { identifierMap[$0] }
+            try saveLibrary()
+        } catch {
+            tracks = previousTracks
+            currentTrackID = previousCurrentID
+            throw error
+        }
+
+        try? fileManager.removeItem(at: oldAudio)
+        try? fileManager.removeItem(at: oldLyrics)
+
+        currentTime = 0
+        duration = 0
+        lyrics = []
+        currentLyricIndex = 0
+        if let currentTrackID {
+            try loadTrack(id: currentTrackID, autoplay: false, persistSelection: false)
+        }
+        libraryMessage = "已恢复 \(tracks.count) 首歌曲"
     }
 
     private func loadTrack(id: String, autoplay: Bool, persistSelection: Bool = true) throws {
