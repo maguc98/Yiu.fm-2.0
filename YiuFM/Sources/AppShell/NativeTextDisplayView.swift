@@ -42,7 +42,7 @@ struct NativeTextDisplayView: View {
                 )
                 .ignoresSafeArea()
 
-                TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying || reduceMotion)) { timeline in
+                TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying)) { timeline in
                     let elapsed = elapsedTime(at: timeline.date)
                     let frame = currentFrame(at: elapsed)
 
@@ -51,6 +51,7 @@ struct NativeTextDisplayView: View {
                             textCard(frame: frame, elapsed: elapsed, size: geometry.size)
                                 .id(frame.card.id)
                                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: frame.card.id)
                                 .padding(.horizontal, 28)
                         } else {
                             VStack(spacing: 12) {
@@ -204,7 +205,6 @@ struct NativeTextDisplayView: View {
             .rotationEffect(.degrees(rotation(for: card.animation, elapsed: elapsed)))
             .shadow(color: color.opacity(card.animation == .star ? 0.55 : 0.14), radius: card.animation == .star ? 18 : 7, x: 0, y: 3)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: progress)
     }
 
     private func visibleText(for card: NativeTextCard, progress: Double) -> String {
