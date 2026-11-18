@@ -2067,7 +2067,16 @@ body.performance-mode #cmRoot.lt .cm-panel{background:rgba(150,152,164,.96)}
   });
 
   /* ---------- /err 错误收集（从脚本加载起一直在记） ---------- */
-  var errs = ((window.__cmEarly && window.__cmEarly.errs) || []).slice(-100).map(function (x) { return { t: x.t || Date.now(), msg: x.msg || '启动异常', src: x.src || '', file: x.file || '', line: x.line || 0, column: x.column || 0, stack: x.stack || '' }; }), errLive = false;
+  var errs = ((window.__cmEarly && window.__cmEarly.errs) || []).slice(-100).map(function (x) {
+    var active = x.activeScript || null, label = active && active.label ? active.label : '';
+    var hint = label ? '执行脚本线索：' + label : '';
+    return {
+      t: x.t || Date.now(), msg: x.msg || '启动异常',
+      src: x.src || hint, file: x.file || '', line: x.line || 0,
+      column: x.column || 0, stack: x.stack || '',
+      kind: x.kind || '', activeScript: label
+    };
+  }), errLive = false;
   /* 合并 index.html 在 sys-log.js 加载前保存的异常。之前这份队列只进系统日志，/err 看不到。 */
   (window.__YiuEarlyErrors || []).forEach(function (x) {
     var d = x.detail || {}, msg = d.message || ('启动早期异常：' + (x.kind || 'unknown'));
