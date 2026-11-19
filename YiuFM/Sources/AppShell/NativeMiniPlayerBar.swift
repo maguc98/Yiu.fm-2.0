@@ -9,11 +9,10 @@ struct NativeMiniPlayerBar: View {
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 9) {
             Button(action: onOpenPlayer) {
                 HStack(spacing: 10) {
                     artwork
-
                     VStack(alignment: .leading, spacing: 3) {
                         Text(player.currentTrack?.title ?? "Yiu.fm · Aether")
                             .font(.system(size: 12, weight: .semibold))
@@ -37,29 +36,33 @@ struct NativeMiniPlayerBar: View {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 36, height: 38)
+                    .frame(width: 34, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!player.hasTrack)
             .accessibilityLabel(player.isPlaying ? "暂停播放" : "开始播放")
 
-            Button(action: onOpenControlCenter) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: 36, height: 38)
-                    .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            Button {
+                NativeHaptics.selection(enabled: hapticsEnabled)
+                player.nextTrack()
+            } label: {
+                Image(systemName: "forward.end.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(player.tracks.count > 1 ? 0.88 : 0.35))
+                    .frame(width: 30, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("打开控制中心")
+            .disabled(player.tracks.count < 2)
+            .accessibilityLabel("下一首")
         }
-        .padding(.horizontal, 11)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, 10)
+        .frame(height: 66)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .environment(\.colorScheme, .dark)
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(.white.opacity(0.20), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.28), radius: 17, x: 0, y: 7)
@@ -70,8 +73,8 @@ struct NativeMiniPlayerBar: View {
                     .frame(width: geometry.size.width * progress, height: 2)
                     .frame(maxHeight: .infinity, alignment: .bottom)
             }
-            .padding(.horizontal, 15)
-            .padding(.bottom, 6)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 5)
             .allowsHitTesting(false)
         }
     }
@@ -92,7 +95,7 @@ struct NativeMiniPlayerBar: View {
                 }
             }
         }
-        .frame(width: 40, height: 40)
+        .frame(width: 46, height: 46)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
