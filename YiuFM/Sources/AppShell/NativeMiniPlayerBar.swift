@@ -3,59 +3,89 @@ import SwiftUI
 struct NativeMiniPlayerBar: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
-    let onOpenPlayer: () -> Void
+    @Binding var isExpanded: Bool
     let onOpenControlCenter: () -> Void
+    let onSwipeUp: () -> Void
 
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
 
+    private var currentTitle: String {
+        player.currentTrack?.title ?? player.currentLyric?.text ?? "—"
+    }
+
+    private var artworkLetter: String {
+        String(currentTitle.prefix(1)).isEmpty ? "文" : String(currentTitle.prefix(1))
+    }
+
     var body: some View {
         HStack(spacing: 9) {
-            Button(action: onOpenPlayer) {
+            Button(action: onOpenControlCenter) {
                 HStack(spacing: 10) {
                     artwork
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(player.currentTrack?.title ?? "Yiu.fm · Aether")
-                            .font(.system(size: 12, weight: .semibold))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("正在播放")
+                            .font(.system(size: 11, weight: .medium))
+                            .tracking(1)
+                            .foregroundStyle(.white.opacity(0.62))
+                            .lineLimit(1)
+                        Text(currentTitle)
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
                             .lineLimit(1)
-                        Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "点击选择本地歌曲")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.58))
-                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 18)
+                    .onEnded { value in
+                        let dx = value.translation.width
+                        let dy = value.translation.height
+                        if abs(dx) > 36 && abs(dx) > abs(dy) * 1.5 {
+                            withAnimation(.spring(response: 0.48, dampingFraction: 0.78)) {
+                                isExpanded = dx > 0
+                            }
+                        } else if dy < -36 && abs(dy) > abs(dx) * 1.5 {
+                            onSwipeUp()
+                        }
+                    }
+            )
 
-            Button {
-                NativeHaptics.impact(enabled: hapticsEnabled)
-                player.togglePlayback()
-            } label: {
-                Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 34, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!player.hasTrack)
-            .accessibilityLabel(player.isPlaying ? "暂停播放" : "开始播放")
+            if isExpanded {
+                Button {
+                    NativeHaptics.impact(enabled: hapticsEnabled)
+                    player.togglePlayback()
+                } label: {
+                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 42, height: 42)
+                        .background(.white.opacity(0.12), in: Circle())
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!player.hasTrack)
+                .accessibilityLabel(player.isPlaying ? "暂停播放" : "开始播放")
+                .transition(.scale.combined(with: .opacity))
 
-            Button {
-                NativeHaptics.selection(enabled: hapticsEnabled)
-                player.nextTrack()
-            } label: {
-                Image(systemName: "forward.end.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(player.tracks.count > 1 ? 0.88 : 0.35))
-                    .frame(width: 30, height: 44)
-                    .contentShape(Rectangle())
+                Button {
+                    NativeHaptics.selection(enabled: hapticsEnabled)
+                    player.nextTrack()
+                } label: {
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white.opacity(player.tracks.count > 1 ? 0.88 : 0.35))
+                        .frame(width: 42, height: 42)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(player.tracks.count < 2)
+                .accessibilityLabel("下一首")
+                .transition(.scale.combined(with: .opacity))
             }
-            .buttonStyle(.plain)
-            .disabled(player.tracks.count < 2)
-            .accessibilityLabel("下一首")
         }
         .padding(.horizontal, 10)
         .frame(height: 66)
@@ -64,7 +94,7 @@ struct NativeMiniPlayerBar: View {
                 .fill(.ultraThinMaterial)
                 .overlay {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.42))
+                        .fill(Color(red: 34.0 / 255.0, green: 34.0 / 255.0, blue: 40.0 / 255.0).opacity(0.62))
                 }
         }
         .environment(\.colorScheme, .dark)
@@ -73,17 +103,8 @@ struct NativeMiniPlayerBar: View {
                 .strokeBorder(.white.opacity(0.20), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.28), radius: 17, x: 0, y: 7)
-        .overlay(alignment: .bottomLeading) {
-            GeometryReader { geometry in
-                Capsule()
-                    .fill(Color(red: 0.60, green: 0.72, blue: 0.98).opacity(0.95))
-                    .frame(width: geometry.size.width * progress, height: 2)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-            }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 5)
-            .allowsHitTesting(false)
-        }
+        .animation(.spring(response: 0.48, dampingFraction: 0.78), value: isExpanded)
+        .accessibilityElement(children: .contain)
     }
 
     private var artwork: some View {
@@ -94,24 +115,25 @@ struct NativeMiniPlayerBar: View {
                     .scaledToFill()
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.white.opacity(0.12))
-                    Image(systemName: "waveform")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.82))
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.56, green: 0.69, blue: 1.0).opacity(0.60), .white.opacity(0.12)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Text(artworkLetter)
+                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white)
                 }
             }
         }
         .frame(width: 46, height: 46)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(.white.opacity(0.16), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
         }
-    }
-
-    private var progress: Double {
-        guard player.duration > 0 else { return 0 }
-        return min(1, max(0, player.currentTime / player.duration))
     }
 }
