@@ -323,6 +323,22 @@ struct NativeAppBackground: View {
     @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
     @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
+    @AppStorage("yiufm.native.background.fadeSpeed") private var fadeSpeed = 1.5
+
+    private var backgroundSignature: String {
+        [
+            appearance.backgroundMode.rawValue,
+            appearance.solidColorHex,
+            appearance.gradientStartHex,
+            appearance.gradientMid1Hex,
+            appearance.gradientMid2Hex,
+            appearance.gradientEndHex,
+            String(appearance.gradientAngle),
+            String(appearance.backgroundDim),
+            String(appearance.backgroundBlur),
+            String(appearance.backgroundImageData?.hashValue ?? 0)
+        ].joined(separator: "|")
+    }
 
     var body: some View {
         ZStack {
@@ -363,6 +379,7 @@ struct NativeAppBackground: View {
             }
         }
         .ignoresSafeArea()
+        .animation(.easeInOut(duration: fadeSpeed), value: backgroundSignature)
     }
 
     @ViewBuilder
