@@ -14,6 +14,9 @@ struct YiuRootView: View {
     @StateObject private var presentation = NativePresentationState()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("yiufm.native.system.keepAwake") private var keepScreenAwake = false
+    @AppStorage("yiufm.native.ui.autoHideDelay") private var autoHideDelay = 10
+    @State private var isMiniPlayerHiddenByTimer = false
+    @State private var autoHideTask: Task<Void, Never>?
 
     var body: some View {
         GeometryReader { geometry in
@@ -80,7 +83,7 @@ struct YiuRootView: View {
                 .preferredColorScheme(.light)
                 .environmentObject(presentation)
 
-                if !presentation.hideMiniPlayer {
+                if !presentation.hideMiniPlayer && !isMiniPlayerHiddenByTimer {
                     ZStack {
                         NativeMiniPlayerBar(
                             player: player,
@@ -181,18 +184,57 @@ struct YiuRootView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
             .background(Color.black.ignoresSafeArea())
             .animation(.spring(response: 0.36, dampingFraction: 0.86), value: showingControlCenter)
+            .simultaneousGesture(TapGesture().onEnded { registerUIActivity() })
         }
         .ignoresSafeArea()
         .tint(Color(red: 0.56, green: 0.68, blue: 0.93))
         .environmentObject(presentation)
-        .onAppear { updateIdleTimer() }
+        .onAppear {
+            updateIdleTimer()
+            scheduleAutoHide()
+        }
         .onChange(of: keepScreenAwake) { _, _ in updateIdleTimer() }
         .onChange(of: scenePhase) { _, _ in updateIdleTimer() }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onChange(of: player.isPlaying) { _, _ in scheduleAutoHide() }
+        .onChange(of: autoHideDelay) { _, _ in scheduleAutoHide() }
+        .onDisappear {
+            autoHideTask?.cancel()
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
     }
 
     private func updateIdleTimer() {
         UIApplication.shared.isIdleTimerDisabled = keepScreenAwake && scenePhase == .active
+    }
+
+    private func registerUIActivity() {
+        if isMiniPlayerHiddenByTimer {
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.84)) {
+                isMiniPlayerHiddenByTimer = false
+            }
+        }
+        scheduleAutoHide()
+    }
+
+    private func scheduleAutoHide() {
+        autoHideTask?.cancel()
+        guard player.isPlaying, autoHideDelay > 0, !presentation.hideMiniPlayer else {
+            isMiniPlayerHiddenByTimer = false
+            return
+        }
+        autoHideTask = Task { @MainActor in
+            do {
+                try await Task.sleep(nanoseconds: UInt64(autoHideDelay) * 1_000_000_000)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.35)) {
+                isMiniPlayerHiddenByTimer = true
+                showingControlCenter = false
+                showingExpandedPlayer = false
+            }
+        }
     }
 
     private func miniPlayerWidth(for geometry: GeometryProxy) -> CGFloat {
