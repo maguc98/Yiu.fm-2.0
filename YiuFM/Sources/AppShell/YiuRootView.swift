@@ -25,6 +25,7 @@ struct YiuRootView: View {
                     NativeHomeView(
                         player: player,
                         appearance: appearance,
+                        textDeck: textDeck,
                         openMusic: { path.append(.music) },
                         openVisualizer: { path.append(.visualizer) },
                         openText: { path.append(.textDisplay) },
