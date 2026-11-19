@@ -7,7 +7,7 @@ struct NativeControlCenterView: View {
     let onOpenMusic: () -> Void
     let onOpenVisualizer: () -> Void
     let onOpenBackground: () -> Void
-    let onOpenSystem: () -> Void
+    let onOpenTuning: () -> Void
     let onOpenText: () -> Void
     let onClose: () -> Void
 
@@ -129,7 +129,7 @@ struct NativeControlCenterView: View {
 
     private var sectionNavigation: some View {
         HStack(spacing: 0) {
-            sectionButton("调节", symbol: "slider.horizontal.3", action: onOpenSystem)
+            sectionButton("调节", symbol: "slider.horizontal.3", action: onOpenTuning)
             sectionButton("风格", symbol: "sparkles", action: onOpenVisualizer)
             sectionButton("背景", symbol: "photo", action: onOpenBackground)
             sectionButton("文字", symbol: "textformat", action: onOpenText)
