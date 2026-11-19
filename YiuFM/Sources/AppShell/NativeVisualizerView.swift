@@ -1009,24 +1009,37 @@ struct NativeVisualBackdrop: View {
     let targetFPS: Int
     let animationSpeed: Double
     let reduceMotion: Bool
+    let motionStrength: Double
+    let cameraIntensity: Double
+    let graphicDensity: Double
+    let primaryColor: Color
+    let secondaryColor: Color
+    let accentColor: Color
+    let showBackgroundMG: Bool
+    let showFixedGeometry: Bool
+    let showBackgroundDecor: Bool
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying || reduceMotion)) { timeline in
             Canvas { context, size in
-                let time = timeline.date.timeIntervalSinceReferenceDate * animationSpeed
+                let time = timeline.date.timeIntervalSinceReferenceDate * animationSpeed * max(0.05, motionStrength)
                 let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
-                // The user-selected native app background is rendered underneath this transparent effect layer.
+                guard showBackgroundMG else { return }
                 switch engine {
                 case .sonnet:
-                    drawSonnet(in: &context, size: size, time: time, pulse: pulse)
+                    drawSonnet(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
                 case .tempera:
-                    drawTempera(in: &context, size: size, time: time, pulse: pulse)
+                    drawTempera(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor)
                 case .lumiere:
-                    drawLumiere(in: &context, size: size, time: time, pulse: pulse)
+                    drawLumiere(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
                 case .partita:
-                    drawPartita(in: &context, size: size, time: time, pulse: pulse)
+                    if showFixedGeometry {
+                        drawPartita(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor)
+                    } else {
+                        drawSonnet(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
+                    }
                 case .fume:
-                    drawFume(in: &context, size: size, time: time, pulse: pulse)
+                    drawFume(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
                 }
             }
         }
