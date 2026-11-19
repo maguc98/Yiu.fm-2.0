@@ -212,7 +212,7 @@ struct NativeTextDisplayView: View {
         let animation = card.animation == .follow ? store.defaultAnimation : card.animation
         let progress = frame.progress
         let animationProgress = reduceMotion ? 1.0 : progress
-        let sourceText = visibleText(for: card, progress: animationProgress)
+        let sourceText = visibleText(for: card, animation: animation, progress: animationProgress)
         let text = layoutText(sourceText, mode: wrapMode, availableWidth: max(120, Double(size.width) - sidePadding * 2), fontSize: Double(card.fontSize * globalScale))
         let color = Color(nativeHex: card.colorHex ?? globalColorHex)
         let fontSize = CGFloat(card.fontSize * globalScale)
@@ -307,8 +307,8 @@ struct NativeTextDisplayView: View {
         return tokens
     }
 
-    private func visibleText(for card: NativeTextCard, progress: Double) -> String {
-        guard card.animation == .type else { return card.text }
+    private func visibleText(for card: NativeTextCard, animation: NativeTextAnimation, progress: Double) -> String {
+        guard animation == .type else { return card.text }
         let characters = Array(card.text)
         let count = min(characters.count, max(0, Int(Double(characters.count) * progress)))
         return String(characters.prefix(count))
