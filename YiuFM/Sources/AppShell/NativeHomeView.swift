@@ -40,7 +40,7 @@ struct NativeHomeView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let stageSide = min(geometry.size.width, geometry.size.height * 0.62)
+            let stageSide = min(max(geometry.size.width - 24, 0), geometry.size.height * 0.62)
 
             ZStack {
                 NativeAppBackground(appearance: appearance)
@@ -50,11 +50,11 @@ struct NativeHomeView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    Spacer(minLength: 8)
                     lyricStage
                         .frame(width: stageSide, height: stageSide)
-                    Spacer(minLength: 104)
+                    Spacer(minLength: 0)
                 }
+                .padding(.top, max(geometry.safeAreaInsets.top, 50) + 12)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
