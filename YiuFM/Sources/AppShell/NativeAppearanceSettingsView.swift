@@ -31,7 +31,7 @@ struct NativeBackgroundSettingsView: View {
                             themeCard(
                                 name: theme.name,
                                 colors: theme.colors,
-                                id: "preset-\\(theme.id)",
+                                id: "preset-\(theme.id)",
                                 isCustom: false
                             ) {
                                 appearance.applyTheme(theme)
@@ -272,7 +272,7 @@ struct NativeBackgroundSettingsView: View {
                             }
                             .buttonStyle(.plain)
                             .offset(x: 6, y: -6)
-                            .accessibilityLabel("删除主题：\\(name)")
+                            .accessibilityLabel("删除主题：\(name)")
                         }
                     }
                 Text(name)
