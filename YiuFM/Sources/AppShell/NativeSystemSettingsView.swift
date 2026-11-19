@@ -6,6 +6,7 @@ struct NativeSystemSettingsView: View {
     @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
+    @AppStorage("yiufm.native.system.keepAwake") private var keepScreenAwake = false
 
     var body: some View {
         Form {
@@ -43,6 +44,11 @@ struct NativeSystemSettingsView: View {
             Section("交互") {
                 Toggle("触感反馈", isOn: $hapticsEnabled)
                     .tint(Color(red: 0.42, green: 0.60, blue: 0.72))
+                Toggle("屏幕常亮", isOn: $keepScreenAwake)
+                    .tint(Color(red: 0.42, green: 0.60, blue: 0.72))
+                Text("开启后，应用处于前台时不会自动锁屏；切到后台或退出应用后会恢复系统默认行为。")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Section("应用信息") {
@@ -59,6 +65,7 @@ struct NativeSystemSettingsView: View {
                     targetFPS = 30
                     reduceMotion = false
                     hapticsEnabled = true
+                    keepScreenAwake = false
                 }
             }
         }
