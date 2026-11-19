@@ -387,7 +387,15 @@ jobs:
       - name: Validate native-only app target
         if: github.ref == 'refs/heads/native-swiftui-rebuild'
         run: |
-          ! grep -R -nE 'import WebKit|WKWebView\\(|LegacyVisualStage\\(' YiuFM/Sources/AppShell YiuFM/Sources/Playback YiuFM/Sources/YiuFMApp.swift
+          if grep -R -nE 'import WebKit|WKWebView\(|LegacyVisualStage\(' YiuFM/Sources/AppShell YiuFM/Sources/Playback YiuFM/Sources/YiuFMApp.swift; then
+            echo "Unexpected WebKit or legacy visual stage reference in native app target."
+            exit 1
+          else
+            grep_status=$?
+            if [ "$grep_status" -ne 1 ]; then
+              exit "$grep_status"
+            fi
+          fi
           grep -q 'NativeHomeView' YiuFM/Sources/AppShell/YiuRootView.swift
           grep -q 'NativeMusicView' YiuFM/Sources/AppShell/YiuRootView.swift
           grep -q 'NativeFeatureCategoriesView' YiuFM/Sources/AppShell/YiuRootView.swift
