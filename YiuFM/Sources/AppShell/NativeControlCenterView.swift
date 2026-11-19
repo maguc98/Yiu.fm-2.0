@@ -35,7 +35,7 @@ struct NativeControlCenterView: View {
                 .environment(\.colorScheme, .dark)
                 .overlay {
                     RoundedRectangle(cornerRadius: 32, style: .continuous)
-                        .fill(Color(red: 0.055, green: 0.065, blue: 0.09).opacity(0.70))
+                        .fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.58))
                 }
         }
         .overlay {
