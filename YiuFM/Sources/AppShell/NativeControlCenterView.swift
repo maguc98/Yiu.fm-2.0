@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum NativeControlCenterSection {
+private enum NativeControlCenterSection: String {
     case adjust
     case style
     case background
@@ -25,6 +25,8 @@ struct NativeControlCenterView: View {
     @AppStorage("yiufm.native.visual.motionStrength") private var motionStrength = 1.0
     @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
+    @AppStorage("yiufm.native.control.rememberLastSection") private var rememberLastSection = false
+    @AppStorage("yiufm.native.control.lastSection") private var lastSectionID = NativeControlCenterSection.background.rawValue
     @State private var selectedSection: NativeControlCenterSection = .background
 
     private var engine: NativeVisualEngine {
@@ -66,6 +68,14 @@ struct NativeControlCenterView: View {
         .shadow(color: .black.opacity(0.34), radius: 28, x: 0, y: 14)
         .environment(\.colorScheme, .dark)
         .animation(.spring(response: 0.34, dampingFraction: 0.88), value: engineID)
+        .onAppear {
+            selectedSection = rememberLastSection
+                ? (NativeControlCenterSection(rawValue: lastSectionID) ?? .background)
+                : .background
+        }
+        .onChange(of: selectedSection) { _, newValue in
+            lastSectionID = newValue.rawValue
+        }
     }
 
     private var header: some View {
