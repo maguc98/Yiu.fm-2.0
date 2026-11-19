@@ -92,7 +92,13 @@ struct YiuRootView: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .frame(width: 52, height: 52)
-                                .background(.ultraThinMaterial, in: Circle())
+                                .background {
+                                    Circle()
+                                        .fill(.ultraThinMaterial)
+                                        .overlay {
+                                            Circle().fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.42))
+                                        }
+                                }
                                 .overlay {
                                     Circle().strokeBorder(.white.opacity(0.22), lineWidth: 1)
                                 }
@@ -103,7 +109,7 @@ struct YiuRootView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 4)
-                    .transition(.offset(y: 26).combined(with: .scale(scale: 0.90, anchor: .bottomTrailing)).combined(with: .opacity))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
                 if showingControlCenter {
@@ -128,7 +134,7 @@ struct YiuRootView: View {
                     .padding(.trailing, 12)
                     .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 92)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(.offset(y: 26).combined(with: .scale(scale: 0.90, anchor: .bottomTrailing)).combined(with: .opacity))
                     .zIndex(2)
                 }
             }
