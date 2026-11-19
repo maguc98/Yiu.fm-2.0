@@ -25,6 +25,12 @@ struct NativeControlCenterView: View {
     @AppStorage("yiufm.native.visual.motionStrength") private var motionStrength = 1.0
     @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
+    @AppStorage("yiufm.native.visual.performanceMode") private var performanceMode = true
+    @AppStorage("yiufm.native.visual.showGuide") private var showGuide = false
+    @AppStorage("yiufm.native.visual.audioReactive") private var audioReactive = true
+    @AppStorage("yiufm.native.visual.showBottomCaption") private var showBottomCaption = false
+    @AppStorage("yiufm.native.visual.interludeDots") private var interludeDots = true
+    @AppStorage("yiufm.native.visual.showOnlyText") private var showOnlyText = false
     @AppStorage("yiufm.native.control.rememberLastSection") private var rememberLastSection = false
     @AppStorage("yiufm.native.control.lastSection") private var lastSectionID = NativeControlCenterSection.background.rawValue
     @State private var selectedSection: NativeControlCenterSection = .background
@@ -209,7 +215,7 @@ struct NativeControlCenterView: View {
             }
         }
         .padding(10)
-        .frame(maxWidth: .infinity, minHeight: 86, maxHeight: 98)
+        .frame(maxWidth: .infinity, minHeight: 86, maxHeight: 110)
         .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 17, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 17, style: .continuous)
@@ -219,20 +225,61 @@ struct NativeControlCenterView: View {
     }
 
     private var tuningQuickControls: some View {
-        VStack(spacing: 8) {
-            quickSlider("动效强度", value: $visualIntensity, range: 0.15...1.5, valueText: "\(Int(visualIntensity * 100))%")
-            quickSlider("动画速度", value: $motionStrength, range: 0...2, valueText: "\(Int(motionStrength * 100))%")
+        VStack(spacing: 5) {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
+                spacing: 4
+            ) {
+                quickToggle("性能优化", symbol: "speedometer", isOn: $performanceMode)
+                quickToggle("参考线", symbol: "grid", isOn: $showGuide)
+                quickToggle("音频律动", symbol: "waveform", isOn: $audioReactive)
+                quickToggle("底部文案", symbol: "text.aligncenter", isOn: $showBottomCaption)
+                quickToggle("间奏圆点", symbol: "circle.grid.3x3", isOn: $interludeDots)
+                quickToggle("只显示文字", symbol: "textformat", isOn: $showOnlyText)
+            }
             HStack {
-                Text("更多调节")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.52))
+                Text("快捷开关会即时影响首页画面")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.48))
                 Spacer()
-                Button("打开") { onOpenTuning() }
+                Button("更多调节") { onOpenTuning() }
                     .font(.system(size: 10, weight: .semibold))
                     .buttonStyle(.bordered)
                     .tint(.white.opacity(0.7))
             }
         }
+    }
+
+    private func quickToggle(
+        _ title: String,
+        symbol: String,
+        isOn: Binding<Bool>
+    ) -> some View {
+        let active = isOn.wrappedValue
+        return Button {
+            NativeHaptics.selection(enabled: hapticsEnabled)
+            isOn.wrappedValue.toggle()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: symbol)
+                    .font(.system(size: 10, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 9, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(active ? .white : .white.opacity(0.58))
+            .frame(maxWidth: .infinity)
+            .frame(height: 29)
+            .background(active ? .white.opacity(0.15) : .white.opacity(0.045), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .strokeBorder(.white.opacity(active ? 0.20 : 0.08), lineWidth: 1)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(active ? .isSelected : [])
     }
 
     private var engineQuickPicker: some View {
