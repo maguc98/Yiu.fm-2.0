@@ -1023,17 +1023,21 @@ struct NativeVisualBackdrop: View {
     let primaryColor: Color
     let secondaryColor: Color
     let accentColor: Color
+    let backgroundColor: Color
     let showBackgroundMG: Bool
     let showFixedGeometry: Bool
     let showBackgroundDecor: Bool
+    let interludeDots: Bool
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / Double(max(15, min(60, targetFPS))), paused: !isPlaying || reduceMotion)) { timeline in
             Canvas { context, size in
                 let time = timeline.date.timeIntervalSinceReferenceDate * animationSpeed * max(0.05, motionStrength)
                 let pulse = audioReactive ? min(1, max(0, audioLevel * intensity)) : 0
-                guard showBackgroundMG else { return }
-                switch engine {
+                let canvasRect = CGRect(origin: .zero, size: size)
+                context.fill(Path(canvasRect), with: .color(backgroundColor.opacity(0.12)))
+                if showBackgroundMG {
+                    switch engine {
                 case .sonnet:
                     drawSonnet(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
                 case .tempera:
@@ -1046,8 +1050,18 @@ struct NativeVisualBackdrop: View {
                     } else {
                         drawSonnet(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
                     }
-                case .fume:
-                    drawFume(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
+                    case .fume:
+                        drawFume(in: &context, size: size, time: time, pulse: pulse, camera: cameraIntensity, density: graphicDensity, primary: primaryColor, secondary: secondaryColor, showDecor: showBackgroundDecor)
+                    }
+                }
+                if interludeDots && !isPlaying {
+                    for index in 0..<8 {
+                        let x = size.width * (Double(index) + 0.5) / 8
+                        let y = size.height * (0.28 + 0.44 * (0.5 + 0.5 * sin(Double(index) * 1.3)))
+                        let dotSize: CGFloat = 2.2
+                        let dot = CGRect(x: x, y: y, width: dotSize, height: dotSize)
+                        context.fill(Path(ellipseIn: dot), with: .color(secondaryColor.opacity(0.42)))
+                    }
                 }
             }
         }
