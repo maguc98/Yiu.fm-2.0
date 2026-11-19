@@ -52,26 +52,13 @@ struct NativeControlCenterView: View {
         .padding(15)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 32, style: .continuous)
-                        .fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.58))
-                }
+            NativeLiquidGlassBackground(
+                shape: RoundedRectangle(cornerRadius: 32, style: .continuous),
+                tint: Color(red: 0.08, green: 0.09, blue: 0.13),
+                fallbackOpacity: 0.30
+            )
+            .environment(\.colorScheme, .dark)
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [.white.opacity(0.28), .white.opacity(0.07), .white.opacity(0.16)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        }
-        .shadow(color: .black.opacity(0.34), radius: 28, x: 0, y: 14)
         .environment(\.colorScheme, .dark)
         .animation(.spring(response: 0.34, dampingFraction: 0.88), value: engineID)
         .onAppear {
