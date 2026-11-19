@@ -109,16 +109,12 @@ struct YiuRootView: View {
                                     .foregroundStyle(.white)
                                     .frame(width: 52, height: 52)
                                     .background {
-                                        Circle()
-                                            .fill(.ultraThinMaterial)
-                                            .overlay {
-                                                Circle().fill(Color(red: 34.0 / 255.0, green: 34.0 / 255.0, blue: 40.0 / 255.0).opacity(0.42))
-                                            }
+                                        NativeLiquidGlassBackground(
+                                            shape: Circle(),
+                                            tint: Color(red: 0.10, green: 0.11, blue: 0.16),
+                                            fallbackOpacity: 0.28
+                                        )
                                     }
-                                    .overlay {
-                                        Circle().strokeBorder(.white.opacity(0.22), lineWidth: 1)
-                                    }
-                                    .shadow(color: .black.opacity(0.28), radius: 16, x: 0, y: 6)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("打开控制中心")
