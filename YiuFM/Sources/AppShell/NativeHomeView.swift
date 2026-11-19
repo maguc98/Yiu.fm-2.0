@@ -27,6 +27,7 @@ struct NativeHomeView: View {
     @AppStorage("yiufm.native.visual.primaryColor") private var primaryColorHex = "#FFFFFF"
     @AppStorage("yiufm.native.visual.secondaryColor") private var secondaryColorHex = "#AFC5FF"
     @AppStorage("yiufm.native.visual.accentColor") private var accentColorHex = "#8FB0FF"
+    @AppStorage("yiufm.native.visual.backgroundColor") private var backgroundColorHex = "#08080C"
     @AppStorage("yiufm.native.visual.showGuide") private var showGuide = false
     @AppStorage("yiufm.native.visual.postProcessEnabled") private var postProcessEnabled = true
     @AppStorage("yiufm.native.visual.showBackgroundMG") private var showBackgroundMG = true
@@ -106,9 +107,11 @@ struct NativeHomeView: View {
                     primaryColor: Color(nativeHex: primaryColorHex),
                     secondaryColor: Color(nativeHex: secondaryColorHex),
                     accentColor: Color(nativeHex: accentColorHex),
+                    backgroundColor: Color(nativeHex: backgroundColorHex),
                     showBackgroundMG: showBackgroundMG,
                     showFixedGeometry: showFixedGeometry,
-                    showBackgroundDecor: showBackgroundDecor
+                    showBackgroundDecor: showBackgroundDecor,
+                    interludeDots: interludeDots
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             }
@@ -133,6 +136,10 @@ struct NativeHomeView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .allowsHitTesting(false)
+            }
+
+            if showGuide {
+                NativeVisualGuideOverlay()
             }
 
             lyricContent
@@ -199,7 +206,7 @@ struct NativeHomeView: View {
                             )
                             .frame(maxWidth: .infinity)
                             .id(player.currentLyricIndex)
-                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                            .transition(enableTransitions ? .opacity.combined(with: .scale(scale: 0.97)) : .identity)
                     } else {
                         Text(" ")
                             .frame(height: 52)
