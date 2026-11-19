@@ -59,7 +59,14 @@ struct NativeMiniPlayerBar: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 66)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.42))
+                }
+        }
         .environment(\.colorScheme, .dark)
         .overlay {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
