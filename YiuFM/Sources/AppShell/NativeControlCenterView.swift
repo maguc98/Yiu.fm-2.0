@@ -12,235 +12,271 @@ struct NativeControlCenterView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage("yiufm.native.visual.engine") private var engineID = NativeVisualEngine.sonnet.rawValue
-    @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
+    @State private var showingOtherActions = false
 
     private var engine: NativeVisualEngine {
         NativeVisualEngine(rawValue: engineID) ?? .sonnet
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.93, green: 0.96, blue: 0.99),
-                        Color(red: 0.96, green: 0.93, blue: 0.98),
-                        Color(red: 0.93, green: 0.97, blue: 0.95)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.96, green: 0.97, blue: 0.99),
+                    Color(red: 0.92, green: 0.94, blue: 0.98),
+                    Color(red: 0.95, green: 0.92, blue: 0.97)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 18) {
-                        header
-                        playbackCard
-                        engineCard
-                        quickActions
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 12) {
+                    header
+                    engineCard
+                    shortcuts
+                    resolutionCard
+                    otherButton
+
+                    if showingOtherActions {
+                        otherActions
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 10)
-                    .padding(.bottom, 30)
                 }
-            }
-            .navigationTitle("控制中心")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") { dismiss() }
-                        .font(.system(size: 14, weight: .semibold))
-                }
+                .padding(.horizontal, 17)
+                .padding(.top, 14)
+                .padding(.bottom, 26)
             }
         }
+        .environment(\.colorScheme, .light)
+        .presentationBackground(.ultraThinMaterial)
+        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: showingOtherActions)
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("YIU.FM · NATIVE")
-                .font(.system(size: 9, weight: .bold, design: .rounded))
-                .tracking(1.8)
-                .foregroundStyle(.secondary)
-            Text("控制中心")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.16, green: 0.20, blue: 0.29))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
-    }
-
-    private var playbackCard: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            HStack {
-                Label("音乐与播放", systemImage: "waveform")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(player.isPlaying ? "正在播放" : (player.hasTrack ? "已暂停" : "未选择歌曲"))
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.35, green: 0.58, blue: 0.52))
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(Color.white.opacity(0.7), in: Capsule())
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("控制中心")
+                    .font(.system(size: 23, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.14, green: 0.17, blue: 0.23))
+                Text("YIU.FM")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(2.0)
+                    .foregroundStyle(Color(red: 0.43, green: 0.47, blue: 0.55))
             }
 
-            HStack(spacing: 11) {
-                if let cover = appearance.coverImage ?? player.currentArtwork {
-                    Image(uiImage: cover)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 48, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                } else {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(Color(red: 0.41, green: 0.53, blue: 0.72))
-                        .frame(width: 48, height: 48)
-                        .background(Color.white.opacity(0.76), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
+            Spacer()
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(player.currentTrack?.title ?? "选择一首音乐")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.17, green: 0.21, blue: 0.29))
-                        .lineLimit(1)
-                    Text("\(player.formattedTime(player.currentTime)) / \(player.formattedTime(player.duration))")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: 4)
-
-                Button {
-                    NativeHaptics.impact(enabled: hapticsEnabled)
-                    player.togglePlayback()
-                } label: {
-                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 42, height: 42)
-                        .background(Color(red: 0.40, green: 0.54, blue: 0.74), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!player.hasTrack)
-                .accessibilityLabel(player.isPlaying ? "暂停" : "播放")
-            }
-
-            Button(action: onOpenMusic) {
-                HStack {
-                    Text("打开音乐播放器")
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                }
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color(red: 0.36, green: 0.49, blue: 0.69))
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.24, green: 0.28, blue: 0.36))
+                    .frame(width: 30, height: 30)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("关闭控制中心")
         }
-        .padding(16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(.white.opacity(0.86), lineWidth: 1)
-        }
+        .padding(.bottom, 1)
     }
 
     private var engineCard: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("视觉引擎")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.17, green: 0.21, blue: 0.29))
-                    Text(engine.title + " · " + engine.subtitle)
+        Button(action: onOpenVisualizer) {
+            VStack(alignment: .leading, spacing: 9) {
+                HStack {
+                    Text("当前视觉引擎")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text(player.isPlaying ? "运行中" : "已就绪")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.26, green: 0.56, blue: 0.47))
+                        .foregroundStyle(Color(red: 0.39, green: 0.43, blue: 0.51))
+                    Spacer()
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(Color(red: 0.25, green: 0.68, blue: 0.49))
+                            .frame(width: 6, height: 6)
+                        Text(player.isPlaying ? "运行中" : "已就绪")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.20, green: 0.56, blue: 0.40))
+                    }
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
-                    .background(Color(red: 0.87, green: 0.95, blue: 0.91), in: Capsule())
-            }
-
-            HStack(spacing: 7) {
-                ForEach(NativeVisualEngine.allCases) { item in
-                    Button {
-                        NativeHaptics.selection(enabled: hapticsEnabled)
-                        engineID = item.rawValue
-                    } label: {
-                        VStack(spacing: 6) {
-                            Image(systemName: item.symbol)
-                                .font(.system(size: 15, weight: .semibold))
-                            Text(item.title)
-                                .font(.system(size: 10, weight: .semibold))
-                        }
-                        .foregroundStyle(engine == item ? .white : Color(red: 0.43, green: 0.49, blue: 0.59))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 58)
-                        .background(
-                            engine == item ? Color(red: 0.40, green: 0.53, blue: 0.72) : Color.white.opacity(0.62),
-                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    .background(Color(red: 0.88, green: 0.96, blue: 0.91), in: Capsule())
                 }
-            }
 
-            Button(action: onOpenVisualizer) {
-                HStack {
-                    Text("打开视觉舞台")
+                HStack(alignment: .lastTextBaseline, spacing: 9) {
+                    Text(engine.rawValue.uppercased())
+                        .font(.system(size: 27, weight: .bold, design: .rounded))
+                        .tracking(1.2)
+                        .foregroundStyle(Color(red: 0.16, green: 0.20, blue: 0.29))
+                    Text(engine.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.42, green: 0.47, blue: 0.57))
                     Spacer()
-                    Image(systemName: "arrow.up.right")
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.tertiary)
                 }
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color(red: 0.36, green: 0.49, blue: 0.69))
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(.white.opacity(0.9), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.045), radius: 14, x: 0, y: 6)
         }
-        .padding(16)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .buttonStyle(.plain)
+    }
+
+    private var shortcuts: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("快捷操作")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color(red: 0.23, green: 0.27, blue: 0.35))
+
+            HStack(spacing: 9) {
+                shortcutCard(title: "视觉效果", symbol: "sparkles", subtitle: "切换视觉引擎", action: onOpenVisualizer)
+                shortcutCard(title: "显示模式", symbol: "rectangle.on.rectangle", subtitle: "文字与音乐显示", action: onOpenText)
+            }
+        }
+    }
+
+    private func shortcutCard(
+        title: String,
+        symbol: String,
+        subtitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.39, green: 0.50, blue: 0.72))
+                    .frame(width: 36, height: 36)
+                    .background(Color.white.opacity(0.78), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.19, green: 0.23, blue: 0.31))
+                    Text(subtitle)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(Color(red: 0.49, green: 0.53, blue: 0.60))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, minHeight: 58)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(.white.opacity(0.88), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var resolutionCard: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack {
+                Text("渲染分辨率")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.27, green: 0.31, blue: 0.39))
+                Spacer()
+                Text("100%")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(Color(red: 0.27, green: 0.39, blue: 0.62))
+            }
+
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color(red: 0.80, green: 0.84, blue: 0.90).opacity(0.68))
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.37, green: 0.53, blue: 0.78),
+                                    Color(red: 0.59, green: 0.55, blue: 0.78)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geometry.size.width * 0.5)
+                }
+            }
+            .frame(height: 7)
+
+            Text("由系统原生画布按设备分辨率输出")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(Color(red: 0.51, green: 0.55, blue: 0.62))
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(.white.opacity(0.86), lineWidth: 1)
         }
     }
 
-    private var quickActions: some View {
-        VStack(alignment: .leading, spacing: 11) {
-            Text("快捷操作")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.17, green: 0.21, blue: 0.29))
-
+    private var otherButton: some View {
+        Button {
+            showingOtherActions.toggle()
+        } label: {
             HStack(spacing: 10) {
-                quickAction(title: "文字内容", symbol: "text.alignleft", action: onOpenText)
-                quickAction(title: "背景与封面", symbol: "photo", action: onOpenBackground)
-                quickAction(title: "系统与性能", symbol: "slider.horizontal.3", action: onOpenSystem)
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.43, green: 0.50, blue: 0.67))
+                Text("其他")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.26, green: 0.30, blue: 0.38))
+                Spacer()
+                Image(systemName: showingOtherActions ? "chevron.up" : "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.tertiary)
             }
+            .padding(.horizontal, 13)
+            .frame(height: 43)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(.white.opacity(0.86), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var otherActions: some View {
+        HStack(spacing: 9) {
+            smallAction("音乐", symbol: "music.note", action: onOpenMusic)
+            smallAction("背景", symbol: "photo", action: onOpenBackground)
+            smallAction("系统", symbol: "slider.horizontal.3", action: onOpenSystem)
         }
     }
 
-    private func quickAction(title: String, symbol: String, action: @escaping () -> Void) -> some View {
+    private func smallAction(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 11) {
+            VStack(spacing: 7) {
                 Image(systemName: symbol)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.43, green: 0.53, blue: 0.72))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.42, green: 0.51, blue: 0.70))
                 Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.23, green: 0.28, blue: 0.37))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.28, green: 0.32, blue: 0.40))
             }
-            .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
-            .padding(12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .frame(height: 62)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 17, style: .continuous)
-                    .strokeBorder(.white.opacity(0.82), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .strokeBorder(.white.opacity(0.86), lineWidth: 1)
             }
         }
         .buttonStyle(.plain)

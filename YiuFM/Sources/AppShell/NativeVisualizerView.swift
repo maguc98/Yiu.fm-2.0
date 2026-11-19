@@ -457,7 +457,7 @@ struct NativeVisualizerView: View {
     }
 }
 
-private struct NativeVisualBackdrop: View {
+struct NativeVisualBackdrop: View {
     let engine: NativeVisualEngine
     let audioLevel: Double
     let isPlaying: Bool

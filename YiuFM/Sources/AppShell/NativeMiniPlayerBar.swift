@@ -9,18 +9,19 @@ struct NativeMiniPlayerBar: View {
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
 
     var body: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 10) {
             Button(action: onOpenPlayer) {
                 HStack(spacing: 10) {
                     artwork
+
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(player.currentTrack?.title ?? "Yiu.fm · 音乐播放器")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.20, blue: 0.29))
+                        Text(player.currentTrack?.title ?? "Yiu.fm · Aether")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white)
                             .lineLimit(1)
-                        Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "选择一首本地歌曲")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "点击选择本地歌曲")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.58))
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
@@ -34,9 +35,10 @@ struct NativeMiniPlayerBar: View {
                 player.togglePlayback()
             } label: {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color(red: 0.32, green: 0.43, blue: 0.61))
-                    .frame(width: 38, height: 42)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 38)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!player.hasTrack)
@@ -44,31 +46,32 @@ struct NativeMiniPlayerBar: View {
 
             Button(action: onOpenControlCenter) {
                 Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.39, green: 0.48, blue: 0.63))
-                    .frame(width: 38, height: 42)
-                    .background(Color.white.opacity(0.56), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .frame(width: 36, height: 38)
+                    .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("打开控制中心")
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 23, style: .continuous))
+        .padding(.horizontal, 11)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .environment(\.colorScheme, .dark)
         .overlay {
-            RoundedRectangle(cornerRadius: 23, style: .continuous)
-                .strokeBorder(.white.opacity(0.82), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(.white.opacity(0.20), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.09), radius: 16, x: 0, y: 6)
+        .shadow(color: .black.opacity(0.28), radius: 17, x: 0, y: 7)
         .overlay(alignment: .bottomLeading) {
             GeometryReader { geometry in
                 Capsule()
-                    .fill(Color(red: 0.47, green: 0.59, blue: 0.77).opacity(0.9))
+                    .fill(Color(red: 0.60, green: 0.72, blue: 0.98).opacity(0.95))
                     .frame(width: geometry.size.width * progress, height: 2)
                     .frame(maxHeight: .infinity, alignment: .bottom)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 7)
+            .padding(.horizontal, 15)
+            .padding(.bottom, 6)
             .allowsHitTesting(false)
         }
     }
@@ -81,16 +84,20 @@ struct NativeMiniPlayerBar: View {
                     .scaledToFill()
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(red: 0.84, green: 0.88, blue: 0.95))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.white.opacity(0.12))
                     Image(systemName: "waveform")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Color(red: 0.39, green: 0.50, blue: 0.69))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.82))
                 }
             }
         }
-        .frame(width: 44, height: 44)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .frame(width: 40, height: 40)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(.white.opacity(0.16), lineWidth: 1)
+        }
     }
 
     private var progress: Double {

@@ -33,6 +33,7 @@ struct NativeMusicView: View {
                 .padding(.bottom, 36)
             }
         }
+        .environment(\.colorScheme, .dark)
         .navigationTitle("音乐与播放")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -307,10 +308,10 @@ struct NativeMusicView: View {
             }
         }
         .padding(17)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.white.opacity(0.85), lineWidth: 1)
+                .strokeBorder(.white.opacity(0.20), lineWidth: 1)
         }
     }
 
@@ -390,8 +391,8 @@ struct NativeMusicView: View {
         }
     }
 
-    private var ink: Color { Color(red: 0.17, green: 0.21, blue: 0.29) }
-    private var accent: Color { Color(red: 0.40, green: 0.54, blue: 0.75) }
+    private var ink: Color { Color.white.opacity(0.94) }
+    private var accent: Color { Color(red: 0.61, green: 0.72, blue: 0.98) }
 }
 
 private struct PrimaryNativeButtonStyle: ButtonStyle {
@@ -411,10 +412,10 @@ private struct SecondaryNativeButtonStyle: ButtonStyle {
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(Color(red: 0.35, green: 0.46, blue: 0.65))
             .frame(height: 46)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .strokeBorder(.white.opacity(0.88), lineWidth: 1)
+                    .strokeBorder(.white.opacity(0.20), lineWidth: 1)
             }
             .opacity(configuration.isPressed ? 0.82 : 1)
     }

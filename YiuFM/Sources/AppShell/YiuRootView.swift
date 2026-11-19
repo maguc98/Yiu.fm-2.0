@@ -17,7 +17,8 @@ struct YiuRootView: View {
                 appearance: appearance,
                 openMusic: { path.append(.music) },
                 openVisualizer: { path.append(.visualizer) },
-                openCategories: { path.append(.categories) }
+                openCategories: { path.append(.categories) },
+                openControlCenter: { showingControlCenter = true }
             )
             .navigationDestination(for: NativeRoute.self) { route in
                 switch route {
@@ -63,7 +64,7 @@ struct YiuRootView: View {
                 }
             }
         }
-        .tint(Color(red: 0.38, green: 0.51, blue: 0.71))
+        .tint(Color(red: 0.56, green: 0.68, blue: 0.93))
         .preferredColorScheme(.light)
         .environmentObject(presentation)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -91,7 +92,7 @@ struct YiuRootView: View {
                 onOpenText: { openControlDestination(.typography) }
             )
             .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .presentationDragIndicator(.hidden)
         }
     }
 
