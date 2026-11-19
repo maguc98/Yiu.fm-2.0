@@ -13,6 +13,7 @@ targets:
           - Web/**
           - NativeBridge/**
     info:
+      path: Info.plist
       properties:
         UIBackgroundModes:
           - audio
