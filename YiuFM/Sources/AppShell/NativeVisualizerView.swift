@@ -147,12 +147,10 @@ struct NativeVisualizerView: View {
             }
         }
         .sheet(isPresented: $showingSettings) {
-            NativeVisualizerSettingsSheet(
-                lyricScale: $lyricScale,
-                intensity: $intensity,
-                audioReactive: $audioReactive
-            )
-            .presentationDetents([.medium])
+            NavigationStack {
+                NativeVisualTuningSettingsView()
+            }
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
     }
