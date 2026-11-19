@@ -751,6 +751,7 @@ struct NativeVisualBackdrop: View {
             let dotSize = CGFloat(1.5 + pulse * Double(index % 4 + 1))
             let dot = CGRect(x: x, y: y, width: dotSize, height: dotSize)
             context.fill(Path(ellipseIn: dot), with: .color(ink.opacity(0.20 + pulse * 0.25)))
+            }
         }
     }
 }
