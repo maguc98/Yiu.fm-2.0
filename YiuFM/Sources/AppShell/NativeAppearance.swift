@@ -32,6 +32,17 @@ struct NativeBackgroundTheme: Identifiable, Hashable {
     ]
 }
 
+struct NativeCustomBackgroundTheme: Identifiable, Codable, Hashable {
+    let id: String
+    var name: String
+    var colors: [String]
+    var isSolid: Bool
+
+    var theme: NativeBackgroundTheme {
+        NativeBackgroundTheme(name: name, colors: colors, isSolid: isSolid)
+    }
+}
+
 enum NativeFontFamily: String, CaseIterable, Identifiable {
     case rounded
     case sans
@@ -95,6 +106,7 @@ final class NativeAppearanceStore: ObservableObject {
     }
     @Published private(set) var backgroundImageData: Data?
     @Published private(set) var coverImageData: Data?
+    @Published private(set) var customThemes: [NativeCustomBackgroundTheme] = []
 
     private let defaults = UserDefaults.standard
     private let fileManager = FileManager.default
@@ -111,6 +123,7 @@ final class NativeAppearanceStore: ObservableObject {
         static let blur = "yiufm.native.background.blur"
         static let dim = "yiufm.native.background.dim"
         static let square = "yiufm.native.background.square"
+        static let customThemes = "yiufm.native.background.customThemes.v1"
     }
 
     private var imageDirectory: URL {
@@ -143,6 +156,10 @@ final class NativeAppearanceStore: ObservableObject {
         backgroundBlur = defaults.object(forKey: Keys.blur) as? Double ?? 8
         backgroundDim = defaults.object(forKey: Keys.dim) as? Double ?? 0.30
         backgroundSquare = defaults.object(forKey: Keys.square) as? Bool ?? false
+        if let data = defaults.data(forKey: Keys.customThemes),
+           let decoded = try? JSONDecoder().decode([NativeCustomBackgroundTheme].self, from: data) {
+            customThemes = decoded
+        }
 
         try? fileManager.createDirectory(at: imageDirectory, withIntermediateDirectories: true)
         backgroundImageData = try? Data(contentsOf: imageURL)
@@ -160,6 +177,43 @@ final class NativeAppearanceStore: ObservableObject {
             gradientMid2Hex = theme.colors[2]
             gradientEndHex = theme.colors[3]
         }
+    }
+
+    @discardableResult
+    func addCustomThemeFromCurrentSettings() -> NativeCustomBackgroundTheme {
+        let number = (customThemes.compactMap { Int($0.name.replacingOccurrences(of: "自定义 ", with: "")) }.max() ?? 0) + 1
+        let colors: [String]
+        let isSolid: Bool
+        if backgroundMode == .solid {
+            colors = [solidColorHex, solidColorHex, solidColorHex, solidColorHex]
+            isSolid = true
+        } else {
+            colors = [gradientStartHex, gradientMid1Hex, gradientMid2Hex, gradientEndHex]
+            isSolid = false
+        }
+        let theme = NativeCustomBackgroundTheme(
+            id: UUID().uuidString,
+            name: "自定义 \(number)",
+            colors: colors,
+            isSolid: isSolid
+        )
+        customThemes.append(theme)
+        persistCustomThemes()
+        return theme
+    }
+
+    func applyCustomTheme(_ theme: NativeCustomBackgroundTheme) {
+        applyTheme(theme.theme)
+    }
+
+    func removeCustomTheme(_ id: String) {
+        customThemes.removeAll { $0.id == id }
+        persistCustomThemes()
+    }
+
+    private func persistCustomThemes() {
+        guard let data = try? JSONEncoder().encode(customThemes) else { return }
+        defaults.set(data, forKey: Keys.customThemes)
     }
 
     func importBackground(from url: URL) throws {
