@@ -15,6 +15,28 @@ struct NativeHomeView: View {
     @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
     @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
+    @AppStorage("yiufm.native.visual.motionStrength") private var motionStrength = 1.0
+    @AppStorage("yiufm.native.visual.cameraIntensity") private var cameraIntensity = 1.0
+    @AppStorage("yiufm.native.visual.graphicDensity") private var graphicDensity = 0.55
+    @AppStorage("yiufm.native.visual.lyricsFontScale") private var lyricsFontScale = 1.0
+    @AppStorage("yiufm.native.visual.edgeDispersion") private var edgeDispersion = 0.8
+    @AppStorage("yiufm.native.visual.edgeBand") private var edgeBand = 0.7
+    @AppStorage("yiufm.native.visual.rgbEdgeIntensity") private var rgbEdgeIntensity = 0.7
+    @AppStorage("yiufm.native.visual.rgbEdgeWidth") private var rgbEdgeWidth = 14.0
+    @AppStorage("yiufm.native.visual.rgbEdgeRate") private var rgbEdgeRate = 1.0
+    @AppStorage("yiufm.native.visual.primaryColor") private var primaryColorHex = "#FFFFFF"
+    @AppStorage("yiufm.native.visual.secondaryColor") private var secondaryColorHex = "#AFC5FF"
+    @AppStorage("yiufm.native.visual.accentColor") private var accentColorHex = "#8FB0FF"
+    @AppStorage("yiufm.native.visual.showGuide") private var showGuide = false
+    @AppStorage("yiufm.native.visual.postProcessEnabled") private var postProcessEnabled = true
+    @AppStorage("yiufm.native.visual.showBackgroundMG") private var showBackgroundMG = true
+    @AppStorage("yiufm.native.visual.showFixedGeometry") private var showFixedGeometry = true
+    @AppStorage("yiufm.native.visual.showBackgroundDecor") private var showBackgroundDecor = true
+    @AppStorage("yiufm.native.visual.showGiantText") private var showGiantText = false
+    @AppStorage("yiufm.native.visual.showOnlyText") private var showOnlyText = false
+    @AppStorage("yiufm.native.visual.enableTransitions") private var enableTransitions = true
+    @AppStorage("yiufm.native.visual.interludeDots") private var interludeDots = true
+    @AppStorage("yiufm.native.visual.rgbEdge") private var rgbEdge = false
     @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var typographyScale = 1.0
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
@@ -68,17 +90,28 @@ struct NativeHomeView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Color.black)
 
-            NativeVisualBackdrop(
-                engine: engine,
-                audioLevel: player.audioLevel,
-                isPlaying: player.isPlaying,
-                intensity: intensity,
-                audioReactive: audioReactive,
-                targetFPS: targetFPS,
-                animationSpeed: animationSpeed,
-                reduceMotion: reduceMotion
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            if !showOnlyText {
+                NativeVisualBackdrop(
+                    engine: engine,
+                    audioLevel: player.audioLevel,
+                    isPlaying: player.isPlaying,
+                    intensity: intensity,
+                    audioReactive: audioReactive,
+                    targetFPS: targetFPS,
+                    animationSpeed: animationSpeed,
+                    reduceMotion: reduceMotion,
+                    motionStrength: motionStrength,
+                    cameraIntensity: cameraIntensity,
+                    graphicDensity: graphicDensity,
+                    primaryColor: Color(nativeHex: primaryColorHex),
+                    secondaryColor: Color(nativeHex: secondaryColorHex),
+                    accentColor: Color(nativeHex: accentColorHex),
+                    showBackgroundMG: showBackgroundMG,
+                    showFixedGeometry: showFixedGeometry,
+                    showBackgroundDecor: showBackgroundDecor
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            }
 
             LinearGradient(
                 stops: [
@@ -91,6 +124,16 @@ struct NativeHomeView: View {
                 endPoint: .bottom
             )
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+
+            if showGiantText {
+                Text(engine.rawValue.uppercased())
+                    .font(.system(size: 54, weight: .black, design: .rounded))
+                    .tracking(3)
+                    .foregroundStyle(Color(nativeHex: secondaryColorHex).opacity(0.07))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .allowsHitTesting(false)
+            }
 
             lyricContent
                 .padding(.horizontal, 22)
@@ -144,6 +187,16 @@ struct NativeHomeView: View {
                             .multilineTextAlignment(.center)
                             .lineSpacing(8)
                             .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
+                            .shadow(
+                                color: postProcessEnabled ? Color(nativeHex: accentColorHex).opacity(min(0.65, edgeDispersion * 0.28)) : .clear,
+                                radius: postProcessEnabled ? CGFloat(4 + edgeBand * 12) : 0
+                            )
+                            .shadow(
+                                color: rgbEdge && postProcessEnabled ? Color(nativeHex: secondaryColorHex).opacity(rgbEdgeIntensity * (0.35 + 0.1 * sin(Date().timeIntervalSinceReferenceDate * rgbEdgeRate))) : .clear,
+                                radius: rgbEdge && postProcessEnabled ? CGFloat(rgbEdgeWidth) * 0.35 : 0,
+                                x: 1,
+                                y: 0
+                            )
                             .frame(maxWidth: .infinity)
                             .id(player.currentLyricIndex)
                             .transition(.opacity.combined(with: .scale(scale: 0.97)))
