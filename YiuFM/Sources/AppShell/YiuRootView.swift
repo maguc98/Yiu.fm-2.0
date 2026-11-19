@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// App entry point for the native SwiftUI experience.
 /// The legacy WKWebView host is deliberately not used by this navigation tree.
@@ -11,6 +12,8 @@ struct YiuRootView: View {
     @StateObject private var appearance = NativeAppearanceStore()
     @StateObject private var textDeck = NativeTextDeckStore()
     @StateObject private var presentation = NativePresentationState()
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("yiufm.native.system.keepAwake") private var keepScreenAwake = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -182,6 +185,14 @@ struct YiuRootView: View {
         .ignoresSafeArea()
         .tint(Color(red: 0.56, green: 0.68, blue: 0.93))
         .environmentObject(presentation)
+        .onAppear { updateIdleTimer() }
+        .onChange(of: keepScreenAwake) { _, _ in updateIdleTimer() }
+        .onChange(of: scenePhase) { _, _ in updateIdleTimer() }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+    }
+
+    private func updateIdleTimer() {
+        UIApplication.shared.isIdleTimerDisabled = keepScreenAwake && scenePhase == .active
     }
 
     private func miniPlayerWidth(for geometry: GeometryProxy) -> CGFloat {
