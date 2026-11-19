@@ -226,3 +226,33 @@ struct NativeHomeView: View {
         }
     }
 }
+
+
+private struct NativeVisualGuideOverlay: View {
+    var body: some View {
+        GeometryReader { geometry in
+            Path { path in
+                let width = geometry.size.width
+                let height = geometry.size.height
+                for fraction in [1.0 / 3.0, 2.0 / 3.0] {
+                    let x = width * fraction
+                    let y = height * fraction
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x, y: height))
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: width, y: y))
+                }
+                path.move(to: CGPoint(x: width * 0.5, y: 0))
+                path.addLine(to: CGPoint(x: width * 0.5, y: height))
+                path.move(to: CGPoint(x: 0, y: height * 0.5))
+                path.addLine(to: CGPoint(x: width, y: height * 0.5))
+            }
+            .stroke(
+                .white.opacity(0.22),
+                style: StrokeStyle(lineWidth: 0.7, dash: [4, 5])
+            )
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
