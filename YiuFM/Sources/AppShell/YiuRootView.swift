@@ -81,7 +81,7 @@ struct YiuRootView: View {
                             onOpenPlayer: { path.append(.music) },
                             onOpenControlCenter: { showingControlCenter = true }
                         )
-                        .frame(width: min(max(geometry.size.width - 98, 180), 340))
+                        .frame(width: min(max(geometry.size.width - 24 - 52 - 10, 180), min(geometry.size.height * 0.30 + 28, 340)))
 
                         Button {
                             withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
@@ -103,7 +103,7 @@ struct YiuRootView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 4)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(.offset(y: 26).combined(with: .scale(scale: 0.90, anchor: .bottomTrailing)).combined(with: .opacity))
                 }
 
                 if showingControlCenter {
