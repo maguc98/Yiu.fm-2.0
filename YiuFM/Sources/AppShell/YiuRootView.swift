@@ -62,6 +62,8 @@ struct YiuRootView: View {
                             NativeVisualizerView(player: player, appearance: appearance)
                         case .tuning:
                             NativeVisualTuningSettingsView()
+                        case .textDeck:
+                            NativeTextDeckView(store: textDeck, appearance: appearance)
                         case .textDisplay:
                             NativeTextDisplayView(store: textDeck, appearance: appearance)
                         case .background:
@@ -159,11 +161,12 @@ struct YiuRootView: View {
                     NativeControlCenterView(
                         player: player,
                         appearance: appearance,
+                        textDeck: textDeck,
                         onOpenMusic: { openControlDestination(.music) },
                         onOpenVisualizer: { openControlDestination(.visualizer) },
                         onOpenBackground: { openControlDestination(.background) },
                         onOpenTuning: { openControlDestination(.tuning) },
-                        onOpenText: { openControlDestination(.textDisplay) },
+                        onOpenText: { openControlDestination(.textDeck) },
                         onClose: {
                             withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
                                 showingControlCenter = false
@@ -314,6 +317,7 @@ private enum NativeRoute: Hashable {
     case music
     case visualizer
     case tuning
+    case textDeck
     case textDisplay
     case background
     case typography
