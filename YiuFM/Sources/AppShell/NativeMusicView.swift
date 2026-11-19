@@ -356,7 +356,7 @@ struct NativeMusicView: View {
                 Text("曲库 \(player.tracks.count) 首")
                 Spacer()
                 NavigationLink {
-                    NativeLibraryView(player: player)
+                    NativeLibraryView(player: player, appearance: appearance)
                 } label: {
                     HStack(spacing: 4) {
                         Text("管理曲库")
