@@ -49,6 +49,7 @@ struct NativeVisualizerView: View {
     @AppStorage("yiufm.native.typography.weight") private var fontWeightValue = 0.78
     @AppStorage("yiufm.native.typography.color") private var textColorHex = "#FFFFFF"
     @AppStorage("yiufm.native.system.targetFPS") private var targetFPS = 30
+    @AppStorage("yiufm.native.visual.performanceMode") private var performanceMode = true
     @AppStorage("yiufm.native.system.animationSpeed") private var animationSpeed = 1.0
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
@@ -78,6 +79,7 @@ struct NativeVisualizerView: View {
     @State private var showingSettings = false
 
     private var engine: NativeVisualEngine { NativeVisualEngine(rawValue: engineID) ?? .sonnet }
+    private var effectiveTargetFPS: Int { performanceMode ? min(targetFPS, 30) : targetFPS }
     private var lyricFontFamily: NativeFontFamily { NativeFontFamily(rawValue: fontFamilyID) ?? .serif }
     private var lyricColor: Color { Color(nativeHex: textColorHex) }
     private var lyricFontWeight: Font.Weight {
