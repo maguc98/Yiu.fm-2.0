@@ -91,11 +91,11 @@ struct YiuRootView: View {
                         .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 4)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-                        if !isMiniExpanded && !showingControlCenter {
+                        if !isMiniExpanded && !showingControlCenter && !showingExpandedPlayer {
                             Button {
                                 openControlCenterPanel()
                             } label: {
-                                Image(systemName: "play.rectangle")
+                                NativeMiniSettingsGlyph()
                                     .font(.system(size: 17, weight: .semibold))
                                     .foregroundStyle(.white)
                                     .frame(width: 52, height: 52)
@@ -232,6 +232,27 @@ struct YiuRootView: View {
         DispatchQueue.main.async {
             path.append(route)
         }
+    }
+}
+
+private struct NativeMiniSettingsGlyph: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 5.5, style: .continuous)
+                .strokeBorder(.white, lineWidth: 1.8)
+                .frame(width: 24, height: 13)
+
+            HStack(spacing: 4) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 7, weight: .bold))
+                Capsule()
+                    .fill(.white)
+                    .frame(width: 5, height: 1.5)
+            }
+            .foregroundStyle(.white)
+        }
+        .frame(width: 24, height: 24)
+        .accessibilityHidden(true)
     }
 }
 
