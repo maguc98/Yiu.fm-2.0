@@ -88,6 +88,8 @@ struct NativeVisualTuningSettingsView: View {
     @AppStorage("yiufm.native.visual.enableTransitions") private var enableTransitions = true
     @AppStorage("yiufm.native.visual.interludeDots") private var interludeDots = true
     @AppStorage("yiufm.native.visual.rgbEdge") private var rgbEdge = false
+    @AppStorage("yiufm.native.visual.performanceMode") private var performanceMode = true
+    @AppStorage("yiufm.native.visual.showBottomCaption") private var showBottomCaption = false
 
     private var engine: NativeVisualEngine {
         NativeVisualEngine(rawValue: engineID) ?? .sonnet
@@ -126,6 +128,8 @@ struct NativeVisualTuningSettingsView: View {
             }
 
             Section("画面元素") {
+                Toggle("性能优化", isOn: $performanceMode)
+                Toggle("显示底部文案", isOn: $showBottomCaption)
                 Toggle("背景动态图形", isOn: $showBackgroundMG)
                 Toggle("固定几何", isOn: $showFixedGeometry)
                 Toggle("背景装饰", isOn: $showBackgroundDecor)
@@ -161,6 +165,8 @@ struct NativeVisualTuningSettingsView: View {
                     enableTransitions = true
                     interludeDots = true
                     rgbEdge = false
+                    performanceMode = true
+                    showBottomCaption = false
                 }
             } footer: {
                 Text("重置只恢复视觉参数，不会删除歌曲、歌词、背景图片或文字项目。")
