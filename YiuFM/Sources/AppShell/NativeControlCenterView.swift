@@ -1,5 +1,12 @@
 import SwiftUI
 
+private enum NativeControlCenterSection {
+    case adjust
+    case style
+    case background
+    case text
+}
+
 struct NativeControlCenterView: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
@@ -13,6 +20,11 @@ struct NativeControlCenterView: View {
 
     @AppStorage("yiufm.native.visual.engine") private var engineID = NativeVisualEngine.sonnet.rawValue
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
+    @AppStorage("yiufm.native.visual.intensity") private var visualIntensity = 0.85
+    @AppStorage("yiufm.native.visual.motionStrength") private var motionStrength = 1.0
+    @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
+    @AppStorage("yiufm.native.typography.scale") private var fontScale = 1.0
+    @State private var selectedSection: NativeControlCenterSection = .background
 
     private var engine: NativeVisualEngine {
         NativeVisualEngine(rawValue: engineID) ?? .sonnet
@@ -23,6 +35,7 @@ struct NativeControlCenterView: View {
             header
             engineCard
             sectionNavigation
+            sectionContent
             trackInformation
             playbackTimeline
             transportDock
@@ -129,10 +142,10 @@ struct NativeControlCenterView: View {
 
     private var sectionNavigation: some View {
         HStack(spacing: 0) {
-            sectionButton("调节", symbol: "slider.horizontal.3", action: onOpenTuning)
-            sectionButton("风格", symbol: "sparkles", action: onOpenVisualizer)
-            sectionButton("背景", symbol: "photo", action: onOpenBackground)
-            sectionButton("文字", symbol: "textformat", action: onOpenText)
+            sectionButton("调节", symbol: "slider.horizontal.3", section: .adjust)
+            sectionButton("风格", symbol: "sparkles", section: .style)
+            sectionButton("背景", symbol: "photo", section: .background)
+            sectionButton("文字", symbol: "textformat", section: .text)
         }
         .padding(5)
         .background(.white.opacity(0.055), in: Capsule())
@@ -141,10 +154,13 @@ struct NativeControlCenterView: View {
         }
     }
 
-    private func sectionButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button {
+    private func sectionButton(_ title: String, symbol: String, section: NativeControlCenterSection) -> some View {
+        let isSelected = selectedSection == section
+        return Button {
             NativeHaptics.selection(enabled: hapticsEnabled)
-            action()
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
+                selectedSection = section
+            }
         } label: {
             VStack(spacing: 5) {
                 Image(systemName: symbol)
@@ -152,12 +168,171 @@ struct NativeControlCenterView: View {
                 Text(title)
                     .font(.system(size: 9, weight: .semibold))
             }
-            .foregroundStyle(.white.opacity(0.78))
+            .foregroundStyle(isSelected ? .white : .white.opacity(0.58))
             .frame(maxWidth: .infinity)
             .frame(height: 43)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.white.opacity(0.13))
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    @ViewBuilder
+    private var sectionContent: some View {
+        Group {
+            switch selectedSection {
+            case .adjust:
+                tuningQuickControls
+            case .style:
+                engineQuickPicker
+            case .background:
+                backgroundQuickControls
+            case .text:
+                typographyQuickControls
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, minHeight: 86, maxHeight: 98)
+        .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .strokeBorder(.white.opacity(0.09), lineWidth: 1)
+        }
+        .animation(.easeInOut(duration: 0.20), value: selectedSection)
+    }
+
+    private var tuningQuickControls: some View {
+        VStack(spacing: 8) {
+            quickSlider("动效强度", value: $visualIntensity, range: 0.15...1.5, valueText: "\(Int(visualIntensity * 100))%")
+            quickSlider("动画速度", value: $motionStrength, range: 0...2, valueText: "\(Int(motionStrength * 100))%")
+            HStack {
+                Text("更多调节")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.52))
+                Spacer()
+                Button("打开") { onOpenTuning() }
+                    .font(.system(size: 10, weight: .semibold))
+                    .buttonStyle(.bordered)
+                    .tint(.white.opacity(0.7))
+            }
+        }
+    }
+
+    private var engineQuickPicker: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                ForEach(NativeVisualEngine.allCases) { item in
+                    Button {
+                        NativeHaptics.selection(enabled: hapticsEnabled)
+                        engineID = item.rawValue
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: item.symbol)
+                                .font(.system(size: 13, weight: .semibold))
+                            Text(item.title)
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        .foregroundStyle(engine == item ? .white : .white.opacity(0.58))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 43)
+                        .background(engine == item ? .white.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            HStack {
+                Text(engine.subtitle)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.50))
+                Spacer()
+                Button("更多风格") { onOpenVisualizer() }
+                    .font(.system(size: 10, weight: .semibold))
+                    .buttonStyle(.bordered)
+                    .tint(.white.opacity(0.7))
+            }
+        }
+    }
+
+    private var backgroundQuickControls: some View {
+        VStack(spacing: 8) {
+            Picker("背景类型", selection: $appearance.backgroundMode) {
+                ForEach(NativeBackgroundMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .tint(.white)
+            HStack(spacing: 7) {
+                ForEach(NativeBackgroundTheme.presets.prefix(4)) { theme in
+                    Button {
+                        appearance.applyTheme(theme)
+                    } label: {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(LinearGradient(colors: theme.colors.map { Color(nativeHex: $0) }, startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(height: 23)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.22), lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button("更多") { onOpenBackground() }
+                    .font(.system(size: 10, weight: .semibold))
+                    .buttonStyle(.bordered)
+                    .tint(.white.opacity(0.7))
+            }
+        }
+    }
+
+    private var typographyQuickControls: some View {
+        VStack(spacing: 8) {
+            Picker("字体", selection: $fontFamilyID) {
+                ForEach(NativeFontFamily.allCases) { item in
+                    Text(item.title).tag(item.rawValue)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.white)
+            quickSlider("字号", value: $fontScale, range: 0.75...1.55, valueText: "\(Int(fontScale * 100))%")
+            HStack {
+                Text("字体、排版、文字卡片")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.50))
+                Spacer()
+                Button("打开") { onOpenText() }
+                    .font(.system(size: 10, weight: .semibold))
+                    .buttonStyle(.bordered)
+                    .tint(.white.opacity(0.7))
+            }
+        }
+    }
+
+    private func quickSlider(
+        _ title: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        valueText: String
+    ) -> some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.white.opacity(0.62))
+                .frame(width: 53, alignment: .leading)
+            Slider(value: value, in: range)
+                .tint(.white.opacity(0.82))
+            Text(valueText)
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white.opacity(0.62))
+                .frame(width: 38, alignment: .trailing)
+        }
     }
 
     private var trackInformation: some View {
