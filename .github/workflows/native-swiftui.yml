@@ -1,0 +1,69 @@
+name: Build Yiu.fm Native iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - native-swiftui-rebuild
+    paths:
+      - "YiuFM/**"
+      - ".github/workflows/native-swiftui.yml"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate native Xcode project
+        working-directory: YiuFM
+        run: xcodegen generate --spec project.yml
+
+      - name: Build unsigned native app
+        working-directory: YiuFM
+        run: |
+          xcodebuild \
+            -project YiuFM.xcodeproj \
+            -scheme YiuFM \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Verify native app bundle
+        working-directory: YiuFM
+        run: |
+          APP="build/Build/Products/Release-iphoneos/YiuFM.app"
+          test -d "$APP"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
+          if find "$APP" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" \) | grep -q .; then
+            echo "Unexpected web runtime resources found in native app bundle"
+            exit 1
+          fi
+
+      - name: Package unsigned IPA
+        working-directory: YiuFM
+        run: |
+          mkdir -p output/Payload
+          cp -R build/Build/Products/Release-iphoneos/YiuFM.app output/Payload/YiuFM.app
+          cd output
+          /usr/bin/zip -qry YiuFM-2.0-unsigned.ipa Payload
+          rm -rf Payload
+          ls -lh YiuFM-2.0-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: YiuFM-2.0-native-unsigned-ipa
+          path: YiuFM/output/YiuFM-2.0-unsigned.ipa
+          retention-days: 90
