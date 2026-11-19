@@ -152,9 +152,13 @@ struct NativeControlCenterView: View {
             sectionButton("文字", symbol: "textformat", section: .text)
         }
         .padding(5)
-        .background(.white.opacity(0.055), in: Capsule())
-        .overlay {
-            Capsule().strokeBorder(.white.opacity(0.10), lineWidth: 1)
+        .background {
+            NativeLiquidGlassBackground(
+                shape: Capsule(),
+                tint: .white,
+                fallbackOpacity: 0.045,
+                shadowRadius: 0
+            )
         }
     }
 
@@ -203,10 +207,13 @@ struct NativeControlCenterView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, minHeight: 86, maxHeight: 110)
-        .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 17, style: .continuous)
-                .strokeBorder(.white.opacity(0.09), lineWidth: 1)
+        .background {
+            NativeLiquidGlassBackground(
+                shape: RoundedRectangle(cornerRadius: 17, style: .continuous),
+                tint: .white,
+                fallbackOpacity: 0.035,
+                shadowRadius: 0
+            )
         }
         .animation(.easeInOut(duration: 0.20), value: selectedSection)
     }
