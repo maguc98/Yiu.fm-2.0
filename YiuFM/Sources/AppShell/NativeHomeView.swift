@@ -3,6 +3,7 @@ import SwiftUI
 struct NativeHomeView: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
+    @ObservedObject var textDeck: NativeTextDeckStore
     let openMusic: () -> Void
     let openVisualizer: () -> Void
     let openText: () -> Void
@@ -183,30 +184,31 @@ struct NativeHomeView: View {
                     }
 
                     if let lyric = player.currentLyric {
-                        Text(lyric.text)
-                            .font(.system(
-                                size: CGFloat(29 * typographyScale),
-                                weight: fontWeight,
-                                design: fontFamily.design
-                            ))
-                            .tracking(engine == .sonnet ? 1.1 : 0.35)
-                            .foregroundStyle(Color(nativeHex: textColorHex))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(8)
-                            .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
-                            .shadow(
-                                color: postProcessEnabled ? Color(nativeHex: accentColorHex).opacity(min(0.65, edgeDispersion * 0.28)) : .clear,
-                                radius: postProcessEnabled ? CGFloat(4 + edgeBand * 12) : 0
-                            )
-                            .shadow(
-                                color: rgbEdge && postProcessEnabled ? Color(nativeHex: secondaryColorHex).opacity(rgbEdgeIntensity * (0.35 + 0.1 * sin(Date().timeIntervalSinceReferenceDate * rgbEdgeRate))) : .clear,
-                                radius: rgbEdge && postProcessEnabled ? CGFloat(rgbEdgeWidth) * 0.35 : 0,
-                                x: 1,
-                                y: 0
-                            )
-                            .frame(maxWidth: .infinity)
-                            .id(player.currentLyricIndex)
-                            .transition(enableTransitions ? .opacity.combined(with: .scale(scale: 0.97)) : .identity)
+                        NativeLegacyLyricEffectView(
+                            text: lyric.text,
+                            animation: textDeck.defaultAnimation,
+                            color: Color(nativeHex: textColorHex),
+                            fontSize: CGFloat(29 * typographyScale),
+                            fontWeight: fontWeight,
+                            fontDesign: fontFamily.design,
+                            currentTime: player.currentTime,
+                            audioLevel: player.audioLevel
+                        )
+                        .tracking(engine == .sonnet ? 1.1 : 0.35)
+                        .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
+                        .shadow(
+                            color: postProcessEnabled ? Color(nativeHex: accentColorHex).opacity(min(0.65, edgeDispersion * 0.28)) : .clear,
+                            radius: postProcessEnabled ? CGFloat(4 + edgeBand * 12) : 0
+                        )
+                        .shadow(
+                            color: rgbEdge && postProcessEnabled ? Color(nativeHex: secondaryColorHex).opacity(rgbEdgeIntensity * (0.35 + 0.1 * sin(Date().timeIntervalSinceReferenceDate * rgbEdgeRate))) : .clear,
+                            radius: rgbEdge && postProcessEnabled ? CGFloat(rgbEdgeWidth) * 0.35 : 0,
+                            x: 1,
+                            y: 0
+                        )
+                        .frame(maxWidth: .infinity)
+                        .id(player.currentLyricIndex)
+                        .transition(enableTransitions ? .opacity.combined(with: .scale(scale: 0.97)) : .identity)
                     } else {
                         Text(" ")
                             .frame(height: 52)
