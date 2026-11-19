@@ -5,6 +5,7 @@ struct NativeLiquidGlassBackground<S: InsettableShape>: View {
     let shape: S
     var tint: Color = .black
     var fallbackOpacity: Double = 0.42
+    var shadowRadius: CGFloat = 18
 
     var body: some View {
         Group {
@@ -40,7 +41,7 @@ struct NativeLiquidGlassBackground<S: InsettableShape>: View {
                     }
             }
         }
-        .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 8)
+        .shadow(color: .black.opacity(shadowRadius > 0 ? 0.16 : 0), radius: shadowRadius, x: 0, y: 5)
         .accessibilityHidden(true)
     }
 }
