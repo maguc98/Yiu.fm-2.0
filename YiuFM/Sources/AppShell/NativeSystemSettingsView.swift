@@ -7,6 +7,7 @@ struct NativeSystemSettingsView: View {
     @AppStorage("yiufm.native.system.reduceMotion") private var reduceMotion = false
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
     @AppStorage("yiufm.native.system.keepAwake") private var keepScreenAwake = false
+    @AppStorage("yiufm.native.ui.autoHideDelay") private var autoHideDelay = 10
 
     var body: some View {
         Form {
@@ -39,6 +40,23 @@ struct NativeSystemSettingsView: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            Section("界面") {
+                HStack {
+                    Text("自动隐藏 UI")
+                    Spacer()
+                    Text(autoHideDelay == 0 ? "关闭" : "\(autoHideDelay) 秒")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: Binding(
+                    get: { Double(autoHideDelay) },
+                    set: { autoHideDelay = Int($0.rounded()) }
+                ), in: 0...10, step: 1)
+                Text("播放时无操作会自动收起底部迷你条与悬浮控制中心；触碰屏幕即可恢复。设置为 0 秒则关闭。")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Section("交互") {
