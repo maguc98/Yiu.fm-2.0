@@ -10,6 +10,7 @@ private enum NativeControlCenterSection {
 struct NativeControlCenterView: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
+    @ObservedObject var textDeck: NativeTextDeckStore
 
     let onOpenMusic: () -> Void
     let onOpenVisualizer: () -> Void
@@ -225,33 +226,44 @@ struct NativeControlCenterView: View {
     }
 
     private var engineQuickPicker: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 6) {
-                ForEach(NativeVisualEngine.allCases) { item in
-                    Button {
-                        NativeHaptics.selection(enabled: hapticsEnabled)
-                        engineID = item.rawValue
-                    } label: {
-                        VStack(spacing: 4) {
-                            Image(systemName: item.symbol)
-                                .font(.system(size: 13, weight: .semibold))
-                            Text(item.title)
+        VStack(spacing: 7) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHGrid(
+                    rows: [GridItem(.fixed(32), spacing: 5), GridItem(.fixed(32), spacing: 5)],
+                    alignment: .center,
+                    spacing: 5
+                ) {
+                    ForEach(NativeTextAnimation.allCases) { animation in
+                        Button {
+                            NativeHaptics.selection(enabled: hapticsEnabled)
+                            textDeck.setDefaultAnimation(animation)
+                        } label: {
+                            Text(animation.title)
                                 .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(textDeck.defaultAnimation == animation ? .white : .white.opacity(0.62))
+                                .frame(width: 72, height: 30)
+                                .background(
+                                    textDeck.defaultAnimation == animation ? .white.opacity(0.17) : .white.opacity(0.045),
+                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .strokeBorder(.white.opacity(textDeck.defaultAnimation == animation ? 0.24 : 0.08), lineWidth: 1)
+                                }
                         }
-                        .foregroundStyle(engine == item ? .white : .white.opacity(0.58))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 43)
-                        .background(engine == item ? .white.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(textDeck.defaultAnimation == animation ? .isSelected : [])
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 1)
             }
             HStack {
-                Text(engine.subtitle)
+                Text("默认动效：\(textDeck.defaultAnimation.title)")
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.50))
-                Spacer()
-                Button("更多风格") { onOpenVisualizer() }
+                    .foregroundStyle(.white.opacity(0.52))
+                    .lineLimit(1)
+                Spacer(minLength: 5)
+                Button("文字卡片") { onOpenText() }
                     .font(.system(size: 10, weight: .semibold))
                     .buttonStyle(.bordered)
                     .tint(.white.opacity(0.7))
