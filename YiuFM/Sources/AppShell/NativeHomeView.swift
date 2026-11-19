@@ -5,6 +5,7 @@ struct NativeHomeView: View {
     @ObservedObject var appearance: NativeAppearanceStore
     let openMusic: () -> Void
     let openVisualizer: () -> Void
+    let openText: () -> Void
     let openCategories: () -> Void
     let openControlCenter: () -> Void
 
@@ -263,7 +264,7 @@ struct NativeHomeView: View {
 
     private var controlDock: some View {
         HStack(spacing: 0) {
-            NativeHomeDockButton(title: "文字", symbol: "text.aligncenter", action: openCategories)
+            NativeHomeDockButton(title: "文字", symbol: "text.aligncenter", action: openText)
             NativeHomeDockButton(title: "视觉", symbol: "sparkles", action: openVisualizer)
             NativeHomeDockButton(title: "音乐", symbol: "music.note", action: openMusic)
             NativeHomeDockButton(title: "功能", symbol: "square.grid.2x2", action: openCategories)

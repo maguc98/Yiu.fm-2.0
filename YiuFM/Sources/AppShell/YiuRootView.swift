@@ -17,6 +17,7 @@ struct YiuRootView: View {
                 appearance: appearance,
                 openMusic: { path.append(.music) },
                 openVisualizer: { path.append(.visualizer) },
+                openText: { path.append(.textDisplay) },
                 openCategories: { path.append(.categories) },
                 openControlCenter: { showingControlCenter = true }
             )
@@ -49,6 +50,8 @@ struct YiuRootView: View {
                     NativeMusicView(player: player, appearance: appearance)
                 case .visualizer:
                     NativeVisualizerView(player: player, appearance: appearance)
+                case .textDisplay:
+                    NativeTextDisplayView(store: textDeck, appearance: appearance)
                 case .background:
                     NativeBackgroundSettingsView(appearance: appearance)
                 case .typography:
@@ -89,7 +92,7 @@ struct YiuRootView: View {
                 onOpenVisualizer: { openControlDestination(.visualizer) },
                 onOpenBackground: { openControlDestination(.background) },
                 onOpenSystem: { openControlDestination(.system) },
-                onOpenText: { openControlDestination(.typography) }
+                onOpenText: { openControlDestination(.textDisplay) }
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.hidden)
@@ -108,6 +111,7 @@ private enum NativeRoute: Hashable {
     case categories
     case music
     case visualizer
+    case textDisplay
     case background
     case typography
     case system
