@@ -8,6 +8,8 @@ struct NativeSystemSettingsView: View {
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
     @AppStorage("yiufm.native.system.keepAwake") private var keepScreenAwake = false
     @AppStorage("yiufm.native.ui.autoHideDelay") private var autoHideDelay = 10
+    @AppStorage("yiufm.native.control.rememberLastSection") private var rememberLastSection = false
+    @AppStorage("yiufm.native.background.fadeSpeed") private var backgroundFadeSpeed = 1.5
 
     var body: some View {
         Form {
@@ -55,6 +57,27 @@ struct NativeSystemSettingsView: View {
                     set: { autoHideDelay = Int($0.rounded()) }
                 ), in: 0...10, step: 1)
                 Text("播放时无操作会自动收起底部迷你条与悬浮控制中心；触碰屏幕即可恢复。设置为 0 秒则关闭。")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("其他选项") {
+                Picker("控制中心默认页", selection: $rememberLastSection) {
+                    Text("背景").tag(false)
+                    Text("上一次").tag(true)
+                }
+                .pickerStyle(.segmented)
+
+                HStack {
+                    Text("换图渐变速度")
+                    Spacer()
+                    Text(String(format: "%.1fs", backgroundFadeSpeed))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $backgroundFadeSpeed, in: 1.5...5, step: 0.5)
+                    .tint(Color(red: 0.42, green: 0.57, blue: 0.78))
+                Text("控制背景图片、主题和底色变化时的过渡速度。")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
