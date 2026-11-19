@@ -90,19 +90,13 @@ struct NativeMiniPlayerBar: View {
         .padding(.horizontal, 10)
         .frame(height: 66)
         .background {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color(red: 34.0 / 255.0, green: 34.0 / 255.0, blue: 40.0 / 255.0).opacity(0.62))
-                }
+            NativeLiquidGlassBackground(
+                shape: RoundedRectangle(cornerRadius: 24, style: .continuous),
+                tint: Color(red: 0.10, green: 0.11, blue: 0.16),
+                fallbackOpacity: 0.34
+            )
         }
         .environment(\.colorScheme, .dark)
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.white.opacity(0.20), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.28), radius: 17, x: 0, y: 7)
         .animation(.spring(response: 0.48, dampingFraction: 0.78), value: isExpanded)
         .accessibilityElement(children: .contain)
     }
