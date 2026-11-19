@@ -5,9 +5,11 @@ import Foundation
 final class NativeTextDeckStore: ObservableObject {
     @Published private(set) var packages: [NativeTextPackage] = []
     @Published private(set) var activePackageID: String?
+    @Published private(set) var defaultAnimation: NativeTextAnimation = .follow
 
     private let defaults = UserDefaults.standard
     private let storageKey = "yiufm.native.text.packages.v1"
+    private let defaultAnimationKey = "yiufm.native.text.defaultAnimation.v1"
 
     var activePackage: NativeTextPackage? {
         packages.first { $0.id == activePackageID }
@@ -18,6 +20,7 @@ final class NativeTextDeckStore: ObservableObject {
     }
 
     init() {
+        defaultAnimation = NativeTextAnimation(rawValue: defaults.string(forKey: defaultAnimationKey) ?? "") ?? .follow
         restore()
         if packages.isEmpty {
             let initial = NativeTextPackage(name: "默认文件包", cards: [NativeTextCard()])
@@ -57,8 +60,14 @@ final class NativeTextDeckStore: ObservableObject {
         persist()
     }
 
+    func setDefaultAnimation(_ animation: NativeTextAnimation) {
+        guard defaultAnimation != animation else { return }
+        defaultAnimation = animation
+        defaults.set(animation.rawValue, forKey: defaultAnimationKey)
+    }
+
     func addCard() {
-        updateActive { $0.cards.append(NativeTextCard()) }
+        updateActive { $0.cards.append(NativeTextCard(animation: .follow)) }
     }
 
     func updateCard(_ id: String, mutate: (inout NativeTextCard) -> Void) {
@@ -92,7 +101,7 @@ final class NativeTextDeckStore: ObservableObject {
         let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let newPackage = NativeTextPackage(
             name: String((cleaned.isEmpty ? "新文件包" : cleaned).prefix(60)),
-            cards: [NativeTextCard()]
+            cards: [NativeTextCard(animation: .follow)]
         )
         packages.append(newPackage)
         activePackageID = newPackage.id
