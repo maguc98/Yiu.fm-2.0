@@ -9,275 +9,287 @@ struct NativeControlCenterView: View {
     let onOpenBackground: () -> Void
     let onOpenSystem: () -> Void
     let onOpenText: () -> Void
+    let onClose: () -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @AppStorage("yiufm.native.visual.engine") private var engineID = NativeVisualEngine.sonnet.rawValue
-    @State private var showingOtherActions = false
+    @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
 
     private var engine: NativeVisualEngine {
         NativeVisualEngine(rawValue: engineID) ?? .sonnet
     }
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.96, green: 0.97, blue: 0.99),
-                    Color(red: 0.92, green: 0.94, blue: 0.98),
-                    Color(red: 0.95, green: 0.92, blue: 0.97)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 12) {
-                    header
-                    engineCard
-                    shortcuts
-                    resolutionCard
-                    otherButton
-
-                    if showingOtherActions {
-                        otherActions
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                }
-                .padding(.horizontal, 17)
-                .padding(.top, 14)
-                .padding(.bottom, 26)
-            }
+        VStack(spacing: 12) {
+            header
+            engineCard
+            sectionNavigation
+            trackInformation
+            playbackTimeline
+            transportDock
         }
-        .environment(\.colorScheme, .light)
-        .presentationBackground(.ultraThinMaterial)
-        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: showingOtherActions)
+        .padding(15)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background {
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .environment(\.colorScheme, .dark)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(Color(red: 0.055, green: 0.065, blue: 0.09).opacity(0.70))
+                }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.white.opacity(0.28), .white.opacity(0.07), .white.opacity(0.16)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        }
+        .shadow(color: .black.opacity(0.34), radius: 28, x: 0, y: 14)
+        .environment(\.colorScheme, .dark)
+        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: engineID)
     }
 
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("控制中心")
-                    .font(.system(size: 23, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.14, green: 0.17, blue: 0.23))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
                 Text("YIU.FM")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .tracking(2.0)
-                    .foregroundStyle(Color(red: 0.43, green: 0.47, blue: 0.55))
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .tracking(2.1)
+                    .foregroundStyle(.white.opacity(0.48))
             }
 
             Spacer()
 
-            Button {
-                dismiss()
-            } label: {
+            Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.24, green: 0.28, blue: 0.36))
-                    .frame(width: 30, height: 30)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.78))
+                    .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("关闭控制中心")
         }
-        .padding(.bottom, 1)
     }
 
     private var engineCard: some View {
         Button(action: onOpenVisualizer) {
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 7) {
                 HStack {
                     Text("当前视觉引擎")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(red: 0.39, green: 0.43, blue: 0.51))
+                        .foregroundStyle(.white.opacity(0.56))
                     Spacer()
                     HStack(spacing: 5) {
                         Circle()
-                            .fill(Color(red: 0.25, green: 0.68, blue: 0.49))
+                            .fill(Color(red: 0.36, green: 0.86, blue: 0.64))
                             .frame(width: 6, height: 6)
                         Text(player.isPlaying ? "运行中" : "已就绪")
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(Color(red: 0.20, green: 0.56, blue: 0.40))
+                            .foregroundStyle(Color(red: 0.54, green: 0.91, blue: 0.72))
                     }
-                    .padding(.horizontal, 9)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 5)
-                    .background(Color(red: 0.88, green: 0.96, blue: 0.91), in: Capsule())
+                    .background(Color(red: 0.12, green: 0.28, blue: 0.22).opacity(0.88), in: Capsule())
                 }
 
                 HStack(alignment: .lastTextBaseline, spacing: 9) {
                     Text(engine.rawValue.uppercased())
-                        .font(.system(size: 27, weight: .bold, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(Color(red: 0.16, green: 0.20, blue: 0.29))
+                        .font(.system(size: 25, weight: .bold, design: .rounded))
+                        .tracking(1.1)
+                        .foregroundStyle(.white)
                     Text(engine.title)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.42, green: 0.47, blue: 0.57))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.60))
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.42))
                 }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(.white.opacity(0.9), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.045), radius: 14, x: 0, y: 6)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var shortcuts: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("快捷操作")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color(red: 0.23, green: 0.27, blue: 0.35))
-
-            HStack(spacing: 9) {
-                shortcutCard(title: "视觉效果", symbol: "sparkles", subtitle: "切换视觉引擎", action: onOpenVisualizer)
-                shortcutCard(title: "显示模式", symbol: "rectangle.on.rectangle", subtitle: "文字与音乐显示", action: onOpenText)
-            }
-        }
-    }
-
-    private func shortcutCard(
-        title: String,
-        symbol: String,
-        subtitle: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.39, green: 0.50, blue: 0.72))
-                    .frame(width: 36, height: 36)
-                    .background(Color.white.opacity(0.78), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.19, green: 0.23, blue: 0.31))
-                    Text(subtitle)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(Color(red: 0.49, green: 0.53, blue: 0.60))
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(10)
-            .frame(maxWidth: .infinity, minHeight: 58)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(.white.opacity(0.88), lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var resolutionCard: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack {
-                Text("渲染分辨率")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.27, green: 0.31, blue: 0.39))
-                Spacer()
-                Text("100%")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(Color(red: 0.27, green: 0.39, blue: 0.62))
-            }
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color(red: 0.80, green: 0.84, blue: 0.90).opacity(0.68))
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.37, green: 0.53, blue: 0.78),
-                                    Color(red: 0.59, green: 0.55, blue: 0.78)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geometry.size.width * 0.5)
-                }
-            }
-            .frame(height: 7)
-
-            Text("由系统原生画布按设备分辨率输出")
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(Color(red: 0.51, green: 0.55, blue: 0.62))
-        }
-        .padding(.horizontal, 13)
-        .padding(.vertical, 11)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(.white.opacity(0.86), lineWidth: 1)
-        }
-    }
-
-    private var otherButton: some View {
-        Button {
-            showingOtherActions.toggle()
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "square.grid.2x2")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.43, green: 0.50, blue: 0.67))
-                Text("其他")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.26, green: 0.30, blue: 0.38))
-                Spacer()
-                Image(systemName: showingOtherActions ? "chevron.up" : "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 13)
-            .frame(height: 43)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.vertical, 11)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white.opacity(0.075), in: RoundedRectangle(cornerRadius: 19, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(.white.opacity(0.86), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 19, style: .continuous)
+                    .strokeBorder(.white.opacity(0.13), lineWidth: 1)
             }
         }
         .buttonStyle(.plain)
     }
 
-    private var otherActions: some View {
-        HStack(spacing: 9) {
-            smallAction("音乐", symbol: "music.note", action: onOpenMusic)
-            smallAction("背景", symbol: "photo", action: onOpenBackground)
-            smallAction("系统", symbol: "slider.horizontal.3", action: onOpenSystem)
+    private var sectionNavigation: some View {
+        HStack(spacing: 0) {
+            sectionButton("调节", symbol: "slider.horizontal.3", action: onOpenSystem)
+            sectionButton("风格", symbol: "sparkles", action: onOpenVisualizer)
+            sectionButton("背景", symbol: "photo", action: onOpenBackground)
+            sectionButton("文字", symbol: "textformat", action: onOpenText)
+        }
+        .padding(5)
+        .background(.white.opacity(0.055), in: Capsule())
+        .overlay {
+            Capsule().strokeBorder(.white.opacity(0.10), lineWidth: 1)
         }
     }
 
-    private func smallAction(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 7) {
+    private func sectionButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button {
+            NativeHaptics.selection(enabled: hapticsEnabled)
+            action()
+        } label: {
+            VStack(spacing: 5) {
                 Image(systemName: symbol)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.42, green: 0.51, blue: 0.70))
                 Text(title)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.28, green: 0.32, blue: 0.40))
+                    .font(.system(size: 9, weight: .semibold))
             }
+            .foregroundStyle(.white.opacity(0.78))
             .frame(maxWidth: .infinity)
-            .frame(height: 62)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .strokeBorder(.white.opacity(0.86), lineWidth: 1)
+            .frame(height: 43)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var trackInformation: some View {
+        HStack(spacing: 10) {
+            Group {
+                if let cover = appearance.coverImage ?? player.currentArtwork {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.white.opacity(0.10))
+                        Image(systemName: "waveform")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.78))
+                    }
+                }
             }
+            .frame(width: 42, height: 42)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(player.currentTrack?.title ?? "尚未播放歌曲")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(player.currentTrack.map { $0.artist.isEmpty ? "本地音乐" : $0.artist } ?? "选择音乐，开始播放")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.52))
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onOpenMusic) {
+                Image(systemName: "list.bullet")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.72))
+                    .frame(width: 30, height: 30)
+                    .background(.white.opacity(0.08), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("打开音乐库")
+        }
+    }
+
+    private var playbackTimeline: some View {
+        VStack(spacing: 5) {
+            Slider(
+                value: Binding(
+                    get: { player.currentTime },
+                    set: { player.seek(to: $0) }
+                ),
+                in: 0...max(player.duration, 1)
+            )
+            .tint(Color(red: 0.62, green: 0.73, blue: 1.0))
+            .disabled(!player.hasTrack)
+
+            HStack {
+                Text(player.formattedTime(player.currentTime))
+                Spacer()
+                Text(player.formattedTime(player.duration))
+            }
+            .font(.system(size: 9, weight: .medium, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(.white.opacity(0.50))
+        }
+    }
+
+    private var transportDock: some View {
+        HStack(spacing: 0) {
+            transportButton("shuffle", active: player.shuffleEnabled) {
+                player.toggleShuffle()
+            }
+
+            transportButton("backward.end.fill") {
+                player.previousTrack()
+            }
+            .disabled(!player.hasTrack || player.tracks.count < 2)
+
+            Button {
+                NativeHaptics.impact(enabled: hapticsEnabled)
+                player.togglePlayback()
+            } label: {
+                Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 42, height: 42)
+                    .background(.white.opacity(0.16), in: Circle())
+                    .overlay { Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1) }
+            }
+            .buttonStyle(.plain)
+            .disabled(!player.hasTrack)
+            .accessibilityLabel(player.isPlaying ? "暂停" : "播放")
+
+            transportButton("forward.end.fill") {
+                player.nextTrack()
+            }
+            .disabled(!player.hasTrack || player.tracks.count < 2)
+
+            transportButton(player.repeatMode.symbol, active: player.repeatMode != .off) {
+                player.cycleRepeatMode()
+            }
+        }
+        .frame(height: 56)
+        .padding(.horizontal, 7)
+        .background(.white.opacity(0.075), in: Capsule())
+        .overlay {
+            Capsule().strokeBorder(.white.opacity(0.15), lineWidth: 1)
+        }
+    }
+
+    private func transportButton(
+        _ symbol: String,
+        active: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            NativeHaptics.selection(enabled: hapticsEnabled)
+            action()
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(active ? Color(red: 0.72, green: 0.80, blue: 1.0) : .white.opacity(0.72))
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
