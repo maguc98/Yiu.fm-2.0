@@ -31,10 +31,20 @@ jobs:
         with:
           node-version: 24
 
-      - name: Select Xcode
+      - name: Select Xcode 26 for Liquid Glass APIs
         run: |
-          sudo xcode-select -s /Applications/Xcode.app
+          set -euo pipefail
+          XCODE_26="$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' -print | sort -V | tail -n 1)"
+          if [ -z "$XCODE_26" ]; then
+            echo "::error::Xcode 26 is required because the native UI uses SwiftUI Liquid Glass APIs (.glassEffect)."
+            echo "Installed Xcode applications:"
+            ls -1d /Applications/Xcode*.app || true
+            exit 1
+          fi
+          echo "Selecting $XCODE_26"
+          sudo xcode-select -s "$XCODE_26"
           xcodebuild -version
+          xcodebuild -showsdks | grep -E 'iOS .* -sdk iphoneos'
 
       - name: Install XcodeGen
         run: brew install xcodegen
