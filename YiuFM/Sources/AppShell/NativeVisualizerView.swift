@@ -144,12 +144,10 @@ struct NativeVisualizerView: View {
             }
         }
         .sheet(isPresented: $showingSettings) {
-            NativeVisualizerSettingsSheet(
-                lyricScale: $lyricScale,
-                intensity: $intensity,
-                audioReactive: $audioReactive
-            )
-            .presentationDetents([.medium])
+            NavigationStack {
+                NativeVisualTuningSettingsView()
+            }
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
     }
@@ -329,6 +327,16 @@ struct NativeVisualizerView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(8)
                 .shadow(color: .black.opacity(0.16), radius: 5, x: 0, y: 2)
+                .shadow(
+                    color: postProcessEnabled ? Color(nativeHex: accentColorHex).opacity(min(0.65, edgeDispersion * 0.28)) : .clear,
+                    radius: postProcessEnabled ? CGFloat(4 + edgeBand * 12) : 0
+                )
+                .shadow(
+                    color: rgbEdge && postProcessEnabled ? Color(nativeHex: secondaryColorHex).opacity(rgbEdgeIntensity * (0.35 + 0.1 * sin(Date().timeIntervalSinceReferenceDate * rgbEdgeRate))) : .clear,
+                    radius: rgbEdge && postProcessEnabled ? CGFloat(rgbEdgeWidth) * 0.35 : 0,
+                    x: 1,
+                    y: 0
+                )
 
         case .tempera:
             ZStack {
@@ -480,11 +488,11 @@ struct NativeVisualizerView: View {
 
     private var activeFontSize: CGFloat {
         switch engine {
-        case .sonnet: return CGFloat(29 * lyricScale * typographyScale)
-        case .tempera: return CGFloat(27 * lyricScale * typographyScale)
-        case .lumiere: return CGFloat(28 * lyricScale * typographyScale)
-        case .partita: return CGFloat(26 * lyricScale * typographyScale)
-        case .fume: return 28 * lyricScale * typographyScale
+        case .sonnet: return CGFloat(29 * lyricScale * typographyScale * lyricsFontScale)
+        case .tempera: return CGFloat(27 * lyricScale * typographyScale * lyricsFontScale)
+        case .lumiere: return CGFloat(28 * lyricScale * typographyScale * lyricsFontScale)
+        case .partita: return CGFloat(26 * lyricScale * typographyScale * lyricsFontScale)
+        case .fume: return 28 * lyricScale * typographyScale * lyricsFontScale
         }
     }
 
