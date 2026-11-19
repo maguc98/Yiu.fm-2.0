@@ -5,7 +5,7 @@ import Foundation
 final class NativeTextDeckStore: ObservableObject {
     @Published private(set) var packages: [NativeTextPackage] = []
     @Published private(set) var activePackageID: String?
-    @Published private(set) var defaultAnimation: NativeTextAnimation = .follow
+    @Published private(set) var defaultAnimation: NativeTextAnimation = .scatter
 
     private let defaults = UserDefaults.standard
     private let storageKey = "yiufm.native.text.packages.v1"
@@ -20,7 +20,7 @@ final class NativeTextDeckStore: ObservableObject {
     }
 
     init() {
-        defaultAnimation = NativeTextAnimation(rawValue: defaults.string(forKey: defaultAnimationKey) ?? "") ?? .follow
+        defaultAnimation = NativeTextAnimation(rawValue: defaults.string(forKey: defaultAnimationKey) ?? "") ?? .scatter
         restore()
         if packages.isEmpty {
             let initial = NativeTextPackage(name: "默认文件包", cards: [NativeTextCard()])
