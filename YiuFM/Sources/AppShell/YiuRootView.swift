@@ -5,6 +5,8 @@ import SwiftUI
 struct YiuRootView: View {
     @State private var path: [NativeRoute] = []
     @State private var showingControlCenter = false
+    @State private var isMiniExpanded = false
+    @State private var showingExpandedPlayer = false
     @StateObject private var player = YiuAudioPlayer()
     @StateObject private var appearance = NativeAppearanceStore()
     @StateObject private var textDeck = NativeTextDeckStore()
@@ -74,42 +76,75 @@ struct YiuRootView: View {
                 .environmentObject(presentation)
 
                 if !presentation.hideMiniPlayer {
-                    HStack(spacing: 10) {
+                    ZStack {
                         NativeMiniPlayerBar(
                             player: player,
                             appearance: appearance,
-                            onOpenPlayer: { path.append(.music) },
-                            onOpenControlCenter: { showingControlCenter = true }
+                            isExpanded: $isMiniExpanded,
+                            onOpenControlCenter: { toggleControlCenterPanel() },
+                            onSwipeUp: { openExpandedPlayerCard() }
                         )
-                        .frame(width: min(max(geometry.size.width - 24 - 52 - 10, 180), min(geometry.size.height * 0.30 + 28, 340)))
+                        .frame(width: miniPlayerWidth(for: geometry))
+                        .padding(.leading, 12)
+                        .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-                        Button {
-                            withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
-                                showingControlCenter.toggle()
+                        if !isMiniExpanded && !showingControlCenter {
+                            Button {
+                                openControlCenterPanel()
+                            } label: {
+                                Image(systemName: "play.rectangle")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 52, height: 52)
+                                    .background {
+                                        Circle()
+                                            .fill(.ultraThinMaterial)
+                                            .overlay {
+                                                Circle().fill(Color(red: 34.0 / 255.0, green: 34.0 / 255.0, blue: 40.0 / 255.0).opacity(0.42))
+                                            }
+                                    }
+                                    .overlay {
+                                        Circle().strokeBorder(.white.opacity(0.22), lineWidth: 1)
+                                    }
+                                    .shadow(color: .black.opacity(0.28), radius: 16, x: 0, y: 6)
                             }
-                        } label: {
-                            Image(systemName: showingControlCenter ? "xmark" : "slider.horizontal.3")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 52, height: 52)
-                                .background {
-                                    Circle()
-                                        .fill(.ultraThinMaterial)
-                                        .overlay {
-                                            Circle().fill(Color(red: 34 / 255, green: 34 / 255, blue: 40 / 255).opacity(0.42))
-                                        }
-                                }
-                                .overlay {
-                                    Circle().strokeBorder(.white.opacity(0.22), lineWidth: 1)
-                                }
-                                .shadow(color: .black.opacity(0.28), radius: 16, x: 0, y: 6)
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("打开控制中心")
+                            .frame(width: 52, height: 52)
+                            .padding(.trailing, 12)
+                            .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 11)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                            .transition(.scale.combined(with: .opacity))
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(showingControlCenter ? "关闭控制中心" : "打开控制中心")
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 4)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                if showingExpandedPlayer {
+                    ZStack(alignment: .bottomLeading) {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+                                    showingExpandedPlayer = false
+                                }
+                            }
+
+                        NativeExpandedPlayerCard(
+                            player: player,
+                            appearance: appearance,
+                            isPresented: $showingExpandedPlayer,
+                            width: min(max(geometry.size.width - 24, 180), min(geometry.size.height * 0.30 + 28, 340)),
+                            onEditCover: { openCoverSettings() }
+                        )
+                        .padding(.leading, 12)
+                        .padding(.bottom, max(geometry.safeAreaInsets.bottom, 34) + 80)
+                        .transition(.move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.96, anchor: .bottomLeading)))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .zIndex(4)
                 }
 
                 if showingControlCenter {
@@ -147,9 +182,50 @@ struct YiuRootView: View {
         .environmentObject(presentation)
     }
 
+    private func miniPlayerWidth(for geometry: GeometryProxy) -> CGFloat {
+        let collapsed = min(max(geometry.size.width - 24, 180), min(geometry.size.height * 0.30 + 28, 340))
+        let expanded = min(max(geometry.size.width - 24, 180), 380)
+        return isMiniExpanded ? expanded : collapsed
+    }
+
+    private func toggleControlCenterPanel() {
+        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+            showingExpandedPlayer = false
+            isMiniExpanded = false
+            showingControlCenter.toggle()
+        }
+    }
+
+    private func openControlCenterPanel() {
+        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+            showingExpandedPlayer = false
+            isMiniExpanded = false
+            showingControlCenter = true
+        }
+    }
+
+    private func openExpandedPlayerCard() {
+        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+            showingControlCenter = false
+            isMiniExpanded = false
+            showingExpandedPlayer = true
+        }
+    }
+
+    private func openCoverSettings() {
+        withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+            showingExpandedPlayer = false
+        }
+        DispatchQueue.main.async {
+            path.append(.background)
+        }
+    }
+
     private func openControlDestination(_ route: NativeRoute) {
         withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
             showingControlCenter = false
+            showingExpandedPlayer = false
+            isMiniExpanded = false
         }
         DispatchQueue.main.async {
             path.append(route)
