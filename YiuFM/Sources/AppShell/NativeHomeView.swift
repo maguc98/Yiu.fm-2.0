@@ -38,6 +38,8 @@ struct NativeHomeView: View {
     @AppStorage("yiufm.native.visual.showOnlyText") private var showOnlyText = false
     @AppStorage("yiufm.native.visual.enableTransitions") private var enableTransitions = true
     @AppStorage("yiufm.native.visual.interludeDots") private var interludeDots = true
+    @AppStorage("yiufm.native.visual.performanceMode") private var performanceMode = true
+    @AppStorage("yiufm.native.visual.showBottomCaption") private var showBottomCaption = false
     @AppStorage("yiufm.native.visual.rgbEdge") private var rgbEdge = false
     @AppStorage("yiufm.native.typography.family") private var fontFamilyID = NativeFontFamily.serif.rawValue
     @AppStorage("yiufm.native.typography.scale") private var typographyScale = 1.0
@@ -46,6 +48,10 @@ struct NativeHomeView: View {
 
     private var engine: NativeVisualEngine {
         NativeVisualEngine(rawValue: engineID) ?? .sonnet
+    }
+
+    private var effectiveTargetFPS: Int {
+        performanceMode ? min(targetFPS, 30) : targetFPS
     }
 
     private var fontFamily: NativeFontFamily {
@@ -99,7 +105,7 @@ struct NativeHomeView: View {
                     isPlaying: player.isPlaying,
                     intensity: intensity,
                     audioReactive: audioReactive,
-                    targetFPS: targetFPS,
+                    targetFPS: effectiveTargetFPS,
                     animationSpeed: animationSpeed,
                     reduceMotion: reduceMotion,
                     motionStrength: motionStrength,
@@ -146,6 +152,19 @@ struct NativeHomeView: View {
             lyricContent
                 .padding(.horizontal, 22)
                 .padding(.vertical, 24)
+
+            if showBottomCaption {
+                VStack {
+                    Spacer()
+                    Text("YIU.FM · AETHER")
+                        .font(.system(size: 8, weight: .semibold, design: .rounded))
+                        .tracking(2.2)
+                        .foregroundStyle(.white.opacity(0.42))
+                        .padding(.bottom, 9)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+            }
         }
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
