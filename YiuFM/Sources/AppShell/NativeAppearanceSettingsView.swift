@@ -7,6 +7,7 @@ struct NativeBackgroundSettingsView: View {
     @State private var showingCoverImporter = false
     @State private var importError: String?
     @State private var showingError = false
+    @State private var deletingThemeID: String?
 
     private var imageType: UTType { UTType.image }
 
@@ -23,38 +24,63 @@ struct NativeBackgroundSettingsView: View {
                 Text("背景")
             }
 
-            Section("内置主题") {
+            Section {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
                         ForEach(NativeBackgroundTheme.presets) { theme in
-                            Button {
+                            themeCard(
+                                name: theme.name,
+                                colors: theme.colors,
+                                id: "preset-\\(theme.id)",
+                                isCustom: false
+                            ) {
                                 appearance.applyTheme(theme)
-                            } label: {
-                                VStack(spacing: 7) {
-                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: theme.colors.map { Color(nativeHex: $0) },
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(width: 76, height: 52)
-                                        .overlay {
-                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                                .strokeBorder(.white.opacity(0.82), lineWidth: 1)
-                                        }
-                                    Text(theme.name)
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(.primary)
-                                }
                             }
-                            .buttonStyle(.plain)
                         }
+
+                        ForEach(appearance.customThemes) { theme in
+                            themeCard(
+                                name: theme.name,
+                                colors: theme.colors,
+                                id: theme.id,
+                                isCustom: true
+                            ) {
+                                appearance.applyCustomTheme(theme)
+                            }
+                        }
+
+                        Button {
+                            _ = appearance.addCustomThemeFromCurrentSettings()
+                        } label: {
+                            VStack(spacing: 7) {
+                                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                    .fill(.secondary.opacity(0.10))
+                                    .frame(width: 76, height: 52)
+                                    .overlay {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 20, weight: .medium))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                            .strokeBorder(.secondary.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                                    }
+                                Text("保存当前")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(width: 82)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("保存当前背景为自定义主题")
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            } header: {
+                Text("主题")
+            } footer: {
+                Text("点击应用主题；长按自定义主题可显示删除按钮。")
             }
 
             switch appearance.backgroundMode {
@@ -205,6 +231,63 @@ struct NativeBackgroundSettingsView: View {
             Button("好", role: .cancel) {}
         } message: {
             Text(importError ?? "导入失败")
+        }
+    }
+
+    private func themeCard(
+        name: String,
+        colors: [String],
+        id: String,
+        isCustom: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            action()
+            deletingThemeID = nil
+        } label: {
+            VStack(spacing: 7) {
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: colors.map { Color(nativeHex: $0) },
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 76, height: 52)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                            .strokeBorder(.white.opacity(0.72), lineWidth: 1)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if isCustom && deletingThemeID == id {
+                            Button {
+                                appearance.removeCustomTheme(id)
+                                deletingThemeID = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(.white, .black.opacity(0.62))
+                            }
+                            .buttonStyle(.plain)
+                            .offset(x: 6, y: -6)
+                            .accessibilityLabel("删除主题：\\(name)")
+                        }
+                    }
+                Text(name)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .frame(width: 82)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0.55) {
+            guard isCustom else { return }
+            NativeHaptics.impact(enabled: true)
+            deletingThemeID = deletingThemeID == id ? nil : id
         }
     }
 
