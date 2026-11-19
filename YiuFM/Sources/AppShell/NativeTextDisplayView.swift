@@ -209,30 +209,31 @@ struct NativeTextDisplayView: View {
     @ViewBuilder
     private func textCard(frame: (card: NativeTextCard, progress: Double, start: Double), elapsed: Double, size: CGSize) -> some View {
         let card = frame.card
+        let animation = card.animation == .follow ? store.defaultAnimation : card.animation
         let progress = frame.progress
         let animationProgress = reduceMotion ? 1.0 : progress
         let sourceText = visibleText(for: card, progress: animationProgress)
         let text = layoutText(sourceText, mode: wrapMode, availableWidth: max(120, Double(size.width) - sidePadding * 2), fontSize: Double(card.fontSize * globalScale))
         let color = Color(nativeHex: card.colorHex ?? globalColorHex)
         let fontSize = CGFloat(card.fontSize * globalScale)
-        let spacing = CGFloat(max(0, lineSpacingMultiplier - 1) * 20 + (card.animation == .poster ? 5 : 0))
+        let spacing = CGFloat(max(0, lineSpacingMultiplier - 1) * 20 + (animation == .poster ? 5 : 0))
 
         Text(text.isEmpty ? " " : text)
             .font(.system(size: fontSize, weight: fontWeight, design: family.design))
             .foregroundStyle(color)
             .multilineTextAlignment(textAlignment)
             .lineSpacing(spacing)
-            .opacity(opacity(for: card.animation, progress: animationProgress))
-            .scaleEffect(scale(for: card.animation, progress: animationProgress))
-            .offset(x: horizontalOffset(for: card.animation, progress: animationProgress, width: size.width))
-            .offset(y: verticalOffset(for: card.animation, progress: animationProgress))
-            .blur(radius: blurRadius(for: card.animation, progress: animationProgress))
+            .opacity(opacity(for: animation, progress: animationProgress))
+            .scaleEffect(scale(for: animation, progress: animationProgress))
+            .offset(x: horizontalOffset(for: animation, progress: animationProgress, width: size.width))
+            .offset(y: verticalOffset(for: animation, progress: animationProgress))
+            .blur(radius: blurRadius(for: animation, progress: animationProgress))
             .rotation3DEffect(
-                .degrees(card.animation == .flip ? (1 - animationProgress) * 76 : 0),
+                .degrees(animation == .flip ? (1 - animationProgress) * 76 : 0),
                 axis: (x: 1, y: 0, z: 0)
             )
-            .rotationEffect(.degrees(reduceMotion ? 0 : rotation(for: card.animation, elapsed: elapsed)))
-            .shadow(color: color.opacity(card.animation == .star ? 0.55 : 0.14), radius: card.animation == .star ? 18 : 7, x: 0, y: 3)
+            .rotationEffect(.degrees(reduceMotion ? 0 : rotation(for: animation, elapsed: elapsed)))
+            .shadow(color: color.opacity(animation == .star ? 0.55 : 0.14), radius: animation == .star ? 18 : 7, x: 0, y: 3)
             .padding(.horizontal, CGFloat(sidePadding))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: contentAlignment)
     }
