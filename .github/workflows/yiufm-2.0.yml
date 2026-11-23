@@ -44,7 +44,12 @@ jobs:
           echo "Selecting $XCODE_26"
           sudo xcode-select -s "$XCODE_26"
           xcodebuild -version
-          xcodebuild -showsdks | grep -E 'iOS .* -sdk iphoneos'
+          SDK_LIST="$(xcodebuild -showsdks)"
+          printf '%s\n' "$SDK_LIST"
+          if ! printf '%s\n' "$SDK_LIST" | grep -qiE 'iOS [0-9]'; then
+            echo "::error::The selected Xcode installation does not expose an iOS SDK."
+            exit 1
+          fi
 
       - name: Install XcodeGen
         run: brew install xcodegen
