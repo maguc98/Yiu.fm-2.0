@@ -45,9 +45,6 @@ struct NativeControlCenterView: View {
             engineCard
             sectionNavigation
             sectionContent
-            trackInformation
-            playbackTimeline
-            transportDock
         }
         .padding(15)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
