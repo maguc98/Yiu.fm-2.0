@@ -4,7 +4,7 @@ struct NativeMiniPlayerBar: View {
     @ObservedObject var player: YiuAudioPlayer
     @ObservedObject var appearance: NativeAppearanceStore
     @Binding var isExpanded: Bool
-    let onOpenControlCenter: () -> Void
+    let onOpenExpandedPlayer: () -> Void
     let onSwipeUp: () -> Void
 
     @AppStorage("yiufm.native.system.haptics") private var hapticsEnabled = true
@@ -19,7 +19,7 @@ struct NativeMiniPlayerBar: View {
 
     var body: some View {
         HStack(spacing: 9) {
-            Button(action: onOpenControlCenter) {
+            Button(action: onOpenExpandedPlayer) {
                 HStack(spacing: 10) {
                     artwork
                     VStack(alignment: .leading, spacing: 1) {
