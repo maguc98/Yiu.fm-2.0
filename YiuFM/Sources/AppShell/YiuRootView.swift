@@ -92,7 +92,7 @@ struct YiuRootView: View {
                             player: player,
                             appearance: appearance,
                             isExpanded: $isMiniExpanded,
-                            onOpenControlCenter: { toggleControlCenterPanel() },
+                            onOpenExpandedPlayer: { openExpandedPlayerCard() },
                             onSwipeUp: { openExpandedPlayerCard() }
                         )
                         .frame(width: miniPlayerWidth(for: geometry))
